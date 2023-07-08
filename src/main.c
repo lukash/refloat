@@ -1350,8 +1350,13 @@ static void apply_torquetilt(data *d) {
         d->accel_gap = 0;
     }
 
-    float atr_strength =
-        (d->accel_gap > 0) ? d->float_conf.atr_strength_up : d->float_conf.atr_strength_down;
+    // d->accel_gap | > 0  | <= 0
+    // -------------+------+-------
+    //      forward | up   | down
+    //     !forward | down | up
+    float atr_strength = forward == (d->accel_gap > 0) ? d->float_conf.atr_strength_up
+                                                       : d->float_conf.atr_strength_down;
+
     // from 3000 to 6000 erpm gradually crank up the torque response
     if ((d->abs_erpm > 3000) && (!d->braking)) {
         float speedboost = (d->abs_erpm - 3000) / 3000;
