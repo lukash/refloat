@@ -2119,13 +2119,21 @@ static void refloat_thd(void *arg) {
                 reset_vars(d);
                 break;
             }
-            // Ignore roll while it's upside down
+            // Ignore roll for the first second while it's upside down
             if (d->is_upside_down && (fabsf(d->pitch_angle) < d->startup_pitch_tolerance)) {
-                if ((d->state != FAULT_REVERSE) ||
-                    // after a reverse fault, wait at least 1 second before allowing to re-engage
-                    (d->current_time - d->disengage_timer) > 1) {
-                    reset_vars(d);
-                    break;
+                if ((d->current_time - d->disengage_timer) > 1) {
+                    // after 1 second:
+                    if (fabsf(fabsf(d->roll_angle) - 180) < d->float_conf.startup_roll_tolerance) {
+                        reset_vars(d);
+                        break;
+                    }
+                } else {
+                    // 1 second or less, ignore roll-faults to allow for kick flips etc.
+                    if (d->state != FAULT_REVERSE) {
+                        // don't instantly re-engage after a reverse fault!
+                        reset_vars(d);
+                        break;
+                    }
                 }
             }
             // Push-start aka dirty landing Part II
