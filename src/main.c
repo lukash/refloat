@@ -936,6 +936,12 @@ static void calculate_setpoint_target(data *d) {
                 d->state = RUNNING;
             }
         }
+        if (d->float_conf.fault_reversestop_enabled && (d->erpm < 0)) {
+            // the 500ms wheelslip time can cause us to blow past the reverse stop condition!
+            d->setpointAdjustmentType = REVERSESTOP;
+            d->reverse_timer = d->current_time;
+            d->reverse_total_erpm = 0;
+        }
     } else if (d->abs_duty_cycle > d->float_conf.tiltback_duty) {
         if (d->erpm > 0) {
             d->setpoint_target = d->float_conf.tiltback_duty_angle;
