@@ -39,16 +39,12 @@ static inline float inv_sqrt(float x) {
     return 1.0 / sqrtf(x);
 }
 
-static float calculate_acc_confidence(float accMag, float *accMagP, float acc_confidence_decay) {
+static float calculate_acc_confidence(float new_acc_mag, BalanceFilterData *data) {
     // G.K. Egan (C) computes confidence in accelerometers when
     // aircraft is being accelerated over and above that due to gravity
+    data->acc_mag = data->acc_mag * 0.9 + new_acc_mag * 0.1;
 
-    float confidence;
-
-    accMag = *accMagP * 0.9f + accMag * 0.1f;
-    *accMagP = accMag;
-
-    confidence = 1.0 - (acc_confidence_decay * sqrtf(fabsf(accMag - 1.0f)));
+    float confidence = 1.0 - (data->acc_confidence_decay * sqrtf(fabsf(data->acc_mag - 1.0f)));
 
     return confidence > 0 ? confidence : 0;
 }
@@ -64,7 +60,7 @@ void balance_filter_init(BalanceFilterData *data) {
     data->integralFBx = 0.0;
     data->integralFBy = 0.0;
     data->integralFBz = 0.0;
-    data->accMagP = 1.0;
+    data->acc_mag = 1.0;
 }
 
 void balance_filter_configure(BalanceFilterData *data, const RefloatConfig *config) {
@@ -97,8 +93,7 @@ void balance_filter_update(float *gyroXYZ, float *accelXYZ, float dt, BalanceFil
         volatile float twoKp = 2.0 * data->kp;
         volatile float twoKi = 2.0 * data->ki;
 
-        accelConfidence =
-            calculate_acc_confidence(accelNorm, &data->accMagP, data->acc_confidence_decay);
+        accelConfidence = calculate_acc_confidence(accelNorm, data);
         twoKp *= accelConfidence;
         twoKi *= accelConfidence;
 

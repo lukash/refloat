@@ -28,7 +28,7 @@ typedef struct {
     float integralFBx;
     float integralFBy;
     float integralFBz;
-    float accMagP;
+    float acc_mag;
 
     // parameters
     float acc_confidence_decay;
