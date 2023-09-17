@@ -1148,7 +1148,7 @@ static void set_current(data *d, float current) {
 static void imu_ref_callback(float *acc, float *gyro, float *mag, float dt) {
     UNUSED(mag);
     data *d = (data *) ARG;
-    balance_filter_update(gyro, acc, dt, &d->balance_filter);
+    balance_filter_update(&d->balance_filter, gyro, acc, dt);
 }
 
 static void refloat_thd(void *arg) {

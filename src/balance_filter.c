@@ -25,7 +25,7 @@
 // 02/10/2011   SOH Madgwick    Optimised for reduced CPU load
 // 26/01/2014   Benjamin V      Adaption to our platform
 // 20/02/2017   Benjamin V      Added Madgwick algorithm and refactoring
-// 17/09/2023   Lukas Hrazky    Adopted from vedderb/bldc
+// 17/09/2023   Lukas Hrazky    Adopted from vedderb/bldc, modified for self-balancing skateboard
 //
 //=====================================================================================================
 
@@ -57,102 +57,72 @@ void balance_filter_init(BalanceFilterData *data) {
     data->q1 = quat[1];
     data->q2 = quat[2];
     data->q3 = quat[3];
-    data->integralFBx = 0.0;
-    data->integralFBy = 0.0;
-    data->integralFBz = 0.0;
     data->acc_mag = 1.0;
 }
 
 void balance_filter_configure(BalanceFilterData *data, const RefloatConfig *config) {
     data->acc_confidence_decay = config->bf_accel_confidence_decay;
     data->kp = config->mahony_kp;
-    data->ki = 0;
 }
 
-void balance_filter_update(float *gyroXYZ, float *accelXYZ, float dt, BalanceFilterData *data) {
-    float accelNorm, recipNorm;
-    float qa, qb, qc;
+void balance_filter_update(BalanceFilterData *data, float *gyro_xyz, float *accel_xyz, float dt) {
+    float gx = gyro_xyz[0];
+    float gy = gyro_xyz[1];
+    float gz = gyro_xyz[2];
 
-    float gx = gyroXYZ[0];
-    float gy = gyroXYZ[1];
-    float gz = gyroXYZ[2];
+    float ax = accel_xyz[0];
+    float ay = accel_xyz[1];
+    float az = accel_xyz[2];
 
-    float ax = accelXYZ[0];
-    float ay = accelXYZ[1];
-    float az = accelXYZ[2];
-
-    accelNorm = sqrtf(ax * ax + ay * ay + az * az);
+    float accel_norm = sqrtf(ax * ax + ay * ay + az * az);
 
     // Compute feedback only if accelerometer abs(vector)is not too small to avoid a division
     // by a small number
-    if (accelNorm > 0.01) {
-        float halfvx, halfvy, halfvz;
-        float halfex, halfey, halfez;
-        float accelConfidence;
-
-        volatile float twoKp = 2.0 * data->kp;
-        volatile float twoKi = 2.0 * data->ki;
-
-        accelConfidence = calculate_acc_confidence(accelNorm, data);
-        twoKp *= accelConfidence;
-        twoKi *= accelConfidence;
+    if (accel_norm > 0.01) {
+        float two_kp = 2.0 * data->kp * calculate_acc_confidence(accel_norm, data);
 
         // Normalise accelerometer measurement
-        recipNorm = inv_sqrt(ax * ax + ay * ay + az * az);
-        ax *= recipNorm;
-        ay *= recipNorm;
-        az *= recipNorm;
+        float recip_norm = inv_sqrt(ax * ax + ay * ay + az * az);
+        ax *= recip_norm;
+        ay *= recip_norm;
+        az *= recip_norm;
 
         // Estimated direction of gravity and vector perpendicular to magnetic flux
-        halfvx = data->q1 * data->q3 - data->q0 * data->q2;
-        halfvy = data->q0 * data->q1 + data->q2 * data->q3;
-        halfvz = data->q0 * data->q0 - 0.5f + data->q3 * data->q3;
+        float halfvx = data->q1 * data->q3 - data->q0 * data->q2;
+        float halfvy = data->q0 * data->q1 + data->q2 * data->q3;
+        float halfvz = data->q0 * data->q0 - 0.5f + data->q3 * data->q3;
 
         // Error is sum of cross product between estimated and measured direction of gravity
-        halfex = (ay * halfvz - az * halfvy);
-        halfey = (az * halfvx - ax * halfvz);
-        halfez = (ax * halfvy - ay * halfvx);
-
-        // Compute and apply integral feedback if enabled
-        if (twoKi > 0.0f) {
-            data->integralFBx += twoKi * halfex * dt;  // integral error scaled by Ki
-            data->integralFBy += twoKi * halfey * dt;
-            data->integralFBz += twoKi * halfez * dt;
-            gx += data->integralFBx;  // apply integral feedback
-            gy += data->integralFBy;
-            gz += data->integralFBz;
-        } else {
-            data->integralFBx = 0.0f;  // prevent integral windup
-            data->integralFBy = 0.0f;
-            data->integralFBz = 0.0f;
-        }
+        float halfex = (ay * halfvz - az * halfvy);
+        float halfey = (az * halfvx - ax * halfvz);
+        float halfez = (ax * halfvy - ay * halfvx);
 
         // Apply proportional feedback
-        gx += twoKp * halfex;
-        gy += twoKp * halfey;
-        gz += twoKp * halfez;
+        gx += two_kp * halfex;
+        gy += two_kp * halfey;
+        gz += two_kp * halfez;
     }
 
     // Integrate rate of change of quaternion
     gx *= (0.5f * dt);  // pre-multiply common factors
     gy *= (0.5f * dt);
     gz *= (0.5f * dt);
-    qa = data->q0;
-    qb = data->q1;
-    qc = data->q2;
+    float qa = data->q0;
+    float qb = data->q1;
+    float qc = data->q2;
     data->q0 += (-qb * gx - qc * gy - data->q3 * gz);
     data->q1 += (qa * gx + qc * gz - data->q3 * gy);
     data->q2 += (qa * gy - qb * gz + data->q3 * gx);
     data->q3 += (qa * gz + qb * gy - qc * gx);
 
     // Normalize quaternion
-    recipNorm = inv_sqrt(
+    float recip_norm = inv_sqrt(
         data->q0 * data->q0 + data->q1 * data->q1 + data->q2 * data->q2 + data->q3 * data->q3
     );
-    data->q0 *= recipNorm;
-    data->q1 *= recipNorm;
-    data->q2 *= recipNorm;
-    data->q3 *= recipNorm;
+    data->q0 *= recip_norm;
+    data->q1 *= recip_norm;
+    data->q2 *= recip_norm;
+    data->q3 *= recip_norm;
 }
 
 float balance_filter_get_roll(BalanceFilterData *data) {
