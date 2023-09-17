@@ -126,8 +126,8 @@ typedef struct {
     bool surge_enable;
     bool duty_beeping;
 
-    // Feature: True Pitch
-    ATTITUDE_INFO m_att_ref;
+    // IMU data for the balancing filter
+    ATTITUDE_INFO balance_filter;
 
     // Runtime values read from elsewhere
     float pitch_angle, last_pitch_angle, roll_angle, abs_roll_angle, abs_roll_angle_sin,
@@ -335,9 +335,16 @@ static void configure(data *d) {
     // Feature: Dirty Landings
     d->startup_pitch_trickmargin = d->float_conf.startup_dirtylandings_enabled ? 10 : 0;
 
-    // Overwrite App CFG Mahony KP to package CFG Value
-    if (VESC_IF->get_cfg_float(CFG_PARAM_IMU_mahony_kp) != d->float_conf.mahony_kp) {
-        VESC_IF->set_cfg_float(CFG_PARAM_IMU_mahony_kp, d->float_conf.mahony_kp);
+    // Backwards compatibility hack:
+    // If mahony kp from the firmware internal filter is higher than 1, it's
+    // the old setup with it being the main balancing filter. In that case, set
+    // the kp and acc confidence decay to hardcoded defaults of the former true
+    // pitch filter, to preserve the behavior of the old setup in the new one.
+    // (Though Mahony KP 0.4 instead of 0.2 is used, as it seems to work better)
+    if (VESC_IF->get_cfg_float(CFG_PARAM_IMU_mahony_kp) > 1) {
+        VESC_IF->set_cfg_float(CFG_PARAM_IMU_mahony_kp, 0.4);
+        VESC_IF->set_cfg_float(CFG_PARAM_IMU_mahony_ki, 0);
+        VESC_IF->set_cfg_float(CFG_PARAM_IMU_accel_confidence_decay, 0.1);
     }
 
     d->mc_max_temp_fet = VESC_IF->get_cfg_float(CFG_PARAM_l_temp_fet_start) - 3;
@@ -406,6 +413,10 @@ static void configure(data *d) {
     }
 
     d->do_handtest = false;
+
+    d->balance_filter.acc_confidence_decay = d->float_conf.bf_accel_confidence_decay;
+    d->balance_filter.kp = d->float_conf.mahony_kp;
+    d->balance_filter.ki = 0;
 
     konami_init(&d->flywheel_konami, flywheel_konami_sequence, sizeof(flywheel_konami_sequence));
 
@@ -1138,7 +1149,7 @@ static void set_current(data *d, float current) {
 static void imu_ref_callback(float *acc, float *gyro, float *mag, float dt) {
     UNUSED(mag);
     data *d = (data *) ARG;
-    VESC_IF->ahrs_update_mahony_imu(gyro, acc, dt, &d->m_att_ref);
+    VESC_IF->ahrs_update_mahony_imu(gyro, acc, dt, &d->balance_filter);
 }
 
 static void refloat_thd(void *arg) {
@@ -1167,7 +1178,7 @@ static void refloat_thd(void *arg) {
             (1.0 - d->loop_overshoot_alpha) * d->filtered_loop_overshoot;
 
         // Get the IMU Values
-        d->roll_angle = RAD2DEG_f(VESC_IF->ahrs_get_roll(&d->m_att_ref));
+        d->roll_angle = RAD2DEG_f(VESC_IF->imu_get_roll());
         d->abs_roll_angle = fabsf(d->roll_angle);
         d->abs_roll_angle_sin = sinf(DEG2RAD_f(d->abs_roll_angle));
 
@@ -1189,8 +1200,8 @@ static void refloat_thd(void *arg) {
         d->last_pitch_angle = d->pitch_angle;
 
         // True pitch is derived from the secondary IMU filter running with kp=0.2
-        d->true_pitch_angle = RAD2DEG_f(VESC_IF->ahrs_get_pitch(&d->m_att_ref));
-        d->pitch_angle = RAD2DEG_f(VESC_IF->imu_get_pitch());
+        d->true_pitch_angle = RAD2DEG_f(VESC_IF->imu_get_pitch());
+        d->pitch_angle = RAD2DEG_f(VESC_IF->ahrs_get_pitch(&d->balance_filter));
         if (d->is_flywheel_mode) {
             // flip sign and use offsets
             d->true_pitch_angle = d->flywheel_pitch_offset - d->true_pitch_angle;
@@ -1248,7 +1259,7 @@ static void refloat_thd(void *arg) {
         d->throttle_val = servo_val;
 
         // Turn Tilt:
-        d->yaw_angle = VESC_IF->ahrs_get_yaw(&d->m_att_ref) * 180.0f / M_PI;
+        d->yaw_angle = VESC_IF->imu_get_yaw() * 180.0f / M_PI;
         float new_change = d->yaw_angle - d->last_yaw_angle;
         bool unchanged = false;
         if ((new_change == 0)  // Exact 0's only happen when the IMU is not updating between loops
@@ -2018,7 +2029,6 @@ static void cmd_runtime_tune(data *d, unsigned char *cfg, int len) {
         d->float_conf.turntilt_angle_limit = (h1 & 0x3) + 2;
         d->float_conf.turntilt_start_erpm = (float) (h1 >> 2) * 500 + 1000;
         d->float_conf.mahony_kp = ((float) h2) / 10 + 1.5;
-        VESC_IF->set_cfg_float(CFG_PARAM_IMU_mahony_kp + 100, d->float_conf.mahony_kp);
 
         split(cfg[5], &h1, &h2);
         if (h1 == 0) {
@@ -2104,6 +2114,7 @@ static void cmd_tune_defaults(data *d) {
     d->float_conf.kp2 = CFG_DFLT_KP2;
     d->float_conf.ki = CFG_DFLT_KI;
     d->float_conf.mahony_kp = CFG_DFLT_MAHONY_KP;
+    d->float_conf.bf_accel_confidence_decay = CFG_DFLT_BF_ACCEL_CONFIDENCE_DECAY;
     d->float_conf.kp_brake = CFG_DFLT_KP_BRAKE;
     d->float_conf.kp2_brake = CFG_DFLT_KP2_BRAKE;
     d->float_conf.ki_limit = CFG_DFLT_KI_LIMIT;
@@ -2497,12 +2508,10 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
     }
     case COMMAND_CFG_RESTORE: {
         read_cfg_from_eeprom(d);
-        VESC_IF->set_cfg_float(CFG_PARAM_IMU_mahony_kp + 100, d->float_conf.mahony_kp);
         return;
     }
     case COMMAND_TUNE_DEFAULTS: {
         cmd_tune_defaults(d);
-        VESC_IF->set_cfg_float(CFG_PARAM_IMU_mahony_kp + 100, d->float_conf.mahony_kp);
         return;
     }
     case COMMAND_CFG_SAVE: {
@@ -2673,10 +2682,7 @@ INIT_FUN(lib_info *info) {
         buzzer_init();
     }
 
-    VESC_IF->ahrs_init_attitude_info(&d->m_att_ref);
-    d->m_att_ref.acc_confidence_decay = 0.1;
-    d->m_att_ref.kp = 0.2;
-
+    VESC_IF->ahrs_init_attitude_info(&d->balance_filter);
     VESC_IF->imu_set_read_callback(imu_ref_callback);
 
     d->thread = VESC_IF->spawn(refloat_thd, 2048, "Refloat Main", d);

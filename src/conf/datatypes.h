@@ -34,6 +34,7 @@ typedef struct {
     float ki;
     float kp2;
     float mahony_kp;
+    float bf_accel_confidence_decay;
     float kp_brake;
     float kp2_brake;
     uint16_t kp_brake_erpm;
