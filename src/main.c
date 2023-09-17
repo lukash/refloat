@@ -17,6 +17,8 @@
 // You should have received a copy of the GNU General Public License along with
 // this program. If not, see <http://www.gnu.org/licenses/>.
 
+#include "balance_filter.h"
+
 #include "vesc_c_if.h"
 
 #include "atr.h"
@@ -127,7 +129,7 @@ typedef struct {
     bool duty_beeping;
 
     // IMU data for the balancing filter
-    ATTITUDE_INFO balance_filter;
+    BalanceFilterData balance_filter;
 
     // Runtime values read from elsewhere
     float pitch_angle, last_pitch_angle, roll_angle, abs_roll_angle, abs_roll_angle_sin,
@@ -298,6 +300,7 @@ static void app_init(data *d) {
 
 static void reconfigure(data *d) {
     motor_data_configure_atr_filter(&d->motor, d->float_conf.atr_filter / d->float_conf.hertz);
+    balance_filter_configure(&d->balance_filter, &d->float_conf);
     torque_tilt_configure(&d->torque_tilt, &d->float_conf);
     atr_configure(&d->atr, &d->float_conf);
 }
@@ -413,10 +416,6 @@ static void configure(data *d) {
     }
 
     d->do_handtest = false;
-
-    d->balance_filter.acc_confidence_decay = d->float_conf.bf_accel_confidence_decay;
-    d->balance_filter.kp = d->float_conf.mahony_kp;
-    d->balance_filter.ki = 0;
 
     konami_init(&d->flywheel_konami, flywheel_konami_sequence, sizeof(flywheel_konami_sequence));
 
@@ -1149,7 +1148,7 @@ static void set_current(data *d, float current) {
 static void imu_ref_callback(float *acc, float *gyro, float *mag, float dt) {
     UNUSED(mag);
     data *d = (data *) ARG;
-    VESC_IF->ahrs_update_mahony_imu(gyro, acc, dt, &d->balance_filter);
+    balance_filter_update(gyro, acc, dt, &d->balance_filter);
 }
 
 static void refloat_thd(void *arg) {
@@ -1201,7 +1200,7 @@ static void refloat_thd(void *arg) {
 
         // True pitch is derived from the secondary IMU filter running with kp=0.2
         d->true_pitch_angle = RAD2DEG_f(VESC_IF->imu_get_pitch());
-        d->pitch_angle = RAD2DEG_f(VESC_IF->ahrs_get_pitch(&d->balance_filter));
+        d->pitch_angle = RAD2DEG_f(balance_filter_get_pitch(&d->balance_filter));
         if (d->is_flywheel_mode) {
             // flip sign and use offsets
             d->true_pitch_angle = d->flywheel_pitch_offset - d->true_pitch_angle;
@@ -2682,7 +2681,7 @@ INIT_FUN(lib_info *info) {
         buzzer_init();
     }
 
-    VESC_IF->ahrs_init_attitude_info(&d->balance_filter);
+    balance_filter_init(&d->balance_filter);
     VESC_IF->imu_set_read_callback(imu_ref_callback);
 
     d->thread = VESC_IF->spawn(refloat_thd, 2048, "Refloat Main", d);
