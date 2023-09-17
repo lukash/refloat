@@ -57,6 +57,8 @@ Item {
             {"name": "kp_brake", "type": "Double"},
             {"name": "kp2_brake", "type": "Double"},
             {"name": "mahony_kp", "type": "Double"},
+            {"name": "mahony_kp_roll", "type": "Double"},
+            {"name": "mahony_kp_yaw", "type": "Double"},
             {"name": "bf_accel_confidence_decay", "type": "Double"},
             // {"name": "hertz", "type": "Int"},
             {"name": "fault_pitch", "type": "Double"},

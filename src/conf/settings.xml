@@ -108,21 +108,21 @@ p, li { white-space: pre-wrap; }
             <vTx>7</vTx>
         </ki>
         <mahony_kp>
-            <longName>Mahony KP</longName>
+            <longName>Pitch KP</longName>
             <type>1</type>
             <transmittable>1</transmittable>
             <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; text-decoration: underline;&quot;&gt;KP value for Mahony IMU Filter&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Decides how heavily the accelerometer is used in &amp;quot;estimating&amp;quot; IMU data. For our purpose, this filter is a bit abused in order to achieve desirable ride behavior.&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; text-decoration: underline;&quot;&gt;KP for the pitch axis of the Mahony IMU Filter&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Defines the amount of accelerometer correction applied to the pitch axis (forward-backward tilt) of the Mahony filter.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-weight:600; text-decoration: underline;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;In practice, increasing this value will loosen up the board, specifically in the center of the board and in how quickly it rebounds to level. If you want a snappier board, drop this down a bit. If you want things a bit looser, with increased board angle control, bump it up a notch or two.&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Recommended Values: 1.5 - 2.5 (Caution with higher values!!)&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;*Note: If your set Mahony KP in &amp;quot;App CFG -&amp;gt; IMU&amp;quot; does not match this value, this value will take priority and writing the Refloat Config will overwrite this value into your App CFG.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;This parameter is amongst those that have the most impact on the feel of the ride and how the board behaves in ondulated terrain.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Recommended Values: 1.5 - 2.5 (Caution with higher values!)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_MAHONY_KP</cDefine>
             <editorDecimalsDouble>1</editorDecimalsDouble>
             <editorScale>1</editorScale>
@@ -136,6 +136,66 @@ p, li { white-space: pre-wrap; }
             <suffix></suffix>
             <vTx>7</vTx>
         </mahony_kp>
+        <mahony_kp_roll>
+            <longName>Roll KP</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; text-decoration: underline;&quot;&gt;KP for the roll axis of the Mahony IMU Filter&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Defines the amount of accelerometer correction applied to the roll axis (board sideways rotation) of the Mahony filter.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;High &lt;span style=&quot; font-style:italic;&quot;&gt;Pitch&lt;/span&gt; KP makes the board response mellow and makes the tilt &amp;quot;linger&amp;quot; longer. This is not desireable for the roll axis, because as the board rotates in yaw during a turn, roll becomes pitch. If you roll a board to the side when making a turn, the angle will propagate into your pitch and the nose will be dipping when turning. This effect is presumably more pronounced with roundier tires.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Setting the Roll KP lower than Pitch KP will make the nose hold up better in turns and make the board stiffer in general, and especially in tight carves.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;However, unequal axes KPs skew the Mahony's mathematical model and setting Roll KP too low brings unwanted side-effects, like the board being twitchy and the nose lifting too much during sudden rotations.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Recommended Values: 0.8 - 1.8&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_MAHONY_KP_ROLL</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>3</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.1</stepDouble>
+            <valDouble>1.4</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix></suffix>
+            <vTx>7</vTx>
+        </mahony_kp_roll>
+        <mahony_kp_yaw>
+            <longName>Yaw KP</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; text-decoration: underline;&quot;&gt;KP for the yaw axis of the Mahony IMU Filter&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Defines the amount of accelerometer correction applied to the yaw axis (directional rotation) of the Mahony filter.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Yaw KP has little effect, because Mahony's accelerometer correction is based on the vector of gravity pointing straight down, so it can't correct yaw by principle. However, when the board is moving, the acceleration vector diverges from vector of gravity, so some effect should be present.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Practical impact of Yaw KP seems to be minimal, but it is kept as a parameter for now for completeness and experimentation.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Due to the above and out of ignorance of the mathematics behind the Mahony filter, the recommended value is right inbetween your Pitch KP and Roll KP.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_MAHONY_KP_YAW</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>3</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.1</stepDouble>
+            <valDouble>1.7</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix></suffix>
+            <vTx>7</vTx>
+        </mahony_kp_yaw>
         <bf_accel_confidence_decay>
             <longName>Accelerometer Confidence Decay</longName>
             <type>1</type>
@@ -2176,6 +2236,8 @@ p, li { white-space: pre-wrap; }
         <ser>kp2</ser>
         <ser>ki</ser>
         <ser>mahony_kp</ser>
+        <ser>mahony_kp_roll</ser>
+        <ser>mahony_kp_yaw</ser>
         <ser>bf_accel_confidence_decay</ser>
         <ser>kp_brake</ser>
         <ser>kp2_brake</ser>
@@ -2283,6 +2345,8 @@ p, li { white-space: pre-wrap; }
                     <param>ki_limit</param>
                     <param>::sep::Balance Filter</param>
                     <param>mahony_kp</param>
+                    <param>mahony_kp_roll</param>
+                    <param>mahony_kp_yaw</param>
                     <param>bf_accel_confidence_decay</param>
                     <param>::sep::Brake Scaling</param>
                     <param>kp_brake</param>

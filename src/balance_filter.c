@@ -62,7 +62,9 @@ void balance_filter_init(BalanceFilterData *data) {
 
 void balance_filter_configure(BalanceFilterData *data, const RefloatConfig *config) {
     data->acc_confidence_decay = config->bf_accel_confidence_decay;
-    data->kp = config->mahony_kp;
+    data->kp_pitch = config->mahony_kp;
+    data->kp_roll = config->mahony_kp_roll;
+    data->kp_yaw = config->mahony_kp_yaw;
 }
 
 void balance_filter_update(BalanceFilterData *data, float *gyro_xyz, float *accel_xyz, float dt) {
@@ -79,7 +81,10 @@ void balance_filter_update(BalanceFilterData *data, float *gyro_xyz, float *acce
     // Compute feedback only if accelerometer abs(vector)is not too small to avoid a division
     // by a small number
     if (accel_norm > 0.01) {
-        float two_kp = 2.0 * data->kp * calculate_acc_confidence(accel_norm, data);
+        float accel_confidence = calculate_acc_confidence(accel_norm, data);
+        float two_kp_pitch = 2.0 * data->kp_pitch * accel_confidence;
+        float two_kp_roll = 2.0 * data->kp_roll * accel_confidence;
+        float two_kp_yaw = 2.0 * data->kp_yaw * accel_confidence;
 
         // Normalise accelerometer measurement
         float recip_norm = inv_sqrt(ax * ax + ay * ay + az * az);
@@ -98,9 +103,9 @@ void balance_filter_update(BalanceFilterData *data, float *gyro_xyz, float *acce
         float halfez = (ax * halfvy - ay * halfvx);
 
         // Apply proportional feedback
-        gx += two_kp * halfex;
-        gy += two_kp * halfey;
-        gz += two_kp * halfez;
+        gx += two_kp_roll * halfex;
+        gy += two_kp_pitch * halfey;
+        gz += two_kp_yaw * halfez;
     }
 
     // Integrate rate of change of quaternion
@@ -135,12 +140,15 @@ float balance_filter_get_roll(BalanceFilterData *data) {
 }
 
 float balance_filter_get_pitch(BalanceFilterData *data) {
-    const float q0 = data->q0;
-    const float q1 = data->q1;
-    const float q2 = data->q2;
-    const float q3 = data->q3;
+    float sin = -2.0 * (data->q1 * data->q3 - data->q0 * data->q2);
 
-    return asinf(-2.0 * (q1 * q3 - q0 * q2));
+    if (sin < -1) {
+        return -M_PI / 2;
+    } else if (sin > 1) {
+        return M_PI / 2;
+    }
+
+    return asinf(sin);
 }
 
 float balance_filter_get_yaw(BalanceFilterData *data) {
