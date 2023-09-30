@@ -929,7 +929,7 @@ static void calculate_setpoint_target(data *d) {
         // Remain in wheelslip state for at least 500ms to avoid any overreactions
         if (d->abs_duty_cycle > d->max_duty_with_margin) {
             d->wheelslip_timer = d->current_time;
-        } else if (d->current_time - d->wheelslip_timer > 0.5) {
+        } else if (d->current_time - d->wheelslip_timer > 0.2) {
             if (d->abs_duty_cycle < 0.7) {
                 // Leave wheelslip state only if duty < 70%
                 d->traction_control = false;
