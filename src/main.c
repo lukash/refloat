@@ -2847,6 +2847,15 @@ static void cmd_flywheel_toggle(data *d, unsigned char *cfg, int len) {
         return;
     }
 
+    // cfg[0]: Command (0 = stop, 1 = start)
+    // All of the below are mandatory, but can be 0 to just use defaults
+    // cfg[1]: AngleP: kp*10 (e.g. 90: P=9.0)
+    // cfg[2]: RateP:  kp2*100 (e.g. 50: RateP=0.5)
+    // cfg[3]: Duty TB Angle * 10
+    // cfg[4]: Duty TB Duty %
+    // cfg[5]: Allow Abort via footpad (1 = do allow, 0 = don't allow)
+    // Optional:
+    // cfg[6]: Duty TB Speed in deg/sec
     int command = cfg[0] & 0x7F;
     d->is_flywheel_mode = (command == 0) ? false : true;
 
@@ -2931,6 +2940,7 @@ static void cmd_flywheel_toggle(data *d, unsigned char *cfg, int len) {
         d->float_conf.tiltback_variable = 0;
         d->float_conf.brake_current = 0;
         d->float_conf.fault_darkride_enabled = false;
+        d->float_conf.fault_reversestop_enabled = false;
         d->float_conf.tiltback_constant = 0;
         d->tiltback_variable_max_erpm = 0;
         d->tiltback_variable = 0;
