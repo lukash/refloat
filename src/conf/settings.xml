@@ -519,7 +519,7 @@ p, li { white-space: pre-wrap; }
             <vTx>7</vTx>
         </tiltback_duty_speed>
         <tiltback_duty>
-            <longName>Duty Cycle</longName>
+            <longName>Duty Cycle Threshold</longName>
             <type>1</type>
             <transmittable>1</transmittable>
             <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
@@ -2385,11 +2385,11 @@ p, li { white-space: pre-wrap; }
                 </subgroupParams>
             </subgroup>
             <subgroup>
-                <subgroupName>Tiltback</subgroupName>
+                <subgroupName>Pushback Alerts</subgroupName>
                 <subgroupParams>
                     <param>::sep::General Config</param>
                     <param>tiltback_return_speed</param>
-                    <param>::sep::Duty Cycle Tiltback</param>
+                    <param>::sep::Duty Cycle Alert Pushback</param>
                     <param>tiltback_duty</param>
                     <param>tiltback_duty_angle</param>
                     <param>tiltback_duty_speed</param>
@@ -2398,10 +2398,10 @@ p, li { white-space: pre-wrap; }
                     <param>surge_duty_start</param>
                     <param>surge_angle</param>
                     <param>is_surgebuzz_enabled</param>
-                    <param>::sep::High Voltage Tiltback</param>
+                    <param>::sep::High Voltage Alert Pushback</param>
                     <param>tiltback_hv_angle</param>
                     <param>tiltback_hv_speed</param>
-                    <param>::sep::Low Voltage Tiltback</param>
+                    <param>::sep::Low Voltage Alert Pushback</param>
                     <param>tiltback_lv_angle</param>
                     <param>tiltback_lv_speed</param>
                 </subgroupParams>
