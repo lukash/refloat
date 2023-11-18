@@ -661,8 +661,6 @@ static float get_setpoint_adjustment_step_size(data *d) {
 
 // Read ADCs and determine switch state
 static SwitchState check_adcs(data *d) {
-    SwitchState sw_state;
-
     float fault_adc1 = d->float_conf.fault_adc1;
     float fault_adc2 = d->float_conf.fault_adc2;
     if (d->is_flywheel_mode) {
@@ -673,30 +671,24 @@ static SwitchState check_adcs(data *d) {
 
     // Calculate switch state from ADC values
     if (fault_adc1 == 0 && fault_adc2 == 0) {  // No Switch
-        sw_state = ON;
+        return ON;
     } else if (fault_adc2 == 0) {  // Single switch on ADC1
         if (d->adc1 > fault_adc1) {
-            sw_state = ON;
-        } else {
-            sw_state = OFF;
+            return ON;
         }
     } else if (fault_adc1 == 0) {  // Single switch on ADC2
         if (d->adc2 > fault_adc2) {
-            sw_state = ON;
-        } else {
-            sw_state = OFF;
+            return ON;
         }
     } else {  // Double switch
         if (d->adc1 > fault_adc1 && d->adc2 > fault_adc2) {
-            sw_state = ON;
+            return ON;
         } else if (d->adc1 > fault_adc1 || d->adc2 > fault_adc2) {
-            sw_state = HALF;
-        } else {
-            sw_state = OFF;
+            return HALF;
         }
     }
 
-    return sw_state;
+    return OFF;
 }
 
 // Fault checking order does not really matter. From a UX perspective, switch should be before
