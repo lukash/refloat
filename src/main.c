@@ -705,16 +705,11 @@ static SwitchState check_adcs(data *d) {
         }
     }
 
-    if ((sw_state == OFF) && (d->state <= RUNNING_TILTBACK)) {
-        if (d->abs_erpm > d->switch_warn_buzz_erpm) {
-            // If we're at riding speed and the switch is off => ALERT the user
-            // set force=true since this could indicate an imminent shutdown/nosedive
-            beep_on(d, true);
-            d->beep_reason = BEEP_SENSORS;
-        } else {
-            // if we drop below riding speed stop buzzing
-            beep_off(d, false);
-        }
+    if (sw_state == OFF && d->state <= RUNNING_TILTBACK && d->abs_erpm > d->switch_warn_buzz_erpm) {
+        // If we're at riding speed and the switch is off => ALERT the user
+        // set force=true since this could indicate an imminent shutdown/nosedive
+        beep_on(d, true);
+        d->beep_reason = BEEP_SENSORS;
     } else {
         // if the switch comes back on we stop buzzing
         beep_off(d, false);
