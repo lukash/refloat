@@ -96,6 +96,11 @@ typedef enum {
 } FootpadSensorState;
 
 typedef struct {
+    float adc1, adc2;
+    FootpadSensorState state;
+} FootpadSensor;
+
+typedef struct {
     float a0, a1, a2, b1, b2;
     float z1, z2;
 } Biquad;
@@ -153,10 +158,9 @@ typedef struct {
     float duty_cycle, abs_duty_cycle, duty_smooth;
     float erpm, abs_erpm, avg_erpm;
     float motor_current;
-    float adc1, adc2;
     float throttle_val;
     float max_duty_with_margin;
-    FootpadSensorState footpad_sensor_state;
+    FootpadSensor footpad_sensor;
 
     // Feature: ATR (Adaptive Torque Response)
     float atr_on_step_size, atr_off_step_size;
@@ -661,36 +665,45 @@ static float get_setpoint_adjustment_step_size(data *d) {
 }
 
 // Read ADCs and determine footpad sensor state
-static FootpadSensorState footpad_sensor_state_evaluate(data *d) {
-    float fault_adc1 = d->float_conf.fault_adc1;
-    float fault_adc2 = d->float_conf.fault_adc2;
-
+static FootpadSensorState
+footpad_sensor_state_evaluate(const FootpadSensor *fs, const RefloatConfig *config) {
     // Calculate sensor state from ADC values
-    if (fault_adc1 == 0 && fault_adc2 == 0) {  // No sensors
+    if (config->fault_adc1 == 0 && config->fault_adc2 == 0) {  // No sensors
         return FS_BOTH;
-    } else if (fault_adc2 == 0) {  // Single sensor on ADC1
-        if (d->adc1 > fault_adc1) {
+    } else if (config->fault_adc2 == 0) {  // Single sensor on ADC1
+        if (fs->adc1 > config->fault_adc1) {
             return FS_BOTH;
         }
-    } else if (fault_adc1 == 0) {  // Single sensor on ADC2
-        if (d->adc2 > fault_adc2) {
+    } else if (config->fault_adc1 == 0) {  // Single sensor on ADC2
+        if (fs->adc2 > config->fault_adc2) {
             return FS_BOTH;
         }
     } else {  // Double sensor
-        if (d->adc1 > fault_adc1) {
-            if (d->adc2 > fault_adc2) {
+        if (fs->adc1 > config->fault_adc1) {
+            if (fs->adc2 > config->fault_adc2) {
                 return FS_BOTH;
             } else {
                 return FS_LEFT;
             }
         } else {
-            if (d->adc2 > fault_adc2) {
+            if (fs->adc2 > config->fault_adc2) {
                 return FS_RIGHT;
             }
         }
     }
 
     return FS_NONE;
+}
+
+static void footpad_sensor_update(FootpadSensor *fs, const RefloatConfig *config) {
+    fs->adc1 = VESC_IF->io_read_analog(VESC_PIN_ADC1);
+    // returns -1.0 if the pin is missing on the hardware
+    fs->adc2 = VESC_IF->io_read_analog(VESC_PIN_ADC2);
+    if (fs->adc2 < 0.0) {
+        fs->adc2 = 0.0;
+    }
+
+    fs->state = footpad_sensor_state_evaluate(fs, config);
 }
 
 static int footpad_sensor_state_to_switch_compat(FootpadSensorState v) {
@@ -707,11 +720,11 @@ static int footpad_sensor_state_to_switch_compat(FootpadSensorState v) {
 }
 
 bool is_engaged(const data *d) {
-    if (d->footpad_sensor_state == FS_BOTH) {
+    if (d->footpad_sensor.state == FS_BOTH) {
         return true;
     }
 
-    if (d->footpad_sensor_state == FS_LEFT || d->footpad_sensor_state == FS_RIGHT) {
+    if (d->footpad_sensor.state == FS_LEFT || d->footpad_sensor.state == FS_RIGHT) {
         // 5 seconds after stopping we allow starting with a single sensor (e.g. for jump starts)
         bool is_simple_start =
             d->float_conf.startup_simplestart_enabled && (d->current_time - d->disengage_timer > 5);
@@ -774,7 +787,7 @@ static bool check_faults(data *d) {
 
         // Check switch
         // Switch fully open
-        if (d->footpad_sensor_state == FS_NONE && !d->is_flywheel_mode) {
+        if (d->footpad_sensor.state == FS_NONE && !d->is_flywheel_mode) {
             if (!disable_switch_faults) {
                 if ((1000.0 * (d->current_time - d->fault_switch_timer)) >
                     d->float_conf.fault_delay_switch_full) {
@@ -805,7 +818,7 @@ static bool check_faults(data *d) {
         // Feature: Reverse-Stop
         if (d->setpointAdjustmentType == REVERSESTOP) {
             //  Taking your foot off entirely while reversing? Ignore delays
-            if (d->footpad_sensor_state == FS_NONE) {
+            if (d->footpad_sensor.state == FS_NONE) {
                 d->state = FAULT_SWITCH_FULL;
                 return true;
             }
@@ -864,8 +877,8 @@ static bool check_faults(data *d) {
         }
 
         if (d->is_flywheel_mode && d->flywheel_allow_abort) {
-            if (d->adc1 > (d->float_conf.fault_adc1 * ADC_HAND_PRESS_SCALE) &&
-                d->adc2 > (d->float_conf.fault_adc2 * ADC_HAND_PRESS_SCALE)) {
+            if (d->footpad_sensor.adc1 > (d->float_conf.fault_adc1 * ADC_HAND_PRESS_SCALE) &&
+                d->footpad_sensor.adc2 > (d->float_conf.fault_adc2 * ADC_HAND_PRESS_SCALE)) {
                 d->state = FAULT_SWITCH_HALF;
                 d->flywheel_abort = true;
                 return true;
@@ -1732,12 +1745,6 @@ static void refloat_thd(void *arg) {
         d->abs_duty_cycle = fabsf(d->duty_cycle);
         d->erpm = VESC_IF->mc_get_rpm();
         d->abs_erpm = fabsf(d->erpm);
-        d->adc1 = VESC_IF->io_read_analog(VESC_PIN_ADC1);
-        // Returns -1.0 if the pin is missing on the hardware
-        d->adc2 = VESC_IF->io_read_analog(VESC_PIN_ADC2);
-        if (d->adc2 < 0.0) {
-            d->adc2 = 0.0;
-        }
         d->duty_smooth = d->duty_smooth * 0.9 + d->duty_cycle * 0.1;
 
         bool remote_connected = false;
@@ -1814,9 +1821,9 @@ static void refloat_thd(void *arg) {
             d->yaw_aggregate += d->yaw_change;
         }
 
-        d->footpad_sensor_state = footpad_sensor_state_evaluate(d);
+        footpad_sensor_update(&d->footpad_sensor, &d->float_conf);
 
-        if (d->footpad_sensor_state == FS_NONE && d->state <= RUNNING_TILTBACK &&
+        if (d->footpad_sensor.state == FS_NONE && d->state <= RUNNING_TILTBACK &&
             d->abs_erpm > d->switch_warn_buzz_erpm) {
             // If we're at riding speed and the switch is off => ALERT the user
             // set force=true since this could indicate an imminent shutdown/nosedive
@@ -2090,7 +2097,8 @@ static void refloat_thd(void *arg) {
         case (FAULT_STARTUP):
             if (d->is_flywheel_mode) {
                 if ((d->flywheel_abort) ||
-                    (d->flywheel_allow_abort && d->adc1 > 1 && d->adc2 > 1)) {
+                    (d->flywheel_allow_abort && d->footpad_sensor.adc1 > 1 &&
+                     d->footpad_sensor.adc2 > 1)) {
                     flywheel_stop(d);
                     break;
                 }
@@ -2315,13 +2323,13 @@ static void send_realtime_data(data *d) {
         state = RUNNING_FLYWHEEL;
     }
     send_buffer[ind++] = (state & 0xF) + (d->setpointAdjustmentType << 4);
-    state = footpad_sensor_state_to_switch_compat(d->footpad_sensor_state);
+    state = footpad_sensor_state_to_switch_compat(d->footpad_sensor.state);
     if (d->do_handtest) {
         state |= 0x8;
     }
     send_buffer[ind++] = (state & 0xF) + (d->beep_reason << 4);
-    buffer_append_float32_auto(send_buffer, d->adc1, &ind);
-    buffer_append_float32_auto(send_buffer, d->adc2, &ind);
+    buffer_append_float32_auto(send_buffer, d->footpad_sensor.adc1, &ind);
+    buffer_append_float32_auto(send_buffer, d->footpad_sensor.adc2, &ind);
 
     // Setpoints
     buffer_append_float32_auto(send_buffer, d->float_setpoint, &ind);
@@ -2372,15 +2380,15 @@ static void cmd_send_all_data(data *d, unsigned char mode) {
         send_buffer[ind++] = state;
 
         // passed switch-state includes bit3 for handtest, and bits4..7 for beep reason
-        state = footpad_sensor_state_to_switch_compat(d->footpad_sensor_state);
+        state = footpad_sensor_state_to_switch_compat(d->footpad_sensor.state);
         if (d->do_handtest) {
             state |= 0x8;
         }
         send_buffer[ind++] = (state & 0xF) + (d->beep_reason << 4);
         d->beep_reason = BEEP_NONE;
 
-        send_buffer[ind++] = d->adc1 * 50;
-        send_buffer[ind++] = d->adc2 * 50;
+        send_buffer[ind++] = d->footpad_sensor.adc1 * 50;
+        send_buffer[ind++] = d->footpad_sensor.adc2 * 50;
 
         // Setpoints (can be positive or negative)
         send_buffer[ind++] = d->float_setpoint * 5 + 128;
@@ -3032,22 +3040,22 @@ bool flywheel_konami_step(data *d, int input) {
          (fabsf(d->true_pitch_angle - d->flywheel_konami_pitch) < 2.5))) {
         switch (input) {
         case 1:  // ADC 1 Pressed
-            if ((d->adc1 > fault_adc1) && (d->adc2 < fault_adc2)) {
+            if ((d->footpad_sensor.adc1 > fault_adc1) && (d->footpad_sensor.adc2 < fault_adc2)) {
                 return true;
             }
             break;
         case 2:  // ADC 2 Pressed
-            if ((d->adc1 < fault_adc1) && (d->adc2 > fault_adc2)) {
+            if ((d->footpad_sensor.adc1 < fault_adc1) && (d->footpad_sensor.adc2 > fault_adc2)) {
                 return true;
             }
             break;
         case 3:  // ADC 1 + 2 Pressed
-            if ((d->adc1 > fault_adc1) && (d->adc2 > fault_adc2)) {
+            if ((d->footpad_sensor.adc1 > fault_adc1) && (d->footpad_sensor.adc2 > fault_adc2)) {
                 return true;
             }
             break;
         default:  // No ADC Pressed
-            if ((d->adc1 < fault_adc1) && (d->adc2 < fault_adc2)) {
+            if ((d->footpad_sensor.adc1 < fault_adc1) && (d->footpad_sensor.adc2 < fault_adc2)) {
                 return true;
             }
             break;
