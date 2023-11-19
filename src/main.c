@@ -664,11 +664,6 @@ static float get_setpoint_adjustment_step_size(data *d) {
 static FootpadSensorState footpad_sensor_state_evaluate(data *d) {
     float fault_adc1 = d->float_conf.fault_adc1;
     float fault_adc2 = d->float_conf.fault_adc2;
-    if (d->is_flywheel_mode) {
-        // use local variables to avoid risk of VESC Tool writing settings!
-        fault_adc1 = 0;
-        fault_adc2 = 0;
-    }
 
     // Calculate sensor state from ADC values
     if (fault_adc1 == 0 && fault_adc2 == 0) {  // No sensors
@@ -726,6 +721,11 @@ bool is_engaged(const data *d) {
         }
     }
 
+    // Keep the board engaged in flywheel mode
+    if (d->is_flywheel_mode) {
+        return true;
+    }
+
     return false;
 }
 
@@ -774,7 +774,7 @@ static bool check_faults(data *d) {
 
         // Check switch
         // Switch fully open
-        if (d->footpad_sensor_state == FS_NONE) {
+        if (d->footpad_sensor_state == FS_NONE && !d->is_flywheel_mode) {
             if (!disable_switch_faults) {
                 if ((1000.0 * (d->current_time - d->fault_switch_timer)) >
                     d->float_conf.fault_delay_switch_full) {
