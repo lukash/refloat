@@ -27,6 +27,8 @@
 #include "conf/confxml.h"
 #include "conf/datatypes.h"
 
+#include "konami.h"
+
 #include <math.h>
 #include <string.h>
 
@@ -99,6 +101,9 @@ typedef enum {
     BQ_LOWPASS,
     BQ_HIGHPASS
 } BiquadType;
+
+static const FootpadSensorState flywheel_konami_sequence[] = {FS_LEFT, FS_NONE, FS_RIGHT, FS_NONE,
+                                                              FS_LEFT, FS_NONE, FS_RIGHT};
 
 // This is all persistent state of the application, which will be allocated in init. It
 // is put here because variables can only be read-only when this program is loaded
@@ -211,8 +216,7 @@ typedef struct {
 
     // Feature: Flywheel
     bool is_flywheel_mode, flywheel_abort, flywheel_allow_abort;
-    float flywheel_pitch_offset, flywheel_roll_offset, flywheel_konami_timer, flywheel_konami_pitch;
-    int flywheel_konami_state;
+    float flywheel_pitch_offset, flywheel_roll_offset;
 
     // Feature: Handtest
     bool do_handtest;
@@ -248,14 +252,14 @@ typedef struct {
     int debug_sample_field, debug_sample_count, debug_sample_index;
     int debug_experiment_1, debug_experiment_2, debug_experiment_3, debug_experiment_4,
         debug_experiment_5, debug_experiment_6;
+
+    Konami flywheel_konami;
 } data;
 
 static void brake(data *d);
 static void set_current(data *d, float current);
 static void flywheel_stop(data *d);
 static void cmd_flywheel_toggle(data *d, unsigned char *cfg, int len);
-static bool flywheel_konami_check(data *d);
-static bool flywheel_konami_step(data *d, int input);
 
 const VESC_PIN buzzer_pin = VESC_PIN_PPM;
 
@@ -512,6 +516,8 @@ static void configure(data *d) {
     }
 
     d->do_handtest = false;
+
+    konami_init(&d->flywheel_konami, flywheel_konami_sequence, sizeof(flywheel_konami_sequence));
 }
 
 static void reset_vars(data *d) {
@@ -2037,8 +2043,10 @@ static void refloat_thd(void *arg) {
                     flywheel_stop(d);
                     break;
                 }
-            } else {
-                if (flywheel_konami_check(d)) {
+            }
+
+            if (!d->is_flywheel_mode && d->true_pitch_angle > 75 && d->true_pitch_angle < 105) {
+                if (konami_check(&d->flywheel_konami, &d->footpad_sensor, d->current_time)) {
                     unsigned char enabled[6] = {0x82, 0, 0, 0, 0, 1};
                     cmd_flywheel_toggle(d, enabled, 6);
                 }
@@ -2924,79 +2932,6 @@ void flywheel_stop(data *d) {
     VESC_IF->set_cfg_float(CFG_PARAM_l_max_erpm + 100, 30000);
     read_cfg_from_eeprom(d);
     configure(d);
-}
-
-bool flywheel_konami_check(data *d) {
-    if ((d->flywheel_konami_state == 0) && flywheel_konami_step(d, 1)) {  // LEFT
-        d->flywheel_konami_state = 1;
-        d->flywheel_konami_timer = d->current_time;
-        d->flywheel_konami_pitch = d->true_pitch_angle;
-    } else if ((d->flywheel_konami_state == 1) && flywheel_konami_step(d, 0)) {  // _
-        d->flywheel_konami_state = 2;
-        d->flywheel_konami_timer = d->current_time;
-    } else if ((d->flywheel_konami_state == 2) && flywheel_konami_step(d, 2)) {  // RIGHT
-        d->flywheel_konami_state = 3;
-        d->flywheel_konami_timer = d->current_time;
-    } else if ((d->flywheel_konami_state == 3) && flywheel_konami_step(d, 0)) {  // _
-        d->flywheel_konami_state = 4;
-        d->flywheel_konami_timer = d->current_time;
-    } else if ((d->flywheel_konami_state == 4) && flywheel_konami_step(d, 1)) {  // LEFT
-        d->flywheel_konami_state = 5;
-        d->flywheel_konami_timer = d->current_time;
-    } else if ((d->flywheel_konami_state == 5) && flywheel_konami_step(d, 0)) {  // _
-        d->flywheel_konami_state = 6;
-        d->flywheel_konami_timer = d->current_time;
-    } else if ((d->flywheel_konami_state == 6) && flywheel_konami_step(d, 2)) {  // RIGHT
-        d->flywheel_konami_state = 7;
-        d->flywheel_konami_timer = d->current_time;
-        return true;
-    } else if (  // Timeout:
-        (d->current_time - d->flywheel_konami_timer > 0.5) ||
-        // Right Press when expecting Left:
-        ((d->flywheel_konami_state == 4) && flywheel_konami_step(d, 2)) ||
-        // Left Press when expecting Right:
-        (((d->flywheel_konami_state == 2) || (d->flywheel_konami_state == 6)) &&
-         flywheel_konami_step(d, 1)) ||
-        // Double Press when expecting None:
-        (((d->flywheel_konami_state == 1) || (d->flywheel_konami_state == 3) ||
-          (d->flywheel_konami_state == 5)) &&
-         flywheel_konami_step(d, 3))) {
-
-        d->flywheel_konami_state = 0;
-    }
-    return false;
-}
-
-bool flywheel_konami_step(data *d, int input) {
-    float fault_adc1 = d->float_conf.fault_adc1 * ADC_HAND_PRESS_SCALE;
-    float fault_adc2 = d->float_conf.fault_adc2 * ADC_HAND_PRESS_SCALE;
-    if ((!d->is_flywheel_mode) && (d->true_pitch_angle > 75) && (d->true_pitch_angle < 105) &&
-        ((d->flywheel_konami_state == 0) ||
-         (fabsf(d->true_pitch_angle - d->flywheel_konami_pitch) < 2.5))) {
-        switch (input) {
-        case 1:  // ADC 1 Pressed
-            if ((d->footpad_sensor.adc1 > fault_adc1) && (d->footpad_sensor.adc2 < fault_adc2)) {
-                return true;
-            }
-            break;
-        case 2:  // ADC 2 Pressed
-            if ((d->footpad_sensor.adc1 < fault_adc1) && (d->footpad_sensor.adc2 > fault_adc2)) {
-                return true;
-            }
-            break;
-        case 3:  // ADC 1 + 2 Pressed
-            if ((d->footpad_sensor.adc1 > fault_adc1) && (d->footpad_sensor.adc2 > fault_adc2)) {
-                return true;
-            }
-            break;
-        default:  // No ADC Pressed
-            if ((d->footpad_sensor.adc1 < fault_adc1) && (d->footpad_sensor.adc2 < fault_adc2)) {
-                return true;
-            }
-            break;
-        }
-    }
-    return false;  // Reached if any conditions along the way are failed
 }
 
 // Handler for incoming app commands
