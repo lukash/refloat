@@ -711,6 +711,24 @@ static int footpad_sensor_state_to_switch_compat(FootpadSensorState v) {
     }
 }
 
+bool is_engaged(const data *d) {
+    if (d->footpad_sensor_state == FS_BOTH) {
+        return true;
+    }
+
+    if (d->footpad_sensor_state == FS_LEFT || d->footpad_sensor_state == FS_RIGHT) {
+        // 5 seconds after stopping we allow starting with a single sensor (e.g. for jump starts)
+        bool is_simple_start =
+            d->float_conf.startup_simplestart_enabled && (d->current_time - d->disengage_timer > 5);
+
+        if (d->float_conf.fault_is_dual_switch || is_simple_start) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 // Fault checking order does not really matter. From a UX perspective, switch should be before
 // angle.
 static bool check_faults(data *d) {
@@ -742,7 +760,7 @@ static bool check_faults(data *d) {
                 d->fault_angle_roll_timer = d->current_time;
             }
         }
-        if (d->footpad_sensor_state == FS_BOTH) {
+        if (is_engaged(d)) {
             // allow turning it off by engaging foot sensors
             d->state = FAULT_SWITCH_HALF;
             return true;
@@ -816,8 +834,7 @@ static bool check_faults(data *d) {
 
         // Switch partially open and stopped
         if (!d->float_conf.fault_is_dual_switch) {
-            if (d->footpad_sensor_state != FS_BOTH &&
-                d->abs_erpm < d->float_conf.fault_adc_half_erpm) {
+            if (!is_engaged(d) && d->abs_erpm < d->float_conf.fault_adc_half_erpm) {
                 if ((1000.0 * (d->current_time - d->fault_switch_half_timer)) >
                     d->float_conf.fault_delay_switch_half) {
                     d->state = FAULT_SWITCH_HALF;
@@ -1799,17 +1816,6 @@ static void refloat_thd(void *arg) {
 
         d->footpad_sensor_state = footpad_sensor_state_evaluate(d);
 
-        if (d->footpad_sensor_state == FS_LEFT || d->footpad_sensor_state == FS_RIGHT) {
-            // 5 seconds after stopping we allow starting with a single sensor (e.g. for jump
-            // starts)
-            bool is_simple_start = d->float_conf.startup_simplestart_enabled &&
-                (d->current_time - d->disengage_timer > 5);
-
-            if (d->float_conf.fault_is_dual_switch || is_simple_start) {
-                d->footpad_sensor_state = FS_BOTH;
-            }
-        }
-
         if (d->footpad_sensor_state == FS_NONE && d->state <= RUNNING_TILTBACK &&
             d->abs_erpm > d->switch_warn_buzz_erpm) {
             // If we're at riding speed and the switch is off => ALERT the user
@@ -2130,8 +2136,7 @@ static void refloat_thd(void *arg) {
 
             // Check for valid startup position and switch state
             if (fabsf(d->pitch_angle) < d->startup_pitch_tolerance &&
-                fabsf(d->roll_angle) < d->float_conf.startup_roll_tolerance &&
-                d->footpad_sensor_state == FS_BOTH) {
+                fabsf(d->roll_angle) < d->float_conf.startup_roll_tolerance && is_engaged(d)) {
                 reset_vars(d);
                 break;
             }
@@ -2153,8 +2158,7 @@ static void refloat_thd(void *arg) {
                 }
             }
             // Push-start aka dirty landing Part II
-            if (d->float_conf.startup_pushstart_enabled && (d->abs_erpm > 1000) &&
-                d->footpad_sensor_state == FS_BOTH) {
+            if (d->float_conf.startup_pushstart_enabled && (d->abs_erpm > 1000) && is_engaged(d)) {
                 if ((fabsf(d->pitch_angle) < 45) && (fabsf(d->roll_angle) < 45)) {
                     // 45 to prevent board engaging when upright or laying sideways
                     // 45 degree tolerance is more than plenty for tricks / extreme mounts
