@@ -146,7 +146,7 @@ typedef struct {
         last_gyro_y;
     float true_pitch_angle;
     float gyro[3];
-    float duty_cycle, abs_duty_cycle, duty_smooth;
+    float duty_cycle, duty_smooth;
     float erpm, abs_erpm, avg_erpm;
     float motor_current;
     float throttle_val;
@@ -829,7 +829,7 @@ static void calculate_setpoint_target(data *d) {
         }
     } else if (
         (fabsf(d->acceleration) > 15) &&  // not normal, either wheelslip or wheel getting stuck
-        (SIGN(d->acceleration) == SIGN(d->erpm)) && (d->abs_duty_cycle > 0.3) &&
+        (SIGN(d->acceleration) == SIGN(d->erpm)) && (d->duty_cycle > 0.3) &&
         (d->abs_erpm > 2000))  // acceleration can jump a lot at very low speeds
     {
         d->state = RUNNING_WHEELSLIP;
@@ -844,10 +844,10 @@ static void calculate_setpoint_target(data *d) {
             d->traction_control = false;
         }
         // Remain in wheelslip state for at least 500ms to avoid any overreactions
-        if (d->abs_duty_cycle > d->max_duty_with_margin) {
+        if (d->duty_cycle > d->max_duty_with_margin) {
             d->wheelslip_timer = d->current_time;
         } else if (d->current_time - d->wheelslip_timer > 0.2) {
-            if (d->abs_duty_cycle < 0.7) {
+            if (d->duty_cycle < 0.7) {
                 // Leave wheelslip state only if duty < 70%
                 d->traction_control = false;
                 d->state = RUNNING;
@@ -859,7 +859,7 @@ static void calculate_setpoint_target(data *d) {
             d->reverse_timer = d->current_time;
             d->reverse_total_erpm = 0;
         }
-    } else if (d->abs_duty_cycle > d->float_conf.tiltback_duty) {
+    } else if (d->duty_cycle > d->float_conf.tiltback_duty) {
         if (d->erpm > 0) {
             d->setpoint_target = d->float_conf.tiltback_duty_angle;
         } else {
@@ -867,7 +867,7 @@ static void calculate_setpoint_target(data *d) {
         }
         d->setpointAdjustmentType = TILTBACK_DUTY;
         d->state = RUNNING_TILTBACK;
-    } else if (d->abs_duty_cycle > 0.05 && input_voltage > d->float_conf.tiltback_hv) {
+    } else if (d->duty_cycle > 0.05 && input_voltage > d->float_conf.tiltback_hv) {
         d->beep_reason = BEEP_HV;
         beep_alert(d, 3, false);
         if (((d->current_time - d->tb_highvoltage_timer) > .5) ||
@@ -920,7 +920,7 @@ static void calculate_setpoint_target(data *d) {
             d->setpointAdjustmentType = TILTBACK_NONE;
             d->state = RUNNING;
         }
-    } else if (d->abs_duty_cycle > 0.05 && input_voltage < d->float_conf.tiltback_lv) {
+    } else if (d->duty_cycle > 0.05 && input_voltage < d->float_conf.tiltback_lv) {
         beep_alert(d, 3, false);
         d->beep_reason = BEEP_LV;
         float abs_motor_current = fabsf(d->motor_current);
@@ -957,7 +957,7 @@ static void calculate_setpoint_target(data *d) {
         d->state = RUNNING;
     }
 
-    if ((d->state == RUNNING_WHEELSLIP) && (d->abs_duty_cycle > d->max_duty_with_margin)) {
+    if ((d->state == RUNNING_WHEELSLIP) && (d->duty_cycle > d->max_duty_with_margin)) {
         d->setpoint_target = 0;
     }
     if (d->is_upside_down && (d->state == RUNNING)) {
@@ -1001,16 +1001,15 @@ static void calculate_setpoint_interpolated(data *d) {
 
 static void add_surge(data *d) {
     if (d->surge_enable) {
-        float abs_duty_smooth = fabsf(d->duty_smooth);
         float surge_now = 0;
 
-        if (abs_duty_smooth > d->float_conf.surge_duty_start + 0.04) {
+        if (d->duty_smooth > d->float_conf.surge_duty_start + 0.04) {
             surge_now = d->surge_angle3;
             beep_alert(d, 3, 1);
-        } else if (abs_duty_smooth > d->float_conf.surge_duty_start + 0.02) {
+        } else if (d->duty_smooth > d->float_conf.surge_duty_start + 0.02) {
             surge_now = d->surge_angle2;
             beep_alert(d, 2, 1);
-        } else if (abs_duty_smooth > d->float_conf.surge_duty_start) {
+        } else if (d->duty_smooth > d->float_conf.surge_duty_start) {
             surge_now = d->surge_angle;
             beep_alert(d, 1, 1);
         }
@@ -1603,11 +1602,10 @@ static void refloat_thd(void *arg) {
         VESC_IF->imu_get_gyro(d->gyro);
 
         // Get the motor values we want
-        d->duty_cycle = VESC_IF->mc_get_duty_cycle_now();
-        d->abs_duty_cycle = fabsf(d->duty_cycle);
+        d->duty_cycle = fabsf(VESC_IF->mc_get_duty_cycle_now());
+        d->duty_smooth = d->duty_smooth * 0.9 + d->duty_cycle * 0.1;
         d->erpm = VESC_IF->mc_get_rpm();
         d->abs_erpm = fabsf(d->erpm);
-        d->duty_smooth = d->duty_smooth * 0.9 + d->duty_cycle * 0.1;
 
         bool remote_connected = false;
         float servo_val = 0;
