@@ -356,6 +356,37 @@ static void biquad_reset(Biquad *biquad) {
     biquad->z2 = 0;
 }
 
+static void motor_data_init(MotorData *m) {
+    m->duty_smooth = 0;
+
+    m->acceleration = 0;
+    m->accel_idx = 0;
+    for (int i = 0; i < 40; i++) {
+        m->accel_history[i] = 0;
+    }
+}
+
+static void motor_data_update(MotorData *m) {
+    m->erpm = VESC_IF->mc_get_rpm();
+    m->abs_erpm = fabsf(m->erpm);
+    m->erpm_sign = SIGN(m->erpm);
+
+    m->current = VESC_IF->mc_get_tot_current_directional_filtered();
+
+    m->duty_cycle = fabsf(VESC_IF->mc_get_duty_cycle_now());
+    m->duty_smooth = m->duty_smooth * 0.9f + m->duty_cycle * 0.1f;
+
+    float current_acceleration = m->erpm - m->last_erpm;
+    m->last_erpm = m->erpm;
+
+    m->acceleration += (current_acceleration - m->accel_history[m->accel_idx]) / ACCEL_ARRAY_SIZE;
+    m->accel_history[m->accel_idx] = current_acceleration;
+    m->accel_idx++;
+    if (m->accel_idx == ACCEL_ARRAY_SIZE) {
+        m->accel_idx = 0;
+    }
+}
+
 // First start only, set initial state
 static void app_init(data *d) {
     if (d->state != DISABLED) {
@@ -497,6 +528,8 @@ static void configure(data *d) {
 }
 
 static void reset_vars(data *d) {
+    motor_data_init(&d->motor);
+
     // Clear accumulated values.
     d->last_proportional = 0;
     // Set values for startup
@@ -540,12 +573,6 @@ static void reset_vars(data *d) {
 
     // ATR:
     d->accel_gap = 0;
-
-    d->motor.acceleration = 0;
-    for (int i = 0; i < 40; i++) {
-        d->motor.accel_history[i] = 0;
-    }
-    d->motor.accel_idx = 0;
 
     // Turntilt:
     d->last_yaw_angle = 0;
@@ -1569,9 +1596,6 @@ static void refloat_thd(void *arg) {
         d->filtered_loop_overshoot = d->loop_overshoot_alpha * d->loop_overshoot +
             (1.0 - d->loop_overshoot_alpha) * d->filtered_loop_overshoot;
 
-        // Read values for GUI
-        d->motor.current = VESC_IF->mc_get_tot_current_directional_filtered();
-
         // Get the IMU Values
         d->roll_angle = RAD2DEG_f(VESC_IF->ahrs_get_roll(&d->m_att_ref));
         d->abs_roll_angle = fabsf(d->roll_angle);
@@ -1616,12 +1640,7 @@ static void refloat_thd(void *arg) {
         d->last_gyro_y = d->gyro[1];
         VESC_IF->imu_get_gyro(d->gyro);
 
-        // Get the motor values we want
-        d->motor.duty_cycle = fabsf(VESC_IF->mc_get_duty_cycle_now());
-        d->motor.duty_smooth = d->motor.duty_smooth * 0.9 + d->motor.duty_cycle * 0.1;
-        d->motor.erpm = VESC_IF->mc_get_rpm();
-        d->motor.abs_erpm = fabsf(d->motor.erpm);
-        d->motor.erpm_sign = SIGN(d->motor.erpm);
+        motor_data_update(&d->motor);
 
         bool remote_connected = false;
         float servo_val = 0;
@@ -1657,17 +1676,6 @@ static void refloat_thd(void *arg) {
         }
 
         d->throttle_val = servo_val;
-
-        float acceleration_raw = d->motor.erpm - d->motor.last_erpm;
-        d->motor.last_erpm = d->motor.erpm;
-
-        d->motor.acceleration +=
-            (acceleration_raw - d->motor.accel_history[d->motor.accel_idx]) / ACCEL_ARRAY_SIZE;
-        d->motor.accel_history[d->motor.accel_idx] = acceleration_raw;
-        d->motor.accel_idx++;
-        if (d->motor.accel_idx == ACCEL_ARRAY_SIZE) {
-            d->motor.accel_idx = 0;
-        }
 
         // Turn Tilt:
         d->yaw_angle = VESC_IF->ahrs_get_yaw(&d->m_att_ref) * 180.0f / M_PI;
