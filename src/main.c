@@ -102,6 +102,23 @@ typedef enum {
 static const FootpadSensorState flywheel_konami_sequence[] = {FS_LEFT, FS_NONE, FS_RIGHT, FS_NONE,
                                                               FS_LEFT, FS_NONE, FS_RIGHT};
 
+typedef struct {
+    float erpm;
+    float abs_erpm;
+    float last_erpm;
+    int8_t erpm_sign;
+
+    float current;
+
+    float duty_cycle;
+    float duty_smooth;
+
+    // an average calculated over last ACCEL_ARRAY_SIZE values
+    float acceleration;
+    float accel_history[ACCEL_ARRAY_SIZE];
+    uint8_t accel_idx;
+} MotorData;
+
 // This is all persistent state of the application, which will be allocated in init. It
 // is put here because variables can only be read-only when this program is loaded
 // in flash without virtual memory in RAM (as all RAM already is dedicated to the
@@ -114,6 +131,8 @@ typedef struct {
 
     // Firmware version, passed in from Lisp
     int fw_version_major, fw_version_minor, fw_version_beta;
+
+    MotorData motor;
 
     // Buzzer
     int beep_num_left;
@@ -146,20 +165,15 @@ typedef struct {
         last_gyro_y;
     float true_pitch_angle;
     float gyro[3];
-    float duty_cycle, duty_smooth;
-    float erpm, abs_erpm, avg_erpm;
-    float motor_current;
+
     float throttle_val;
     float max_duty_with_margin;
+
     FootpadSensor footpad_sensor;
 
     // Feature: ATR (Adaptive Torque Response)
     float atr_on_step_size, atr_off_step_size;
-    float acceleration, last_erpm;
     float accel_gap;
-    float accelhist[ACCEL_ARRAY_SIZE];
-    float accelavg;
-    int accelidx;
     bool braking;
 
     // Feature: Turntilt
@@ -527,11 +541,11 @@ static void reset_vars(data *d) {
     // ATR:
     d->accel_gap = 0;
 
+    d->motor.acceleration = 0;
     for (int i = 0; i < 40; i++) {
-        d->accelhist[i] = 0;
+        d->motor.accel_history[i] = 0;
     }
-    d->accelidx = 0;
-    d->accelavg = 0;
+    d->motor.accel_idx = 0;
 
     // Turntilt:
     d->last_yaw_angle = 0;
@@ -572,7 +586,7 @@ static void check_odometer(data *d) {
 static void do_rc_move(data *d) {
     if (d->rc_steps > 0) {
         d->rc_current = d->rc_current * 0.95 + d->rc_current_target * 0.05;
-        if (d->abs_erpm > 800) {
+        if (d->motor.abs_erpm > 800) {
             d->rc_current = 0;
         }
         set_current(d, d->rc_current);
@@ -649,9 +663,9 @@ bool is_engaged(const data *d) {
 static bool check_faults(data *d) {
     // Aggressive reverse stop in case the board runs off when upside down
     if (d->is_upside_down) {
-        if (d->erpm > 1000) {
+        if (d->motor.erpm > 1000) {
             // erpms are also reversed when upside down!
-            if (((d->current_time - d->fault_switch_timer) * 1000 > 100) || (d->erpm > 2000) ||
+            if (((d->current_time - d->fault_switch_timer) * 1000 > 100) || d->motor.erpm > 2000 ||
                 ((d->state == RUNNING_WHEELSLIP) &&
                  (d->current_time - d->delay_upside_down_fault > 1) &&
                  ((d->current_time - d->fault_switch_timer) * 1000 > 30))) {
@@ -665,7 +679,7 @@ static bool check_faults(data *d) {
             }
         } else {
             d->fault_switch_timer = d->current_time;
-            if (d->erpm > 300) {
+            if (d->motor.erpm > 300) {
                 // erpms are also reversed when upside down!
                 if ((d->current_time - d->fault_angle_roll_timer) * 1000 > 500) {
                     d->state = FAULT_REVERSE;
@@ -683,7 +697,7 @@ static bool check_faults(data *d) {
     } else {
         bool disable_switch_faults = d->float_conf.fault_moving_fault_disabled &&
             // Rolling forward (not backwards!)
-            d->erpm > (d->float_conf.fault_adc_half_erpm * 2) &&
+            d->motor.erpm > (d->float_conf.fault_adc_half_erpm * 2) &&
             // Not tipped over
             fabsf(d->roll_angle) < 40;
 
@@ -698,7 +712,7 @@ static bool check_faults(data *d) {
                 }
                 // low speed (below 6 x half-fault threshold speed):
                 else if (
-                    (d->abs_erpm < d->float_conf.fault_adc_half_erpm * 6) &&
+                    (d->motor.abs_erpm < d->float_conf.fault_adc_half_erpm * 6) &&
                     (1000.0 * (d->current_time - d->fault_switch_timer) >
                      d->float_conf.fault_delay_switch_half)) {
                     d->state = FAULT_SWITCH_FULL;
@@ -706,9 +720,9 @@ static bool check_faults(data *d) {
                 }
             }
 
-            if ((d->abs_erpm < d->quickstop_erpm) && (fabsf(d->true_pitch_angle) > 14) &&
-                (fabsf(d->inputtilt_interpolated) < 30) &&
-                (SIGN(d->true_pitch_angle) == SIGN(d->erpm))) {
+            if (d->motor.abs_erpm < d->quickstop_erpm && fabsf(d->true_pitch_angle) > 14 &&
+                fabsf(d->inputtilt_interpolated) < 30 &&
+                SIGN(d->true_pitch_angle) == d->motor.erpm_sign) {
                 // QUICK STOP
                 d->state = FAULT_QUICKSTOP;
                 return true;
@@ -749,7 +763,7 @@ static bool check_faults(data *d) {
 
         // Switch partially open and stopped
         if (!d->float_conf.fault_is_dual_switch) {
-            if (!is_engaged(d) && d->abs_erpm < d->float_conf.fault_adc_half_erpm) {
+            if (!is_engaged(d) && d->motor.abs_erpm < d->float_conf.fault_adc_half_erpm) {
                 if ((1000.0 * (d->current_time - d->fault_switch_half_timer)) >
                     d->float_conf.fault_delay_switch_half) {
                     d->state = FAULT_SWITCH_HALF;
@@ -813,13 +827,13 @@ static void calculate_setpoint_target(data *d) {
         d->state = RUNNING;
     } else if (d->setpointAdjustmentType == REVERSESTOP) {
         // accumalete erpms:
-        d->reverse_total_erpm += d->erpm;
+        d->reverse_total_erpm += d->motor.erpm;
         if (fabsf(d->reverse_total_erpm) > d->reverse_tolerance) {
             // tilt down by 10 degrees after 50k aggregate erpm
             d->setpoint_target = 10 * (fabsf(d->reverse_total_erpm) - d->reverse_tolerance) / 50000;
         } else {
             if (fabsf(d->reverse_total_erpm) <= d->reverse_tolerance / 2) {
-                if (d->erpm >= 0) {
+                if (d->motor.erpm >= 0) {
                     d->setpointAdjustmentType = TILTBACK_NONE;
                     d->reverse_total_erpm = 0;
                     d->setpoint_target = 0;
@@ -828,9 +842,9 @@ static void calculate_setpoint_target(data *d) {
             }
         }
     } else if (
-        (fabsf(d->acceleration) > 15) &&  // not normal, either wheelslip or wheel getting stuck
-        (SIGN(d->acceleration) == SIGN(d->erpm)) && (d->duty_cycle > 0.3) &&
-        (d->abs_erpm > 2000))  // acceleration can jump a lot at very low speeds
+        fabsf(d->motor.acceleration) > 15 &&  // not normal, either wheelslip or wheel getting stuck
+        SIGN(d->motor.acceleration) == d->motor.erpm_sign && d->motor.duty_cycle > 0.3 &&
+        d->motor.abs_erpm > 2000)  // acceleration can jump a lot at very low speeds
     {
         d->state = RUNNING_WHEELSLIP;
         d->setpointAdjustmentType = TILTBACK_NONE;
@@ -839,41 +853,41 @@ static void calculate_setpoint_target(data *d) {
             d->traction_control = true;
         }
     } else if (d->state == RUNNING_WHEELSLIP) {
-        if (fabsf(d->acceleration) < 10) {
+        if (fabsf(d->motor.acceleration) < 10) {
             // acceleration is slowing down, traction control seems to have worked
             d->traction_control = false;
         }
         // Remain in wheelslip state for at least 500ms to avoid any overreactions
-        if (d->duty_cycle > d->max_duty_with_margin) {
+        if (d->motor.duty_cycle > d->max_duty_with_margin) {
             d->wheelslip_timer = d->current_time;
         } else if (d->current_time - d->wheelslip_timer > 0.2) {
-            if (d->duty_cycle < 0.7) {
+            if (d->motor.duty_cycle < 0.7) {
                 // Leave wheelslip state only if duty < 70%
                 d->traction_control = false;
                 d->state = RUNNING;
             }
         }
-        if (d->float_conf.fault_reversestop_enabled && (d->erpm < 0)) {
+        if (d->float_conf.fault_reversestop_enabled && (d->motor.erpm < 0)) {
             // the 500ms wheelslip time can cause us to blow past the reverse stop condition!
             d->setpointAdjustmentType = REVERSESTOP;
             d->reverse_timer = d->current_time;
             d->reverse_total_erpm = 0;
         }
-    } else if (d->duty_cycle > d->float_conf.tiltback_duty) {
-        if (d->erpm > 0) {
+    } else if (d->motor.duty_cycle > d->float_conf.tiltback_duty) {
+        if (d->motor.erpm > 0) {
             d->setpoint_target = d->float_conf.tiltback_duty_angle;
         } else {
             d->setpoint_target = -d->float_conf.tiltback_duty_angle;
         }
         d->setpointAdjustmentType = TILTBACK_DUTY;
         d->state = RUNNING_TILTBACK;
-    } else if (d->duty_cycle > 0.05 && input_voltage > d->float_conf.tiltback_hv) {
+    } else if (d->motor.duty_cycle > 0.05 && input_voltage > d->float_conf.tiltback_hv) {
         d->beep_reason = BEEP_HV;
         beep_alert(d, 3, false);
         if (((d->current_time - d->tb_highvoltage_timer) > .5) ||
             (input_voltage > d->float_conf.tiltback_hv + 1)) {
             // 500ms have passed or voltage is another volt higher, time for some tiltback
-            if (d->erpm > 0) {
+            if (d->motor.erpm > 0) {
                 d->setpoint_target = d->float_conf.tiltback_hv_angle;
             } else {
                 d->setpoint_target = -d->float_conf.tiltback_hv_angle;
@@ -891,7 +905,7 @@ static void calculate_setpoint_target(data *d) {
         beep_alert(d, 3, true);
         d->beep_reason = BEEP_TEMPFET;
         if (VESC_IF->mc_temp_fet_filtered() > (d->mc_max_temp_fet + 1)) {
-            if (d->erpm > 0) {
+            if (d->motor.erpm > 0) {
                 d->setpoint_target = d->float_conf.tiltback_lv_angle;
             } else {
                 d->setpoint_target = -d->float_conf.tiltback_lv_angle;
@@ -908,7 +922,7 @@ static void calculate_setpoint_target(data *d) {
         beep_alert(d, 3, true);
         d->beep_reason = BEEP_TEMPMOT;
         if (VESC_IF->mc_temp_motor_filtered() > (d->mc_max_temp_mot + 1)) {
-            if (d->erpm > 0) {
+            if (d->motor.erpm > 0) {
                 d->setpoint_target = d->float_conf.tiltback_lv_angle;
             } else {
                 d->setpoint_target = -d->float_conf.tiltback_lv_angle;
@@ -920,10 +934,10 @@ static void calculate_setpoint_target(data *d) {
             d->setpointAdjustmentType = TILTBACK_NONE;
             d->state = RUNNING;
         }
-    } else if (d->duty_cycle > 0.05 && input_voltage < d->float_conf.tiltback_lv) {
+    } else if (d->motor.duty_cycle > 0.05 && input_voltage < d->float_conf.tiltback_lv) {
         beep_alert(d, 3, false);
         d->beep_reason = BEEP_LV;
-        float abs_motor_current = fabsf(d->motor_current);
+        float abs_motor_current = fabsf(d->motor.current);
         float vdelta = d->float_conf.tiltback_lv - input_voltage;
         float ratio = vdelta * 20 / abs_motor_current;
         // When to do LV tiltback:
@@ -931,7 +945,7 @@ static void calculate_setpoint_target(data *d) {
         // b) motor current is small (we cannot assume vsag)
         // c) we have more than 20A per Volt of difference (we tolerate some amount of vsag)
         if ((vdelta > 2) || (abs_motor_current < 5) || (ratio > 1)) {
-            if (d->erpm > 0) {
+            if (d->motor.erpm > 0) {
                 d->setpoint_target = d->float_conf.tiltback_lv_angle;
             } else {
                 d->setpoint_target = -d->float_conf.tiltback_lv_angle;
@@ -946,7 +960,7 @@ static void calculate_setpoint_target(data *d) {
         }
     } else {
         // Normal running
-        if (d->float_conf.fault_reversestop_enabled && (d->erpm < -200) && !d->is_upside_down) {
+        if (d->float_conf.fault_reversestop_enabled && d->motor.erpm < -200 && !d->is_upside_down) {
             d->setpointAdjustmentType = REVERSESTOP;
             d->reverse_timer = d->current_time;
             d->reverse_total_erpm = 0;
@@ -957,7 +971,7 @@ static void calculate_setpoint_target(data *d) {
         d->state = RUNNING;
     }
 
-    if ((d->state == RUNNING_WHEELSLIP) && (d->duty_cycle > d->max_duty_with_margin)) {
+    if (d->state == RUNNING_WHEELSLIP && d->motor.duty_cycle > d->max_duty_with_margin) {
         d->setpoint_target = 0;
     }
     if (d->is_upside_down && (d->state == RUNNING)) {
@@ -1003,13 +1017,13 @@ static void add_surge(data *d) {
     if (d->surge_enable) {
         float surge_now = 0;
 
-        if (d->duty_smooth > d->float_conf.surge_duty_start + 0.04) {
+        if (d->motor.duty_smooth > d->float_conf.surge_duty_start + 0.04) {
             surge_now = d->surge_angle3;
             beep_alert(d, 3, 1);
-        } else if (d->duty_smooth > d->float_conf.surge_duty_start + 0.02) {
+        } else if (d->motor.duty_smooth > d->float_conf.surge_duty_start + 0.02) {
             surge_now = d->surge_angle2;
             beep_alert(d, 2, 1);
-        } else if (d->duty_smooth > d->float_conf.surge_duty_start) {
+        } else if (d->motor.duty_smooth > d->float_conf.surge_duty_start) {
             surge_now = d->surge_angle;
             beep_alert(d, 1, 1);
         }
@@ -1022,7 +1036,7 @@ static void add_surge(data *d) {
         }
 
         // Add surge angle to setpoint
-        if (d->erpm > 0) {
+        if (d->motor.erpm > 0) {
             d->setpoint += d->surge_adder;
         } else {
             d->setpoint -= d->surge_adder;
@@ -1050,16 +1064,16 @@ static void apply_noseangling(data *d) {
         float noseangling_target = 0;
 
         // Variable Tiltback looks at ERPM from the reference point of the set minimum ERPM
-        float variable_erpm = fmaxf(0, fabsf(d->erpm) - d->float_conf.tiltback_variable_erpm);
+        float variable_erpm = fmaxf(0, d->motor.abs_erpm - d->float_conf.tiltback_variable_erpm);
         if (variable_erpm > d->tiltback_variable_max_erpm) {
-            noseangling_target = d->float_conf.tiltback_variable_max * SIGN(d->erpm);
+            noseangling_target = d->float_conf.tiltback_variable_max * d->motor.erpm_sign;
         } else {
-            noseangling_target = d->tiltback_variable * variable_erpm * SIGN(d->erpm) *
+            noseangling_target = d->tiltback_variable * variable_erpm * d->motor.erpm_sign *
                 SIGN(d->float_conf.tiltback_variable_max);
         }
 
-        if (fabsf(d->erpm) > d->float_conf.tiltback_constant_erpm) {
-            noseangling_target += d->float_conf.tiltback_constant * SIGN(d->erpm);
+        if (d->motor.abs_erpm > d->float_conf.tiltback_constant_erpm) {
+            noseangling_target += d->float_conf.tiltback_constant * d->motor.erpm_sign;
         }
 
         if (fabsf(noseangling_target - d->noseangling_interpolated) < d->noseangling_step_size) {
@@ -1140,14 +1154,14 @@ static void apply_torquetilt(data *d) {
 
     // Filter current (Biquad)
     if (d->float_conf.atr_filter > 0) {
-        d->atr_filtered_current = biquad_process(&d->atr_current_biquad, d->motor_current);
+        d->atr_filtered_current = biquad_process(&d->atr_current_biquad, d->motor.current);
     } else {
-        d->atr_filtered_current = d->motor_current;
+        d->atr_filtered_current = d->motor.current;
     }
 
     int torque_sign = SIGN(d->atr_filtered_current);
 
-    if ((d->abs_erpm > 250) && (torque_sign != SIGN(d->erpm))) {
+    if (d->motor.abs_erpm > 250 && torque_sign != d->motor.erpm_sign) {
         // current is negative, so we are braking or going downhill
         // high currents downhill are less likely
         d->braking = true;
@@ -1210,33 +1224,34 @@ static void apply_torquetilt(data *d) {
     float accel_factor2 = accel_factor * 1.3;
 
     // compare measured acceleration to expected acceleration
-    float measured_acc = fmaxf(d->acceleration, -5);
+    float measured_acc = fmaxf(d->motor.acceleration, -5);
     measured_acc = fminf(measured_acc, 5);
 
     // expected acceleration is proportional to current (minus an offset, required to
     // balance/maintain speed)
     float expected_acc;
     if (abs_torque < 25) {
-        expected_acc = (d->atr_filtered_current - SIGN(d->erpm) * torque_offset) / accel_factor;
+        expected_acc =
+            (d->atr_filtered_current - d->motor.erpm_sign * torque_offset) / accel_factor;
     } else {
         // primitive linear approximation of non-linear torque-accel relationship
-        expected_acc = (torque_sign * 25 - SIGN(d->erpm) * torque_offset) / accel_factor;
+        expected_acc = (torque_sign * 25 - d->motor.erpm_sign * torque_offset) / accel_factor;
         expected_acc += torque_sign * (abs_torque - 25) / accel_factor2;
     }
 
-    bool forward = (d->erpm > 0);
-    if ((d->abs_erpm < 250) && (abs_torque > 30)) {
+    bool forward = d->motor.erpm > 0;
+    if (d->motor.abs_erpm < 250 && abs_torque > 30) {
         forward = (expected_acc > 0);
     }
 
     float acc_diff = expected_acc - measured_acc;
     d->float_acc_diff = acc_diff;
 
-    if (d->abs_erpm > 2000) {
+    if (d->motor.abs_erpm > 2000) {
         d->accel_gap = 0.9 * d->accel_gap + 0.1 * acc_diff;
-    } else if (d->abs_erpm > 1000) {
+    } else if (d->motor.abs_erpm > 1000) {
         d->accel_gap = 0.95 * d->accel_gap + 0.05 * acc_diff;
-    } else if (d->abs_erpm > 250) {
+    } else if (d->motor.abs_erpm > 250) {
         d->accel_gap = 0.98 * d->accel_gap + 0.02 * acc_diff;
     } else {
         d->accel_gap = 0;
@@ -1250,8 +1265,8 @@ static void apply_torquetilt(data *d) {
                                                        : d->float_conf.atr_strength_down;
 
     // from 3000 to 6000 erpm gradually crank up the torque response
-    if ((d->abs_erpm > 3000) && (!d->braking)) {
-        float speedboost = (d->abs_erpm - 3000) / 3000;
+    if (d->motor.abs_erpm > 3000 && !d->braking) {
+        float speedboost = (d->motor.abs_erpm - 3000) / 3000;
         speedboost = fminf(1, speedboost) * d->float_conf.atr_speed_boost;
         atr_strength += atr_strength * speedboost;
     }
@@ -1269,10 +1284,10 @@ static void apply_torquetilt(data *d) {
     d->atr_target = fmaxf(d->atr_target, -d->float_conf.atr_angle_limit);
 
     float response_boost = 1;
-    if (d->abs_erpm > 2500) {
+    if (d->motor.abs_erpm > 2500) {
         response_boost = d->float_conf.atr_response_boost;
     }
-    if (d->abs_erpm > 6000) {
+    if (d->motor.abs_erpm > 6000) {
         response_boost *= d->float_conf.atr_response_boost;
     }
 
@@ -1288,7 +1303,7 @@ static void apply_torquetilt(data *d) {
                 atr_step_size = d->atr_off_step_size;
                 if ((d->atr_target > 0) &&
                     ((d->atr_target - d->atr_interpolated) > TT_BOOST_MARGIN) &&
-                    (d->abs_erpm > 2000)) {
+                    d->motor.abs_erpm > 2000) {
                     // boost the speed if tilt target has reversed (and if there's a significant
                     // margin)
                     atr_step_size = d->atr_off_step_size * d->float_conf.atr_transition_boost;
@@ -1316,7 +1331,7 @@ static void apply_torquetilt(data *d) {
                 atr_step_size = d->atr_off_step_size;
                 if ((d->atr_target < 0) &&
                     ((d->atr_interpolated - d->atr_target) > TT_BOOST_MARGIN) &&
-                    (d->abs_erpm > 2000)) {
+                    d->motor.abs_erpm > 2000) {
                     // boost the speed if tilt target has reversed (and if there's a significant
                     // margin)
                     atr_step_size = d->atr_off_step_size * d->float_conf.atr_transition_boost;
@@ -1340,14 +1355,14 @@ static void apply_torquetilt(data *d) {
     // Feature: Brake Tiltback
 
     // braking also should cause setpoint change lift, causing a delayed lingering nose lift
-    if ((d->braketilt_factor < 0) && d->braking && (d->abs_erpm > 2000)) {
+    if (d->braketilt_factor < 0 && d->braking && d->motor.abs_erpm > 2000) {
         // negative currents alone don't necessarily consitute active braking, look at proportional:
-        if (SIGN(d->proportional) != SIGN(d->erpm)) {
+        if (SIGN(d->proportional) != d->motor.erpm_sign) {
             float downhill_damper = 1;
             // if we're braking on a downhill we don't want braking to lift the setpoint quite as
             // much
-            if (((d->erpm > 1000) && (d->accel_gap < -1)) ||
-                ((d->erpm < -1000) && (d->accel_gap > 1))) {
+            if ((d->motor.erpm > 1000 && d->accel_gap < -1) ||
+                (d->motor.erpm < -1000 && d->accel_gap > 1)) {
                 downhill_damper += fabsf(d->accel_gap) / 2;
             }
             d->braketilt_target = d->proportional / d->braketilt_factor / downhill_damper;
@@ -1363,13 +1378,13 @@ static void apply_torquetilt(data *d) {
     braketilt_step_size = d->atr_off_step_size / d->float_conf.braketilt_lingering;
     if (fabsf(d->braketilt_target) > fabsf(d->braketilt_interpolated)) {
         braketilt_step_size = d->atr_on_step_size * 1.5;
-    } else if (d->abs_erpm < 800) {
+    } else if (d->motor.abs_erpm < 800) {
         braketilt_step_size = d->atr_on_step_size;
     }
 
     // when slow then erpm data is especially choppy, causing fake spikes in acceleration
     // mellow down the reaction to reduce noticeable oscillations
-    if (d->abs_erpm < 500) {
+    if (d->motor.abs_erpm < 500) {
         tt_step_size /= 2;
         atr_step_size /= 2;
         braketilt_step_size /= 2;
@@ -1429,8 +1444,8 @@ static void apply_turntilt(data *d) {
 
         // Apply speed scaling
         float boost;
-        if (d->abs_erpm < d->float_conf.turntilt_erpm_boost_end) {
-            boost = 1.0 + d->abs_erpm * d->turntilt_boost_per_erpm;
+        if (d->motor.abs_erpm < d->float_conf.turntilt_erpm_boost_end) {
+            boost = 1.0 + d->motor.abs_erpm * d->turntilt_boost_per_erpm;
         } else {
             boost = 1.0 + (float) d->float_conf.turntilt_erpm_boost / 100.0;
         }
@@ -1438,7 +1453,7 @@ static void apply_turntilt(data *d) {
 
         // Increase turntilt based on aggregate yaw change (at most: double it)
         float aggregate_damper = 1.0;
-        if (d->abs_erpm < 2000) {
+        if (d->motor.abs_erpm < 2000) {
             aggregate_damper = 0.5;
         }
         boost = 1 + aggregate_damper * abs_yaw_aggregate / d->yaw_aggregate_target;
@@ -1453,10 +1468,10 @@ static void apply_turntilt(data *d) {
         }
 
         // Disable below erpm threshold otherwise add directionality
-        if (d->abs_erpm < d->float_conf.turntilt_start_erpm) {
+        if (d->motor.abs_erpm < d->float_conf.turntilt_start_erpm) {
             d->turntilt_target = 0;
         } else {
-            d->turntilt_target *= SIGN(d->erpm);
+            d->turntilt_target *= d->motor.erpm_sign;
         }
 
         // ATR interference: Reduce turntilt_target during moments of high torque response
@@ -1499,7 +1514,7 @@ static void apply_turntilt(data *d) {
 static void brake(data *d) {
     // Brake timeout logic
     float brake_timeout_length = 1;  // Brake Timeout hard-coded to 1s
-    if ((d->abs_erpm > 1 || d->brake_timeout == 0)) {
+    if (d->motor.abs_erpm > 1 || d->brake_timeout == 0) {
         d->brake_timeout = d->current_time + brake_timeout_length;
     }
 
@@ -1555,7 +1570,7 @@ static void refloat_thd(void *arg) {
             (1.0 - d->loop_overshoot_alpha) * d->filtered_loop_overshoot;
 
         // Read values for GUI
-        d->motor_current = VESC_IF->mc_get_tot_current_directional_filtered();
+        d->motor.current = VESC_IF->mc_get_tot_current_directional_filtered();
 
         // Get the IMU Values
         d->roll_angle = RAD2DEG_f(VESC_IF->ahrs_get_roll(&d->m_att_ref));
@@ -1602,10 +1617,11 @@ static void refloat_thd(void *arg) {
         VESC_IF->imu_get_gyro(d->gyro);
 
         // Get the motor values we want
-        d->duty_cycle = fabsf(VESC_IF->mc_get_duty_cycle_now());
-        d->duty_smooth = d->duty_smooth * 0.9 + d->duty_cycle * 0.1;
-        d->erpm = VESC_IF->mc_get_rpm();
-        d->abs_erpm = fabsf(d->erpm);
+        d->motor.duty_cycle = fabsf(VESC_IF->mc_get_duty_cycle_now());
+        d->motor.duty_smooth = d->motor.duty_smooth * 0.9 + d->motor.duty_cycle * 0.1;
+        d->motor.erpm = VESC_IF->mc_get_rpm();
+        d->motor.abs_erpm = fabsf(d->motor.erpm);
+        d->motor.erpm_sign = SIGN(d->motor.erpm);
 
         bool remote_connected = false;
         float servo_val = 0;
@@ -1642,17 +1658,16 @@ static void refloat_thd(void *arg) {
 
         d->throttle_val = servo_val;
 
-        float acceleration_raw = d->erpm - d->last_erpm;
-        d->last_erpm = d->erpm;
+        float acceleration_raw = d->motor.erpm - d->motor.last_erpm;
+        d->motor.last_erpm = d->motor.erpm;
 
-        d->accelavg += (acceleration_raw - d->accelhist[d->accelidx]) / ACCEL_ARRAY_SIZE;
-        d->accelhist[d->accelidx] = acceleration_raw;
-        d->accelidx++;
-        if (d->accelidx == ACCEL_ARRAY_SIZE) {
-            d->accelidx = 0;
+        d->motor.acceleration +=
+            (acceleration_raw - d->motor.accel_history[d->motor.accel_idx]) / ACCEL_ARRAY_SIZE;
+        d->motor.accel_history[d->motor.accel_idx] = acceleration_raw;
+        d->motor.accel_idx++;
+        if (d->motor.accel_idx == ACCEL_ARRAY_SIZE) {
+            d->motor.accel_idx = 0;
         }
-
-        d->acceleration = d->accelavg;
 
         // Turn Tilt:
         d->yaw_angle = VESC_IF->ahrs_get_yaw(&d->m_att_ref) * 180.0f / M_PI;
@@ -1684,7 +1699,7 @@ static void refloat_thd(void *arg) {
         footpad_sensor_update(&d->footpad_sensor, &d->float_conf);
 
         if (d->footpad_sensor.state == FS_NONE && d->state <= RUNNING_TILTBACK &&
-            d->abs_erpm > d->switch_warn_buzz_erpm) {
+            d->motor.abs_erpm > d->switch_warn_buzz_erpm) {
             // If we're at riding speed and the switch is off => ALERT the user
             // set force=true since this could indicate an imminent shutdown/nosedive
             beep_on(d, true);
@@ -1761,14 +1776,15 @@ static void refloat_thd(void *arg) {
             }
 
             // Prepare Brake Scaling (ramp scale values as needed for smooth transitions)
-            if (fabsf(d->erpm) < 500) {
+            if (d->motor.abs_erpm < 500) {
                 // All scaling should roll back to 1.0x when near a stop for a smooth stand-still
                 // and back-forth transition
                 d->kp_brake_scale = 0.01 + 0.99 * d->kp_brake_scale;
                 d->kp2_brake_scale = 0.01 + 0.99 * d->kp2_brake_scale;
                 d->kp_accel_scale = 0.01 + 0.99 * d->kp_accel_scale;
                 d->kp2_accel_scale = 0.01 + 0.99 * d->kp2_accel_scale;
-            } else if (d->erpm > 0) {
+
+            } else if (d->motor.erpm > 0) {
                 // Once rolling forward, brakes should transition to scaled values
                 d->kp_brake_scale = 0.01 * d->float_conf.kp_brake + 0.99 * d->kp_brake_scale;
                 d->kp2_brake_scale = 0.01 * d->float_conf.kp2_brake + 0.99 * d->kp2_brake_scale;
@@ -1786,7 +1802,7 @@ static void refloat_thd(void *arg) {
 
             // Do PID maths
             d->proportional = d->setpoint - d->pitch_angle;
-            bool tail_down = SIGN(d->proportional) != SIGN(d->erpm);
+            bool tail_down = SIGN(d->proportional) != d->motor.erpm_sign;
 
             // Resume real PID maths
             d->pid_integral = d->pid_integral + d->proportional * d->float_conf.ki;
@@ -1850,8 +1866,8 @@ static void refloat_thd(void *arg) {
 
                 // Make booster a bit stronger at higher speed (up to 2x stronger when braking)
                 const int boost_min_erpm = 3000;
-                if (d->abs_erpm > boost_min_erpm) {
-                    float speedstiffness = fminf(1, (d->abs_erpm - boost_min_erpm) / 10000);
+                if (d->motor.abs_erpm > boost_min_erpm) {
+                    float speedstiffness = fminf(1, (d->motor.abs_erpm - boost_min_erpm) / 10000);
                     if (tail_down) {
                         // use higher current at speed when braking
                         booster_current += booster_current * speedstiffness;
@@ -2001,7 +2017,8 @@ static void refloat_thd(void *arg) {
                 }
             }
             // Push-start aka dirty landing Part II
-            if (d->float_conf.startup_pushstart_enabled && (d->abs_erpm > 1000) && is_engaged(d)) {
+            if (d->float_conf.startup_pushstart_enabled && d->motor.abs_erpm > 1000 &&
+                is_engaged(d)) {
                 if ((fabsf(d->pitch_angle) < 45) && (fabsf(d->roll_angle) < 45)) {
                     // 45 to prevent board engaging when upright or laying sideways
                     // 45 degree tolerance is more than plenty for tricks / extreme mounts
@@ -2094,11 +2111,11 @@ static float app_get_debug(int index) {
     case (5):
         return d->last_pitch_angle - d->pitch_angle;
     case (6):
-        return d->motor_current;
+        return d->motor.current;
     case (7):
-        return d->erpm;
+        return d->motor.erpm;
     case (8):
-        return d->abs_erpm;
+        return d->motor.abs_erpm;
     case (9):
         return d->loop_time_seconds;
     case (10):
@@ -2179,7 +2196,7 @@ static void send_realtime_data(data *d) {
     buffer_append_float32_auto(send_buffer, d->atr_filtered_current, &ind);
     buffer_append_float32_auto(send_buffer, d->float_acc_diff, &ind);
     buffer_append_float32_auto(send_buffer, d->applied_booster_current, &ind);
-    buffer_append_float32_auto(send_buffer, d->motor_current, &ind);
+    buffer_append_float32_auto(send_buffer, d->motor.current, &ind);
     buffer_append_float32_auto(send_buffer, d->throttle_val, &ind);
 
     if (ind > BUFSIZE) {
