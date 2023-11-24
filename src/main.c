@@ -160,7 +160,6 @@ typedef struct {
     float accelhist[ACCEL_ARRAY_SIZE];
     float accelavg;
     int accelidx;
-    int direction_counter;
     bool braking;
 
     // Feature: Turntilt
@@ -192,7 +191,7 @@ typedef struct {
         fault_switch_half_timer;
     float motor_timeout_seconds;
     float brake_timeout;
-    float wheelslip_timer, wheelslip_end_timer, overcurrent_timer, tb_highvoltage_timer;
+    float wheelslip_timer, overcurrent_timer, tb_highvoltage_timer;
     float switch_warn_buzz_erpm;
     float quickstop_erpm;
     bool traction_control;
@@ -238,7 +237,7 @@ typedef struct {
     // Log values
     float float_setpoint, float_atr, float_braketilt, float_torquetilt, float_turntilt,
         float_inputtilt;
-    float float_expected_acc, float_measured_acc, float_acc_diff;
+    float float_acc_diff;
 
     // Debug values
     int debug_render_1, debug_render_2;
@@ -527,7 +526,6 @@ static void reset_vars(data *d) {
 
     // ATR:
     d->accel_gap = 0;
-    d->direction_counter = 0;
 
     for (int i = 0; i < 40; i++) {
         d->accelhist[i] = 0;
@@ -1140,13 +1138,6 @@ static void apply_torquetilt(data *d) {
     float tt_step_size = 0;
     float atr_step_size = 0;
     float braketilt_step_size = 0;
-    int torque_sign;
-    float abs_torque;
-    float atr_threshold;
-    float torque_offset;
-    float accel_factor;
-    float accel_factor2;
-    float expected_acc;
 
     // Filter current (Biquad)
     if (d->float_conf.atr_filter > 0) {
@@ -1155,7 +1146,7 @@ static void apply_torquetilt(data *d) {
         d->atr_filtered_current = d->motor_current;
     }
 
-    torque_sign = SIGN(d->atr_filtered_current);
+    int torque_sign = SIGN(d->atr_filtered_current);
 
     if ((d->abs_erpm > 250) && (torque_sign != SIGN(d->erpm))) {
         // current is negative, so we are braking or going downhill
@@ -1171,39 +1162,17 @@ static void apply_torquetilt(data *d) {
     if (d->state == RUNNING_WHEELSLIP) {
         d->torquetilt_interpolated *= 0.995;
         d->torquetilt_target *= 0.99;
+
         d->atr_interpolated *= 0.995;
         d->atr_target *= 0.99;
+
         d->braketilt_interpolated *= 0.995;
         d->braketilt_target *= 0.99;
+
         calculate_torqueresponse_interpolated(d);
+
         d->setpoint += d->torqueresponse_interpolated;
-        d->wheelslip_end_timer = d->current_time;
         return;
-    } else {
-        /*
-        if ((d->current_time - d->wheelslip_end_timer) * 1000 < 100) {
-                // for 100ms after wheelslip we still don't do ATR to allow the wheel to decelerate
-                d->torquetilt_interpolated *= 0.998;
-                d->torquetilt_target *= 0.999;
-                d->atr_interpolated *= 0.998;
-                d->atr_target *= 0.999;
-                d->braketilt_interpolated *= 0.998;
-                d->braketilt_target *= 0.999;
-                calculate_torqueresponse_interpolated(d);
-                d->setpoint += d->torqueresponse_interpolated;
-                return;
-        }
-        else if ((fabsf(d->acceleration) > 10) && (d->abs_erpm > 1000)) {
-                d->torquetilt_interpolated *= 0.998;
-                d->torquetilt_target *= 0.999;
-                d->atr_interpolated *= 0.998;
-                d->atr_target *= 0.999;
-                d->braketilt_interpolated *= 0.998;
-                d->braketilt_target *= 0.999;
-                calculate_torqueresponse_interpolated(d);
-                d->setpoint += d->torqueresponse_interpolated;
-                return;
-                }*/
     }
 
     // CLASSIC TORQUE TILT /////////////////////////////////
@@ -1233,12 +1202,13 @@ static void apply_torquetilt(data *d) {
 
     // ADAPTIVE TORQUE RESPONSE ////////////////////////////
 
-    abs_torque = fabsf(d->atr_filtered_current);
-    torque_offset = 8;  // hard-code to 8A for now (shouldn't really be changed much anyways)
-    atr_threshold = d->braking ? d->float_conf.atr_threshold_down : d->float_conf.atr_threshold_up;
-    accel_factor =
+    float abs_torque = fabsf(d->atr_filtered_current);
+    float torque_offset = 8;  // hard-code to 8A for now (shouldn't really be changed much anyways)
+    float atr_threshold =
+        d->braking ? d->float_conf.atr_threshold_down : d->float_conf.atr_threshold_up;
+    float accel_factor =
         d->braking ? d->float_conf.atr_amps_decel_ratio : d->float_conf.atr_amps_accel_ratio;
-    accel_factor2 = accel_factor * 1.3;
+    float accel_factor2 = accel_factor * 1.3;
 
     // compare measured acceleration to expected acceleration
     float measured_acc = fmaxf(d->acceleration, -5);
@@ -1246,7 +1216,7 @@ static void apply_torquetilt(data *d) {
 
     // expected acceleration is proportional to current (minus an offset, required to
     // balance/maintain speed)
-    // XXXXXfloat expected_acc;
+    float expected_acc;
     if (abs_torque < 25) {
         expected_acc = (d->atr_filtered_current - SIGN(d->erpm) * torque_offset) / accel_factor;
     } else {
@@ -1261,8 +1231,6 @@ static void apply_torquetilt(data *d) {
     }
 
     float acc_diff = expected_acc - measured_acc;
-    d->float_expected_acc = expected_acc;
-    d->float_measured_acc = measured_acc;
     d->float_acc_diff = acc_diff;
 
     if (d->abs_erpm > 2000) {
