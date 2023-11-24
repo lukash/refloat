@@ -37,8 +37,8 @@
 
 HEADER
 
-// Return the sign of the argument. -1.0 if negative, 1.0 if zero or positive.
-#define SIGN(x) (((x) < 0.0) ? -1.0 : 1.0)
+// Return the sign of the argument. -1 if negative, 1 if zero or positive.
+#define SIGN(x) (((x) < 0) ? -1 : 1)
 
 #define DEG2RAD_f(deg) ((deg) * (float) (M_PI / 180.0))
 #define RAD2DEG_f(rad) ((rad) * (float) (180.0 / M_PI))
