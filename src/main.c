@@ -136,7 +136,6 @@ typedef struct {
     float mc_current_max, mc_current_min;
     float surge_angle, surge_angle2, surge_angle3, surge_adder;
     bool surge_enable;
-    bool current_beeping;
     bool duty_beeping;
 
     // Feature: True Pitch
@@ -1951,21 +1950,6 @@ static void refloat_thd(void *arg) {
             }
             if (fabsf(new_pid_value) > current_limit) {
                 new_pid_value = SIGN(new_pid_value) * current_limit;
-            } else {
-                // Over continuous current for more than 3 seconds? Just beep, don't actually limit
-                // currents
-                if (fabsf(d->atr_filtered_current) < d->mc_current_max) {
-                    d->overcurrent_timer = d->current_time;
-                    if (d->current_beeping) {
-                        d->current_beeping = false;
-                        beep_off(d, false);
-                    }
-                } else {
-                    if (d->current_time - d->overcurrent_timer > 3) {
-                        beep_on(d, true);
-                        d->current_beeping = true;
-                    }
-                }
             }
 
             if (d->traction_control) {
