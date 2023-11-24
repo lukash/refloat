@@ -133,7 +133,7 @@ typedef struct {
     float tiltback_variable, tiltback_variable_max_erpm, noseangling_step_size,
         inputtilt_ramped_step_size, inputtilt_step_size;
     float mc_max_temp_fet, mc_max_temp_mot;
-    float mc_current_max, mc_current_min, max_continuous_current;
+    float mc_current_max, mc_current_min;
     float surge_angle, surge_angle2, surge_angle3, surge_adder;
     bool surge_enable;
     bool current_beeping;
@@ -405,32 +405,8 @@ static void configure(data *d) {
     d->mc_max_temp_mot = VESC_IF->get_cfg_float(CFG_PARAM_l_temp_motor_start) - 3;
 
     d->mc_current_max = VESC_IF->get_cfg_float(CFG_PARAM_l_current_max);
-    int mcm = d->mc_current_max;
-    float mc_max_reduce = d->mc_current_max - mcm;
-    if (mc_max_reduce >= 0.5) {
-        // reduce the max current by X% to save that for torque tilt situations
-        // less than 60 peak amps makes no sense though so I'm not allowing it
-        d->mc_current_max = fmaxf(mc_max_reduce * d->mc_current_max, 60);
-    }
-
     // min current is a positive value here!
     d->mc_current_min = fabsf(VESC_IF->get_cfg_float(CFG_PARAM_l_current_min));
-    mcm = d->mc_current_min;
-    float mc_min_reduce = fabsf(d->mc_current_min - mcm);
-    if (mc_min_reduce >= 0.5) {
-        // reduce the max current by X% to save that for torque tilt situations
-        // less than 50 peak breaking amps makes no sense though so I'm not allowing it
-        d->mc_current_min = fmaxf(mc_min_reduce * d->mc_current_min, 50);
-    }
-
-    // Decimals of abs-max specify max continuous current
-    float max_abs = VESC_IF->get_cfg_float(CFG_PARAM_l_abs_current_max);
-    int mabs = max_abs;
-    d->max_continuous_current = (max_abs - mabs) * 100;
-    if (d->max_continuous_current < 25) {
-        // anything below 25A is suspicious and will be ignored!
-        d->max_continuous_current = d->mc_current_max;
-    }
 
     // Maximum amps change when braking
     d->pid_brake_increment = 5;
@@ -1978,7 +1954,7 @@ static void refloat_thd(void *arg) {
             } else {
                 // Over continuous current for more than 3 seconds? Just beep, don't actually limit
                 // currents
-                if (fabsf(d->atr_filtered_current) < d->max_continuous_current) {
+                if (fabsf(d->atr_filtered_current) < d->mc_current_max) {
                     d->overcurrent_timer = d->current_time;
                     if (d->current_beeping) {
                         d->current_beeping = false;
