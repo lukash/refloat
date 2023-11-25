@@ -381,10 +381,7 @@ static void motor_data_update(MotorData *m) {
 
     m->acceleration += (current_acceleration - m->accel_history[m->accel_idx]) / ACCEL_ARRAY_SIZE;
     m->accel_history[m->accel_idx] = current_acceleration;
-    m->accel_idx++;
-    if (m->accel_idx == ACCEL_ARRAY_SIZE) {
-        m->accel_idx = 0;
-    }
+    m->accel_idx = (m->accel_idx + 1) % ACCEL_ARRAY_SIZE;
 }
 
 // First start only, set initial state
