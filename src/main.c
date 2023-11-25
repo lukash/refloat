@@ -1926,11 +1926,9 @@ static void refloat_thd(void *arg) {
             // Current Limiting!
             float current_limit;
             if (d->braking) {
-                current_limit =
-                    d->mc_current_min * (1 + 0.6 * fabsf(d->torqueresponse_interpolated / 10));
+                current_limit = d->mc_current_min;
             } else {
-                current_limit =
-                    d->mc_current_max * (1 + 0.6 * fabsf(d->torqueresponse_interpolated / 10));
+                current_limit = d->mc_current_max;
             }
             if (fabsf(new_pid_value) > current_limit) {
                 new_pid_value = SIGN(new_pid_value) * current_limit;
