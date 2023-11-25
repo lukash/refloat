@@ -20,6 +20,7 @@
 #include "vesc_c_if.h"
 
 #include "footpad_sensor.h"
+#include "utils.h"
 
 #include "conf/buffer.h"
 #include "conf/conf_general.h"
@@ -36,14 +37,6 @@
 #define ACCEL_ARRAY_SIZE 40
 
 HEADER
-
-// Return the sign of the argument. -1 if negative, 1 if zero or positive.
-#define SIGN(x) (((x) < 0) ? -1 : 1)
-
-#define DEG2RAD_f(deg) ((deg) * (float) (M_PI / 180.0))
-#define RAD2DEG_f(rad) ((rad) * (float) (180.0 / M_PI))
-
-#define UNUSED(x) (void) (x)
 
 // Data type
 typedef enum {
