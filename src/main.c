@@ -2361,8 +2361,7 @@ static void cmd_handtest(data *d, unsigned char *cfg) {
         d->do_handtest = cfg[0] ? true : false;
         if (d->do_handtest) {
             // temporarily reduce max currents to make hand test safer / gentler
-            d->mc_current_max = 7;
-            d->mc_current_min = -7;
+            d->mc_current_max = d->mc_current_min = 7;
             // Disable I-term and all tune modifiers and tilts
             d->float_conf.ki = 0;
             d->float_conf.kp_brake = 1;
