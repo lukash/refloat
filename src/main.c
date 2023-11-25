@@ -1557,13 +1557,6 @@ static void brake(data *d) {
 }
 
 static void set_current(data *d, float current) {
-    // Limit current output to configured max output
-    if (current > 0 && current > VESC_IF->get_cfg_float(CFG_PARAM_l_current_max)) {
-        current = VESC_IF->get_cfg_float(CFG_PARAM_l_current_max);
-    } else if (current < 0 && current < VESC_IF->get_cfg_float(CFG_PARAM_l_current_min)) {
-        current = VESC_IF->get_cfg_float(CFG_PARAM_l_current_min);
-    }
-
     // Reset the timeout
     VESC_IF->timeout_reset();
     // Set the current delay
