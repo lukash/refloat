@@ -20,6 +20,7 @@
 #include "vesc_c_if.h"
 
 #include "footpad_sensor.h"
+#include "motor_data.h"
 #include "utils.h"
 
 #include "conf/buffer.h"
@@ -32,9 +33,6 @@
 
 #include <math.h>
 #include <string.h>
-
-// Acceleration average
-#define ACCEL_ARRAY_SIZE 40
 
 HEADER
 
@@ -94,24 +92,6 @@ typedef enum {
 
 static const FootpadSensorState flywheel_konami_sequence[] = {FS_LEFT, FS_NONE, FS_RIGHT, FS_NONE,
                                                               FS_LEFT, FS_NONE, FS_RIGHT};
-
-typedef struct {
-    float erpm;
-    float abs_erpm;
-    float last_erpm;
-    int8_t erpm_sign;
-
-    float current;
-    bool braking;
-
-    float duty_cycle;
-    float duty_smooth;
-
-    // an average calculated over last ACCEL_ARRAY_SIZE values
-    float acceleration;
-    float accel_history[ACCEL_ARRAY_SIZE];
-    uint8_t accel_idx;
-} MotorData;
 
 // This is all persistent state of the application, which will be allocated in init. It
 // is put here because variables can only be read-only when this program is loaded
@@ -347,35 +327,6 @@ static void biquad_config(Biquad *biquad, BiquadType type, float Fc) {
 static void biquad_reset(Biquad *biquad) {
     biquad->z1 = 0;
     biquad->z2 = 0;
-}
-
-static void motor_data_init(MotorData *m) {
-    m->duty_smooth = 0;
-
-    m->acceleration = 0;
-    m->accel_idx = 0;
-    for (int i = 0; i < 40; i++) {
-        m->accel_history[i] = 0;
-    }
-}
-
-static void motor_data_update(MotorData *m) {
-    m->erpm = VESC_IF->mc_get_rpm();
-    m->abs_erpm = fabsf(m->erpm);
-    m->erpm_sign = SIGN(m->erpm);
-
-    m->current = VESC_IF->mc_get_tot_current_directional_filtered();
-    m->braking = m->abs_erpm > 250 && SIGN(m->current) != m->erpm_sign;
-
-    m->duty_cycle = fabsf(VESC_IF->mc_get_duty_cycle_now());
-    m->duty_smooth = m->duty_smooth * 0.9f + m->duty_cycle * 0.1f;
-
-    float current_acceleration = m->erpm - m->last_erpm;
-    m->last_erpm = m->erpm;
-
-    m->acceleration += (current_acceleration - m->accel_history[m->accel_idx]) / ACCEL_ARRAY_SIZE;
-    m->accel_history[m->accel_idx] = current_acceleration;
-    m->accel_idx = (m->accel_idx + 1) % ACCEL_ARRAY_SIZE;
 }
 
 // First start only, set initial state
