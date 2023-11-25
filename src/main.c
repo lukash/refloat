@@ -224,9 +224,6 @@ typedef struct {
     // Feature: Soft Start
     float softstart_pid_limit, softstart_ramp_step_size;
 
-    // Brake Amp Rate Limiting:
-    float pid_brake_increment;
-
     // Odometer
     float odo_timer;
     int odometer_dirty;
@@ -406,12 +403,6 @@ static void configure(data *d) {
     d->mc_current_max = VESC_IF->get_cfg_float(CFG_PARAM_l_current_max);
     // min current is a positive value here!
     d->mc_current_min = fabsf(VESC_IF->get_cfg_float(CFG_PARAM_l_current_min));
-
-    // Maximum amps change when braking
-    d->pid_brake_increment = 5;
-    if (d->pid_brake_increment < 0.1) {
-        d->pid_brake_increment = 5;
-    }
 
     d->max_duty_with_margin = VESC_IF->get_cfg_float(CFG_PARAM_l_max_duty) - 0.1;
 
@@ -1949,16 +1940,7 @@ static void refloat_thd(void *arg) {
                 // freewheel while traction loss is detected
                 d->pid_value = 0;
             } else {
-                // Brake Amp Rate Limiting
-                if (d->braking && (fabsf(d->pid_value - new_pid_value) > d->pid_brake_increment)) {
-                    if (new_pid_value > d->pid_value) {
-                        d->pid_value += d->pid_brake_increment;
-                    } else {
-                        d->pid_value -= d->pid_brake_increment;
-                    }
-                } else {
-                    d->pid_value = d->pid_value * 0.8 + new_pid_value * 0.2;
-                }
+                d->pid_value = d->pid_value * 0.8 + new_pid_value * 0.2;
             }
 
             // Output to motor
