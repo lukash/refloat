@@ -19,6 +19,7 @@
 
 #include "vesc_c_if.h"
 
+#include "biquad.h"
 #include "footpad_sensor.h"
 #include "motor_data.h"
 #include "utils.h"
@@ -79,16 +80,6 @@ typedef enum {
     TILTBACK_LV,
     TILTBACK_TEMP
 } SetpointAdjustmentType;
-
-typedef struct {
-    float a0, a1, a2, b1, b2;
-    float z1, z2;
-} Biquad;
-
-typedef enum {
-    BQ_LOWPASS,
-    BQ_HIGHPASS
-} BiquadType;
 
 static const FootpadSensorState flywheel_konami_sequence[] = {FS_LEFT, FS_NONE, FS_RIGHT, FS_NONE,
                                                               FS_LEFT, FS_NONE, FS_RIGHT};
@@ -299,36 +290,6 @@ void beep_on(data *d, bool force) {
     }
 }
 
-// Utility Functions
-static float biquad_process(Biquad *biquad, float in) {
-    float out = in * biquad->a0 + biquad->z1;
-    biquad->z1 = in * biquad->a1 + biquad->z2 - biquad->b1 * out;
-    biquad->z2 = in * biquad->a2 - biquad->b2 * out;
-    return out;
-}
-
-static void biquad_config(Biquad *biquad, BiquadType type, float Fc) {
-    float K = tanf(M_PI * Fc);  // -0.0159;
-    float Q = 0.707;  // maximum sharpness (0.5 = maximum smoothness)
-    float norm = 1 / (1 + K / Q + K * K);
-    if (type == BQ_LOWPASS) {
-        biquad->a0 = K * K * norm;
-        biquad->a1 = 2 * biquad->a0;
-        biquad->a2 = biquad->a0;
-    } else if (type == BQ_HIGHPASS) {
-        biquad->a0 = 1 * norm;
-        biquad->a1 = -2 * biquad->a0;
-        biquad->a2 = biquad->a0;
-    }
-    biquad->b1 = 2 * (K * K - 1) * norm;
-    biquad->b2 = (1 - K / Q + K * K) * norm;
-}
-
-static void biquad_reset(Biquad *biquad) {
-    biquad->z1 = 0;
-    biquad->z2 = 0;
-}
-
 // First start only, set initial state
 static void app_init(data *d) {
     if (d->state != DISABLED) {
@@ -404,7 +365,7 @@ static void configure(data *d) {
 
     if (d->float_conf.atr_filter > 0) {  // ATR Current Biquad
         float Fc = d->float_conf.atr_filter / d->float_conf.hertz;
-        biquad_config(&d->atr_current_biquad, BQ_LOWPASS, Fc);
+        biquad_configure(&d->atr_current_biquad, BQ_LOWPASS, Fc);
     }
 
     // Feature: ATR:
