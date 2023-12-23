@@ -1,369 +1,76 @@
-/*
-    Copyright 2022 Benjamin Vedder benjamin@vedder.se
-
-    This file is part of VESC Tool.
-
-    VESC Tool is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    VESC Tool is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/>.
-*/
+// Copyright 2022 Benjamin Vedder <benjamin@vedder.se>
+// Copyright 2024 Lukas Hrazky
+//
+// This file is part of the Refloat VESC package.
+//
+// Refloat VESC package is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by the
+// Free Software Foundation, either version 3 of the License, or (at your
+// option) any later version.
+//
+// Refloat VESC package is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+// or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+// more details.
+//
+// You should have received a copy of the GNU General Public License along with
+// this program. If not, see <http://www.gnu.org/licenses/>.
 
 import Qt.labs.settings 1.0
-import QtQuick 2.12
-import QtQuick.Controls 2.12
-import QtQuick.Layouts 1.3
+import QtQuick 2.15
+import QtQuick.Controls 2.15
+import QtQuick.Layouts 1.15
+import QtQuick.Dialogs 1.3 as Dl
+import QtGraphicalEffects 1.15
+
+import Vedder.vesc.vescinterface 1.0
 import Vedder.vesc.commands 1.0
 import Vedder.vesc.configparams 1.0
 import Vedder.vesc.utility 1.0
+import QtQuick.Controls.Material 2.2
 
 Item {
     id: mainItem
 
-    readonly property var defaultQuicksaveNames: {
-        "Quicksave 1": "Quicksave 1",
-        "Quicksave 2": "Quicksave 2",
-        "Quicksave 3": "Quicksave 3",
-        "Quicksave 4": "Quicksave 4",
-        "Quicksave 5": "Quicksave 5",
-        "Quicksave 6": "Quicksave 6",
-        "IMU Quicksave 1": "IMU Quicksave 1",
-        "IMU Quicksave 2": "IMU Quicksave 2"
-    }
-    property Commands mCommands: VescIf.commands()
-    property ConfigParams mMcConf: VescIf.mcConfig()
-    property ConfigParams mAppConf: VescIf.appConfig()
-    property ConfigParams mCustomConf: VescIf.customConfig(0)
-    property var quicksaveNames: []
-    property var handtest_toggle: 0
-    property var beep_reason: 0
-    property var fault_code: 0
+    property Commands vescCommands: VescIf.commands()
 
-    function quicksave(saveName) {
-        var params = [
-            // {"name": "float_disable", "type": "Double"},
-            {"name": "kp", "type": "Double"},
-            {"name": "ki", "type": "Double"},
-            {"name": "kd", "type": "Double"},
-            {"name": "kp2", "type": "Double"},
-            {"name": "kp_brake", "type": "Double"},
-            {"name": "kp2_brake", "type": "Double"},
-            {"name": "mahony_kp", "type": "Double"},
-            {"name": "mahony_kp_roll", "type": "Double"},
-            {"name": "mahony_kp_yaw", "type": "Double"},
-            {"name": "bf_accel_confidence_decay", "type": "Double"},
-            // {"name": "hertz", "type": "Int"},
-            {"name": "fault_pitch", "type": "Double"},
-            {"name": "fault_roll", "type": "Double"},
-            // {"name": "fault_adc1", "type": "Double"},
-            // {"name": "fault_adc2", "type": "Double"},
-            {"name": "fault_delay_pitch", "type": "Int"},
-            {"name": "fault_delay_roll", "type": "Int"},
-            {"name": "fault_delay_switch_half", "type": "Int"},
-            {"name": "fault_delay_switch_full", "type": "Int"},
-            {"name": "fault_adc_half_erpm", "type": "Int"},
-            {"name": "fault_is_dual_switch", "type": "Bool"},
-            {"name": "fault_moving_fault_disabled", "type": "Bool"},
-            {"name": "fault_darkride_enabled", "type": "Bool"},
-            {"name": "fault_reversestop_enabled", "type": "Bool"},
-            {"name": "tiltback_duty_angle", "type": "Double"},
-            {"name": "tiltback_duty_speed", "type": "Double"},
-            {"name": "tiltback_duty", "type": "Double"},
-            {"name": "tiltback_hv_angle", "type": "Double"},
-            {"name": "tiltback_hv_speed", "type": "Double"},
-            // {"name": "tiltback_hv", "type": "Double"},
-            {"name": "tiltback_lv_angle", "type": "Double"},
-            {"name": "tiltback_lv_speed", "type": "Double"},
-            // {"name": "tiltback_lv", "type": "Double"},
-            {"name": "tiltback_return_speed", "type": "Double"},
-            {"name": "tiltback_constant", "type": "Double"},
-            {"name": "tiltback_constant_erpm", "type": "Int"},
-            {"name": "tiltback_variable", "type": "Double"},
-            {"name": "tiltback_variable_max", "type": "Double"},
-            {"name": "tiltback_variable_erpm", "type": "Int"},
-            // {"name": "inputtilt_remote_type", "type": "Enum"},
-            {"name": "inputtilt_speed", "type": "Double"},
-            {"name": "inputtilt_angle_limit", "type": "Double"},
-            {"name": "inputtilt_smoothing_factor", "type": "Int"},
-            {"name": "inputtilt_invert_throttle", "type": "Bool"},
-            // {"name": "inputtilt_deadband", "type": "Double"},
-            {"name": "remote_throttle_current_max", "type": "Double"},
-            {"name": "remote_throttle_grace_period", "type": "Double"},
-            {"name": "noseangling_speed", "type": "Double"},
-            {"name": "startup_pitch_tolerance", "type": "Double"},
-            {"name": "startup_roll_tolerance", "type": "Double"},
-            {"name": "startup_speed", "type": "Double"},
-            {"name": "startup_click_current", "type": "Double"},
-            {"name": "startup_simplestart_enabled", "type": "Bool"},
-            {"name": "startup_pushstart_enabled", "type": "Bool"},
-            {"name": "startup_dirtylandings_enabled", "type": "Bool"},
-            {"name": "brake_current", "type": "Double"},
-            {"name": "ki_limit", "type": "Double"},
-            {"name": "booster_angle", "type": "Double"},
-            {"name": "booster_ramp", "type": "Double"},
-            {"name": "booster_current", "type": "Double"},
-            {"name": "brkbooster_angle", "type": "Double"},
-            {"name": "brkbooster_ramp", "type": "Double"},
-            {"name": "brkbooster_current", "type": "Double"},
-            {"name": "torquetilt_start_current", "type": "Double"},
-            {"name": "torquetilt_angle_limit", "type": "Double"},
-            {"name": "torquetilt_on_speed", "type": "Double"},
-            {"name": "torquetilt_off_speed", "type": "Double"},
-            {"name": "torquetilt_strength", "type": "Double"},
-            {"name": "torquetilt_strength_regen", "type": "Double"},
-            {"name": "atr_strength_up", "type": "Double"},
-            {"name": "atr_strength_down", "type": "Double"},
-            {"name": "atr_threshold_up", "type": "Double"},
-            {"name": "atr_threshold_down", "type": "Double"},
-            {"name": "atr_torque_offset", "type": "Double"},
-            {"name": "atr_speed_boost", "type": "Double"},
-            {"name": "atr_angle_limit", "type": "Double"},
-            {"name": "atr_on_speed", "type": "Double"},
-            {"name": "atr_off_speed", "type": "Double"},
-            {"name": "atr_response_boost", "type": "Double"},
-            {"name": "atr_transition_boost", "type": "Double"},
-            {"name": "atr_filter", "type": "Double"},
-            {"name": "atr_amps_accel_ratio", "type": "Double"},
-            {"name": "atr_amps_decel_ratio", "type": "Double"},
-            {"name": "braketilt_strength", "type": "Double"},
-            {"name": "braketilt_lingering", "type": "Double"},
-            {"name": "turntilt_strength", "type": "Double"},
-            {"name": "turntilt_angle_limit", "type": "Double"},
-            {"name": "turntilt_start_angle", "type": "Double"},
-            {"name": "turntilt_start_erpm", "type": "Int"},
-            {"name": "turntilt_speed", "type": "Double"},
-            {"name": "turntilt_erpm_boost", "type": "Int"},
-            {"name": "turntilt_erpm_boost_end", "type": "Int"},
-            {"name": "turntilt_yaw_aggregate", "type": "Int"},
-            // {"name": "dark_pitch_offset", "type": "Double"},
-            {"name": "is_buzzer_enabled", "type": "Bool"},
-            {"name": "is_dutybuzz_enabled", "type": "Bool"},
-            {"name": "is_footbuzz_enabled", "type": "Bool"},
-            {"name": "is_surgebuzz_enabled", "type": "Bool"},
-            {"name": "surge_duty_start", "type": "Double"},
-            {"name": "surge_angle", "type": "Double"}
-        ];
-
-        for (var i in params) {
-            if (params[i].type == ("Double")) {
-                params[i].value = mCustomConf.getParamDouble(params[i].name);
-            } else if (params[i].type == ("Int")) {
-                params[i].value = mCustomConf.getParamInt(params[i].name);
-            } else if (params[i].type == ("Bool")) {
-                params[i].value = mCustomConf.getParamBool(params[i].name);
-            } else if (params[i].type == ("Enum")) {
-                params[i].value = mCustomConf.getParamEnum(params[i].name);
-            }
-        }
-
-        quicksavePopup.saveName = saveName;
-        quicksavePopup.saveValue = JSON.stringify(params);
-        quicksavePopup.open();
+    // Used to fix the float negative zero problem where applicable
+    function toFixed1Zero(num) {
+        return num.toFixed(1).replace("-0.0", "0.0");
     }
 
-    function quickload(saveName) {
-        var json = settingStorage.value(saveName, "");
-        if (!json) {
-            quickloadErrorPopup.open();
-        } else {
-            var params = JSON.parse(json);
+    // 5s timeout for connection to package
+    Timer {
+        id: packageConnectionWatchdog
+        interval: 5000
+        running: true
 
-            for (var i in params) {
-                if (params[i].type == ("Double")) {
-                    mCustomConf.updateParamDouble(params[i].name, params[i].value);
-                } else if (params[i].type == ("Int")) {
-                    mCustomConf.updateParamInt(params[i].name, params[i].value);
-                } else if (params[i].type == ("Bool")) {
-                    mCustomConf.updateParamBool(params[i].name, params[i].value);
-                } else if (params[i].type == ("Enum")) {
-                    mCustomConf.updateParamEnum(params[i].name, params[i].value);
-                }
-            }
-
-            mCommands.customConfigSet(0, mCustomConf);
+        onTriggered: {
+            state.pkgState = state.s_Disconnected;
         }
     }
 
-    function quicksaveIMU(saveName) {
-        var params = [
-            {"name": "imu_conf.mode", "type": "Enum"},
-            {"name": "imu_conf.filter", "type": "Enum"},
-            {"name": "imu_conf.accel_lowpass_filter_x", "type": "Double"},
-            {"name": "imu_conf.accel_lowpass_filter_y", "type": "Double"},
-            {"name": "imu_conf.accel_lowpass_filter_z", "type": "Double"},
-            {"name": "imu_conf.gyro_lowpass_filter", "type": "Double"},
-            {"name": "imu_conf.sample_rate_hz", "type": "Int"},
-            {"name": "imu_conf.use_magnetometer", "type": "Bool"},
-            {"name": "imu_conf.accel_confidence_decay", "type": "Double"},
-            {"name": "imu_conf.mahony_kp", "type": "Double"},
-            {"name": "imu_conf.mahony_ki", "type": "Double"},
-            {"name": "imu_conf.madgwick_beta", "type": "Double"},
-            {"name": "imu_conf.rot_roll", "type": "Double"},
-            {"name": "imu_conf.rot_pitch", "type": "Double"},
-            {"name": "imu_conf.rot_yaw", "type": "Double"},
-            {"name": "imu_conf.accel_offsets__0", "type": "Double"},
-            {"name": "imu_conf.accel_offsets__1", "type": "Double"},
-            {"name": "imu_conf.accel_offsets__2", "type": "Double"},
-            {"name": "imu_conf.gyro_offsets__0", "type": "Double"},
-            {"name": "imu_conf.gyro_offsets__0", "type": "Double"},
-            {"name": "imu_conf.gyro_offsets__0", "type": "Double"}
-        ];
-
-        for (var i in params) {
-            if (params[i].type == ("Double")) {
-                params[i].value = mAppConf.getParamDouble(params[i].name);
-            } else if (params[i].type == ("Int")) {
-                params[i].value = mAppConf.getParamInt(params[i].name);
-            } else if (params[i].type == ("Bool")) {
-                params[i].value = mAppConf.getParamBool(params[i].name);
-            } else if (params[i].type == ("Enum")) {
-                params[i].value = mAppConf.getParamEnum(params[i].name);
-            }
-        }
-
-        quicksavePopup.saveName = saveName;
-        quicksavePopup.saveValue = JSON.stringify(params);
-        quicksavePopup.open();
-    }
-
-    function quickloadIMU(saveName) {
-        var json = settingStorage.value(saveName, "");
-        if (!json) {
-            quickloadErrorPopup.open();
-        } else {
-            var params = JSON.parse(json);
-
-            for (var i in params) {
-                if (params[i].type == ("Double")) {
-                    mAppConf.updateParamDouble(params[i].name, params[i].value);
-                } else if (params[i].type == ("Int")) {
-                    mAppConf.updateParamInt(params[i].name, params[i].value);
-                } else if (params[i].type == ("Bool")) {
-                    mAppConf.updateParamBool(params[i].name, params[i].value);
-                } else if (params[i].type == ("Enum")) {
-                    mAppConf.updateParamEnum(params[i].name, params[i].value);
-                }
-            }
-
-            mCommands.setAppConf();
-        }
-    }
-
-    function restoreDownloadedTunes() {
-        var tunes = parseCSV(settingStorage.value("tunes_csv", ""));
-        for (var i in tunes) {
-            downloadedTunesModel.append({"tune": tunes[i]});
-        }
-    }
-
-    function parseCSV(csv) {
-        var lines = csv.split("\r\n");
-        var result = [];
-        var tuneCount = lines[0].split(",").length - 1;
-        for (var i = 0; i < tuneCount; i++) {
-            result.push({});
-        }
-        for (var i = 0; i < lines.length; i++) {
-            var currentLine = lines[i].split(",");
-            for (var j = 0; j < tuneCount; j++) {
-                if (currentLine[j + 1]) {
-                    result[j][currentLine[0]] = currentLine[j + 1];
-                }
-            }
-        }
-        return result;
-    }
-
-    function applyDownloadedTune(tune) {
-        for (const [key, value] of Object.entries(tune)) {
-            if (!key.startsWith("_")) {
-                var actualKey;
-                if (key.startsWith("double_")) {
-                    mCustomConf.updateParamDouble(key.substring(7), value);
-                } else if (key.startsWith("int_")) {
-                    mCustomConf.updateParamInt(key.substring(4), value);
-                } else if (key.startsWith("bool_")) {
-                    mCustomConf.updateParamBool(key.substring(5), parseInt(value));
-                } else if (key.startsWith("enum_")) {
-                    mCustomConf.updateParamEnum(key.substring(5), value);
-                }
-            }
-        }
-
-        mCommands.customConfigSet(0, mCustomConf);
-    }
-
-    function restoreQuicksaveNames() {
-        var json = settingStorage.value("quicksave_names", "");
-        if (!json) {
-            quicksaveNames = defaultQuicksaveNames;
-        } else {
-            quicksaveNames = JSON.parse(json);
-        }
-    }
-
-    anchors.fill: parent
-    anchors.margins: 5
-    Component.onCompleted: {
-        restoreQuicksaveNames();
-        restoreDownloadedTunes();
-    }
-
-    Settings {
-        id: settingStorage
-    }
-
-    // Timer 1, 10hz for ble comms
+    // 10hz for realtime data
     Timer {
         running: true
         repeat: true
         interval: 100
         onTriggered: {
-            var buffer = new ArrayBuffer(2);
-            var dv = new DataView(buffer);
-            var ind = 0;
-            dv.setUint8(ind, 101);
-            ind += 1;
-            dv.setUint8(ind, 1);
-            ind += 1;
-            mCommands.sendCustomAppData(buffer);
-            mCommands.getValues();
+            vescCommands.getValuesSetup();
+
+            commands.sendGetRtData();
 
             if (moveSlider.value != 0) {
-                var current = Math.abs(Math.round(moveSlider.value * 70)) + 10;
-                var buffer = new ArrayBuffer(6);
-                var dv = new DataView(buffer);
-                var ind = 0;
-                dv.setUint8(ind, 101); // Package ID
-                ind += 1;
-                dv.setUint8(ind, 7); // Command ID: RC Move
-                ind += 1;
-                dv.setUint8(ind, moveSlider.value > 0 ? 1 : 0); // Direction
-                ind += 1;
-                dv.setUint8(ind, current); // Current
-                ind += 1;
-                dv.setUint8(ind, 1); // Time
-                ind += 1;
-                dv.setUint8(ind, current + 1); // Sum = time + current
-                ind += 1;
-                mCommands.sendCustomAppData(buffer);
+                commands.sendRcMove(moveSlider.value);
             }
 
             if (tiltEnabled.checked) {
-                mCommands.lispSendReplCmd("(set-remote-state " + tiltSlider.value + " 0 0 0 0)");
+                vescCommands.lispSendReplCmd("(set-remote-state " + tiltSlider.value + " 0 0 0 0)");
             }
         }
     }
 
-    // Timer 2, 100hz for for UI updates
+    // 100hz for for UI updates
     Timer {
         running: true
         repeat: true
@@ -406,642 +113,3089 @@ Item {
     }
 
     Connections {
-        target: mCommands
-        onValuesReceived: {
-            var newcode = values.fault_code; // returns undefined for some reason
-            var fault = values.fault_str;
-            fault = fault.replace("FAULT_CODE_", "");
-            if (fault === "NONE") {
-            } else {
-                fault_code = 1;
-                motor_fault.text = "Fault(!!): " + fault + "\n";
+        id: vescConfig
+        target: VescIf
+
+        property bool useImperial: VescIf.useImperialUnits()
+        property string distanceUnit: useImperial ? "mi" : "km"
+        property string speedUnit: useImperial ? "mph" : "km/h"
+        property real imperialFactor: useImperial ? 0.621371192 : 1.0;
+
+        function onUseImperialUnitsChanged(useImperialUnits) {
+            useImperial = useImperialUnits;
+        }
+    }
+
+    Connections {
+        id: motorConfig
+        property ConfigParams mcConfig: VescIf.mcConfig()
+        target: mcConfig
+
+        property int batteryCells: mcConfig.getParamInt("si_battery_cells")
+        property real tempMotorStart: mcConfig.getParamDouble("l_temp_motor_start")
+        property real tempFetStart: mcConfig.getParamDouble("l_temp_fet_start")
+        property real currentMin: mcConfig.getParamDouble("l_current_min")
+        property real currentMax: mcConfig.getParamDouble("l_current_max")
+        property real inCurrentMin: mcConfig.getParamDouble("l_in_current_min")
+        property real inCurrentMax: mcConfig.getParamDouble("l_in_current_max")
+
+        function onParamChangedDouble(src, name, newParam) {
+            if (name === "l_temp_motor_start") {
+                tempMotorStart = newParam;
+            } else if (name === "l_temp_fet_start") {
+                tempFetStart = newParam;
+            } else if (name === "l_current_min") {
+                currentMin = newParam;
+            } else if (name === "l_current_max") {
+                currentMax = newParam;
+            } else if (name === "l_in_current_min") {
+                inCurrentMin = newParam;
+            } else if (name === "l_in_current_max") {
+                inCurrentMax = newParam;
             }
         }
-        onCustomAppDataReceived: {
-            var dv = new DataView(data, 0);
-            var ind = 0;
-            var magicnr = dv.getUint8(ind);
-            ind += 1;
-            var msgtype = dv.getUint8(ind);
-            ind += 1;
-            if (magicnr != 101) {
+
+        function onParamChangedInt(src, name, newParam) {
+            if (name === "si_battery_cells") {
+                batteryCells = newParam;
+            }
+        }
+    }
+
+    Connections {
+        id: packageConfig
+        target: VescIf
+
+        property ConfigParams pkgConfig: VescIf.customConfig(0);
+
+       function onCustomConfigLoadDone() {
+           pkgConfig = VescIf.customConfig(0);
+        }
+
+        function checkConfig() {
+            state.configLoadingError = !pkgConfig;
+            return !!pkgConfig;
+        }
+
+        function setDisabled(disabled) {
+            if (!checkConfig()) return;
+
+            pkgConfig.updateParamBool("disabled", disabled);
+            vescCommands.customConfigSet(0, pkgConfig);
+        }
+
+        function fetchConfig(tuneOnly) {
+            if (!checkConfig()) return;
+
+            var tuneBlacklist = [
+                "inputtilt_remote_type",
+                "inputtilt_deadband",
+                "disabled",
+                "hertz",
+                "tiltback_hv",
+                "tiltback_lv",
+                "fault_adc1",
+                "fault_adc2",
+                "dark_pitch_offset",
+            ];
+
+            var settings = [];
+            for (let subGroup of pkgConfig.getParamSubgroups("General")) {
+                for (let param of pkgConfig.getParamsFromSubgroup("General", subGroup)) {
+                    if (tuneOnly && tuneBlacklist.includes(param)) {
+                        continue;
+                    }
+
+                    var item = {"name": param};
+
+                    if (pkgConfig.isParamDouble(param)) {
+                        item.type = "Double";
+                        item.value = pkgConfig.getParamDouble(param);
+                    } else if (pkgConfig.isParamInt(param)) {
+                        item.type = "Int";
+                        item.value = pkgConfig.getParamInt(param);
+                    } else if (pkgConfig.isParamEnum(param)) {
+                        item.type = "Enum";
+                        item.value = pkgConfig.getParamEnum(param);
+                    } else if (pkgConfig.isParamBool(param)) {
+                        item.type = "Bool";
+                        item.value = pkgConfig.getParamBool(param);
+                    } else if (pkgConfig.isParamQString(param)) {
+                        item.type = "String";
+                        item.value = pkgConfig.getParamQString(param);
+                    } else if (pkgConfig.isParamBitfield(param)) {
+                        item.type = "Bitfield";
+                        item.value = pkgConfig.getParamInt(param);
+                    } else {
+                        // e.g. a separator
+                        continue;
+                    }
+
+                    settings.push(item);
+                }
+            }
+
+            return settings;
+        }
+
+        function applyConfig(config) {
+            if (!checkConfig()) return;
+
+            if (config.version !== "1.0") {
+                VescIf.emitStatusMessage("Error: Unexpected version: %1".arg(config.version), false);
                 return;
             }
 
-            if (msgtype == 1) {
-                var pid_value = dv.getFloat32(ind);
-                ind += 4;
-                var pitch = dv.getFloat32(ind);
-                ind += 4;
-                var roll = dv.getFloat32(ind);
-                ind += 4;
-                var state = dv.getInt8(ind);
-                ind += 1;
-                var setpointAdjustmentType = state >> 4;
-                state = state & 15;
-                var switch_state = dv.getInt8(ind);
-                ind += 1;
-                var handtest = switch_state & 8;
-                var new_beep_reason = switch_state >> 4;
-                switch_state = switch_state & 3;
-                var adc1 = dv.getFloat32(ind);
-                ind += 4;
-                var adc2 = dv.getFloat32(ind);
-                ind += 4;
-                var float_setpoint = dv.getFloat32(ind);
-                ind += 4;
-                var float_atr = dv.getFloat32(ind);
-                ind += 4;
-                var float_braketilt = dv.getFloat32(ind);
-                ind += 4;
-                var float_torquetilt = dv.getFloat32(ind);
-                ind += 4;
-                var float_turntilt = dv.getFloat32(ind);
-                ind += 4;
-                var float_inputtilt = dv.getFloat32(ind);
-                ind += 4;
-                var true_pitch = dv.getFloat32(ind);
-                ind += 4;
-                var filtered_current = dv.getFloat32(ind);
-                ind += 4;
-                var float_acc_diff = dv.getFloat32(ind);
-                ind += 4;
-                var applied_booster_current = dv.getFloat32(ind);
-                ind += 4;
-                var motor_current = dv.getFloat32(ind);
-                ind += 4;
-                var throttle_val = dv.getFloat32(ind);
-                ind += 4;
-                var stateString;
-                if (state == 0) {
-                    stateString = "BOOT";
-                } else if (state == 1) {
-                    stateString = "RUNNING";
-                } else if (state == 2) {
-                    stateString = "RUNNING_TILTBACK";
-                } else if (state == 3) {
-                    stateString = "RUNNING_WHEELSLIP";
-                } else if (state == 4) {
-                    stateString = "RUNNING_UPSIDEDOWN";
-                } else if (state == 5) {
-                    stateString = "RUNNING_FLYWHEEL";
-                } else if (state == 6) {
-                    stateString = "STOP_ANGLE_PITCH";
-                } else if (state == 7) {
-                    stateString = "STOP_ANGLE_ROLL";
-                } else if (state == 8) {
-                    stateString = "STOP_SWITCH_HALF";
-                } else if (state == 9) {
-                    stateString = "STOP_SWITCH_FULL";
-                } else if (state == 11) {
-                    if ((roll > 120) || (roll < -120)) {
-                        stateString = "STARTUP UPSIDEDOWN";
-                    } else {
-                        stateString = "STARTUP";
-                    }
-                } else if (state == 12) {
-                    stateString = "STOP_REVERSE";
-                } else if (state == 13) {
-                    stateString = "STOP_QUICKSTOP";
-                } else {
-                    stateString = "UNKNOWN";
+            for (let item of config.settings) {
+                if (item.type === "Double") {
+                    pkgConfig.updateParamDouble(item.name, item.value);
+                } else if (item.type === "Int") {
+                    pkgConfig.updateParamInt(item.name, item.value);
+                } else if (item.type === "Bool") {
+                    pkgConfig.updateParamBool(item.name, item.value);
+                } else if (item.type === "Enum") {
+                    pkgConfig.updateParamEnum(item.name, item.value);
+                } else if (item.type === "String") {
+                    pkgConfig.updateParamString(item.name, item.value);
+                } else if (item.type === "Bitfield") {
+                    pkgConfig.updateParamInt(item.name, item.value);
                 }
-                var beepString;
-                if (beep_reason == 1) {
-                    beepString = "Low Voltage";
-                } else if (beep_reason == 2) {
-                    beepString = "High Voltage";
-                } else if (beep_reason == 3) {
-                    beepString = "Controller Temp";
-                } else if (beep_reason == 4) {
-                    beepString = "Motor Temp";
-                } else if (beep_reason == 5) {
-                    beepString = "Overcurrent";
-                } else if (beep_reason == 6) {
-                    beepString = "Duty Cycle";
-                } else if (beep_reason == 7) {
-                    beepString = "Foot Sensors";
-                } else if (beep_reason == 8) {
-                    beepString = "Low Battery";
-                } else if (beep_reason == 9) {
-                    beepString = "Board Idle";
-                } else if (beep_reason == 10) {
-                    beepString = "Other";
-                }
-                var suffix = "";
-                if (setpointAdjustmentType == 0) {
-                    suffix = "[CENTERING]";
-                } else if (setpointAdjustmentType == 1) {
-                    suffix = "[REVERSESTOP]";
-                } else if (setpointAdjustmentType == 3) {
-                    suffix = "[DUTY]";
-                } else if (setpointAdjustmentType == 4) {
-                    suffix = "[HV]";
-                } else if (setpointAdjustmentType == 5) {
-                    suffix = "[LV]";
-                } else if (setpointAdjustmentType == 6) {
-                    suffix = "[TEMP]";
-                }
-                if ((state > 0) && (state < 6)) {
-                    stateString += suffix;
-                }
+            }
 
-                if (handtest > 0) {
-                    stateString += "[HANDTEST]";
-                }
+            vescCommands.customConfigSet(0, pkgConfig);
+        }
 
-                var switchString;
-                if (switch_state == 0) {
-                    switchString = "Off";
-                } else if (switch_state == 1) {
-                    switchString = "Half";
-                } else {
-                    switchString = "On";
-                }
-                if (new_beep_reason > 0) {
-                    beep_reason = new_beep_reason;
-                }
+        // TODO don't do this...
+        function setInputTiltRemoteType(type) {
+            if (!checkConfig()) return;
 
-                if (state == 15) {
-                    stateString = "DISABLED"
-                    switchString = "Enable in Reloat Cfg: Specs"
-                    rt_state.text = "Refloat Package is Disabled\n\n" +
-                                    "You can re-enable it in\nRefloat Cfg: Specs\n\n"
-                    rt_data.text = "-- n/a --"
-                    setpoints.text = "-- n/a --"
-                    debug.text = "-- n/a --"
-                } else {
-                    rt_state.text =
-                        "State               : " + stateString + "\n" +
-                        "Switch              : " + switchString + "\n";
-                    rt_data.text =
-                        "Current (Requested) : " + pid_value.toFixed(2) + "A\n" +
-                        "Current (Motor)     : " + motor_current.toFixed(2) + "A\n" +
-                        "Pitch               : " + pitch.toFixed(2) + "°\n" +
-                        "Roll                : " + roll.toFixed(2) + "°\n" +
-                        "ADC1 / ADC2         : " + adc1.toFixed(2) + "V / " + adc2.toFixed(2) + "V\n";
-
-                    setpoints.text =
-                        "Setpoint            : " + float_setpoint.toFixed(2) + "°\n" +
-                        "ATR Setpoint        : " + float_atr.toFixed(2) + "°\n" +
-                        "BrakeTilt Setpoint  : " + float_braketilt.toFixed(2) + "°\n" +
-                        "TorqueTilt Setpoint : " + float_torquetilt.toFixed(2) + "°\n" +
-                        "TurnTilt Setpoint   : " + float_turntilt.toFixed(2) + "°\n" +
-                        "RemoteTilt Setpoint  : " + float_inputtilt.toFixed(2) + "°\n";
-
-                    debug.text =
-                        "True Pitch          : " + true_pitch.toFixed(2) + "°\n" +
-                        "Torque              : " + filtered_current.toFixed(2) + "A\n" +
-                        "Acc. Diff.          : " + float_acc_diff.toFixed(2) + "\n" +
-                        "Booster Current     : " + applied_booster_current.toFixed(2) + "A\n" +
-                        "Remote Input        : " + (throttle_val * 100).toFixed(0) + "%\n";
-
-                    if (beep_reason > 0) {
-                        debug.text += "Last Beep Reason    : " + beepString + "\n";
-                    }
-                }
+            if (pkgConfig.getParamEnum("inputtilt_remote_type", 0) != 1) {
+                pkgConfig.updateParamEnum("inputtilt_remote_type", 1);
+                vescCommands.customConfigSet(0, pkgConfig);
             }
         }
     }
 
-    Dialog {
-        id: quicksavePopup
+    Connections {
+        id: commands
+        target: vescCommands
 
-        property var saveName: "Temp Name"
-        property var saveValue: ""
+        readonly property int c_GET_RT_DATA: 1
+        readonly property int c_RC_MOVE: 7
+        readonly property int c_HANDTEST: 13
+        readonly property int c_FLYWHEEL: 22
 
-        title: saveName
-        standardButtons: Dialog.Save | Dialog.Discard | Dialog.Cancel
-        modal: true
-        focus: true
-        width: parent.width - 20
-        closePolicy: Popup.CloseOnEscape
-        x: 10
-        y: 10 + parent.height / 2 - height / 2
-        parent: ApplicationWindow.overlay
-        onAccepted: {
-            if (quicksaveNameInput.text) {
-                quicksaveNames[saveName] = quicksaveNameInput.text;
-                quicksaveNames = quicksaveNames;
-                settingStorage.setValue("quicksave_names", JSON.stringify(quicksaveNames));
+        function createData(size, command) {
+            var data = new DataView(new ArrayBuffer(size));
+            var ind = 0;
+            data.setUint8(ind++, 101);
+            data.setUint8(ind++, command);
+            return data;
+        }
+
+        function sendGetRtData() {
+            vescCommands.sendCustomAppData(createData(2, c_GET_RT_DATA).buffer);
+        }
+
+        function sendRcMove(value) {
+            var data = createData(6, c_RC_MOVE);
+
+            var current = Math.abs(Math.round(value * 70)) + 10;
+
+            data.setUint8(2, value > 0 ? 1 : 0); // direction
+            data.setUint8(3, current); // current
+            data.setUint8(4, 1); // time
+            data.setUint8(5, current + 1); // sum = time + current
+
+            vescCommands.sendCustomAppData(data.buffer);
+        }
+
+        function sendHandtest(on) {
+            var data = createData(3, c_HANDTEST);
+            data.setUint8(2, on); // on (1) / off (0)
+            vescCommands.sendCustomAppData(data.buffer);
+        }
+
+        function sendFlywheel(on) {
+            var data = createData(9, c_FLYWHEEL);
+
+            data.setUint8(2, on ? 130 : 128); // on, force calibration (130) / off (128)
+            if (on) {
+                data.setUint8(3, 0); // use default kp
+                data.setUint8(4, 0); // use default kp2
+                data.setUint8(5, 0); // use default duty angle
+                data.setUint8(6, 0); // use default duty start
+                data.setUint8(7, 1); // allow abort with footpads
+                data.setUint8(8, 0); // use default duty speed
             }
-            settingStorage.setValue(saveName, saveValue);
-            quicksaveNameInput.text = "";
-            VescIf.emitStatusMessage(saveName + " saved!", true);
-        }
-        onDiscarded: {
-            VescIf.emitStatusMessage(quicksaveNames[saveName] + " discarded", true);
-            quicksaveNames[saveName] = defaultQuicksaveNames[saveName];
-            quicksaveNames = quicksaveNames;
-            settingStorage.setValue("quicksave_names", JSON.stringify(quicksaveNames));
-            settingStorage.setValue(saveName, null);
-            quicksaveNameInput.text = "";
-            close();
-        }
-        onRejected: {
-            quicksaveNameInput.text = "";
-            VescIf.emitStatusMessage(saveName + " cancelled", false);
+            vescCommands.sendCustomAppData(data.buffer);
         }
 
-        ColumnLayout {
+        function onValuesSetupReceived(values, mask) {
+            var fault = values.fault_str;
+            fault = fault.replace("FAULT_CODE_", "");
+            state.vescFault = fault != "NONE" ? fault : "";
+
+            batteryBar.voltage = values.v_in;
+            batteryBar.value = values.battery_level * 100;
+
+            var speed = Math.abs(values.speed * 3.6 * vescConfig.imperialFactor);
+            speedDial.value = speed;
+            speedDial.erpm = Math.abs(values.rpm);
+
+            currentDial.value = values.current_motor;
+            dutyDial.value = Math.abs(values.duty_now * 100);
+            batteryCurrent.value = values.current_in;
+
+            motorTemp.value = values.temp_motor;
+            controllerTemp.value = values.temp_mos;
+            odometer.value = Math.round(values.odometer * 0.001 * vescConfig.imperialFactor);
+            tachometer.value = values.tachometer_abs * 0.001 * vescConfig.imperialFactor;
+
+            consumption.add(Math.max(Math.min(values.current_in * values.v_in / Math.max(speed, 1e-6), 60) , -60));
+        }
+
+        function onCustomAppDataReceived(data) {
+            var dv = new DataView(data, 0);
+            var ind = 0;
+
+            var packageId = dv.getUint8(ind++);
+            if (packageId !== 101) {
+                return;
+            }
+
+            var msgtype = dv.getUint8(ind++);
+
+            if (msgtype === c_GET_RT_DATA) {
+                debugRequestedCurrent.rValue = dv.getFloat32(ind);
+                ind += 4;
+                pitch.balancePitchValue = dv.getFloat32(ind);
+                ind += 4;
+                roll.value = dv.getFloat32(ind);
+                ind += 4;
+                var pkgState = dv.getInt8(ind);
+                ind += 1;
+                var setpointAdjustmentType = pkgState >> 4;
+                pkgState = pkgState & 15;
+                var switchState = dv.getInt8(ind);
+                ind += 1;
+                var handtest = !!(switchState & 8);
+                state.beepReason = switchState >> 4;
+                switchState = switchState & 3;
+                state.adc1Voltage = dv.getFloat32(ind);
+                ind += 4;
+                state.adc2Voltage = dv.getFloat32(ind);
+                ind += 4;
+                pitch.setpointValue = dv.getFloat32(ind);
+                ind += 4;
+                debugAtrSetpoint.rValue = dv.getFloat32(ind);
+                ind += 4;
+                debugBrakeTiltSetpoint.rValue = dv.getFloat32(ind);
+                ind += 4;
+                debugTorqueTiltSetpoint.rValue = dv.getFloat32(ind);
+                ind += 4;
+                debugTurnTiltSetpoint.rValue = dv.getFloat32(ind);
+                ind += 4;
+                debugRemoteTiltSetpoint.rValue = dv.getFloat32(ind);
+                ind += 4;
+                pitch.pitchValue = dv.getFloat32(ind);
+                ind += 4;
+                debugFilteredCurrent.rValue = dv.getFloat32(ind);
+                ind += 4;
+                debugAccDiff.rValue = dv.getFloat32(ind);
+                ind += 4;
+                debugBoosterCurrent.rValue = dv.getFloat32(ind);
+                ind += 4;
+                var motorCurrent = dv.getFloat32(ind);
+                ind += 4;
+                debugRemoteInput.value = Math.round((dv.getFloat32(ind) * 100));
+                ind += 4;
+
+                state.setpointAdjustmentType = state.sat_None;
+                state.darkride = false;
+                state.wheelslip = false;
+                var flywheel = false;
+                if (pkgState === 0) {
+                    state.pkgState = state.s_Startup;
+                } else if (pkgState < 6) {
+                    state.pkgState = state.s_Running;
+
+                    // reset stop reason only once engaged again
+                    state.stopCondition = state.sc_None;
+
+                    // pkgState = 2 is "RUNNING_TILTBACK"
+                    if (pkgState === 3) {
+                        state.wheelslip = true;
+                    } else if (pkgState === 4) {
+                        state.darkride = true;
+                    } else if (pkgState === 5) {
+                        flywheel = true;
+                    }
+
+                    if (setpointAdjustmentType === 0) {
+                        state.setpointAdjustmentType = state.sat_Centering;
+                    } else if (setpointAdjustmentType === 1) {
+                        state.setpointAdjustmentType = state.sat_ReverseStop;
+                    } else if (setpointAdjustmentType === 2) {
+                        state.setpointAdjustmentType = state.sat_None;
+                    } else if (setpointAdjustmentType === 3) {
+                        state.setpointAdjustmentType = state.sat_Duty;
+                    } else if (setpointAdjustmentType === 4) {
+                        state.setpointAdjustmentType = state.sat_HighVoltage;
+                    } else if (setpointAdjustmentType === 5) {
+                        state.setpointAdjustmentType = state.sat_LowVoltage;
+                    } else if (setpointAdjustmentType === 6) {
+                        state.setpointAdjustmentType = state.sat_Temperature;
+                    }
+                } else if (pkgState < 14) {
+                    state.pkgState = state.s_Ready;
+
+                    if (pkgState === 6) {
+                        state.stopCondition = state.sc_Pitch;
+                    } else if (pkgState === 7) {
+                        state.stopCondition = state.sc_Roll;
+                    } else if (pkgState === 8) {
+                        state.stopCondition = state.sc_SensorHalf;
+                    } else if (pkgState === 9) {
+                        state.stopCondition = state.sc_SensorFull;
+                    // pkgState = 11 is "FAULT_STARTUP"
+                    } else if (pkgState === 12) {
+                        state.stopCondition = state.sc_ReverseStop;
+                    } else if (pkgState === 13) {
+                        state.stopCondition = state.sc_Quickstop;
+                    }
+                } else if (pkgState === 15) {
+                    state.pkgState = state.s_Disabled;
+                } else {
+                    state.pkgState = 42;
+                }
+
+                if (handtest) {
+                    state.pkgMode = state.m_Handtest;
+                } else if (flywheel) {
+                    state.pkgMode = state.m_Flywheel;
+                } else {
+                    state.pkgMode = state.m_Normal;
+                }
+
+                if (switchState === 0) {
+                    state.fsState = state.fs_None;
+                } else if (switchState === 1) {
+                    state.fsState = state.fs_Left;
+                } else {
+                    state.fsState = state.fs_Both;
+                }
+            }
+
+            packageConnectionWatchdog.restart();
+        }
+    }
+
+    // Old Float package settings, used to retrieve quicksaves
+    Settings {
+        id: floatSettings
+    }
+
+    Settings {
+        id: preferences
+        category: "preferences"
+
+        property int speedDialMax: vescConfig.useImperial ? 30 : 40
+        property alias swapAdcs: prefSwapAdcs.checked
+        property alias showBattVoltage: prefShowBattVoltage.checked
+        property alias showBattVoltagePerCell: prefShowBattVoltagePerCell.checked
+        property alias battCurrentLog: prefBattCurrentLog.checked
+        property int tempWarningOffset: 10
+        property alias tuneSlotCount: prefTuneSlotCount.value
+        property alias showWelcomeDialog: prefShowWelcomeDialog.checked
+    }
+
+    QtObject {
+        id: tuneManager
+
+        readonly property string formatVersion: "1.0"
+        readonly property string packageName: "Refloat"
+        readonly property string packageVersion: "{{VERSION}}"
+        readonly property int maxTunes: 6
+
+        // Storage for tunes as well as full package configs
+        property var tuneStorage: Settings {
+            id: tuneStorage
+            category: "configs"
+
+            property var tuneArchive
+            property var tuneArchiveDownloadDate
+
+            // An array storing Float tune names that have been converted for
+            // each slot. Prevents converting tunes over and over again, until
+            // the name changes for the Float tune.
+            property var floatTunesConverted: Array(6)
+
+            property var fullBackup
+        }
+
+        property var tuneNames: {
+            var names = {}
+            for (var slot = 1; slot <= maxTunes; slot++) {
+                var tune = loadTune(slot);
+                if (tune) {
+                    names[slot] = tune.name;
+                }
+            }
+
+            return names;
+        }
+
+        property alias fullBackup: tuneStorage.fullBackup
+
+        function tuneId(slot) {
+            return "tune_slot_" + slot;
+        }
+
+        function createTune(name, description, settings) {
+            var tune = {
+                "version": formatVersion,
+                "name": name,
+                "date": new Date(),
+                "package": {
+                    "name": packageName,
+                    "version": packageVersion
+                },
+                "settings": settings
+            };
+
+            if (description) {
+                tune.description = description;
+            }
+
+            return tune;
+        }
+
+        function updateTune(tune, name, description, settings) {
+            tune.name = name;
+            if (description) {
+                tune.description = description;
+            }
+            if (settings) {
+                tune.settings = settings;
+                tune.date = new Date();
+            }
+        }
+
+        function createBackup() {
+            return createTune("Full Backup", "", packageConfig.fetchConfig(false));
+        }
+
+        function saveTune(slot, tune) {
+            var id = tuneId(slot);
+
+            tuneStorage.setValue(id, JSON.stringify(tune));
+
+            tuneNames[slot] = tune.name;
+            // workaround needed so that the change is written through to the storage
+            tuneNames = tuneNames;
+        }
+
+        function loadTune(slot) {
+            var tuneJson = tuneStorage.value(tuneId(slot), "");
+            if (tuneJson) {
+                return JSON.parse(tuneJson);
+            }
+            return null;
+        }
+
+        function eraseTune(slot) {
+            tuneStorage.setValue(tuneId(slot), "");
+            tuneNames[slot] = null;
+            // workaround needed so that the change is written through to the storage
+            tuneNames = tuneNames;
+        }
+
+        function slotEmpty(slot) {
+            return !tuneStorage.value(tuneId(slot), null);
+        }
+
+        function saveTuneArchive(tuneArchive) {
+            tuneStorage.tuneArchive = JSON.stringify(tuneArchive);
+            tuneStorage.tuneArchiveDownloadDate = new Date();
+        }
+
+        function loadTuneArchive() {
+            if (tuneStorage.tuneArchive) {
+                return JSON.parse(tuneStorage.tuneArchive);
+            }
+            return null;
+        }
+
+        function getTuneArchiveDate() {
+            return Qt.formatDateTime(tuneStorage.tuneArchiveDownloadDate);
+        }
+
+        function convertFloatQuicksaves() {
+            var namesJson = floatSettings.value("quicksave_names", null);
+            if (namesJson) {
+                var names = JSON.parse(namesJson);
+                for (var slotName in names) {
+                    if (!slotName.startsWith("Float Quicksave ")) {
+                        continue;
+                    }
+
+                    var tuneSettingsJson = floatSettings.value(slotName, null);
+                    if (!tuneSettingsJson) {
+                        continue;
+                    }
+
+                    var slot = Number(slotName.replace("Float Quicksave ", ""));
+                    // skipping if the tune has been converted before
+                    if (tuneStorage.floatTunesConverted[slot - 1] === names[slotName]) {
+                        continue;
+                    }
+
+                    // at this stage mark slot as converted, if target slot is not empty,
+                    // we don't want it converted at the moment it gets emptied
+                    tuneStorage.floatTunesConverted[slot - 1] = names[slotName];
+                    // workaround needed so that the change is written through to the storage
+                    tuneStorage.floatTunesConverted = tuneStorage.floatTunesConverted;
+
+                    if (slotEmpty(slot)) {
+                        var tuneSettings = JSON.parse(tuneSettingsJson);
+                        tuneManager.saveTune(slot, tuneManager.createTune(names[slotName], "", tuneSettings));
+                    }
+                }
+            }
+        }
+
+        function parseCsv(csv) {
+            var lines = csv.split("\r\n");
+            var tuneCount = lines[0].split(",").length - 1;
+
+            var result = [];
+            for (var i = 0; i < tuneCount; i++) {
+                // set the version to the current one to always pass the version check
+                result.push({"version": formatVersion, "settings": []});
+            }
+
+            for (var i in lines) {
+                var currentLine = lines[i].split(",");
+
+                for (var j = 0; j < tuneCount; j++) {
+                    var value = currentLine[j + 1];
+                    if (value) {
+                        var key = currentLine[0];
+                        var name;
+                        var type;
+
+                        if (key === "_name") {
+                            result[j].name = value;
+                            continue;
+                        } else if (key.startsWith("double_")) {
+                            name = key.substring(7);
+                            type = "Double";
+                        } else if (key.startsWith("int_")) {
+                            name = key.substring(4);
+                            type = "Int";
+                        } else if (key.startsWith("bool_")) {
+                            name = key.substring(5);
+                            type = "Bool";
+                        } else if (key.startsWith("enum_")) {
+                            name = key.substring(5);
+                            type = "Enum";
+                        }
+
+                        result[j].settings.push({
+                            "name": name,
+                            "type": type,
+                            "value": value
+                        });
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        Component.onCompleted: {
+            convertFloatQuicksaves();
+        }
+    }
+
+    QtObject {
+        id: state
+
+        // package state
+        readonly property int s_Disabled: 0
+        readonly property int s_Startup: 1
+        readonly property int s_Ready: 2
+        readonly property int s_Running: 3
+        readonly property int s_Connecting: 254
+        readonly property int s_Disconnected: 255
+
+        readonly property var pkgStateToString: new Map([
+            [s_Disabled, "DISABLED"],
+            [s_Startup, "STARTUP"],
+            [s_Ready, "READY"],
+            [s_Running, "RUNNING"],
+            [s_Connecting, "CONNECTING..."],
+            [s_Disconnected, "DISCONNECTED"],
+        ])
+
+        property int pkgState: s_Connecting
+        property string pkgStateString: pkgStateToString.get(pkgState) ?? "UNKNOWN (%1)".arg(pkgState)
+
+        onPkgStateChanged: {
+            updateErrorStrings();
+        }
+
+        // package mode
+        readonly property int m_Normal: 0
+        readonly property int m_Handtest: 1
+        readonly property int m_Flywheel: 2
+
+        property int pkgMode: m_Normal
+
+        property string pkgModeString: {
+            if (pkgState != s_Disconnected) {
+                if (pkgMode == m_Flywheel) {
+                    return "FLYWHEEL";
+                } else if (pkgMode == m_Handtest) {
+                    return "HANDTEST";
+                }
+            }
+
+            return "";
+        }
+
+        // footpad sensor state
+        readonly property int fs_None: 0
+        readonly property int fs_Left: 1
+        readonly property int fs_Right: 2
+        readonly property int fs_Both: 3
+
+        property int fsState: fs_None
+        property real adc1Voltage: 0
+        property real adc2Voltage: 0
+
+        onFsStateChanged: {
+            leftSensor.on = false;
+            rightSensor.on = false;
+
+            if (fsState & fs_Left) {
+                leftSensor.on = true;
+            }
+
+            if (fsState & fs_Right) {
+                rightSensor.on = true;
+            }
+
+            if (preferences.swapAdcs && leftSensor.on !== rightSensor.on) {
+                leftSensor.on = !leftSensor.on;
+                rightSensor.on = !rightSensor.on;
+            }
+        }
+
+        // setpoint adjustment type
+        readonly property int sat_None: 0
+        readonly property int sat_Centering: 1
+        readonly property int sat_ReverseStop: 2
+        readonly property int sat_Duty: 6
+        readonly property int sat_HighVoltage: 10
+        readonly property int sat_LowVoltage: 11
+        readonly property int sat_Temperature: 12
+
+        // setpoint adjustment class
+        readonly property int sac_Normal: 0
+        readonly property int sac_Warning: 1
+        readonly property int sac_Error: 2
+
+        readonly property var setpointAdjustmentTypeToString: new Map([
+            [sat_None, ""],
+            [sat_Centering, "centering"],
+            [sat_ReverseStop, "reverse stop"],
+            [sat_Duty, "pushback: duty"],
+            [sat_HighVoltage, "pushback: high voltage"],
+            [sat_LowVoltage, "pushback: low voltage"],
+            [sat_Temperature, "pushback: temperature"],
+        ])
+
+        property int setpointAdjustmentType: sat_None
+        property string setpointAdjustmentTypeString
+        property int setpointAdjustmentClass
+        onSetpointAdjustmentTypeChanged: {
+            // do these in one function to keep them consistent, order is important to display and fade correctly in pitchPushbackText
+            setpointAdjustmentClass = setpointAdjustmentType >= sat_HighVoltage ? sac_Error : setpointAdjustmentType >= sat_Duty ? sac_Warning : sac_Normal;
+            setpointAdjustmentTypeString = setpointAdjustmentTypeToString.get(setpointAdjustmentType) ?? "unknown (%1)".arg(setpointAdjustmentType);
+        }
+
+        // stop condition
+        readonly property int sc_None: 0
+        readonly property int sc_Pitch: 1
+        readonly property int sc_Roll: 2
+        readonly property int sc_SensorHalf: 3
+        readonly property int sc_SensorFull: 4
+        readonly property int sc_ReverseStop: 5
+        readonly property int sc_Quickstop: 6
+
+        readonly property var stopConditionToString: new Map([
+            [sc_None, ""],
+            [sc_Pitch, "Pitch"],
+            [sc_Roll, "Roll"],
+            [sc_SensorHalf, "Sensor Half"],
+            [sc_SensorFull, "Sensor Full"],
+            [sc_ReverseStop, "Reverse Stop"],
+            [sc_Quickstop, "Quickstop"],
+        ])
+
+        property int stopCondition: sc_None
+        property string stopConditionString: stopConditionToString.get(stopCondition) ?? "unknown (%1)".arg(stopCondition)
+
+        property bool darkride: false
+        property bool wheelslip: false
+
+        readonly property var beepReasonToString: new Map([
+            [0, ""],
+            [1, "Low Voltage"],
+            [2, "High Voltage"],
+            [3, "Controller Temp"],
+            [4, "Motor Temp"],
+            [5, "Overcurrent"],
+            [6, "Duty Cycle"],
+            [7, "Foot Sensors"],
+            [8, "Low Battery"],
+            [9, "Board Idle"],
+            [10, "Other"],
+        ])
+
+        property int beepReason: 0
+        property string beepReasonString: beepReasonToString.get(beepReason) ?? "unknown (%1)".arg(beepReason)
+
+        property bool pkgStateIsError: ![s_Startup, s_Ready, s_Running, s_Connecting].includes(pkgState)
+        property string vescFault: ""
+        property bool configLoadingError: false
+
+        property bool isError: pkgStateIsError || !!vescFault || configLoadingError
+
+        onVescFaultChanged: updateErrorStrings()
+        onConfigLoadingErrorChanged: updateErrorStrings()
+
+        property string errorText: ""
+        property string errorDescription: ""
+
+        function updateErrorStrings() {
+            if (!!vescFault) {
+                errorText = "VESC fault: %1".arg(vescFault);
+                errorDescription = "VESC reported a fault. Be very careful. You should not continue riding before you fix the root cause."
+            } else if (configLoadingError) {
+                errorText = "Error: Refloat Cfg failed to load.";
+                errorDescription = "Reconnecting to the board usually fixes this. If problem persists, try reinstalling the package.";
+            } else if (pkgState == s_Disconnected) {
+                errorText = "";
+                errorDescription = "Package is not responding. May occur temporarily with spotty connection. If board doesn't engage, the package is dead. Restart the board, if problem persists, try reinstalling the package.";
+            } else if (pkgState == s_Disabled) {
+                errorText = "";
+                errorDescription = "Refloat package is disabled. After you're done with board setup, You can re-enable it in Settings > Setup."
+            } else if (![s_Startup, s_Ready, s_Running, s_Connecting].includes(pkgState)) {
+                errorText = "";
+                errorDescription = "Your Refloat package state is unknown. This should never happen.";
+            } else {
+                errorText = "";
+                errorDescription = "";
+            }
+        }
+    }
+
+    // A distance unit used for most dimensions throughout the layouts.
+    // Basing on width ensures uniform scaling of the whole UI, height is a
+    // factor of width and we rely on vertical aspect ratio to have some space
+    // at the bottom for a StackLayout of Tunes / Control / ...
+    property real unit: width * 0.1
+
+    property real fontSizeBig: 0.4 * unit
+    property real fontSizeNormal: 0.35 * unit
+    property real fontSizeSmall: 0.3 * unit
+    property real fontSizeSuperSmall: 0.25 * unit
+
+    anchors.fill: parent
+
+    component NText : Text {
+        color: Utility.getAppHexColor("normalText")
+    }
+
+    component LText : Text {
+        color: Utility.getAppHexColor("lightText")
+    }
+
+    component DText : Text {
+        color: Utility.getAppHexColor("disabledText")
+    }
+
+    component FloatingToolButton : RoundButton {
+        id: button
+        anchors.margins: 4
+        width: unit
+        height: unit
+        padding: 0
+        leftInset: 0
+        rightInset: 0
+        topInset: 0
+        bottomInset: 0
+
+        property Path iconPath
+        property real iconSize: width * 0.7
+        property color strokeColor: Utility.getAppHexColor("normalText")
+        property color bgColor: Utility.getAppHexColor("darkBackground")
+
+        contentItem: Item {
+            Canvas {
+                id: downloadTuneArchiveCanvas
+                anchors.centerIn: parent
+                implicitWidth: iconSize
+                implicitHeight: iconSize
+                contextType: "2d"
+
+                onPaint: {
+                    var context = getContext("2d");
+                    context.reset();
+                    context.strokeStyle = button.strokeColor
+                    context.lineCap = "round";
+                    iconPath.scale = Qt.size(iconSize / 50, iconSize / 50)
+                    context.path = iconPath
+                    context.lineWidth = 2
+                    context.stroke()
+                }
+            }
+        }
+
+        background: Rectangle {
+            id: buttonBg
+            radius: parent.width / 2
+            opacity: 0.9
+
+            color: button.bgColor
+
+            states: [
+                State {
+                    name: "change"
+                    when: button.pressed
+                    PropertyChanges {target: buttonBg; color: Utility.getAppHexColor("lightestBackground");}
+                }
+            ]
+
+            transitions: Transition {
+                ColorAnimation {property: "color"; duration: 200; easing.type: Easing.InOutCirc;}
+            }
+        }
+    }
+
+    component ToolButton : FloatingToolButton {
+        anchors.margins: 0
+        bgColor: Utility.getAppHexColor("normalBackground")
+    }
+
+    component Dial : Item {
+        id: dial
+
+        property real lineWidth: width * 0.075
+        property real maxValue
+        property real minValue
+        property real value
+        property real topValue
+        property real warnThresholdAbs: 0
+        property bool allowNegative: false
+        property string valueUnit: ""
+        property real valueFontSize: fontSizeNormal
+
+        property real valueAngle: value > 0 ? Math.min(360 * value / maxValue, 360) : Math.max(360 * value / -minValue, -360)
+        property real topAngle: Math.min(360 * topValue / maxValue, 360)
+
+        property real topAngleRads: topAngle * Math.PI / 180
+
+        property real dialRadius: width * 0.3
+
+        Behavior on value {
+            NumberAnimation {
+                easing.type: Easing.OutCirc
+                duration: 100
+            }
+        }
+
+        Behavior on topValue {
+            NumberAnimation {
+                easing.type: Easing.OutCirc
+                duration: 100
+            }
+        }
+
+        onValueAngleChanged: canvas.requestPaint();
+        onTopAngleChanged: canvas.requestPaint();
+
+        Canvas {
+            id: canvas
             anchors.fill: parent
 
-            Text {
-                color: Utility.getAppHexColor("lightText")
-                verticalAlignment: Text.AlignVCenter
+            contextType: "2d"
+
+            Path {
+                id: dialBackground
+
+                PathAngleArc {
+                    centerX: width * 0.5
+                    centerY: centerX
+                    radiusX: dialRadius + lineWidth * 0.5
+                    radiusY: radiusX
+                    startAngle: -270
+                    sweepAngle: 360
+                }
+            }
+
+            Path {
+                id: topFill
+
+                PathAngleArc {
+                    centerX: width * 0.5
+                    centerY: centerX
+                    radiusX: dialRadius + lineWidth * 0.5
+                    radiusY: radiusX
+                    startAngle: -270
+                    sweepAngle: topAngle
+                }
+            }
+
+            Path {
+                id: valueFill
+
+                PathAngleArc {
+                    centerX: width * 0.5
+                    centerY: centerX
+                    radiusX: dialRadius + lineWidth * 0.5
+                    radiusY: radiusX
+                    startAngle: -270
+                    sweepAngle: valueAngle
+                }
+            }
+
+            onPaint: {
+                var context = getContext("2d");
+                context.reset();
+                context.lineWidth = lineWidth;
+                context.strokeStyle = Utility.getAppHexColor("lightBackground");
+                context.path = dialBackground;
+                context.stroke();
+
+                if (!allowNegative) {
+                    context.strokeStyle = Utility.getAppHexColor("lightestBackground");
+                    context.path = topFill;
+                    context.stroke();
+                }
+
+                if (warnThresholdAbs > 0 && Math.abs(value) > warnThresholdAbs) {
+                    context.strokeStyle = Utility.getAppHexColor("orange");
+                } else {
+                    if (valueAngle > 0) {
+                        context.strokeStyle = Utility.getAppHexColor("lightAccent");
+                    } else {
+                        context.strokeStyle = Utility.getAppHexColor("green");
+                    }
+                }
+
+                context.path = valueFill;
+                context.stroke();
+            }
+        }
+
+        Rectangle {
+            id: zeroMarker
+            width: 1
+            height: 1.3 * lineWidth
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: parent.verticalCenter
+            anchors.topMargin: dialRadius
+            z: 1
+            color: Utility.getAppHexColor("lightText")
+        }
+
+        Rectangle {
+            id: topMarker
+            width: 1
+            height: 1.3 * lineWidth
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: parent.verticalCenter
+            anchors.topMargin: dialRadius
+            visible: !allowNegative && topAngle > 0
+            z: 3
+            color: Utility.getAppHexColor("lightText")
+            transform: Rotation {origin.x: 0; origin.y: -dialRadius; angle: topAngle}
+            antialiasing: true
+        }
+
+        LText {
+            id: valueText
+            anchors.centerIn: parent
+
+            font.pixelSize: valueFontSize
+            horizontalAlignment: Text.AlignHCenter
+            text: Math.round(parent.value)
+        }
+
+        DText {
+            id: valueUnit
+            anchors.left: valueText.right
+            anchors.baseline: valueText.baseline
+            anchors.leftMargin: font.pixelSize * 0.1
+
+            font.pixelSize: fontSizeSmall
+            text: parent.valueUnit
+        }
+
+        LText {
+            id: topValueLabel
+            anchors.centerIn: parent
+            anchors.horizontalCenterOffset: -Math.sin(topAngleRads) * (dialRadius + lineWidth + font.pixelSize * 1.7)
+            anchors.verticalCenterOffset: Math.cos(topAngleRads) * (dialRadius + lineWidth + font.pixelSize * 1.1)
+            visible: !allowNegative && topAngle > 0
+            z: 4
+            font.pixelSize: fontSizeSmall
+            text: topValue.toFixed(1)
+        }
+    }
+
+    component BaseDialog : Dialog {
+        x: 10
+        y: (parent.height / 2 - implicitHeight / 2) / (placeAtTop ? 2 : 1)
+        implicitWidth: parent.width - 20
+
+        property real fullHeight: parent.height - 20
+        // place dialog at the top part of the screen, so that the phone
+        // keyboard doesn't just exactly cover the buttons
+        property bool placeAtTop: false
+
+        Material.background: Utility.getAppHexColor("normalBackground")
+
+        modal: true
+        focus: true
+        closePolicy: Popup.CloseOnEscape
+        parent: ApplicationWindow.overlay
+
+        Overlay.modal: Rectangle {
+            color: "#AA000000"
+        }
+    }
+
+    Component.onCompleted: {
+        if (preferences.showWelcomeDialog) {
+            welcomeDialog.show();
+        }
+    }
+
+    Dl.FileDialog {
+        id: jsonSaveDialog
+        title: "Choose a file to save"
+        nameFilters: ["JSON (*.json)"]
+        selectExisting: false
+
+        property string jsonData
+
+        function show(data) {
+            if (!Utility.requestFilePermission()) {
+                VescIf.emitMessageDialog(
+                            "File Permissions",
+                            "Unable to request file system permission.",
+                            false, false);
+                return;
+            }
+
+            jsonData = JSON.stringify(data, null, 4);
+            open();
+        }
+
+        onAccepted: {
+            var fUrl = fileUrl.toString();
+            if (!fUrl.toLowerCase().endsWith(".json")) {
+                fUrl += ".json";
+            }
+
+            var request = new XMLHttpRequest();
+            request.open("PUT", fUrl, false);
+            request.send(jsonData);
+
+            if (request.status === 0) {
+                VescIf.emitStatusMessage("File saved", true);
+            } else {
+                VescIf.emitStatusMessage("Save failed: %1".arg(request.status), false);
+            }
+        }
+    }
+
+    Dl.FileDialog {
+        id: jsonLoadDialog
+        title: "Choose a file to load"
+        nameFilters: ["JSON (*.json)"]
+        selectExisting: true
+
+        function show() {
+            if (!Utility.requestFilePermission()) {
+                VescIf.emitMessageDialog(
+                            "File Permissions",
+                            "Unable to request file system permission.",
+                            false, false);
+                return;
+            }
+
+            applyConfigDialog.open();
+            open();
+        }
+
+        onAccepted: {
+            var fUrl = fileUrl.toString();
+
+            var request = new XMLHttpRequest();
+            request.open("GET", fUrl, false);
+            request.send(null);
+
+            if (request.status === 200) {
+                applyConfigDialog.set(JSON.parse(request.responseText));
+            } else {
+                VescIf.emitStatusMessage("Opening file failed: %1".arg(request.status), false);
+            }
+        }
+
+        onRejected: {
+            applyConfigDialog.close();
+        }
+    }
+
+    BaseDialog {
+        id: settingsDialog
+        implicitHeight: fullHeight
+
+        title: "Settings"
+        standardButtons: Dialog.Close
+
+        function show(tab) {
+            settingsTabBar.currentIndex = tab || 0;
+            open();
+        }
+
+        component RightSwitch : RowLayout {
+            Layout.fillWidth: true
+
+            property string label
+            property alias checked: swtch.checked
+
+            LText {
                 Layout.fillWidth: true
-                wrapMode: Text.WordWrap
-                text: "Do you want to overwrite this slot?"
+                text: parent.label
+            }
+
+            Switch {
+                id: swtch
+            }
+        }
+
+        component IntTextField : RowLayout {
+            Layout.fillWidth: true
+
+            property string label
+            property string valueUnit: ""
+            property int value: Number(textField.text)
+            property int sourceValue
+
+            LText {
+                Layout.fillWidth: true
+                text: parent.label
             }
 
             TextField {
-                id: quicksaveNameInput
+                id: textField
+                implicitWidth: 50
 
-                placeholderText: qsTr("Quicksave name (optional)")
-                Layout.fillWidth: true
+                maximumLength: 2
+                horizontalAlignment: TextInput.AlignRight
+                inputMethodHints: Qt.ImhDigitsOnly
+                text: parent.sourceValue
+                validator: IntValidator {bottom: 0; top: 99;}
+            }
+
+            LText {
+                text: parent.valueUnit
             }
         }
 
-        Overlay.modal: Rectangle {
-            color: "#AA000000"
+        component Heading : LText {
+            Layout.fillWidth: true
+            Layout.topMargin: 10
+            horizontalAlignment: TextInput.AlignHCenter
+            font.pointSize: 15
         }
-    }
 
-    Dialog {
-        id: downloadedTunePopup
-
-        property var tune: ""
-
-        title: tune._name
-        standardButtons: Dialog.Apply | Dialog.Cancel
-        modal: true
-        focus: true
-        width: parent.width - 20
-        closePolicy: Popup.CloseOnEscape
-        x: 10
-        y: 10 + parent.height / 2 - height / 2
-        parent: ApplicationWindow.overlay
-        onApplied: {
-            applyDownloadedTune(tune);
-            VescIf.emitStatusMessage(tune._name + " applied!", true);
-            close();
+        component OptionDescription : LText {
+            Layout.fillWidth: true
+            Layout.leftMargin: 20
+            Layout.rightMargin: 20
+            Layout.topMargin: -7
+            font.pointSize: 10
+            wrapMode: Text.WordWrap
         }
-        onRejected: VescIf.emitStatusMessage(tune._name + " cancelled", false)
+
+        component SetupDescription : LText {
+            Layout.fillWidth: true
+            font.pointSize: 10
+            wrapMode: Text.WordWrap
+        }
 
         ColumnLayout {
-            anchors.fill: parent
+            width: settingsDialog.availableWidth
+            height: parent.height
 
-            Text {
-                color: Utility.getAppHexColor("lightText")
-                verticalAlignment: Text.AlignVCenter
+            TabBar {
+                id: settingsTabBar
                 Layout.fillWidth: true
-                wrapMode: Text.WordWrap
-                text: "Applying this tune will OVERWRITE your current tune. Be sure to have a back-up ready if you would like to revert back at any time. Would you like to apply this tune?"
-            }
-        }
+                clip: true
 
-        Overlay.modal: Rectangle {
-            color: "#AA000000"
+                Repeater {
+                    model: ["Preferences", "Setup"]
+
+                    TabButton {
+                        text: modelData
+                    }
+                }
+
+                background: Rectangle {
+                    opacity: 1
+                    color: Utility.getAppHexColor("lightBackground");
+                }
+
+                onCurrentIndexChanged: {
+                    settingsStackLayout.currentIndex = currentIndex;
+                }
+            }
+
+            StackLayout {
+                id: settingsStackLayout
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                clip: true
+
+                ScrollView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    contentWidth: availableWidth
+                    clip: true
+
+                    ColumnLayout {
+                        anchors.fill: parent
+
+                        IntTextField {
+                            label: "Speed dial max"
+                            valueUnit: vescConfig.speedUnit
+                            sourceValue: preferences.speedDialMax
+                            onValueChanged: {
+                                preferences.speedDialMax = value
+                            }
+                        }
+
+                        RightSwitch {
+                            id: prefSwapAdcs
+                            label: "Swap Footpad Sensor ADCs"
+                        }
+
+                        OptionDescription {
+                            visible: prefSwapAdcs.checked
+                            text: "Note: This swaps only the sensor visualization. You should swap your ADC1/2 physical connection, as this way, for example, your Konamies (sensor tap codes that control the board) will be reversed as well."
+                        }
+
+                        RightSwitch {
+                            id: prefShowBattVoltage
+                            checked: true
+                            label: "Show battery voltage"
+                        }
+
+                        RightSwitch {
+                            id: prefShowBattVoltagePerCell
+                            label: "Show battery voltage per cell"
+                        }
+
+                        RightSwitch {
+                            id: prefBattCurrentLog
+                            checked: true
+                            label: "Use logarithmic scale for battery current bar"
+                        }
+
+                        IntTextField {
+                            label: "Temperature warning offset"
+                            valueUnit: "°C"
+                            sourceValue: preferences.tempWarningOffset
+                            onValueChanged: {
+                                preferences.tempWarningOffset = value
+                            }
+                        }
+
+                        OptionDescription {
+                            text: "Motor/Controller temperatures will be highlighted red if above TEMP - OFFSET, where TEMP is your Motor/MOSFET Temp Cutoff Start in Motor config. The package beeps when temperatures cross the TEMP - 3°C threshold and pushback triggers at TEMP - 2°C."
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            Layout.rightMargin: 20
+
+                            LText {
+                                text: "Number of tune slots"
+                            }
+
+                            Slider {
+                                id: prefTuneSlotCount
+                                Layout.fillWidth: true
+
+                                from: 2
+                                to: tuneManager.maxTunes
+                                value: 4
+                                stepSize: 1
+                            }
+
+                            LText {
+                                text: prefTuneSlotCount.value
+                                font.pointSize: 16
+                            }
+                        }
+
+                        RightSwitch {
+                            id: prefShowWelcomeDialog
+                            checked: true
+                            label: "Show Welcome dialog"
+                        }
+                    }
+                }
+
+                ScrollView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    contentWidth: availableWidth
+                    clip: true
+
+                    ColumnLayout {
+                        anchors.fill: parent
+
+                        Heading {
+                            text: "Disable Package"
+                        }
+
+                        SetupDescription {
+                            text: "If you've installed Refloat before running the motor wizard, you need to disable the package to prevent it from conflicting with the wizard (this is equivalent to setting Disable Package to True in Refloat Cfg > Spec). After configuring your motor (and IMU, though it's not necessary to disable Refloat for IMU configuration), re-enable the package."
+                        }
+
+                        Button {
+                            Layout.alignment: Qt.AlignHCenter
+
+                            text: state.pkgState === state.s_Disabled ? "Enable Refloat" : "Disable Refloat"
+
+                            onClicked: {
+                                packageConfig.setDisabled(state.pkgState !== state.s_Disabled);
+                            }
+                        }
+
+                        Heading {
+                            text: "Handtest"
+                        }
+
+                        SetupDescription {
+                            text: "After finishing setup, you can turn on the Handtest mode and engage your board by hand to verify that it balances in the correct direction. Motor currents will be limited to a safe level."
+                        }
+
+                        Button {
+                            Layout.alignment: Qt.AlignHCenter
+
+                            // Only allow if no other mode is active
+                            enabled: [state.m_Normal, state.m_Handtest].includes(state.pkgMode)
+                            text: state.pkgMode === state.m_Handtest ? "Turn Handtest Off" : "Turn Handtest On"
+
+                            onClicked: {
+                                commands.sendHandtest(state.pkgMode === state.m_Normal);
+                            }
+                        }
+
+                        SetupDescription {
+                            visible: state.pkgMode === state.m_Handtest
+                            text: "If your board balances in reverse (shoots off), your Imu Rotation Yaw is off by 180°. If it moves erratically, your Imu Rotation Yaw is likely off by 90°.\nNote: When Handtest is on, any configuration writing is disabled."
+                        }
+
+                        Heading {
+                            text: "Backup / Restore"
+                        }
+
+                        property string backupDate: tuneManager.fullBackup ? Qt.formatDateTime(tuneManager.fullBackup.date) : ""
+                        property string backupPackage: tuneManager.fullBackup ? "%1-%2".arg(tuneManager.fullBackup.package.name).arg(tuneManager.fullBackup.package.version) : ""
+
+                        NText {
+                            font.pointSize: 11
+                            visible: !!tuneManager.fullBackup
+                            text: "Backup date: %1".arg(parent.backupDate);
+                        }
+
+                        NText {
+                            font.pointSize: 11
+                            visible: !!tuneManager.fullBackup
+                            text: "Saved by: %1".arg(parent.backupPackage);
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            Layout.alignment: Qt.AlignHCenter
+
+                            Button {
+                                Layout.alignment: Qt.AlignHCenter
+
+                                text: "Backup"
+
+                                onClicked: {
+                                    tuneManager.fullBackup = tuneManager.createBackup();
+                                }
+                            }
+
+                            Button {
+                                Layout.alignment: Qt.AlignHCenter
+
+                                text: "Restore"
+
+                                onClicked: {
+                                    applyConfigDialog.show(tuneManager.fullBackup);
+                                }
+                            }
+                        }
+
+                        SetupDescription {
+                            text: "Backup is stored in VESC Tool's internal storage."
+                        }
+
+                        // Doesn't work on Android :(
+                        //LText {
+                        //    text: "JSON file:"
+                        //}
+
+                        //RowLayout {
+                        //    Layout.fillWidth: true
+                        //    Layout.alignment: Qt.AlignHCenter
+
+                        //    Button {
+                        //        Layout.alignment: Qt.AlignHCenter
+
+                        //        text: "Backup to file"
+
+                        //        onClicked: {
+                        //            jsonSaveDialog.show(tuneManager.createBackup());
+                        //        }
+                        //    }
+
+                        //    Button {
+                        //        Layout.alignment: Qt.AlignHCenter
+
+                        //        text: "Load from file"
+
+                        //        onClicked: {
+                        //            jsonLoadDialog.show();
+                        //        }
+                        //    }
+                        //}
+                    }
+                }
+            }
         }
     }
 
-    Dialog {
-        id: quickloadErrorPopup
+    BaseDialog {
+        id: editBoardNameDialog
 
-        title: "Quicksave Empty"
-        standardButtons: Dialog.Ok
-        modal: true
-        focus: true
-        width: parent.width - 20
-        closePolicy: Popup.CloseOnEscape
-        x: 10
-        y: 10 + parent.height / 2 - height / 2
-        parent: ApplicationWindow.overlay
+        title: "Set Board Name"
+        standardButtons: Dialog.Save | Dialog.Cancel
 
-        Text {
-            color: Utility.getAppHexColor("lightText")
-            verticalAlignment: Text.AlignVCenter
-            anchors.fill: parent
-            wrapMode: Text.WordWrap
-            text: "Long Press a Quicksave slot to name and save your current tune, then tap it anytime to apply it instantly."
+        onAccepted: {
+            VescIf.storeBleName(VescIf.getLastBleAddr(), boardNameInput.text);
+            VescIf.storeSettings();
+            boardNameText.load();
         }
 
-        Overlay.modal: Rectangle {
-            color: "#AA000000"
+        TextField {
+            id: boardNameInput
+            width: editBoardNameDialog.availableWidth
+
+            maximumLength: 30
+            text: boardNameText.bleName
+        }
+    }
+
+    BaseDialog {
+        id: editTuneDialog
+
+        title: "Edit Tune"
+        standardButtons: Dialog.Save | Dialog.Discard | Dialog.Cancel
+        placeAtTop: true
+
+        property var tuneSlot
+        property var tune: null
+
+        function show(slot) {
+            tuneSlot = slot;
+            tune = tuneManager.loadTune(slot);
+            open();
+        }
+
+        function tuneAttr(key) {
+            return tune ? tune[key] : "";
+        }
+
+        onAccepted: {
+            if (saveTuneNameInput.text) {
+                if (!tune) {
+                    tune = tuneManager.createTune(saveTuneNameInput.text, saveTuneDescInput.text, packageConfig.fetchConfig(true));
+                } else {
+                    tuneManager.updateTune(tune, saveTuneNameInput.text, saveTuneDescInput.text, saveTuneOverwrite.checked ? packageConfig.fetchConfig(true) : null);
+                }
+                tuneManager.saveTune(tuneSlot, tune);
+                VescIf.emitStatusMessage(saveTuneNameInput.text + " saved", true);
+            }
+        }
+
+        onDiscarded: {
+            tuneManager.eraseTune(tuneSlot);
+            VescIf.emitStatusMessage(tune.name + " erased", true);
+            close();
+        }
+
+        onOpened: {
+            standardButton(Dialog.Save).enabled = !!tune;
+            standardButton(Dialog.Discard).enabled = !!tune;
+        }
+
+        Component.onCompleted: {
+            standardButton(Dialog.Discard).text = "Erase"
+        }
+
+        ColumnLayout {
+            width: editTuneDialog.availableWidth
+
+            NText {
+                Layout.fillWidth: true
+
+                visible: editTuneDialog.tune
+                text: "Tune date: %1".arg(Qt.formatDateTime(new Date(editTuneDialog.tuneAttr("date"))));
+            }
+
+            LText {
+                Layout.fillWidth: true
+                text: "Name:"
+            }
+
+            TextField {
+                id: saveTuneNameInput
+                Layout.fillWidth: true
+
+                maximumLength: 30
+                text: editTuneDialog.tuneAttr("name")
+
+                onTextEdited: {
+                    editTuneDialog.standardButton(Dialog.Save).enabled = !!text;
+                }
+            }
+
+            LText {
+                Layout.fillWidth: true
+                text: "Description:"
+            }
+
+            TextArea {
+                id: saveTuneDescInput
+                Layout.fillWidth: true
+                implicitHeight: 80
+
+                wrapMode: TextEdit.WordWrap
+                text: editTuneDialog.tuneAttr("description") || ""
+            }
+
+            CheckBox {
+                id: saveTuneOverwrite
+
+                checked: !editTuneDialog.tune
+                visible: editTuneDialog.tune
+                text: "Overwrite with current tune"
+            }
+        }
+    }
+
+    BaseDialog {
+        id: tuneArchiveDialog
+        implicitHeight: fullHeight
+        clip: true
+
+        title: "Tune Archive"
+        standardButtons: Dialog.Reset | Dialog.Close
+
+        function download() {
+            tuneArchiveDownloadStatus.text = "Downloading tunes...";
+            var http = new XMLHttpRequest();
+            var url = "http://us-central1-mimetic-union-377520.cloudfunctions.net/float_package_tunes_via_http";
+            http.open("GET", url, true);
+            http.onreadystatechange = function() {
+                if (http.readyState === XMLHttpRequest.DONE) {
+                    if (http.status === 200) {
+                        tuneArchiveDownloadStatus.text = "Download succesful.";
+
+                        var tunes = tuneManager.parseCsv(http.responseText);
+                        tuneManager.saveTuneArchive(tunes);
+                        downloadedTunesModel.setTunes(tunes);
+                    } else if (http.status === 0) {
+                        tuneArchiveDownloadStatus.text = "Download failed: Connection error";
+                    } else {
+                        tuneArchiveDownloadStatus.text = "Download failed: %1 - %2".arg(http.status).arg(http.statusText);
+                    }
+                }
+
+            };
+
+            http.send();
+        }
+
+        function show() {
+            open();
+
+            var tuneArchive = tuneManager.loadTuneArchive();
+            if (tuneArchive) {
+                downloadedTunesModel.setTunes(tuneArchive);
+                tuneArchiveDownloadStatus.text = "Tunes downloaded on %1".arg(tuneManager.getTuneArchiveDate());
+            } else {
+                download();
+            }
+        }
+
+        onReset: {
+            download();
+        }
+
+        Component.onCompleted: {
+            standardButton(Dialog.Reset).text = "Refresh"
+        }
+
+        ColumnLayout {
+            anchors.centerIn: parent
+            width: parent.width * 0.95
+            height: parent.height
+            spacing: 15
+            clip: true
+
+            LText {
+                id: tuneArchiveDownloadStatus
+                Layout.fillWidth: true
+                Layout.alignment: Qt.AlignHCenter
+
+                font.pointSize: 11
+                horizontalAlignment: Text.AlignHCenter
+                wrapMode: Text.WordWrap
+            }
+
+            ListView {
+                id: tuneArchiveTunesList
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.alignment: Qt.AlignHCenter
+                spacing: 10
+                clip: true
+
+                model: ListModel {
+                    id: downloadedTunesModel
+
+                    function setTunes(tunes) {
+                        clear();
+                        for (var i in tunes) {
+                            append({"tune": tunes[i]});
+                        }
+                    }
+                }
+
+                delegate: Button {
+                    width: tuneArchiveTunesList.width
+                    text: tune.name
+                    onClicked: {
+                        applyConfigDialog.show(tune);
+                    }
+                }
+            }
+        }
+    }
+
+    BaseDialog {
+        id: applyConfigDialog
+
+        title: "Apply Config"
+        standardButtons: Dialog.Apply | Dialog.Cancel
+
+        property var config
+
+        property var name: config ? config.name : ""
+        property var date: config && config.date ? Qt.formatDateTime(new Date(config.date)) : ""
+        property var pkg: config && config.package ? "%1-%2".arg(config.package.name).arg(config.package.version) : ""
+        property var description: config && config.description ? config.description : ""
+
+        function show(cfg) {
+            config = cfg;
+            open();
+        }
+
+        function set(cfg) {
+            config = cfg;
+        }
+
+        onApplied: {
+            packageConfig.applyConfig(config);
+            close();
+            tuneArchiveDialog.close();
+        }
+
+        ColumnLayout {
+            width: editTuneDialog.availableWidth
+
+            LText {
+                Layout.fillWidth: true
+                text: "Name: %1".arg(applyConfigDialog.name);
+            }
+
+            NText {
+                Layout.fillWidth: true
+                font.pointSize: 11
+                visible: !!applyConfigDialog.date
+                text: "Backup date: %1".arg(applyConfigDialog.date)
+            }
+
+            NText {
+                Layout.fillWidth: true
+                font.pointSize: 11
+                visible: !!applyConfigDialog.pkg
+                text: "Saved by: %1".arg(applyConfigDialog.pkg)
+            }
+
+            LText {
+                Layout.fillWidth: true
+                visible: !!applyConfigDialog.description
+                text: "Description:"
+            }
+
+            LText {
+                Layout.fillWidth: true
+                font.pointSize: 11
+                visible: !!applyConfigDialog.description
+                text: applyConfigDialog.description
+            }
+
+            LText {
+                Layout.fillWidth: true
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+                wrapMode: Text.WordWrap
+                text: "Applying this config will OVERWRITE your current one. Would you like to apply it?"
+            }
+        }
+    }
+
+    Rectangle {
+        id: welcomeDialog
+        anchors.fill: parent
+        z: 100
+        visible: false
+
+        color: "#AA000000"
+
+        function show() {
+            visible = true;
+        }
+
+        Page {
+            title: "Welcome to Refloat"
+            anchors.centerIn: parent
+            width: parent.width - 20
+            padding: 10
+
+            Material.background: Utility.getAppHexColor("normalBackground")
+
+            header: Label {
+                text: parent.title
+                visible: parent.title
+                font.bold: true
+                padding: 12
+            }
+
+            footer: DialogButtonBox {
+                standardButtons: Dialog.Yes | Dialog.No
+
+                onAccepted: {
+                    welcomeDialog.visible = false;
+                    settingsDialog.show(1);
+                }
+
+                onRejected: {
+                    welcomeDialog.visible = false;
+                }
+            }
+
+            ColumnLayout {
+                id: welcomeDialogContent
+                anchors.fill: parent
+
+                LText {
+                    id: welcomeMessage
+                    Layout.fillWidth: true
+                    wrapMode: Text.WordWrap
+                    text: "If you haven't configured your board yet, make sure to configure your motor and IMU before you try to ride the board.\n\nTo run the motor wizard, you need to disable the Refloat package first. You can do so in Refloat Settings > Setup, which you can access using the cog button in the top right corner of the main Refloat screen.\n\nAfter the setup, you can safely verify your board balances correctly using the Handtest mode.\n\nTo configure Refloat, you need to set the High and Low Voltage Thresholds in Refloat Cfg > Specs according to your battery voltage. The rest of the configuration options has defaults that should provide you with a well-behaving, rideable board.\n\nHappy shredding!\n\nGo to Settings > Setup now?"
+                }
+
+                CheckBox {
+                    id: welcomeShowAgain
+
+                    checked: !preferences.showWelcomeDialog
+                    text: "Don't show again"
+
+                    onCheckedChanged: {
+                        preferences.showWelcomeDialog = !checked
+                    }
+                }
+            }
         }
     }
 
     ColumnLayout {
         id: root
-
         anchors.fill: parent
+        anchors.margins: 5
 
-        TabBar {
-            id: tabBar
-
-            property int buttons: 3
-            property int buttonWidth: 120
-
-            currentIndex: 0
+        ColumnLayout {
             Layout.fillWidth: true
-            clip: true
-            enabled: true
+            spacing: 0
 
-            Repeater {
-                model: ["RT Data", "Controls", "Tunes"]
+            property real centralMargin: 0.08 * unit
 
-                TabButton {
-                    text: modelData
-                    onClicked: {
-                        stackLayout.currentIndex = index;
+            Rectangle {
+                id: batteryBar
+                Layout.fillWidth: true
+                Layout.preferredHeight: 0.8 * unit
+
+                color: Utility.getAppHexColor("lightBackground")
+
+                property real voltage: 0
+                property int value: 0
+
+                Behavior on voltage {
+                    NumberAnimation {
+                        easing.type: Easing.OutExpo
+                        duration: 200
+                    }
+                }
+
+                LText {
+                    id: batteryBarValue
+                    anchors.centerIn: parent
+                    z: 2
+
+                    font.pixelSize: parent.height * 0.7
+                    text: Math.round(parent.value) + "%"
+                }
+
+                Rectangle {
+                    id: batteryBarFill
+                    width: parent.width * parent.value / 100
+                    height: parent.height
+                    z: 1
+
+                    color: Utility.getAppHexColor("lightAccent")
+                }
+
+                LText {
+                    id: batteryBarVoltageValue
+                    anchors.left: batteryBarValue.right
+                    anchors.baseline: batteryBarValue.baseline
+                    anchors.leftMargin: 0.3 * unit
+                    z: 2
+
+                    font.pixelSize: fontSizeNormal
+                    text: {
+                        var voltageString = "";
+
+                        if (preferences.showBattVoltage) {
+                            voltageString = parent.voltage.toFixed(1) + "V";
+                        }
+
+                        if (preferences.showBattVoltagePerCell) {
+                            if (preferences.showBattVoltage) {
+                                voltageString += " / ";
+                            }
+                            voltageString += (parent.voltage / motorConfig.batteryCells).toFixed(2) + "V";
+                        }
+
+                        return voltageString;
                     }
                 }
             }
 
-            background: Rectangle {
-                opacity: 1
-                color: {
-                    color = Utility.getAppHexColor("lightBackground");
+            RowLayout {
+                id: boardNameRow
+                Layout.fillWidth: true
+                Layout.leftMargin: 0.25 * unit
+                Layout.rightMargin: 0.1 * unit
+                Layout.topMargin: 0.06 * unit
+                Layout.bottomMargin: 0.06 * unit
+
+                Text {
+                    id: boardNameText
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignVCenter
+
+                    property string bleName
+                    property string name
+
+                    color: bleName ? Utility.getAppHexColor("lightText") : Utility.getAppHexColor("normalText")
+                    font.pixelSize: 0.45 * unit
+                    clip: true
+                    text: name
+
+                    function load() {
+                        bleName = VescIf.getBleName(VescIf.getLastBleAddr());
+                        name = bleName ? bleName : VescIf.getLastBleAddr();
+                    }
+
+                    Component.onCompleted: load();
+                }
+
+                ToolButton {
+                    id: editBoardNameButton
+                    Layout.alignment: Qt.AlignVCenter
+                    Layout.preferredWidth: 0.8 * unit
+                    Layout.preferredHeight: 0.8 * unit
+                    height: 0.8 * unit
+
+                    iconPath: Path {
+                        PathSvg {path: "M 10.59 24 L 17.63 32.42 L 6 35 L 10.59 24 M 10.59 24 L 34.39 4 L 41.49 12.42 L 17.69 32.42 M 4 42 L 46 42"}
+                    }
+
+                    onClicked: {
+                        editBoardNameDialog.open();
+                    }
+                }
+
+                ToolButton {
+                    id: settingsButton
+                    Layout.alignment: Qt.AlignVCenter
+                    Layout.preferredWidth: 0.8 * unit
+                    Layout.preferredHeight: 0.8 * unit
+                    height: 0.8 * unit
+
+                    iconPath: Path {
+                        PathSvg {path: "M 14.25 37.81 L 10.59 39.42 A 3 3 0 0 1 6.98 38.47 22.5 22.5 0 0 1 4.32 33.87 A 3 3 0 0 1 5.30 30.27 L 8.53 27.9 A 3.6 3.6 0 0 0 8.53 22.1 L 5.30 19.73 A 3 3 0 0 1 4.32 16.13 A 22.5 22.5 0 0 1 6.98 11.53 A 3 3 0 0 1 10.59 10.58 L 14.25 12.19 A 3.6 3.6 0 0 0 19.28 9.29 L 19.79 5.31 A 3 3 0 0 1 22.35 2.66 A 22.5 22.5 0 0 1 27.65 2.66 A 3 3 0 0 1 30.28 5.31 L 30.72 9.29 A 3.6 3.6 0 0 0 35.75 12.19 L 39.41 10.58 A 3 3 0 0 1 43.02 11.53 A 22.5 22.5 0 0 1 45.67 16.13 A 3 3 0 0 1 44.7 19.73 L 41.47 22.1 A 3.6 3.6 0 0 0 41.47 27.9 L 44.7 30.27 A 3 3 0 0 1 45.68 33.87 A 22.5 22.5 0 0 1 43.02 38.47 A 3 3 0 0 1 39.41 39.42 L 35.75 37.81 A 3.6 3.6 0 0 0 30.72 40.71 L 30.28 44.69 A 3 3 0 0 1 27.65 47.34 A 22.5 22.5 0 0 1 22.35 47.34 A 3 3 0 0 1 19.72 44.69 L 19.28 40.71 A 3.6 3.6 0 0 0 14.25 37.81"}
+                        PathAngleArc {centerX: 25; centerY: 25; radiusX: 6.5; radiusY: 6.5; sweepAngle: 360;}
+                    }
+
+                    onClicked: {
+                        settingsDialog.show();
+                    }
                 }
             }
-        }
 
-        // Pages
-        StackLayout {
-            id: stackLayout
+            Item {
+                id: hud
+                Layout.fillWidth: true
+                Layout.preferredHeight: hudRight.height
+                Layout.bottomMargin: parent.centralMargin
 
-            Layout.fillWidth: true
-            Layout.fillHeight: true
+                Item {
+                    id: hudLeft
 
-            // RT Data Page
-            ColumnLayout {
-                id: rtDataColumn
+                    property var barThicknessSmall: 0.14 * unit
+                    property var fontSizeBars: fontSizeNormal
 
-                ScrollView {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    clip: true
+                    width: parent.width  / 2
+                    height: parent.height
 
-                    ColumnLayout {
-                        Text {
-                            id: topheader0
+                    Item {
+                        id: speedDialFrame
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.top: parent.top
+                        anchors.topMargin: -width * 0.09
+                        width: parent.width * 0.9
+                        height: width
 
-                            visible: handtest_toggle == 1
-                            color: Utility.getAppHexColor("lightText")
-                            font.family: "DejaVu Sans Mono"
-                            Layout.margins: 0
-                            Layout.leftMargin: 0
-                            Layout.fillWidth: true
-                            Layout.alignment: Qt.AlignCenter
-                            text: "== HANDTEST =="
-                            font.weight: Font.Black
-                            font.pointSize: 24
+                        Dial {
+                            id: speedDial
+                            anchors.fill: parent
+
+                            maxValue: preferences.speedDialMax
+                            valueUnit: vescConfig.speedUnit
+                            valueFontSize: width * 0.18
+                            lineWidth: 0.25 * unit
+
+                            property int erpm
+
+                            Behavior on erpm {
+                                NumberAnimation {
+                                    easing.type: Easing.OutCirc
+                                    duration: 100
+                                }
+                            }
+
+                            NText {
+                                id: speedDialValueErpm
+                                anchors.top: parent.verticalCenter
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                anchors.topMargin: font.pixelSize * 1.25
+
+                                font.pixelSize: fontSizeNormal
+                                text: parent.erpm
+                            }
+
+                            DText {
+                                id: speedDialValueErpmLabel
+                                anchors.top: speedDialValueErpm.bottom
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                anchors.topMargin: -font.pixelSize * 0.25
+
+                                font.pixelSize: fontSizeSmall
+                                text: "erpm"
+                            }
+
+                            Text {
+                                id: speedDialWheelslip
+                                anchors.bottom: parent.verticalCenter
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                anchors.bottomMargin: 0.5 * unit
+
+                                color: Utility.getAppHexColor("red")
+                                font.family: "Exan"
+                                font.pixelSize: fontSizeSmall
+                                opacity: 0
+                                text: "WHEELSLIP"
+
+                                states: State {
+                                    name: "shown";
+                                    when: state.wheelslip
+                                    PropertyChanges {target: speedDialWheelslip; opacity: 1;}
+                                }
+
+                                transitions: [
+                                    Transition {
+                                        to: "shown"
+                                        PropertyAnimation {target: speedDialWheelslip; property: "opacity"; duration: 200; easing.type: Easing.OutExpo;}
+                                    },
+                                    Transition {
+                                        from: "shown"
+                                        PropertyAnimation {target: speedDialWheelslip; property: "opacity"; duration: 1000; easing.type: Easing.OutExpo;}
+                                    }
+                                ]
+                            }
+
+                            Glow {
+                                anchors.fill: speedDialWheelslip
+                                radius: Math.round(0.09 * unit)
+                                samples: 2 * radius + 1
+                                opacity: 0.6 * speedDialWheelslip.opacity
+                                color: Utility.getAppHexColor("red")
+                                visible: state.wheelslip
+                                source: speedDialWheelslip
+                            }
+                        }
+                    }
+
+                    Item {
+                        anchors.top: speedDialFrame.bottom
+                        anchors.topMargin: -speedDialFrame.width * 0.125
+                        width: parent.width
+                        height: 1.8 * unit
+
+                        NText {
+                            id: currentDialLabel
+                            anchors.bottom: parent.bottom
+                            width: parent.height
+
+                            font.pixelSize: fontSizeSmall
+                            horizontalAlignment: Text.AlignHCenter
+                            text: "current"
                         }
 
-                        Text {
-                            id: motor_fault
+                        Dial {
+                            id: currentDial
+                            anchors.bottom: currentDialLabel.top
+                            anchors.bottomMargin: -0.15 * unit
+                            width: parent.height
+                            height: width
 
-                            visible: fault_code > 0
-                            color: "pink"
-                            font.family: "DejaVu Sans Mono"
-                            font.weight: Font.Black
-                            font.pointSize: 18
-                            Layout.margins: 0
-                            Layout.leftMargin: 5
-                            Layout.preferredWidth: parent.width / 3
-                            text: "No Fault"
+                            allowNegative: true
+                            minValue: motorConfig.currentMin;
+                            maxValue: motorConfig.currentMax;
+                            valueUnit: "A"
                         }
 
-                        Text {
-                            id: faultNotice1
+                        NText {
+                            id: dutyDialLabel
+                            anchors.bottom: parent.bottom
+                            anchors.right: parent.right
+                            width: parent.height
 
-                            visible: fault_code > 0
-                            color: Utility.getAppHexColor("lightText")
-                            Layout.margins: 0
-                            Layout.leftMargin: 5
-                            wrapMode: Text.WordWrap
-                            text: "Your VESC reported a fault.\n"
-                            font.pointSize: 11
+                            font.pixelSize: fontSizeSmall
+                            horizontalAlignment: Text.AlignHCenter
+                            text: "duty"
                         }
 
-                        Text {
-                            id: faultNotice2
+                        Dial {
+                            id: dutyDial
+                            anchors.bottom: currentDialLabel.top
+                            anchors.bottomMargin: -0.15 * unit
+                            anchors.right: parent.right
+                            width: parent.height
+                            height: width
 
-                            visible: fault_code > 0
-                            color: Utility.getAppHexColor("lightText")
-                            Layout.margins: 0
-                            Layout.leftMargin: 5
-                            wrapMode: Text.WordWrap
-                            text: "You should stop riding and try to identify and fix the root cause.\n"
-                            font.pointSize: 11
+                            maxValue: 100
+                            warnThresholdAbs: 80
+                            valueUnit: "%"
                         }
 
-                        Text {
-                            id: header0
+                        Item {
+                            id: consumption
+                            anchors.centerIn: parent
+                            width: unit
+                            height: 0.8 * unit
 
-                            color: Utility.getAppHexColor("lightText")
-                            font.family: "DejaVu Sans Mono"
-                            Layout.margins: 0
-                            Layout.leftMargin: 0
-                            Layout.fillWidth: true
-                            text: "Refloat App State"
-                            font.underline: true
-                            font.weight: Font.Black
-                            font.pointSize: 14
+                            readonly property real alpha: 0.05;
+                            property real value: 0;
+
+                            LText {
+                                width: parent.width
+
+                                font.pixelSize: hudLeft.fontSizeBars
+                                horizontalAlignment: Text.AlignHCenter
+                                text: (toFixed1Zero(parent.value))
+                            }
+
+                            DText {
+                                width: parent.width
+                                anchors.bottom: parent.bottom
+
+                                font.pixelSize: fontSizeSmall
+                                horizontalAlignment: Text.AlignHCenter
+                                text: "Wh/%1".arg(vescConfig.distanceUnit)
+                            }
+
+                            function add(v) {
+                                value = (1.0 - alpha) * value + alpha * v;
+                            }
+                        }
+                    }
+
+                    Item {
+                        id: batteryCurrent
+
+                        property var value: 0
+                        property var minValue: preferences.battCurrentLog ? -Math.log(-motorConfig.inCurrentMin + 1) : motorConfig.inCurrentMin
+                        property var maxValue: preferences.battCurrentLog ? Math.log(motorConfig.inCurrentMax + 1) : motorConfig.inCurrentMax
+
+                        property var positiveWidth: value > 0 ? (preferences.battCurrentLog ? Math.log(value + 1) : value) / maxValue : 0
+                        property var negativeWidth: value < 0 ? (preferences.battCurrentLog ? -Math.log(-value + 1) : value) / minValue : 0
+
+                        Behavior on value {
+                            NumberAnimation {
+                                easing.type: Easing.OutCirc
+                                duration: 100
+                            }
                         }
 
-                        Text {
-                            id: rt_state
+                        anchors.bottom: parent.bottom
+                        width: parent.width
 
-                            color: Utility.getAppHexColor("lightText")
-                            font.family: "DejaVu Sans Mono"
-                            Layout.margins: 0
-                            Layout.leftMargin: 5
-                            Layout.preferredWidth: parent.width / 3
-                            text: "Waiting for RT Data"
+                        NText {
+                            id: batteryCurrentLabel
+                            anchors.bottom: parent.bottom
+                            anchors.horizontalCenter: parent.horizontalCenter
+
+                            font.pixelSize: fontSizeSmall
+                            text: "battery current"
                         }
 
-                        Text {
-                            id: header1
+                        Rectangle {
+                            id: batteryCurrentBar
+                            anchors.bottom: batteryCurrentLabel.top
+                            anchors.bottomMargin: 0.06 * unit
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            width: sideWidth * 2
+                            height: hudLeft.barThicknessSmall
 
-                            color: Utility.getAppHexColor("lightText")
-                            font.family: "DejaVu Sans Mono"
-                            Layout.margins: 0
-                            Layout.leftMargin: 0
-                            Layout.fillWidth: true
-                            text: "Refloat App RT Data"
-                            font.underline: true
-                            font.weight: Font.Black
-                            font.pointSize: 14
+                            property var sideWidth: 1.5 * unit
+
+                            color: Utility.getAppHexColor("lightBackground")
+
+                            Rectangle {
+                                anchors.bottom: parent.bottom
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                width: 1
+                                height: hudLeft.barThicknessSmall * 1.2
+                                z: 2
+
+                                color: Utility.getAppHexColor("lightText")
+                            }
+
+                            Rectangle {
+                                anchors.left: parent.horizontalCenter
+                                width: batteryCurrent.positiveWidth * parent.sideWidth
+                                height: hudLeft.barThicknessSmall
+                                z: 1
+
+                                color: Utility.getAppHexColor("lightAccent")
+                            }
+
+                            Rectangle {
+                                anchors.right: parent.horizontalCenter
+                                width: batteryCurrent.negativeWidth * parent.sideWidth
+                                height: hudLeft.barThicknessSmall
+                                z: 1
+
+                                color: Utility.getAppHexColor("green")
+                            }
                         }
 
-                        Text {
-                            id: rt_data
+                        LText {
+                            id: batteryCurrentValue
+                            anchors.bottom: batteryCurrentBar.top
+                            anchors.bottomMargin: 0.06 * unit
+                            anchors.horizontalCenter: parent.horizontalCenter
 
-                            color: Utility.getAppHexColor("lightText")
-                            font.family: "DejaVu Sans Mono"
-                            Layout.margins: 0
-                            Layout.leftMargin: 5
-                            Layout.preferredWidth: parent.width / 3
-                            text: "-\n"
+                            font.pixelSize: hudLeft.fontSizeBars
+                            text: toFixed1Zero(parent.value)
                         }
 
-                        Text {
-                            id: header2
+                        DText {
+                            id: batteryCurrentValueUnit
+                            anchors.left: batteryCurrentValue.right
+                            anchors.baseline: batteryCurrentValue.baseline
+                            anchors.leftMargin: font.pixelSize * 0.1
 
-                            visible: handtest_toggle == 0
-                            color: Utility.getAppHexColor("lightText")
-                            font.family: "DejaVu Sans Mono"
-                            Layout.margins: 0
-                            Layout.leftMargin: 0
-                            Layout.fillWidth: true
-                            text: "Setpoints"
-                            font.underline: true
-                            font.weight: Font.Black
-                            font.pointSize: 14
-                        }
-
-                        Text {
-                            id: setpoints
-
-                            visible: handtest_toggle == 0
-                            color: Utility.getAppHexColor("lightText")
-                            font.family: "DejaVu Sans Mono"
-                            Layout.margins: 0
-                            Layout.leftMargin: 5
-                            Layout.preferredWidth: parent.width / 3
-                            text: "-\n"
-                        }
-
-                        Text {
-                            id: header3
-
-                            visible: handtest_toggle == 0
-                            color: Utility.getAppHexColor("lightText")
-                            font.family: "DejaVu Sans Mono"
-                            Layout.margins: 0
-                            Layout.leftMargin: 0
-                            Layout.fillWidth: true
-                            text: "DEBUG"
-                            font.underline: true
-                            font.weight: Font.Black
-                        }
-
-                        Text {
-                            id: debug
-
-                            visible: handtest_toggle == 0
-                            color: Utility.getAppHexColor("lightText")
-                            font.family: "DejaVu Sans Mono"
-                            Layout.margins: 0
-                            Layout.leftMargin: 5
-                            Layout.preferredWidth: parent.width / 3
-                            text: "-"
-                        }
-
-                        Text {
-                            id: handtestNotice
-
-                            visible: handtest_toggle == 1
-                            color: Utility.getAppHexColor("lightText")
-                            Layout.margins: 0
-                            Layout.leftMargin: 5
-                            Layout.fillWidth: true
-                            wrapMode: Text.WordWrap
-                            text: "\nPlace your board on the ground and engage with your hands.\nMotor currents are limited to a safe level.\n\nWhen finished hit 'STOP HANDTEST' in the CONTROLS tab."
-                            font.pointSize: 11
+                            font.pixelSize: fontSizeSmall
+                            text: "A"
                         }
                     }
                 }
 
                 Item {
-                    // spacer item
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                }
+                    id: hudRight
 
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 2
-                    color: Utility.getAppHexColor("lightText")
-                }
+                    anchors.right: parent.right
+                    width: parent.width / 2
+                    height: hudRightTop.height + pitch.height + pitch.anchors.topMargin
 
-                RowLayout {
-                    Text {
-                        text: "Refloat v{{VERSION}}"
-                        color: Utility.getAppHexColor("lightText")
-                        font.pointSize: 8
-                        horizontalAlignment: Text.AlignHCenter
-                        Layout.fillWidth: true
+                    Item {
+                        id: hudRightTop
+                        width: parent.width
+                        height: width * 0.4
+
+                        property real sidePadding: (width - 2 * height) / 4
+
+                        Item {
+                            id: footpad
+                            anchors.left: parent.left
+                            anchors.leftMargin: parent.sidePadding
+                            width: parent.height
+                            height: width
+
+                            property real leftVoltage: preferences.swapAdcs ? state.adc2Voltage : state.adc1Voltage
+                            property real rightVoltage: preferences.swapAdcs ? state.adc1Voltage : state.adc2Voltage
+
+                            property real canvasWidth: width * 0.85
+                            property real scale: canvasWidth / footpadPath.width
+
+                            Path {
+                                id: footpadPath
+
+                                property int width: 100
+                                property int height: 80
+                                property real aspect: height / width
+                                scale: Qt.size(footpad.scale, footpad.scale)
+
+                                PathSvg {path: "M 62 2 L 38 2 A 36 15 180 0 0 2 17 L 2 78 L 98 78 L 98 17 A 36 15 0 0 0 62 2 M 50 11 L 50 69"}
+                            }
+
+                            Path {
+                                id: footpadLeftSensorPath
+                                scale: Qt.size(footpad.scale, footpad.scale)
+                                PathSvg {path: "M 44 8 L 44 72 L 8 72 L 8 18.4 A 30 10.4 180 0 1 38 8 L 44 8"}
+                            }
+
+                            Path {
+                                id: footpadRightSensorPath
+                                scale: Qt.size(footpad.scale, footpad.scale)
+                                PathSvg {path: "M 56 72 L 92 72 L 92 18.4 A 30 10.4 0 0 0 62 8L 56 8 L 56 72"}
+                            }
+
+                            component FpCanvas : Canvas {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                anchors.bottom: footpadLeftAdc.top
+                                anchors.bottomMargin: footpadLeftAdc.font.pixelSize * 0.32
+                                width: parent.canvasWidth
+                                height: width * footpadPath.aspect
+                                contextType: "2d"
+                            }
+
+                            component SensorCanvas : FpCanvas {
+                                property Path path
+                                property bool on: false
+                                opacity: on ? 1 : 0
+
+                                onOnChanged: requestPaint();
+
+                                Behavior on opacity {
+                                    NumberAnimation {
+                                        easing.type: Easing.OutCubic
+                                        duration: 60
+                                    }
+                                }
+
+                                onPaint: {
+                                    var context = getContext("2d");
+                                    context.reset();
+                                    context.fillStyle = Utility.getAppHexColor("lightAccent")
+                                    context.path = path
+                                    context.fill()
+                                }
+                            }
+
+                            FpCanvas {
+                                id: footpadCanvas
+                                onPaint: {
+                                    var context = getContext("2d");
+                                    context.reset();
+                                    context.strokeStyle = Utility.getAppHexColor("lightText")
+                                    context.lineWidth = 2
+                                    context.path = footpadPath
+                                    context.stroke()
+                                }
+                            }
+
+                            SensorCanvas {
+                                id: leftSensor
+                                path: footpadLeftSensorPath
+                            }
+
+                            Glow {
+                                anchors.fill: leftSensor
+                                radius: Math.round(0.08 * unit)
+                                samples: radius * 2 + 1
+                                spread: 0.6
+                                opacity: leftSensor.opacity * 0.4
+                                color: Utility.getAppHexColor("lightAccent")
+                                source: leftSensor
+                            }
+
+                            SensorCanvas {
+                                id: rightSensor
+                                path: footpadRightSensorPath
+                            }
+
+                            Glow {
+                                anchors.fill: rightSensor
+                                radius: Math.round(0.08 * unit)
+                                samples: radius * 2 + 1
+                                spread: 0.6
+                                opacity: rightSensor.opacity * 0.4
+                                color: Utility.getAppHexColor("lightAccent")
+                                source: rightSensor
+                            }
+
+                            NText {
+                                id: footpadLeftAdc
+                                anchors.bottom: parent.bottom
+                                anchors.horizontalCenter: footpadCanvas.horizontalCenter
+                                anchors.horizontalCenterOffset: -footpadCanvas.width / 4
+
+                                font.pixelSize: fontSizeSmall
+                                text: "%1V".arg(parent.leftVoltage.toFixed(1))
+                            }
+
+                            NText {
+                                id: footpadRightAdc
+                                anchors.bottom: parent.bottom
+                                anchors.horizontalCenter: footpadCanvas.horizontalCenter
+                                anchors.horizontalCenterOffset: footpadCanvas.width / 4
+
+                                font.pixelSize: fontSizeSmall
+                                text: "%1V".arg(parent.rightVoltage.toFixed(1))
+                            }
+                        }
+
+                        Item {
+                            id: roll
+                            anchors.right: parent.right
+                            anchors.rightMargin: parent.sidePadding
+                            width: parent.height
+                            height: width
+
+                            property real value
+                            onValueChanged: rollCanvas.requestPaint();
+
+                            Behavior on value {
+                                NumberAnimation {
+                                    easing.type: Easing.OutCirc
+                                    duration: 100
+                                }
+                            }
+
+                            Canvas {
+                                id: rollCanvas
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                width: height
+                                height: parent.width - rollText.font.pixelSize * 1.1
+                                contextType: "2d"
+
+                                property real scale: width * 0.95 / rollPath.width
+
+                                Path {
+                                    id: rollPath
+
+                                    property int width: 100
+                                    property int height: 88
+                                    scale: Qt.size(rollCanvas.scale, rollCanvas.scale)
+
+                                    PathSvg {path: "M 45.01 -9 L -45.01 -9 A 3 3 0 0 0 -48 -5.75 L -47 6.25 A 3 3 0 0 0 -44.01 9 L 44.01 9 A 3 3 0 0 0 47 6.25 L 48 -5.75 A 3 3 0 0 0 45.01 -9 M -33.54 9 L -33.01 15 A 38.15 15.07 95.62 0 0 -23.54 37.5 A 35 17.39 0 0 0 23.54 37.5 A 38.15 15.07 -95.62 0 0 33.01 15 L 33.54 9 M 33.54 -9 L 33.01 -15 A 38.15 15.07 95.62 0 0 23.54 -37.5 A 35 17.39 0 0 0 -23.54 -37.5 A 38.15 15.07 84.38 0 0 -33.01 -15 L -33.54 -9 M -36 -3 L 36 -3"}
+                                }
+
+                                onPaint: {
+                                    var context = getContext("2d");
+                                    context.reset();
+                                    context.translate(width / 2, height / 2);
+                                    context.rotate(Math.PI / 180 * parent.value);
+                                    context.path = rollPath;
+                                    context.lineWidth = 2;
+                                    context.strokeStyle = Utility.getAppHexColor("lightText")
+                                    context.stroke();
+                                }
+                            }
+
+                            NText {
+                                id: rollText
+                                anchors.bottom: parent.bottom
+                                anchors.horizontalCenter: parent.horizontalCenter
+
+                                font.pixelSize: fontSizeSmall
+                                text: "roll: %1°".arg(toFixed1Zero(parent.value))
+                            }
+                        }
+                    }
+
+                    Item {
+                        id: pitch
+                        anchors.top: hudRightTop.bottom
+                        anchors.topMargin: 0.15 * unit
+                        width: parent.width
+                        height: width * 0.83
+
+                        property real textWidth: 1.4 * unit
+
+                        property real pitchValue
+                        property real balancePitchValue
+                        property real setpointValue
+
+                        property real runtimeOpacity: 0
+
+                        states: State {
+                            name: "running";
+                            when: state.pkgState === state.s_Running
+                            PropertyChanges {target: pitch; runtimeOpacity: 1;}
+                        }
+
+                        transitions: [
+                            Transition {
+                                to: "running"
+                                PropertyAnimation {target: pitch; property: "runtimeOpacity"; duration: 200; easing.type: Easing.OutExpo;}
+                            },
+                            Transition {
+                                from: "running"
+                                PropertyAnimation {target: pitch; property: "runtimeOpacity"; duration: 2000; easing.type: Easing.OutExpo;}
+                            }
+                        ]
+
+                        Behavior on pitchValue {
+                            NumberAnimation {
+                                easing.type: Easing.OutCirc
+                                duration: 100
+                            }
+                        }
+
+                        Behavior on balancePitchValue {
+                            NumberAnimation {
+                                easing.type: Easing.OutCirc
+                                duration: 100
+                            }
+                        }
+
+                        Behavior on setpointValue {
+                            NumberAnimation {
+                                easing.type: Easing.OutCirc
+                                duration: 100
+                            }
+                        }
+
+                        onPitchValueChanged: pitchCanvas.requestPaint()
+                        onBalancePitchValueChanged: pitchCanvas.requestPaint()
+                        onSetpointValueChanged: pitchCanvas.requestPaint()
+
+                        Canvas {
+                            id: pitchCanvas
+                            anchors.centerIn: parent
+                            width: height
+                            height: parent.height
+                            contextType: "2d"
+
+                            property real scale: width * 0.88 / pitchBoardPath.width
+
+                            Path {
+                                id: pitchBoardPath
+
+                                property int width: 200
+                                property int height: 80
+                                scale: Qt.size(pitchCanvas.scale, pitchCanvas.scale)
+
+                                PathSvg {path: "M -97.36 -3.15 L -91.65 4.16 A 10 10 0 0 0 -83.77 8 L 83.77 8 A 10 10 0 0 0 91.65 4.16 L 97.36 -3.15 A 3 3 0 0 0 95 -8 L -95 -8 A 3 3 0 0 0 -97.36 -3.15"}
+                            }
+
+                            Path {
+                                id: pitchWheelPath
+                                scale: Qt.size(pitchCanvas.scale, pitchCanvas.scale)
+
+                                PathSvg {path: "M 35.1 8 A 36 36 0 0 1 -35.1 8 M -35.1 -8 A 36 36 0 0 1 35.1 -8 M 18.33 8 A 20 20 0 0 1 -18.33 8 M -18.33 -8 A 20 20 0 0 1 18.33 -8"}
+                            }
+
+                            Path {
+                                id: pitchSetpointPath
+                                scale: Qt.size(pitchCanvas.scale, pitchCanvas.scale)
+                                PathSvg {path: "M -86 0 L -43 0 M 43 0 L 86 0"}
+                            }
+
+                            function paintPath(context, paths, rotation, color) {
+                                context.save();
+                                context.translate(width / 2, height / 2);
+                                context.rotate(Math.PI / 180 * rotation);
+                                context.lineWidth = 2;
+                                context.strokeStyle = Utility.getAppHexColor(color);
+                                for (let path of paths) {
+                                    context.path = path;
+                                    context.stroke();
+                                }
+                                context.restore();
+                            }
+
+                            onPaint: {
+                                var context = getContext("2d");
+                                context.reset()
+                                paintPath(context, [pitchBoardPath], parent.balancePitchValue, "lightAccent");
+                                paintPath(context, [pitchBoardPath, pitchWheelPath], parent.pitchValue, "lightText");
+                                context.globalAlpha = parent.runtimeOpacity;
+                                paintPath(context, [pitchSetpointPath], parent.setpointValue, "orange");
+                            }
+                        }
+
+                        Text {
+                            id: pitchPushbackText
+                            anchors.top: parent.top
+                            anchors.left: parent.left
+                            anchors.leftMargin: 0.17 * unit
+
+                            property string satText: state.setpointAdjustmentTypeString
+
+                            onSatTextChanged: {
+                                if (satText) {
+                                    text = satText;
+                                    if (state.setpointAdjustmentClass == state.sac_Error) {
+                                        color = Utility.getAppHexColor("red");
+                                    } else if (state.setpointAdjustmentClass == state.sac_Warning) {
+                                        color = Utility.getAppHexColor("orange");
+                                    } else {
+                                        color = Utility.getAppHexColor("normalText");
+                                    }
+                                }
+                            }
+
+                            font.pixelSize: fontSizeSmall
+                            opacity: 0
+
+                            states: State {
+                                name: "shown";
+                                when: pitchPushbackText.satText != "" && state.pkgState === state.s_Running
+                                PropertyChanges {target: pitchPushbackText; opacity: 1;}
+                            }
+
+                            transitions: [
+                                Transition {
+                                    to: "shown"
+                                    PropertyAnimation {target: pitchPushbackText; property: "opacity"; duration: 200; easing.type: Easing.OutExpo;}
+                                },
+                                Transition {
+                                    from: "shown"
+                                    PropertyAnimation {target: pitchPushbackText; property: "opacity"; duration: 2000; easing.type: Easing.OutExpo;}
+                                }
+                            ]
+                        }
+
+                        NText {
+                            id: pitchPitchLabel
+                            anchors.bottom: parent.bottom
+                            anchors.left: parent.left
+                            width: parent.textWidth
+
+                            font.pixelSize: fontSizeSmall
+                            horizontalAlignment: Text.AlignHCenter
+                            text: "pitch"
+                        }
+
+                        LText {
+                            id: pitchPitchValue
+                            anchors.bottom: pitchPitchLabel.top
+                            width: parent.textWidth
+
+                            font.pixelSize: fontSizeNormal
+                            horizontalAlignment: Text.AlignHCenter
+                            text: "%1°".arg(toFixed1Zero(parent.pitchValue))
+                        }
+
+                        NText {
+                            id: pitchBalancePitchLabel
+                            anchors.bottom: parent.bottom
+                            anchors.right: parent.right
+                            width: parent.textWidth
+
+                            font.pixelSize: fontSizeSmall
+                            horizontalAlignment: Text.AlignHCenter
+                            text: "balance"
+                        }
+
+                        Text {
+                            id: pitchBalancePitchValue
+                            anchors.bottom: pitchBalancePitchLabel.top
+                            anchors.right: parent.right
+                            width: parent.textWidth
+
+                            color: Utility.getAppHexColor("lightAccent")
+                            font.pixelSize: fontSizeNormal
+                            horizontalAlignment: Text.AlignHCenter
+                            text: "%1°".arg(toFixed1Zero(parent.balancePitchValue))
+                        }
+
+                        NText {
+                            id: pitchSetpointLabel
+                            anchors.top: parent.top
+                            anchors.right: parent.right
+                            width: parent.textWidth
+
+                            font.pixelSize: fontSizeSmall
+                            horizontalAlignment: Text.AlignHCenter
+                            opacity: parent.runtimeOpacity
+                            text: "setpoint"
+                        }
+
+                        Text {
+                            id: pitchSetpointValue
+                            anchors.top: pitchSetpointLabel.bottom
+                            anchors.right: parent.right
+                            width: parent.textWidth
+
+                            color: Utility.getAppHexColor("orange")
+                            font.pixelSize: fontSizeNormal
+                            horizontalAlignment: Text.AlignHCenter
+                            opacity: parent.runtimeOpacity
+                            text: "%1°".arg(toFixed1Zero(parent.setpointValue))
+                        }
                     }
                 }
             }
 
-            // Controls Page
-            ColumnLayout {
-                id: controlsColumn
+            Item {
+                id: middleRow
+
+                property var verticalValueItemWidth: 1.7 * unit
+                property var verticalValueItemHeight: 0.8 * unit
 
                 Layout.fillWidth: true
+                Layout.preferredHeight: 1.2 * unit
+                Layout.topMargin: parent.centralMargin
 
-                // Controls Page Top Section
-                ColumnLayout {
-                    id: controlsTop
+                component VerticalValue : Item {
+                    height: parent.verticalValueItemHeight
+                    width: parent.verticalValueItemWidth
+                    anchors.verticalCenter: parent.verticalCenter
 
-                    Layout.fillWidth: true
-                    visible: handtest_toggle == 0
+                    property string labelText
+                    property string unit: ""
+                    property int decimals: 1
+                    property real value
+                    property real warningThreshold: 0
 
-                    // Movement controls
+                    property string format: "%1" + unit
+
+                    NText {
+                        anchors.bottom: parent.bottom
+                        width: parent.width
+                        font.pixelSize: fontSizeSmall
+                        horizontalAlignment: Text.AlignHCenter
+                        text: labelText
+                    }
+
                     Text {
-                        id: movementControlsHeader
+                        width: parent.width
+                        color: !!warningThreshold && value > warningThreshold ? Utility.getAppHexColor("red") : Utility.getAppHexColor("lightText")
+                        font.pixelSize: fontSizeNormal
+                        horizontalAlignment: Text.AlignHCenter
+                        text: format.arg(value.toFixed(decimals))
+                    }
+                }
 
-                        color: Utility.getAppHexColor("lightText")
-                        font.family: "DejaVu Sans Mono"
-                        Layout.margins: 0
-                        Layout.leftMargin: 0
-                        Layout.fillWidth: true
-                        text: "Movement Controls"
-                        font.underline: true
-                        font.weight: Font.Black
-                        font.pointSize: 14
+                VerticalValue {
+                    id: motorTemp
+                    labelText: "motor"
+                    unit: "°C"
+                    warningThreshold: motorConfig.tempMotorStart - preferences.tempWarningOffset
+                }
+
+                VerticalValue {
+                    id: controllerTemp
+                    anchors.left: motorTemp.right
+                    labelText: "controller"
+                    unit: "°C"
+                    warningThreshold: motorConfig.tempFetStart - preferences.tempWarningOffset
+                }
+
+                Item {
+                    id: statusText
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: parent.width - 4 * parent.verticalValueItemWidth
+                    height: parent.height * 0.83
+
+                    property bool red: state.pkgStateIsError
+                    property bool dark: state.darkride
+                    property bool blue: state.pkgState == state.s_Running
+
+                    states: [
+                        State {
+                            name: "specialMode"
+                            when: state.pkgMode != state.m_Normal
+                            AnchorChanges {target: statusTextState; anchors.top: parent.top; anchors.verticalCenter: undefined;}
+                        }
+                    ]
+
+                    LText {
+                        id: statusTextState
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: parent.width
+                        font.pixelSize: (state.pkgStateString.length >= 10 ? 0.42 : 0.55) * unit
+                        font.family: "Exan"
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        text: state.pkgStateString
+                    }
+
+                    Glow {
+                        anchors.fill: statusTextState
+                        radius: Math.round((parent.dark ? 0.2 : 0.12) * unit)
+                        samples: radius * 2 + 1
+                        spread: parent.red ? 0.6 : (parent.dark ? 0.7 : 0.5)
+                        opacity: parent.red || parent.dark || parent.blue ? 0.8 : 0.3
+                        color: {
+                            if (parent.red) {
+                                return Utility.getAppHexColor("red");
+                            } else if (parent.dark) {
+                                return Utility.isDarkMode() ? Utility.getAppHexColor("black") : Utility.getAppHexColor("disabledText");
+                            } else if (parent.blue) {
+                                return Utility.getAppHexColor("lightAccent");
+                            } else {
+                                return Utility.getAppHexColor("lightText");
+                            }
+                        }
+                        source: statusTextState
+                    }
+
+                    Text {
+                        id: statusTextMode
+                        anchors.bottom: parent.bottom
+                        width: parent.width
+                        color: state.pkgMode == state.m_Flywheel ? Utility.getAppHexColor("lightAccent") : Utility.getAppHexColor("lightText")
+                        font.pixelSize: fontSizeSmall
+                        font.family: "Exan"
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        visible: state.pkgMode != state.m_Normal
+                        text: state.pkgModeString
+
+                    }
+
+                    Glow {
+                        anchors.fill: statusTextMode
+                        radius: Math.round(0.12 * unit)
+                        samples: radius * 2 + 1
+                        opacity: 0.3
+                        color: statusTextMode.color
+                        visible: state.pkgMode != state.m_Normal
+                        source: statusTextMode
+                    }
+                }
+
+                VerticalValue {
+                    id: odometer
+                    anchors.right: parent.right
+                    labelText: "life"
+                    decimals: 0
+                    unit: vescConfig.distanceUnit
+                }
+
+                VerticalValue {
+                    id: tachometer
+                    anchors.right: odometer.left
+                    labelText: "trip"
+                    unit: vescConfig.distanceUnit
+                }
+            }
+
+            Text {
+                Layout.fillWidth: true
+                property string fault
+
+                color: Utility.getAppHexColor("red")
+                font.pixelSize: fontSizeNormal
+                horizontalAlignment: Text.AlignHCenter
+                visible: state.isError && !state.pkgStateIsError
+                text: state.errorText
+            }
+        }
+
+        TabBar {
+            Layout.fillWidth: true
+            clip: true
+
+            TabButton {text: "Tunes"}
+
+            TabButton {text: "Control"}
+
+            TabButton {
+                id: tabBarDebugButton
+                text: "Data"
+
+                property bool isError: state.isError
+                property bool glowVisible: false
+
+                onIsErrorChanged: {
+                    glowVisible = isError && !checked
+                }
+
+                onToggled: {
+                    glowVisible = false
+                }
+
+                Glow {
+                    anchors.fill: tabBarDebugButton.contentItem
+                    radius: Math.round(0.12 * unit)
+                    samples: radius * 2 + 1
+                    spread: 0.8
+                    opacity: 0.8
+                    visible: parent.glowVisible
+                    color: Utility.getAppHexColor("red")
+                    source: tabBarDebugButton.contentItem
+                }
+            }
+
+            background: Rectangle {
+                color: Utility.getAppHexColor("lightBackground");
+            }
+
+            onCurrentIndexChanged: {
+                bottomStackLayout.currentIndex = currentIndex;
+            }
+        }
+
+        StackLayout {
+            id: bottomStackLayout
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            clip: true
+
+            Item {
+                id: tunesPage
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+
+                GridLayout {
+                    property int spacing: 0.6 * unit
+                    anchors.fill: parent
+                    anchors.topMargin: spacing
+                    anchors.leftMargin: spacing
+                    anchors.rightMargin: spacing
+                    anchors.bottomMargin: spacing - bottomLine.height - root.spacing
+                    rowSpacing: spacing
+                    columnSpacing: spacing
+                    columns: (preferences.tuneSlotCount === 2 && height > width * 0.6) ? 1 : 2
+
+                    Repeater {
+                        model: preferences.tuneSlotCount
+
+                        Button {
+                            id: button
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            Layout.minimumHeight: buttonItemHeight + 2 * buttonItemMargin
+                            Layout.columnSpan: (slot === preferences.tuneSlotCount && (slot % 2) === 1) ? 2 : 1
+
+                            property int slot: index + 1
+
+                            property var tuneName: tuneManager.tuneNames[slot]
+
+                            property real buttonItemHeight: unit
+                            property real buttonItemMargin: 0.15 * unit
+
+                            padding: 0
+                            leftInset: 0
+                            rightInset: 0
+                            topInset: 0
+                            bottomInset: 0
+
+                            onPressAndHold: {
+                                editTuneDialog.show(slot, tuneName);
+                            }
+
+                            onClicked: {
+                                if (tuneName) {
+                                    packageConfig.applyConfig(tuneManager.loadTune(slot));
+                                }
+                            }
+
+                            contentItem: Item {
+                                anchors.fill: parent
+                                anchors.margins: parent.buttonItemMargin
+                                clip: true
+
+                                Item {
+                                    anchors.centerIn: parent
+                                    width: parent.width
+                                    height: button.buttonItemHeight
+
+                                    Text {
+                                        id: tuneButtonText
+                                        width: parent.width
+                                        anchors.centerIn: tuneName ? parent : undefined
+                                        anchors.top: tuneName ? undefined : parent.top
+
+                                        color: tuneName ? Utility.getAppHexColor("lightText") : Utility.getAppHexColor("disabledText")
+                                        font.pixelSize: 0.5 * unit
+                                        horizontalAlignment: Text.AlignHCenter
+                                        wrapMode: Text.WordWrap
+                                        text: tuneName || "empty slot"
+                                    }
+
+                                    DText {
+                                        id: tuneButtonHelpText
+                                        width: parent.width
+                                        anchors.bottom: parent.bottom
+
+                                        font.pixelSize: fontSizeSuperSmall
+                                        visible: !tuneName
+                                        horizontalAlignment: Text.AlignHCenter
+                                        text: "press and hold to set"
+                                    }
+                                }
+                            }
+
+                            background: Rectangle {
+                                id: buttonBg
+
+                                border.color: tuneName ? Utility.getAppHexColor("lightText") : Utility.getAppHexColor("disabledText")
+                                border.width: 2
+                                radius: 3
+
+                                color: Utility.getAppHexColor("normalBackground")
+
+                                states: [
+                                    State {
+                                        name: "change"
+                                        when: button.pressed
+                                        PropertyChanges {target: buttonBg; color: Utility.getAppHexColor("lightestBackground");}
+                                    }
+                                ]
+
+                                transitions: Transition {
+                                    ColorAnimation {property: "color"; duration: 200; easing.type: Easing.InOutCirc;}
+                                }
+                            }
+                        }
+                    }
+                }
+
+                FloatingToolButton {
+                    id: downloadTunesButton
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+
+                    iconPath: Path {
+                        PathSvg {path: "M 43 39 L 16 39 M 38.5 32 L 11.5 32 M 34 25 L 7 25 M 25 2 L 25 18 L 33 11 M 25 18 L 17 11"}
+                    }
+
+                    onClicked: {
+                        tuneArchiveDialog.show();
+                    }
+                }
+            }
+
+            ScrollView {
+                Layout.fillHeight: true
+                Layout.fillWidth: true
+                contentWidth: availableWidth
+                clip: true
+
+                Column {
+                    anchors.fill: parent
+                    anchors.leftMargin: 0.15 * unit
+                    anchors.rightMargin: 0.15 * unit
+                    spacing: 0.05 * unit
+
+                    Item {
+                        width: parent.width
+                        height: 0.1 * unit
+                    }
+
+                    LText {
+                        id: movementControlsHeader
+                        anchors.horizontalCenter: parent.horizontalCenter
+
+                        font.pixelSize: fontSizeBig
+                        text: "Move"
                     }
 
                     Slider {
                         id: moveSlider
+                        width: parent.width * 0.9
+                        anchors.horizontalCenter: parent.horizontalCenter
 
                         from: -1
-                        value: 0
                         to: 1
-                        Layout.fillWidth: true
+                        value: 0
                     }
 
-                    // Tilt controls
-                    RowLayout {
-                        id: movementStrength
+                    Item {
+                        width: parent.width
+                        implicitHeight: tiltEnabled.implicitHeight
+                        anchors.horizontalCenter: parent.horizontalCenter
 
-                        Layout.fillWidth: true
-
-                        Text {
+                        LText {
                             id: tiltControlsHeader
+                            anchors.centerIn: parent
 
-                            color: Utility.getAppHexColor("lightText")
-                            font.family: "DejaVu Sans Mono"
-                            Layout.margins: 0
-                            Layout.leftMargin: 0
-                            text: "Tilt Controls"
-                            font.underline: true
-                            font.weight: Font.Black
-                            font.pointSize: 14
+                            font.pixelSize: fontSizeBig
+                            text: "Tilt"
                         }
 
                         CheckBox {
                             id: tiltEnabled
+                            anchors.left: tiltControlsHeader.right
+                            anchors.leftMargin: 0.2 * unit
 
                             checked: false
-                            text: qsTr("Enabled (Overrides Remote)")
+                            font.pixelSize: fontSizeNormal
+                            text: "enable"
+
                             onClicked: {
-                                if (tiltEnabled.checked && mCustomConf.getParamEnum("inputtilt_remote_type", 0) != 1) {
-                                    mCustomConf.updateParamEnum("inputtilt_remote_type", 1);
-                                    mCommands.customConfigSet(0, mCustomConf);
+                                if (checked) {
+                                    packageConfig.setInputTiltRemoteType(1);
                                 }
                             }
                         }
@@ -1049,320 +3203,173 @@ Item {
 
                     Slider {
                         id: tiltSlider
+                        width: parent.width * 0.9
+                        anchors.horizontalCenter: parent.horizontalCenter
 
+                        enabled: tiltEnabled.checked
                         from: -1
-                        value: 0
                         to: 1
-                        Layout.fillWidth: true
-                    }
-                }
-
-                Text {
-                    id: handtestTopHeader
-
-                    visible: handtest_toggle == 1
-                    color: Utility.getAppHexColor("lightText")
-                    font.family: "DejaVu Sans Mono"
-                    Layout.margins: 0
-                    Layout.leftMargin: 0
-                    Layout.fillWidth: true
-                    text: "== HANDTEST =="
-                    font.weight: Font.Black
-                    font.pointSize: 24
-                }
-
-                Text {
-                    id: handtestInstructions
-
-                    visible: handtest_toggle == 1
-                    color: Utility.getAppHexColor("lightText")
-                    Layout.margins: 0
-                    Layout.leftMargin: 0
-                    Layout.fillWidth: true
-                    wrapMode: Text.WordWrap
-                    text: "Now switch to the RT Data tab and engage the board by hand to verify that it balances correctly."
-                    font.pointSize: 11
-                }
-
-                // spacer item
-                Item {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                }
-
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 2
-                    color: Utility.getAppHexColor("lightText")
-                }
-
-                // Handtest Controls
-                Text {
-                    id: handtestHeader
-
-                    color: Utility.getAppHexColor("lightText")
-                    font.family: "DejaVu Sans Mono"
-                    Layout.margins: 0
-                    Layout.leftMargin: 0
-                    Layout.fillWidth: true
-                    text: "Handtest (for initial setup)"
-                    font.underline: true
-                    font.weight: Font.Black
-                    font.pointSize: 14
-                }
-
-                Text {
-                    id: handtestInfo
-
-                    color: Utility.getAppHexColor("lightText")
-                    Layout.margins: 0
-                    Layout.leftMargin: 0
-                    Layout.fillWidth: true
-                    wrapMode: Text.WordWrap
-                    text: "After finishing setup enable the handtest to verify that your board balances in the correct direction!"
-                    font.pointSize: 11
-                }
-
-                Button {
-                    id: handtestOnButton
-
-                    text: "START HANDTEST"
-                    Layout.fillWidth: true
-                    font.pointSize: 16
-                    onClicked: {
-                        handtest_toggle = 1 - handtest_toggle;
-                        var buffer = new ArrayBuffer(3);
-                        var dv = new DataView(buffer);
-                        dv.setUint8(0, 101); // Package ID
-                        dv.setUint8(1, 13); // Command ID: Handtest
-                        dv.setUint8(2, handtest_toggle); // Handtest On(1) vs Off(0)
-                        mCommands.sendCustomAppData(buffer);
-                        if (handtest_toggle > 0)
-                            handtestOnButton.text = "STOP HANDTEST";
-                        else
-                            handtestOnButton.text = "START HANDTEST";
-                    }
-                }
-
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 2
-                    color: Utility.getAppHexColor("lightText")
-                }
-
-                // Controls Page Top Section
-                ColumnLayout {
-                    id: controlsBottom
-
-                    Layout.fillWidth: true
-                    enabled: handtest_toggle == 0
-
-                    // Flywheel controls
-                    Text {
-                        id: flywheelControlsHeader
-
-                        color: Utility.getAppHexColor("lightText")
-                        font.family: "DejaVu Sans Mono"
-                        Layout.margins: 0
-                        Layout.leftMargin: 0
-                        Layout.fillWidth: true
-                        text: "Magic Flywheel Mode"
-                        font.underline: true
-                        font.weight: Font.Black
-                        font.pointSize: 14
+                        value: 0
                     }
 
-                    Text {
-                        id: flywheelInstructions
+                    LText {
+                        anchors.horizontalCenter: parent.horizontalCenter
 
-                        color: Utility.getAppHexColor("lightText")
-                        Layout.margins: 0
-                        Layout.leftMargin: 0
-                        Layout.fillWidth: true
+                        font.pixelSize: fontSizeBig
+                        text: "Magic Flywheel"
+                    }
+
+                    LText {
+                        width: parent.width
+                        font.pixelSize: fontSizeNormal
                         wrapMode: Text.WordWrap
-                        text: "Before enabling flywheel mode make sure that your board is nose up and perfectly balanced. To turn it off you must disengage the board first!"
-                        font.pointSize: 11
-                    }
-
-                    RowLayout {
-                        Layout.fillWidth: true
-
-                        Button {
-                            id: flywheelOnButton
-
-                            text: "ON"
-                            Layout.fillWidth: true
-                            onClicked: {
-                                var buffer = new ArrayBuffer(9);
-                                var dv = new DataView(buffer);
-                                dv.setUint8(0, 101); // Package ID
-                                dv.setUint8(1, 22); // Command ID: Flywheel
-                                dv.setUint8(2, 130); // Flywheel On (force calibration)
-                                dv.setUint8(3, 0); // use default kp
-                                dv.setUint8(4, 0); // use default kp2
-                                dv.setUint8(5, 0); // use default duty angle
-                                dv.setUint8(6, 0); // use default duty start
-                                dv.setUint8(7, 1); // allow abort with footpads
-                                dv.setUint8(8, 0); // use default duty speed
-                                mCommands.sendCustomAppData(buffer);
-                            }
-                        }
-
-                        Button {
-                            id: flywheelOffButton
-
-                            text: "OFF"
-                            Layout.fillWidth: true
-                            onClicked: {
-                                var buffer = new ArrayBuffer(8);
-                                var dv = new DataView(buffer);
-                                dv.setUint8(0, 101); // Package ID
-                                dv.setUint8(1, 22); // Command ID: Flywheel
-                                dv.setUint8(2, 128); // Flywheel Off
-                                mCommands.sendCustomAppData(buffer);
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Tunes Page
-            ColumnLayout {
-                id: tunesColumn
-
-                Text {
-                    id: quicksaveHeader
-
-                    color: Utility.getAppHexColor("lightText")
-                    font.family: "DejaVu Sans Mono"
-                    Layout.margins: 0
-                    Layout.fillWidth: true
-                    text: "Refloat Package Quicksave Slots"
-                    font.underline: true
-                    font.weight: Font.Black
-                    font.pointSize: 14
-                }
-
-                GridLayout {
-                    Layout.fillWidth: true
-                    columns: 3
-
-                    Repeater {
-                        model: ["Quicksave 1", "Quicksave 2", "Quicksave 3", "Quicksave 4", "Quicksave 5", "Quicksave 6"]
-
-                        Button {
-                            text: quicksaveNames[modelData]
-                            Layout.fillWidth: true
-                            Layout.preferredWidth: 0
-                            onPressAndHold: {
-                                quicksave(modelData);
-                            }
-                            onClicked: {
-                                quickload(modelData);
-                            }
-                        }
-                    }
-                }
-
-                Text {
-                    id: imuQuicksaveHeader
-
-                    color: Utility.getAppHexColor("lightText")
-                    font.family: "DejaVu Sans Mono"
-                    Layout.margins: 0
-                    Layout.fillWidth: true
-                    text: "IMU Config Quicksave Slots"
-                    font.underline: true
-                    font.weight: Font.Black
-                    font.pointSize: 14
-                }
-
-                GridLayout {
-                    Layout.fillWidth: true
-                    columns: 2
-
-                    Repeater {
-                        model: ["IMU Quicksave 1", "IMU Quicksave 2"]
-
-                        Button {
-                            text: quicksaveNames[modelData]
-                            Layout.fillWidth: true
-                            Layout.preferredWidth: 0
-                            onPressAndHold: {
-                                quicksaveIMU(modelData);
-                            }
-                            onClicked: {
-                                quickloadIMU(modelData);
-                            }
-                        }
-                    }
-                }
-
-                RowLayout {
-                    Layout.fillWidth: true
-
-                    Text {
-                        id: tunesHeader
-
-                        color: Utility.getAppHexColor("lightText")
-                        font.family: "DejaVu Sans Mono"
-                        Layout.margins: 0
-                        Layout.fillWidth: true
-                        text: "Tunes Archive"
-                        font.underline: true
-                        font.weight: Font.Black
-                        font.pointSize: 14
+                        text: "Before enabling flywheel mode make sure that your board is nose up and perfectly balanced. To turn it off, you must disengage the board first."
                     }
 
                     Button {
-                        id: downloadTunesButton
+                        id: flywheelOnButton
+                        anchors.horizontalCenter: parent.horizontalCenter
 
-                        text: "Refresh"
-                        Layout.alignment: Qt.AlignCenter
+                        enabled: [state.m_Normal, state.m_Flywheel].includes(state.pkgMode)
+                        text: state.pkgMode === state.m_Flywheel ? "Off" : "On"
                         onClicked: {
-                            downloadTunesButton.text = "Downloading Tunes...";
-                            downloadedTunesModel.clear();
-                            var http = new XMLHttpRequest();
-                            var url = "http://us-central1-mimetic-union-377520.cloudfunctions.net/float_package_tunes_via_http";
-                            http.open("GET", url, true);
-                            http.onreadystatechange = function() {
-                                if (http.readyState == XMLHttpRequest.DONE) {
-                                    downloadTunesButton.text = "Refresh";
-                                    if (http.status == 200) {
-                                        settingStorage.setValue("tunes_csv", http.responseText);
-                                        restoreDownloadedTunes();
-                                        VescIf.emitStatusMessage("Tune Download Success", true);
-                                    } else {
-                                        VescIf.emitStatusMessage("Tune Download Failed: " + http.status, false);
-                                    }
-                                }
-                            };
-                            http.send();
+                            commands.sendFlywheel(state.pkgMode === state.m_Normal);
                         }
                     }
-                }
 
-                ListView {
-                    id: downloadedTunesList
-
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    spacing: 5
-
-                    model: ListModel {
-                        id: downloadedTunesModel
-                    }
-
-                    delegate: Button {
-                        text: tune._name
+                    Item {
                         width: parent.width
-                        onClicked: {
-                            downloadedTunePopup.tune = tune;
-                            downloadedTunePopup.open();
-                        }
+                        height: 0.1 * unit
                     }
                 }
             }
+
+            ScrollView {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                contentWidth: availableWidth
+                clip: true
+
+                Column {
+                    id: debugColumn
+                    anchors.fill: parent
+                    anchors.leftMargin: 0.15 * unit
+                    anchors.rightMargin: 0.15 * unit
+                    spacing: 5
+
+                    property real itemWidth: width * 0.5
+                    property real labelWidth: itemWidth * 0.7
+
+                    component Value : Item {
+                        implicitHeight: label.implicitHeight
+                        implicitWidth: debugColumn.itemWidth
+
+                        property string label
+                        property string value
+                        property string unit: ""
+
+                        LText {
+                            id: label
+                            width: debugColumn.labelWidth
+                            anchors.left: parent.left
+                            anchors.top: parent.top
+                            font.pixelSize: fontSizeNormal
+                            text: "%1:".arg(parent.label)
+                        }
+
+                        LText {
+                            anchors.left: label.right
+                            anchors.top: parent.top
+                            font.pixelSize: fontSizeNormal
+                            text: parent.value + parent.unit
+                        }
+                    }
+
+                    component RealValue : Value {
+                        property real rValue
+                        property int precision: 2
+
+                        value: rValue.toFixed(precision)
+
+                        onRValueChanged: {
+                            value = rValue.toFixed(precision);
+                        }
+                    }
+
+                    Item {
+                        width: parent.width
+                        height: 0.1 * unit
+                    }
+
+                    LText {
+                        width: parent.width
+
+                        font.pixelSize: fontSizeBig
+                        horizontalAlignment: Text.AlignHCenter
+                        visible: state.isError
+                        text: "Error"
+                    }
+
+                    LText {
+                        width: parent.width
+
+                        font.pixelSize: fontSizeNormal
+                        horizontalAlignment: Text.AlignHCenter
+                        visible: state.isError
+                        wrapMode: Text.WordWrap
+                        text: state.errorDescription
+                    }
+
+                    Value {id: debugStopReason; label: "Stop Condition"; value: state.stopConditionString}
+                    Value {id: debugLastBeepReason; label: "Last Beep Reason"; value: state.beepReasonString}
+
+                    Item {
+                        width: parent.width
+                        height: 0.1 * unit
+                    }
+
+                    Row {
+                        width: parent.width
+
+                        Column {
+                            width: parent.width / 2
+                            spacing: 5
+                            clip: true
+
+                            RealValue {id: debugRequestedCurrent; label: "Requested current"; unit: "A";}
+                            RealValue {id: debugFilteredCurrent; label: "Torque (filt. current)"; unit: "A";}
+                            RealValue {id: debugAccDiff; label: "Accel. difference";}
+                            RealValue {id: debugBoosterCurrent; label: "Booster current"; unit: "A";}
+                            Value {id: debugRemoteInput; label: "Remote input"; unit: "%";}
+                        }
+
+                        Column {
+                            width: parent.width / 2
+                            spacing: 5
+                            clip: true
+
+                            RealValue {id: debugAtrSetpoint; label: "ATR setpoint"; unit: "°";}
+                            RealValue {id: debugBrakeTiltSetpoint; label: "Brake Tilt setpoint"; unit: "°";}
+                            RealValue {id: debugTorqueTiltSetpoint; label: "Torque Tilt setpoint"; unit: "°";}
+                            RealValue {id: debugTurnTiltSetpoint; label: "Turn Tilt setpoint"; unit: "°";}
+                            RealValue {id: debugRemoteTiltSetpoint; label: "Remote Tilt setpoint"; unit: "°";}
+                        }
+                    }
+
+                    Item {
+                        width: parent.width
+                        height: 0.1 * unit
+                    }
+                }
+            }
+        }
+
+        NText {
+            id: bottomLine
+            Layout.fillWidth: true
+            font.pixelSize: 0.2 * unit
+            horizontalAlignment: Text.AlignHCenter
+            text: "Refloat v{{VERSION}}"
         }
     }
 }
