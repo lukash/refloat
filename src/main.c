@@ -109,6 +109,7 @@ typedef struct {
     int8_t erpm_sign;
 
     float current;
+    bool braking;
 
     float duty_cycle;
     float duty_smooth;
@@ -174,7 +175,6 @@ typedef struct {
     // Feature: ATR (Adaptive Torque Response)
     float atr_on_step_size, atr_off_step_size;
     float accel_gap;
-    bool braking;
 
     // Feature: Turntilt
     float last_yaw_angle, yaw_angle, abs_yaw_change, last_yaw_change, yaw_change, yaw_aggregate;
@@ -372,6 +372,7 @@ static void motor_data_update(MotorData *m) {
     m->erpm_sign = SIGN(m->erpm);
 
     m->current = VESC_IF->mc_get_tot_current_directional_filtered();
+    m->braking = m->abs_erpm > 250 && SIGN(m->current) != m->erpm_sign;
 
     m->duty_cycle = fabsf(VESC_IF->mc_get_duty_cycle_now());
     m->duty_smooth = m->duty_smooth * 0.9f + m->duty_cycle * 0.1f;
@@ -1182,16 +1183,7 @@ static void apply_torquetilt(data *d) {
     } else {
         d->atr_filtered_current = d->motor.current;
     }
-
     int torque_sign = SIGN(d->atr_filtered_current);
-
-    if (d->motor.abs_erpm > 250 && torque_sign != d->motor.erpm_sign) {
-        // current is negative, so we are braking or going downhill
-        // high currents downhill are less likely
-        d->braking = true;
-    } else {
-        d->braking = false;
-    }
 
     // Are we dealing with a free-spinning wheel?
     // If yes, don't change the torquetilt till we got traction again
@@ -1214,8 +1206,8 @@ static void apply_torquetilt(data *d) {
 
     // CLASSIC TORQUE TILT /////////////////////////////////
 
-    float tt_strength =
-        d->braking ? d->float_conf.torquetilt_strength_regen : d->float_conf.torquetilt_strength;
+    float tt_strength = d->motor.braking ? d->float_conf.torquetilt_strength_regen
+                                         : d->float_conf.torquetilt_strength;
 
     // Do stock FW torque tilt: (comment from Mitch Lustig)
     // Take abs motor current, subtract start offset, and take the max of that with 0 to get the
@@ -1242,9 +1234,9 @@ static void apply_torquetilt(data *d) {
     float abs_torque = fabsf(d->atr_filtered_current);
     float torque_offset = 8;  // hard-code to 8A for now (shouldn't really be changed much anyways)
     float atr_threshold =
-        d->braking ? d->float_conf.atr_threshold_down : d->float_conf.atr_threshold_up;
+        d->motor.braking ? d->float_conf.atr_threshold_down : d->float_conf.atr_threshold_up;
     float accel_factor =
-        d->braking ? d->float_conf.atr_amps_decel_ratio : d->float_conf.atr_amps_accel_ratio;
+        d->motor.braking ? d->float_conf.atr_amps_decel_ratio : d->float_conf.atr_amps_accel_ratio;
     float accel_factor2 = accel_factor * 1.3;
 
     // compare measured acceleration to expected acceleration
@@ -1289,7 +1281,7 @@ static void apply_torquetilt(data *d) {
                                                        : d->float_conf.atr_strength_down;
 
     // from 3000 to 6000 erpm gradually crank up the torque response
-    if (d->motor.abs_erpm > 3000 && !d->braking) {
+    if (d->motor.abs_erpm > 3000 && !d->motor.braking) {
         float speedboost = (d->motor.abs_erpm - 3000) / 3000;
         speedboost = fminf(1, speedboost) * d->float_conf.atr_speed_boost;
         atr_strength += atr_strength * speedboost;
@@ -1379,7 +1371,7 @@ static void apply_torquetilt(data *d) {
     // Feature: Brake Tiltback
 
     // braking also should cause setpoint change lift, causing a delayed lingering nose lift
-    if (d->braketilt_factor < 0 && d->braking && d->motor.abs_erpm > 2000) {
+    if (d->braketilt_factor < 0 && d->motor.braking && d->motor.abs_erpm > 2000) {
         // negative currents alone don't necessarily consitute active braking, look at proportional:
         if (SIGN(d->proportional) != d->motor.erpm_sign) {
             float downhill_damper = 1;
@@ -1911,12 +1903,7 @@ static void refloat_thd(void *arg) {
             }
 
             // Current Limiting!
-            float current_limit;
-            if (d->braking) {
-                current_limit = d->mc_current_min;
-            } else {
-                current_limit = d->mc_current_max;
-            }
+            float current_limit = d->motor.braking ? d->mc_current_min : d->mc_current_max;
             if (fabsf(new_pid_value) > current_limit) {
                 new_pid_value = SIGN(new_pid_value) * current_limit;
             }
