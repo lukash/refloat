@@ -35,9 +35,6 @@
 // Acceleration average
 #define ACCEL_ARRAY_SIZE 40
 
-// ADC Hand-Press Scale Factor (Accomdate lighter presses than what's needed for engagement by foot)
-#define ADC_HAND_PRESS_SCALE 0.8
-
 HEADER
 
 // Return the sign of the argument. -1.0 if negative, 1.0 if zero or positive.
@@ -817,13 +814,10 @@ static bool check_faults(data *d) {
             }
         }
 
-        if (d->is_flywheel_mode && d->flywheel_allow_abort) {
-            if (d->footpad_sensor.adc1 > (d->float_conf.fault_adc1 * ADC_HAND_PRESS_SCALE) &&
-                d->footpad_sensor.adc2 > (d->float_conf.fault_adc2 * ADC_HAND_PRESS_SCALE)) {
-                d->state = FAULT_SWITCH_HALF;
-                d->flywheel_abort = true;
-                return true;
-            }
+        if (d->is_flywheel_mode && d->flywheel_allow_abort && d->footpad_sensor.state == FS_BOTH) {
+            d->state = FAULT_SWITCH_HALF;
+            d->flywheel_abort = true;
+            return true;
         }
     }
 
@@ -2037,9 +2031,8 @@ static void refloat_thd(void *arg) {
         case (FAULT_SWITCH_FULL):
         case (FAULT_STARTUP):
             if (d->is_flywheel_mode) {
-                if ((d->flywheel_abort) ||
-                    (d->flywheel_allow_abort && d->footpad_sensor.adc1 > 1 &&
-                     d->footpad_sensor.adc2 > 1)) {
+                if (d->flywheel_abort ||
+                    (d->flywheel_allow_abort && d->footpad_sensor.state == FS_BOTH)) {
                     flywheel_stop(d);
                     break;
                 }
