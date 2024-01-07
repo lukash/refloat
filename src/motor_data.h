@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "biquad.h"
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -38,8 +40,14 @@ typedef struct {
     float acceleration;
     float accel_history[ACCEL_ARRAY_SIZE];
     uint8_t accel_idx;
+
+    bool atr_filter_enabled;
+    Biquad atr_current_biquad;
+    float atr_filtered_current;
 } MotorData;
 
 void motor_data_init(MotorData *m);
 
 void motor_data_update(MotorData *m);
+
+void motor_data_configure_atr_filter(MotorData *m, float frequency);

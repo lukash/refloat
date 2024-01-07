@@ -31,6 +31,9 @@ void motor_data_init(MotorData *m) {
     for (int i = 0; i < 40; i++) {
         m->accel_history[i] = 0;
     }
+
+    m->atr_filter_enabled = false;
+    biquad_reset(&m->atr_current_biquad);
 }
 
 void motor_data_update(MotorData *m) {
@@ -50,4 +53,19 @@ void motor_data_update(MotorData *m) {
     m->acceleration += (current_acceleration - m->accel_history[m->accel_idx]) / ACCEL_ARRAY_SIZE;
     m->accel_history[m->accel_idx] = current_acceleration;
     m->accel_idx = (m->accel_idx + 1) % ACCEL_ARRAY_SIZE;
+
+    if (m->atr_filter_enabled) {
+        m->atr_filtered_current = biquad_process(&m->atr_current_biquad, m->current);
+    } else {
+        m->atr_filtered_current = m->current;
+    }
+}
+
+void motor_data_configure_atr_filter(MotorData *m, float frequency) {
+    if (frequency > 0) {
+        biquad_configure(&m->atr_current_biquad, BQ_LOWPASS, frequency);
+        m->atr_filter_enabled = true;
+    } else {
+        m->atr_filter_enabled = false;
+    }
 }

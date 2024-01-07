@@ -19,7 +19,6 @@
 
 #include "vesc_c_if.h"
 
-#include "biquad.h"
 #include "footpad_sensor.h"
 #include "motor_data.h"
 #include "utils.h"
@@ -81,8 +80,9 @@ typedef enum {
     TILTBACK_TEMP
 } SetpointAdjustmentType;
 
-static const FootpadSensorState flywheel_konami_sequence[] = {FS_LEFT, FS_NONE, FS_RIGHT, FS_NONE,
-                                                              FS_LEFT, FS_NONE, FS_RIGHT};
+static const FootpadSensorState flywheel_konami_sequence[] = {
+    FS_LEFT, FS_NONE, FS_RIGHT, FS_NONE, FS_LEFT, FS_NONE, FS_RIGHT
+};
 
 // This is all persistent state of the application, which will be allocated in init. It
 // is put here because variables can only be read-only when this program is loaded
@@ -155,8 +155,7 @@ typedef struct {
     float noseangling_interpolated, inputtilt_interpolated;
     float filtered_current;
     float torquetilt_target, torquetilt_interpolated;
-    float atr_filtered_current, atr_target, atr_interpolated;
-    Biquad atr_current_biquad;
+    float atr_target, atr_interpolated;
     float braketilt_factor, braketilt_target, braketilt_interpolated;
     float turntilt_target, turntilt_interpolated;
     SetpointAdjustmentType setpointAdjustmentType;
@@ -302,6 +301,8 @@ static void app_init(data *d) {
 }
 
 static void configure(data *d) {
+    motor_data_configure_atr_filter(&d->motor, d->float_conf.atr_filter / d->float_conf.hertz);
+
     d->debug_render_1 = 2;
     d->debug_render_2 = 4;
 
@@ -361,11 +362,6 @@ static void configure(data *d) {
     d->loop_overshoot_alpha = 2.0 * M_PI * ((float) 1.0 / (float) d->float_conf.hertz) *
         loop_time_filter /
         (2.0 * M_PI * (1.0 / (float) d->float_conf.hertz) * loop_time_filter + 1.0);
-
-    if (d->float_conf.atr_filter > 0) {  // ATR Current Biquad
-        float Fc = d->float_conf.atr_filter / d->float_conf.hertz;
-        biquad_configure(&d->atr_current_biquad, BQ_LOWPASS, Fc);
-    }
 
     // Feature: ATR:
     d->float_acc_diff = 0;
@@ -445,8 +441,6 @@ static void reset_vars(data *d) {
     d->torquetilt_interpolated = 0;
     d->atr_target = 0;
     d->atr_interpolated = 0;
-    d->atr_filtered_current = 0;
-    biquad_reset(&d->atr_current_biquad);
     d->braketilt_target = 0;
     d->braketilt_interpolated = 0;
     d->turntilt_target = 0;
@@ -940,8 +934,10 @@ static void rate_limit(float *value, float target, float step) {
 static void calculate_setpoint_interpolated(data *d) {
     if (d->setpoint_target_interpolated != d->setpoint_target) {
         rate_limit(
-            &d->setpoint_target_interpolated, d->setpoint_target,
-            get_setpoint_adjustment_step_size(d));
+            &d->setpoint_target_interpolated,
+            d->setpoint_target,
+            get_setpoint_adjustment_step_size(d)
+        );
     }
 }
 
@@ -1070,11 +1066,12 @@ static void apply_torquetilt(data *d) {
     // current to get directionality back
     d->torquetilt_target =
         fminf(
-            fmaxf((fabsf(d->atr_filtered_current) - d->float_conf.torquetilt_start_current), 0) *
-                tt_strength,
+            fmaxf(
+                (fabsf(d->motor.atr_filtered_current) - d->float_conf.torquetilt_start_current), 0
+            ) * tt_strength,
             d->float_conf.torquetilt_angle_limit
         ) *
-        SIGN(d->atr_filtered_current);
+        SIGN(d->motor.atr_filtered_current);
 
     float tt_step_size = 0;
     if ((d->torquetilt_interpolated - d->torquetilt_target > 0 && d->torquetilt_target > 0) ||
@@ -1092,7 +1089,7 @@ static void apply_torquetilt(data *d) {
 }
 
 static void apply_atr(data *d) {
-    float abs_torque = fabsf(d->atr_filtered_current);
+    float abs_torque = fabsf(d->motor.atr_filtered_current);
     float torque_offset = 8;  // hard-code to 8A for now (shouldn't really be changed much anyways)
     float atr_threshold =
         d->motor.braking ? d->float_conf.atr_threshold_down : d->float_conf.atr_threshold_up;
@@ -1109,10 +1106,10 @@ static void apply_atr(data *d) {
     float expected_acc;
     if (abs_torque < 25) {
         expected_acc =
-            (d->atr_filtered_current - d->motor.erpm_sign * torque_offset) / accel_factor;
+            (d->motor.atr_filtered_current - d->motor.erpm_sign * torque_offset) / accel_factor;
     } else {
         // primitive linear approximation of non-linear torque-accel relationship
-        int torque_sign = SIGN(d->atr_filtered_current);
+        int torque_sign = SIGN(d->motor.atr_filtered_current);
         expected_acc = (torque_sign * 25 - d->motor.erpm_sign * torque_offset) / accel_factor;
         expected_acc += torque_sign * (abs_torque - 25) / accel_factor2;
     }
@@ -1600,13 +1597,6 @@ static void refloat_thd(void *arg) {
                 apply_noseangling(d);
                 apply_turntilt(d);
 
-                if (d->float_conf.atr_filter > 0) {
-                    d->atr_filtered_current =
-                        biquad_process(&d->atr_current_biquad, d->motor.current);
-                } else {
-                    d->atr_filtered_current = d->motor.current;
-                }
-
                 // in case of wheelslip, don't change torque tilts, instead slightly decrease each
                 // cycle
                 if (d->state == RUNNING_WHEELSLIP) {
@@ -1961,7 +1951,7 @@ static float app_get_debug(int index) {
     case (2):
         return d->float_setpoint;
     case (3):
-        return d->atr_filtered_current;
+        return d->motor.atr_filtered_current;
     case (4):
         return d->float_atr;
     case (5):
@@ -2049,7 +2039,7 @@ static void send_realtime_data(data *d) {
 
     // DEBUG
     buffer_append_float32_auto(send_buffer, d->true_pitch_angle, &ind);
-    buffer_append_float32_auto(send_buffer, d->atr_filtered_current, &ind);
+    buffer_append_float32_auto(send_buffer, d->motor.atr_filtered_current, &ind);
     buffer_append_float32_auto(send_buffer, d->float_acc_diff, &ind);
     buffer_append_float32_auto(send_buffer, d->applied_booster_current, &ind);
     buffer_append_float32_auto(send_buffer, d->motor.current, &ind);
