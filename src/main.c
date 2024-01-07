@@ -2329,16 +2329,9 @@ static void cmd_runtime_tune(data *d, unsigned char *cfg, int len) {
             d->mc_current_min = fabsf(VESC_IF->get_cfg_float(CFG_PARAM_l_current_min));
         }
 
-        // Update values normally done in configure()
-        d->atr.on_step_size = d->float_conf.atr_on_speed / d->float_conf.hertz;
-        d->atr.off_step_size = d->float_conf.atr_off_speed / d->float_conf.hertz;
         d->turntilt_step_size = d->float_conf.turntilt_speed / d->float_conf.hertz;
 
-        // Feature: Braketilt
-        d->atr.braketilt_factor = d->float_conf.braketilt_strength;
-        d->atr.braketilt_factor = 20 - d->atr.braketilt_factor;
-        // incorporate negative sign into braketilt factor instead of adding it each balance loop
-        d->atr.braketilt_factor = -(0.5 + d->atr.braketilt_factor / 5.0);
+        atr_configure(&d->atr, &d->float_conf);
     }
     if (len >= 16) {
         split(cfg[12], &h1, &h2);
