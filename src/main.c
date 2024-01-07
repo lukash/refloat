@@ -1076,39 +1076,6 @@ static void apply_inputtilt(data *d) {
 }
 
 static void apply_torquetilt(data *d) {
-    float tt_step_size = 0;
-    float atr_step_size = 0;
-    float braketilt_step_size = 0;
-
-    // Filter current (Biquad)
-    if (d->float_conf.atr_filter > 0) {
-        d->atr_filtered_current = biquad_process(&d->atr_current_biquad, d->motor.current);
-    } else {
-        d->atr_filtered_current = d->motor.current;
-    }
-    int torque_sign = SIGN(d->atr_filtered_current);
-
-    // Are we dealing with a free-spinning wheel?
-    // If yes, don't change the torquetilt till we got traction again
-    // instead slightly decrease it each cycle
-    if (d->state == RUNNING_WHEELSLIP) {
-        d->torquetilt_interpolated *= 0.995;
-        d->torquetilt_target *= 0.99;
-
-        d->atr_interpolated *= 0.995;
-        d->atr_target *= 0.99;
-
-        d->braketilt_interpolated *= 0.995;
-        d->braketilt_target *= 0.99;
-
-        calculate_torqueresponse_interpolated(d);
-
-        d->setpoint += d->torqueresponse_interpolated;
-        return;
-    }
-
-    // CLASSIC TORQUE TILT /////////////////////////////////
-
     float tt_strength = d->motor.braking ? d->float_conf.torquetilt_strength_regen
                                          : d->float_conf.torquetilt_strength;
 
@@ -1125,6 +1092,7 @@ static void apply_torquetilt(data *d) {
         ) *
         SIGN(d->atr_filtered_current);
 
+    float tt_step_size = 0;
     if ((d->torquetilt_interpolated - d->torquetilt_target > 0 && d->torquetilt_target > 0) ||
         (d->torquetilt_interpolated - d->torquetilt_target < 0 && d->torquetilt_target < 0)) {
         tt_step_size = d->torquetilt_off_step_size;
@@ -1132,8 +1100,14 @@ static void apply_torquetilt(data *d) {
         tt_step_size = d->torquetilt_on_step_size;
     }
 
-    // ADAPTIVE TORQUE RESPONSE ////////////////////////////
+    if (d->motor.abs_erpm < 500) {
+        tt_step_size /= 2;
+    }
 
+    rate_limit(&d->torquetilt_interpolated, d->torquetilt_target, tt_step_size);
+}
+
+static void apply_atr(data *d) {
     float abs_torque = fabsf(d->atr_filtered_current);
     float torque_offset = 8;  // hard-code to 8A for now (shouldn't really be changed much anyways)
     float atr_threshold =
@@ -1154,6 +1128,7 @@ static void apply_torquetilt(data *d) {
             (d->atr_filtered_current - d->motor.erpm_sign * torque_offset) / accel_factor;
     } else {
         // primitive linear approximation of non-linear torque-accel relationship
+        int torque_sign = SIGN(d->atr_filtered_current);
         expected_acc = (torque_sign * 25 - d->motor.erpm_sign * torque_offset) / accel_factor;
         expected_acc += torque_sign * (abs_torque - 25) / accel_factor2;
     }
@@ -1213,6 +1188,7 @@ static void apply_torquetilt(data *d) {
     // Key to keeping the board level and consistent is to determine the appropriate step size!
     // We want to react quickly to changes, but we don't want to overreact to glitches in
     // acceleration data or trigger oscillations...
+    float atr_step_size = 0;
     const float TT_BOOST_MARGIN = 2;
     if (forward) {
         if (d->atr_interpolated < 0) {
@@ -1271,8 +1247,14 @@ static void apply_torquetilt(data *d) {
         }
     }
 
-    // Feature: Brake Tiltback
+    if (d->motor.abs_erpm < 500) {
+        atr_step_size /= 2;
+    }
 
+    rate_limit(&d->atr_interpolated, d->atr_target, atr_step_size);
+}
+
+static void apply_braketilt(data *d) {
     // braking also should cause setpoint change lift, causing a delayed lingering nose lift
     if (d->braketilt_factor < 0 && d->motor.braking && d->motor.abs_erpm > 2000) {
         // negative currents alone don't necessarily consitute active braking, look at proportional:
@@ -1294,27 +1276,18 @@ static void apply_torquetilt(data *d) {
         d->braketilt_target = 0;
     }
 
-    braketilt_step_size = d->atr_off_step_size / d->float_conf.braketilt_lingering;
+    float braketilt_step_size = d->atr_off_step_size / d->float_conf.braketilt_lingering;
     if (fabsf(d->braketilt_target) > fabsf(d->braketilt_interpolated)) {
         braketilt_step_size = d->atr_on_step_size * 1.5;
     } else if (d->motor.abs_erpm < 800) {
         braketilt_step_size = d->atr_on_step_size;
     }
 
-    // when slow then erpm data is especially choppy, causing fake spikes in acceleration
-    // mellow down the reaction to reduce noticeable oscillations
     if (d->motor.abs_erpm < 500) {
-        tt_step_size /= 2;
-        atr_step_size /= 2;
         braketilt_step_size /= 2;
     }
 
-    rate_limit(&d->torquetilt_interpolated, d->torquetilt_target, tt_step_size);
-    rate_limit(&d->atr_interpolated, d->atr_target, atr_step_size);
     rate_limit(&d->braketilt_interpolated, d->braketilt_target, braketilt_step_size);
-
-    calculate_torqueresponse_interpolated(d);
-    d->setpoint += d->torqueresponse_interpolated;
 }
 
 static void apply_turntilt(data *d) {
@@ -1641,8 +1614,34 @@ static void refloat_thd(void *arg) {
             apply_inputtilt(d);  // Allow Input Tilt for Darkride
             if (!d->is_upside_down) {
                 apply_noseangling(d);
-                apply_torquetilt(d);
                 apply_turntilt(d);
+
+                if (d->float_conf.atr_filter > 0) {
+                    d->atr_filtered_current =
+                        biquad_process(&d->atr_current_biquad, d->motor.current);
+                } else {
+                    d->atr_filtered_current = d->motor.current;
+                }
+
+                // in case of wheelslip, don't change torque tilts, instead slightly decrease each
+                // cycle
+                if (d->state == RUNNING_WHEELSLIP) {
+                    d->torquetilt_interpolated *= 0.995;
+                    d->torquetilt_target *= 0.99;
+
+                    d->atr_interpolated *= 0.995;
+                    d->atr_target *= 0.99;
+
+                    d->braketilt_interpolated *= 0.995;
+                    d->braketilt_target *= 0.99;
+                } else {
+                    apply_torquetilt(d);
+                    apply_atr(d);
+                    apply_braketilt(d);
+                }
+
+                calculate_torqueresponse_interpolated(d);
+                d->setpoint += d->torqueresponse_interpolated;
             }
 
             // Prepare Brake Scaling (ramp scale values as needed for smooth transitions)
