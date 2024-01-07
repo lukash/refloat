@@ -929,17 +929,21 @@ static void calculate_setpoint_target(data *d) {
     }
 }
 
+static void rate_limit(float *value, float target, float step) {
+    if (fabsf(target - *value) < step) {
+        *value = target;
+    } else if (target - *value > 0) {
+        *value += step;
+    } else {
+        *value -= step;
+    }
+}
+
 static void calculate_setpoint_interpolated(data *d) {
     if (d->setpoint_target_interpolated != d->setpoint_target) {
-        // If we are less than one step size away, go all the way
-        if (fabsf(d->setpoint_target - d->setpoint_target_interpolated) <
-            get_setpoint_adjustment_step_size(d)) {
-            d->setpoint_target_interpolated = d->setpoint_target;
-        } else if (d->setpoint_target - d->setpoint_target_interpolated > 0) {
-            d->setpoint_target_interpolated += get_setpoint_adjustment_step_size(d);
-        } else {
-            d->setpoint_target_interpolated -= get_setpoint_adjustment_step_size(d);
-        }
+        rate_limit(
+            &d->setpoint_target_interpolated, d->setpoint_target,
+            get_setpoint_adjustment_step_size(d));
     }
 }
 
@@ -1006,13 +1010,7 @@ static void apply_noseangling(data *d) {
             noseangling_target += d->float_conf.tiltback_constant * d->motor.erpm_sign;
         }
 
-        if (fabsf(noseangling_target - d->noseangling_interpolated) < d->noseangling_step_size) {
-            d->noseangling_interpolated = noseangling_target;
-        } else if (noseangling_target - d->noseangling_interpolated > 0) {
-            d->noseangling_interpolated += d->noseangling_step_size;
-        } else {
-            d->noseangling_interpolated -= d->noseangling_step_size;
-        }
+        rate_limit(&d->noseangling_interpolated, noseangling_target, d->noseangling_step_size);
     }
 
     d->setpoint += d->noseangling_interpolated;
@@ -1311,32 +1309,9 @@ static void apply_torquetilt(data *d) {
         braketilt_step_size /= 2;
     }
 
-    // Torque Tilt Interpolated
-    if (fabsf(d->torquetilt_target - d->torquetilt_interpolated) < tt_step_size) {
-        d->torquetilt_interpolated = d->torquetilt_target;
-    } else if (d->torquetilt_target - d->torquetilt_interpolated > 0) {
-        d->torquetilt_interpolated += tt_step_size;
-    } else {
-        d->torquetilt_interpolated -= tt_step_size;
-    }
-
-    // ATR Interpolated
-    if (fabsf(d->atr_target - d->atr_interpolated) < atr_step_size) {
-        d->atr_interpolated = d->atr_target;
-    } else if (d->atr_target - d->atr_interpolated > 0) {
-        d->atr_interpolated += atr_step_size;
-    } else {
-        d->atr_interpolated -= atr_step_size;
-    }
-
-    // Brake Tilt Interpolated
-    if (fabsf(d->braketilt_target - d->braketilt_interpolated) < braketilt_step_size) {
-        d->braketilt_interpolated = d->braketilt_target;
-    } else if (d->braketilt_target - d->braketilt_interpolated > 0) {
-        d->braketilt_interpolated += braketilt_step_size;
-    } else {
-        d->braketilt_interpolated -= braketilt_step_size;
-    }
+    rate_limit(&d->torquetilt_interpolated, d->torquetilt_target, tt_step_size);
+    rate_limit(&d->atr_interpolated, d->atr_target, atr_step_size);
+    rate_limit(&d->braketilt_interpolated, d->braketilt_target, braketilt_step_size);
 
     calculate_torqueresponse_interpolated(d);
     d->setpoint += d->torqueresponse_interpolated;
@@ -1421,14 +1396,7 @@ static void apply_turntilt(data *d) {
     }
 
     // Move towards target limited by max speed
-    if (fabsf(d->turntilt_target - d->turntilt_interpolated) < d->turntilt_step_size) {
-        d->turntilt_interpolated = d->turntilt_target;
-    } else if (d->turntilt_target - d->turntilt_interpolated > 0) {
-        d->turntilt_interpolated += d->turntilt_step_size;
-    } else {
-        d->turntilt_interpolated -= d->turntilt_step_size;
-    }
-
+    rate_limit(&d->turntilt_interpolated, d->turntilt_target, d->turntilt_step_size);
     d->setpoint += d->turntilt_interpolated;
 }
 
