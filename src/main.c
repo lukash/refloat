@@ -22,6 +22,7 @@
 #include "atr.h"
 #include "footpad_sensor.h"
 #include "motor_data.h"
+#include "torque_tilt.h"
 #include "utils.h"
 
 #include "conf/buffer.h"
@@ -84,13 +85,6 @@ typedef enum {
 static const FootpadSensorState flywheel_konami_sequence[] = {
     FS_LEFT, FS_NONE, FS_RIGHT, FS_NONE, FS_LEFT, FS_NONE, FS_RIGHT
 };
-
-typedef struct {
-    float on_step_size;
-    float off_step_size;
-
-    float offset;  // rate-limited setpoint offset
-} TorqueTilt;
 
 // This is all persistent state of the application, which will be allocated in init. It
 // is put here because variables can only be read-only when this program is loaded
@@ -300,15 +294,6 @@ static void app_init(data *d) {
     // Allow saving of odometer
     d->odometer_dirty = 0;
     d->odometer = VESC_IF->mc_get_odometer();
-}
-
-static void torque_tilt_init(TorqueTilt *tt) {
-    tt->offset = 0;
-}
-
-static void torque_tilt_configure(TorqueTilt *tt, const RefloatConfig *config) {
-    tt->on_step_size = config->atr_on_speed / config->hertz;
-    tt->off_step_size = config->atr_off_speed / config->hertz;
 }
 
 static void configure(data *d) {
@@ -1036,40 +1021,6 @@ static void apply_inputtilt(data *d) {
     d->setpoint += d->inputtilt_interpolated;
 }
 
-static void torque_tilt_update(
-    TorqueTilt *tt, const MotorData *motor, const RefloatConfig *config
-) {
-    float strength =
-        motor->braking ? config->torquetilt_strength_regen : config->torquetilt_strength;
-
-    // Take abs motor current, subtract start offset, and take the max of that
-    // with 0 to get the current above our start threshold (absolute). Then
-    // multiply it by "power" to get our desired angle, and min with the limit
-    // to respect boundaries. Finally multiply it by motor current sign to get
-    // directionality back.
-    float target_offset =
-        fminf(
-            fmaxf((fabsf(motor->atr_filtered_current) - config->torquetilt_start_current), 0) *
-                strength,
-            config->torquetilt_angle_limit
-        ) *
-        SIGN(motor->atr_filtered_current);
-
-    float step_size = 0;
-    if ((tt->offset - target_offset > 0 && target_offset > 0) ||
-        (tt->offset - target_offset < 0 && target_offset < 0)) {
-        step_size = tt->off_step_size;
-    } else {
-        step_size = tt->on_step_size;
-    }
-
-    if (motor->abs_erpm < 500) {
-        step_size /= 2;
-    }
-
-    rate_limit(&tt->offset, target_offset, step_size);
-}
-
 static void apply_turntilt(data *d) {
     if (d->float_conf.turntilt_strength == 0) {
         return;
@@ -1399,7 +1350,7 @@ static void refloat_thd(void *arg) {
                 // in case of wheelslip, don't change torque tilts, instead slightly decrease each
                 // cycle
                 if (d->state == RUNNING_WHEELSLIP) {
-                    d->torque_tilt.offset *= 0.995;
+                    torque_tilt_winddown(&d->torque_tilt);
                     atr_and_braketilt_winddown(&d->atr);
                 } else {
                     torque_tilt_update(&d->torque_tilt, &d->motor, &d->float_conf);
