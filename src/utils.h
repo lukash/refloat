@@ -24,3 +24,16 @@
 #define RAD2DEG_f(rad) ((rad) * (float) (180.0 / M_PI))
 
 #define UNUSED(x) (void) (x)
+
+/**
+ * Rate-limits @p value towards @p target by an amount of maximum value of @p step.
+ *
+ * If the difference between @p value and @p target is greated than step, @p
+ * value is increased or decreased (if @p target is greater or less than @p
+ * value respectively) by @p step. Otherwise, @p value is set to @p target.
+ *
+ * @param value A pointer to value to rate-limit towards @p target.
+ * @param target A target to rate-limit @p value towards.
+ * @param step A maximum unit of change of @p value.
+ */
+void rate_limit(float *value, float target, float step);

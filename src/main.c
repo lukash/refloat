@@ -934,16 +934,6 @@ static void calculate_setpoint_target(data *d) {
     }
 }
 
-static void rate_limit(float *value, float target, float step) {
-    if (fabsf(target - *value) < step) {
-        *value = target;
-    } else if (target - *value > 0) {
-        *value += step;
-    } else {
-        *value -= step;
-    }
-}
-
 static void calculate_setpoint_interpolated(data *d) {
     if (d->setpoint_target_interpolated != d->setpoint_target) {
         rate_limit(
