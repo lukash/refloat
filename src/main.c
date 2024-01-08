@@ -85,6 +85,13 @@ static const FootpadSensorState flywheel_konami_sequence[] = {
     FS_LEFT, FS_NONE, FS_RIGHT, FS_NONE, FS_LEFT, FS_NONE, FS_RIGHT
 };
 
+typedef struct {
+    float on_step_size;
+    float off_step_size;
+
+    float offset;  // rate-limited setpoint offset
+} TorqueTilt;
+
 // This is all persistent state of the application, which will be allocated in init. It
 // is put here because variables can only be read-only when this program is loaded
 // in flash without virtual memory in RAM (as all RAM already is dedicated to the
@@ -99,6 +106,7 @@ typedef struct {
     int fw_version_major, fw_version_minor, fw_version_beta;
 
     MotorData motor;
+    TorqueTilt torque_tilt;
     ATR atr;
 
     // Buzzer
@@ -115,7 +123,7 @@ typedef struct {
     float startup_step_size;
     float tiltback_duty_step_size, tiltback_hv_step_size, tiltback_lv_step_size,
         tiltback_return_step_size;
-    float torquetilt_on_step_size, torquetilt_off_step_size, turntilt_step_size;
+    float turntilt_step_size;
     float tiltback_variable, tiltback_variable_max_erpm, noseangling_step_size,
         inputtilt_ramped_step_size, inputtilt_step_size;
     float mc_max_temp_fet, mc_max_temp_mot;
@@ -152,7 +160,6 @@ typedef struct {
     float applied_booster_current;
     float noseangling_interpolated, inputtilt_interpolated;
     float filtered_current;
-    float torquetilt_target, torquetilt_interpolated;
     float turntilt_target, turntilt_interpolated;
     SetpointAdjustmentType setpointAdjustmentType;
     float current_time, last_time, diff_time, loop_overshoot;
@@ -295,8 +302,18 @@ static void app_init(data *d) {
     d->odometer = VESC_IF->mc_get_odometer();
 }
 
+static void torque_tilt_init(TorqueTilt *tt) {
+    tt->offset = 0;
+}
+
+static void torque_tilt_configure(TorqueTilt *tt, const RefloatConfig *config) {
+    tt->on_step_size = config->atr_on_speed / config->hertz;
+    tt->off_step_size = config->atr_off_speed / config->hertz;
+}
+
 static void configure(data *d) {
     motor_data_configure_atr_filter(&d->motor, d->float_conf.atr_filter / d->float_conf.hertz);
+    torque_tilt_configure(&d->torque_tilt, &d->float_conf);
     atr_configure(&d->atr, &d->float_conf);
 
     d->debug_render_1 = 2;
@@ -315,8 +332,6 @@ static void configure(data *d) {
     d->tiltback_hv_step_size = d->float_conf.tiltback_hv_speed / d->float_conf.hertz;
     d->tiltback_lv_step_size = d->float_conf.tiltback_lv_speed / d->float_conf.hertz;
     d->tiltback_return_step_size = d->float_conf.tiltback_return_speed / d->float_conf.hertz;
-    d->torquetilt_on_step_size = d->float_conf.torquetilt_on_speed / d->float_conf.hertz;
-    d->torquetilt_off_step_size = d->float_conf.torquetilt_off_speed / d->float_conf.hertz;
     d->turntilt_step_size = d->float_conf.turntilt_speed / d->float_conf.hertz;
     d->noseangling_step_size = d->float_conf.noseangling_speed / d->float_conf.hertz;
     d->inputtilt_step_size = d->float_conf.inputtilt_speed / d->float_conf.hertz;
@@ -411,6 +426,7 @@ static void configure(data *d) {
 static void reset_vars(data *d) {
     motor_data_init(&d->motor);
     atr_init(&d->atr);
+    torque_tilt_init(&d->torque_tilt);
 
     // Clear accumulated values.
     d->last_proportional = 0;
@@ -421,8 +437,6 @@ static void reset_vars(data *d) {
     d->applied_booster_current = 0;
     d->noseangling_interpolated = 0;
     d->inputtilt_interpolated = 0;
-    d->torquetilt_target = 0;
-    d->torquetilt_interpolated = 0;
     d->turntilt_target = 0;
     d->turntilt_interpolated = 0;
     d->setpointAdjustmentType = CENTERING;
@@ -1022,37 +1036,38 @@ static void apply_inputtilt(data *d) {
     d->setpoint += d->inputtilt_interpolated;
 }
 
-static void apply_torquetilt(data *d) {
-    float tt_strength = d->motor.braking ? d->float_conf.torquetilt_strength_regen
-                                         : d->float_conf.torquetilt_strength;
+static void torque_tilt_update(
+    TorqueTilt *tt, const MotorData *motor, const RefloatConfig *config
+) {
+    float strength =
+        motor->braking ? config->torquetilt_strength_regen : config->torquetilt_strength;
 
-    // Do stock FW torque tilt: (comment from Mitch Lustig)
-    // Take abs motor current, subtract start offset, and take the max of that with 0 to get the
-    // current above our start threshold (absolute). Then multiply it by "power" to get our desired
-    // angle, and min with the limit to respect boundaries. Finally multiply it by sign motor
-    // current to get directionality back
-    d->torquetilt_target =
+    // Take abs motor current, subtract start offset, and take the max of that
+    // with 0 to get the current above our start threshold (absolute). Then
+    // multiply it by "power" to get our desired angle, and min with the limit
+    // to respect boundaries. Finally multiply it by motor current sign to get
+    // directionality back.
+    float target_offset =
         fminf(
-            fmaxf(
-                (fabsf(d->motor.atr_filtered_current) - d->float_conf.torquetilt_start_current), 0
-            ) * tt_strength,
-            d->float_conf.torquetilt_angle_limit
+            fmaxf((fabsf(motor->atr_filtered_current) - config->torquetilt_start_current), 0) *
+                strength,
+            config->torquetilt_angle_limit
         ) *
-        SIGN(d->motor.atr_filtered_current);
+        SIGN(motor->atr_filtered_current);
 
-    float tt_step_size = 0;
-    if ((d->torquetilt_interpolated - d->torquetilt_target > 0 && d->torquetilt_target > 0) ||
-        (d->torquetilt_interpolated - d->torquetilt_target < 0 && d->torquetilt_target < 0)) {
-        tt_step_size = d->torquetilt_off_step_size;
+    float step_size = 0;
+    if ((tt->offset - target_offset > 0 && target_offset > 0) ||
+        (tt->offset - target_offset < 0 && target_offset < 0)) {
+        step_size = tt->off_step_size;
     } else {
-        tt_step_size = d->torquetilt_on_step_size;
+        step_size = tt->on_step_size;
     }
 
-    if (d->motor.abs_erpm < 500) {
-        tt_step_size /= 2;
+    if (motor->abs_erpm < 500) {
+        step_size /= 2;
     }
 
-    rate_limit(&d->torquetilt_interpolated, d->torquetilt_target, tt_step_size);
+    rate_limit(&tt->offset, target_offset, step_size);
 }
 
 static void apply_turntilt(data *d) {
@@ -1321,7 +1336,7 @@ static void refloat_thd(void *arg) {
         d->float_setpoint = d->setpoint;
         d->float_atr = d->atr.offset;
         d->float_braketilt = d->atr.braketilt_offset;
-        d->float_torquetilt = d->torquetilt_interpolated;
+        d->float_torquetilt = d->torque_tilt.offset;
         d->float_turntilt = d->turntilt_interpolated;
         d->float_inputtilt = d->inputtilt_interpolated;
 
@@ -1384,12 +1399,10 @@ static void refloat_thd(void *arg) {
                 // in case of wheelslip, don't change torque tilts, instead slightly decrease each
                 // cycle
                 if (d->state == RUNNING_WHEELSLIP) {
-                    d->torquetilt_interpolated *= 0.995;
-                    d->torquetilt_target *= 0.99;
-
+                    d->torque_tilt.offset *= 0.995;
                     atr_and_braketilt_winddown(&d->atr);
                 } else {
-                    apply_torquetilt(d);
+                    torque_tilt_update(&d->torque_tilt, &d->motor, &d->float_conf);
                     atr_and_braketilt_update(&d->atr, &d->motor, &d->float_conf, d->proportional);
                 }
 
@@ -1397,11 +1410,11 @@ static void refloat_thd(void *arg) {
                 // if signs match between torque tilt and ATR + brake tilt, use the more significant
                 // one if signs do not match, they are simply added together
                 float ab_offset = d->atr.offset + d->atr.braketilt_offset;
-                if (SIGN(ab_offset) == SIGN(d->torquetilt_interpolated)) {
-                    d->setpoint += SIGN(ab_offset) *
-                        fmaxf(fabsf(ab_offset), fabsf(d->torquetilt_interpolated));
+                if (SIGN(ab_offset) == SIGN(d->torque_tilt.offset)) {
+                    d->setpoint +=
+                        SIGN(ab_offset) * fmaxf(fabsf(ab_offset), fabsf(d->torque_tilt.offset));
                 } else {
-                    d->setpoint += ab_offset + d->torquetilt_interpolated;
+                    d->setpoint += ab_offset + d->torque_tilt.offset;
                 }
             }
 
@@ -2122,8 +2135,8 @@ static void cmd_runtime_tune(data *d, unsigned char *cfg, int len) {
         float offspd = h2;
         d->float_conf.torquetilt_on_speed = onspd / 2;
         d->float_conf.torquetilt_off_speed = offspd + 3;
-        d->torquetilt_on_step_size = d->float_conf.torquetilt_on_speed / d->float_conf.hertz;
-        d->torquetilt_off_step_size = d->float_conf.torquetilt_off_speed / d->float_conf.hertz;
+
+        torque_tilt_configure(&d->torque_tilt, &d->float_conf);
     }
     if (len >= 17) {
         split(cfg[16], &h1, &h2);
