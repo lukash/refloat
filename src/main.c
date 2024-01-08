@@ -156,7 +156,6 @@ typedef struct {
     float filtered_current;
     float torquetilt_target, torquetilt_interpolated;
     float atr_filtered_current, atr_target, atr_interpolated;
-    float torqueresponse_interpolated;
     Biquad atr_current_biquad;
     float braketilt_factor, braketilt_target, braketilt_interpolated;
     float turntilt_target, turntilt_interpolated;
@@ -450,7 +449,6 @@ static void reset_vars(data *d) {
     biquad_reset(&d->atr_current_biquad);
     d->braketilt_target = 0;
     d->braketilt_interpolated = 0;
-    d->torqueresponse_interpolated = 0;
     d->turntilt_target = 0;
     d->turntilt_interpolated = 0;
     d->setpointAdjustmentType = CENTERING;
@@ -975,20 +973,6 @@ static void add_surge(data *d) {
         } else {
             d->setpoint -= d->surge_adder;
         }
-    }
-}
-
-static void calculate_torqueresponse_interpolated(data *d) {
-    float atr_brake_interpolated = d->atr_interpolated + d->braketilt_interpolated;
-
-    // TOTAL: Torque Response Interpolated
-    // If signs match between TorqueTilt and ATR+BrakeTilt, the more significant tilt angle between
-    // the two is taken If signs do not match, they are simply added together
-    if (SIGN(atr_brake_interpolated) == SIGN(d->torquetilt_interpolated)) {
-        d->torqueresponse_interpolated = SIGN(atr_brake_interpolated) *
-            fmaxf(fabsf(atr_brake_interpolated), fabsf(d->torquetilt_interpolated));
-    } else {
-        d->torqueresponse_interpolated = atr_brake_interpolated + d->torquetilt_interpolated;
     }
 }
 
@@ -1640,8 +1624,16 @@ static void refloat_thd(void *arg) {
                     apply_braketilt(d);
                 }
 
-                calculate_torqueresponse_interpolated(d);
-                d->setpoint += d->torqueresponse_interpolated;
+                // aggregated torque tilts:
+                // if signs match between torque tilt and ATR + brake tilt, use the more significant
+                // one if signs do not match, they are simply added together
+                float atr_brake_interpolated = d->atr_interpolated + d->braketilt_interpolated;
+                if (SIGN(atr_brake_interpolated) == SIGN(d->torquetilt_interpolated)) {
+                    d->setpoint += SIGN(atr_brake_interpolated) *
+                        fmaxf(fabsf(atr_brake_interpolated), fabsf(d->torquetilt_interpolated));
+                } else {
+                    d->setpoint += atr_brake_interpolated + d->torquetilt_interpolated;
+                }
             }
 
             // Prepare Brake Scaling (ramp scale values as needed for smooth transitions)
