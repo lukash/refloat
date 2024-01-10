@@ -296,11 +296,13 @@ static void app_init(data *d) {
     d->odometer = VESC_IF->mc_get_odometer();
 }
 
-static void configure(data *d) {
+static void reconfigure(data *d) {
     motor_data_configure_atr_filter(&d->motor, d->float_conf.atr_filter / d->float_conf.hertz);
     torque_tilt_configure(&d->torque_tilt, &d->float_conf);
     atr_configure(&d->atr, &d->float_conf);
+}
 
+static void configure(data *d) {
     d->debug_render_1 = 2;
     d->debug_render_2 = 4;
 
@@ -406,6 +408,8 @@ static void configure(data *d) {
     d->do_handtest = false;
 
     konami_init(&d->flywheel_konami, flywheel_konami_sequence, sizeof(flywheel_konami_sequence));
+
+    reconfigure(d);
 }
 
 static void reset_vars(data *d) {
@@ -2060,8 +2064,6 @@ static void cmd_runtime_tune(data *d, unsigned char *cfg, int len) {
         }
 
         d->turntilt_step_size = d->float_conf.turntilt_speed / d->float_conf.hertz;
-
-        atr_configure(&d->atr, &d->float_conf);
     }
     if (len >= 16) {
         split(cfg[12], &h1, &h2);
@@ -2086,8 +2088,6 @@ static void cmd_runtime_tune(data *d, unsigned char *cfg, int len) {
         float offspd = h2;
         d->float_conf.torquetilt_on_speed = onspd / 2;
         d->float_conf.torquetilt_off_speed = offspd + 3;
-
-        torque_tilt_configure(&d->torque_tilt, &d->float_conf);
     }
     if (len >= 17) {
         split(cfg[16], &h1, &h2);
@@ -2095,6 +2095,8 @@ static void cmd_runtime_tune(data *d, unsigned char *cfg, int len) {
         d->float_conf.kp2_brake = ((float) h2) / 10;
         beep_alert(d, 1, 1);
     }
+
+    reconfigure(d);
 }
 
 static void cmd_tune_defaults(data *d) {
@@ -2151,8 +2153,6 @@ static void cmd_tune_defaults(data *d) {
     d->float_conf.startup_dirtylandings_enabled = CFG_DFLT_DIRTYLANDINGS_ENABLED;
 
     // Update values normally done in configure()
-    d->atr.on_step_size = d->float_conf.atr_on_speed / d->float_conf.hertz;
-    d->atr.off_step_size = d->float_conf.atr_off_speed / d->float_conf.hertz;
     d->turntilt_step_size = d->float_conf.turntilt_speed / d->float_conf.hertz;
 
     d->startup_step_size = d->float_conf.startup_speed / d->float_conf.hertz;
@@ -2165,6 +2165,8 @@ static void cmd_tune_defaults(data *d) {
     } else {
         d->tiltback_variable_max_erpm = 100000;
     }
+
+    reconfigure(d);
 }
 
 /**
