@@ -1,0 +1,2446 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ConfigParams>
+    <Params>
+        <config_name>
+            <longName>none</longName>
+            <type>3</type>
+            <transmittable>0</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine></cDefine>
+            <valString>float_config</valString>
+            <maxLen>0</maxLen>
+        </config_name>
+        <hw_name>
+            <longName>Float Cfg</longName>
+            <type>0</type>
+            <transmittable>0</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;This is the VESC Logging and Communication Module.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine></cDefine>
+        </hw_name>
+        <kp>
+            <longName>Angle P</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; text-decoration: underline;&quot;&gt;Angle P (Proportional)&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Determines how strong the board responds to a difference in Board Angle vs. Setpoint Angle (i.e. nose below setpoint will accelerate, nose above setpoint will brake).&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Recommended Values: 10 - 35 (Take caution closer to 35!)&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;*Note: Angle P and Rate P work together to shape a large part of the ride feel. If trying to soften the effects of both and you would like to maintain the ride feel, these values should be adjusted together by the same proportion (i.e. If reducing Angle P by half, such as from 20 -&amp;gt; 10, Rate P should be reduced by half as well, such as from 0.6 -&amp;gt; 0.3).&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_KP</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>40</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>1</stepDouble>
+            <valDouble>20</valDouble>
+            <vTxDoubleScale>10</vTxDoubleScale>
+            <suffix></suffix>
+            <vTx>7</vTx>
+        </kp>
+        <kp2>
+            <longName>Rate P</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; text-decoration: underline;&quot;&gt;Rate P (Proportional) value&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Determines how strong the board responds to the nose's angular velocity, regardless of setpoint (i.e. pushing nose down will accelerate, pulling nose up will brake).&lt;br /&gt;&lt;br /&gt;Most noticeable in quick/aggressive manuevers, as well as scenarios where Angle P is not effective. For example, coming from hard braking (nose high above setpoint), Rate P will allow the board to begin to accelerate the moment you start pushing the nose down, before the nose is even below setpoint.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;For our use case, while Rate P is a Proportional value, we utilize it practically as the D (Derivative) component for our PID loop, working as a damper for the Angle P component.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-weight:600; text-decoration: underline;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Recommended Values: 0.1 - 0.6 &lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;(0.7 - 1.2+ is possible, may experience negative side effects)&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;*Note: Angle P and Rate P work together to shape a large part of the ride feel. If trying to soften the effects of both and you would like to maintain the ride feel, these values should be adjusted together by the same proportion (i.e. If reducing Angle P by half, such as from 20 -&amp;gt; 10, Rate P should be reduced by half as well, such as from 0.6 -&amp;gt; 0.3).&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_KP2</cDefine>
+            <editorDecimalsDouble>2</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>3</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.1</stepDouble>
+            <valDouble>0.6</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix></suffix>
+            <vTx>7</vTx>
+        </kp2>
+        <ki>
+            <longName>Angle I</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; text-decoration: underline;&quot;&gt;Angle I (Integral) value&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;As time passes with the board angle away from setpoint (considered &amp;quot;error&amp;quot;), Angle I will strengthen the board response based on cumulative error over time. Can be a subtle effect, and has most noticeable effect at the start of uphills/downhills, as well as tricks involving motor freespin.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-weight:600; text-decoration: underline;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Recommended Values: 0.005 - 0.08 (Caution with higher values!!)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_KI</cDefine>
+            <editorDecimalsDouble>3</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>0.5</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.005</stepDouble>
+            <valDouble>0.005</valDouble>
+            <vTxDoubleScale>100000</vTxDoubleScale>
+            <suffix></suffix>
+            <vTx>7</vTx>
+        </ki>
+        <mahony_kp>
+            <longName>Mahony KP</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; text-decoration: underline;&quot;&gt;KP value for Mahony IMU Filter&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Decides how heavily the accelerometer is used in &amp;quot;estimating&amp;quot; IMU data. For our purpose, this filter is a bit abused in order to achieve desirable ride behavior.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;In practice, increasing this value will loosen up the board, specifically in the center of the board and in how quickly it rebounds to level. If you want a snappier board, drop this down a bit. If you want things a bit looser, with increased board angle control, bump it up a notch or two.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Recommended Values: 1.5 - 2.5 (Caution with higher values!!)&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;*Note: If your set Mahony KP in &amp;quot;App CFG -&amp;gt; IMU&amp;quot; does not match this value, this value will take priority and writing the Float Config will overwrite this value into your App CFG.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_MAHONY_KP</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>3</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.1</stepDouble>
+            <valDouble>2</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix></suffix>
+            <vTx>7</vTx>
+        </mahony_kp>
+        <kp_brake>
+            <longName>Angle P (Braking)</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Scales your Angle P value for braking. For example, if:&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Angle P = 20,&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Angle P (Braking) = 0.5x,&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;then your brakes will use an Angle P of 10, half the strength of your acceleration Angle P.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_KP_BRAKE</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>2</maxDouble>
+            <minDouble>0.2</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.1</stepDouble>
+            <valDouble>1</valDouble>
+            <vTxDoubleScale>10</vTxDoubleScale>
+            <suffix>x</suffix>
+            <vTx>7</vTx>
+        </kp_brake>
+        <kp2_brake>
+            <longName>Rate P (Braking)</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Scales your Rate P value for braking. For example, if:&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Rate P = 0.6,&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Rate P (Braking) = 0.5x,&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;then your brakes will use a Rate P of 0.3, half the strength of your acceleration Rate P.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_KP2_BRAKE</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>2</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.1</stepDouble>
+            <valDouble>1</valDouble>
+            <vTxDoubleScale>10</vTxDoubleScale>
+            <suffix>x</suffix>
+            <vTx>7</vTx>
+        </kp2_brake>
+        <hertz>
+            <longName>Loop Hertz</longName>
+            <type>2</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; text-decoration: underline;&quot;&gt;Frequency of Balance Loop Cycle&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-weight:600; text-decoration: underline;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Recommended Value: Same or multiple of IMU Sample Rate&lt;/span&gt;&lt;/p&gt;
+&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; font-style:italic;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Little FOCer v3.1 (LSM6DS3): 832Hz&lt;/li&gt;
+&lt;li style=&quot; font-style:italic;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Little FOCer v3 (BMI160): 800Hz&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_HERTZ</cDefine>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxInt>4000</maxInt>
+            <minInt>50</minInt>
+            <showDisplay>0</showDisplay>
+            <stepInt>16</stepInt>
+            <valInt>832</valInt>
+            <suffix> Hz</suffix>
+            <vTx>3</vTx>
+        </hertz>
+        <fault_pitch>
+            <longName>Pitch Axis Fault Cutoff</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Pitch Angle at which a fault is triggered and the board is disengaged. Can help potentially cut-off a runaway board with a stuck sensor (a.k.a &amp;quot;Ghosting&amp;quot;).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_FAULT_PITCH</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>180</maxDouble>
+            <minDouble>-180</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>1</stepDouble>
+            <valDouble>90</valDouble>
+            <vTxDoubleScale>10</vTxDoubleScale>
+            <suffix> °</suffix>
+            <vTx>7</vTx>
+        </fault_pitch>
+        <fault_roll>
+            <longName>Roll Axis Fault Cutoff</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Roll Angle at which a fault is triggered and the board is disengaged. Can help potentially cut-off a runaway board with a stuck sensor (a.k.a &amp;quot;Ghosting&amp;quot;).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_FAULT_ROLL</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>180</maxDouble>
+            <minDouble>-180</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>1</stepDouble>
+            <valDouble>90</valDouble>
+            <vTxDoubleScale>10</vTxDoubleScale>
+            <suffix> °</suffix>
+            <vTx>7</vTx>
+        </fault_roll>
+        <fault_adc1>
+            <longName>ADC1 Switch Voltage</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Voltage below this value will trigger a fault for the corresponding sensor zone. To disable this switch, set this value to 0.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic; text-decoration: underline;&quot;&gt;Hint:&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt; If voltage with no input does not settle near 0, consider a pulldown resisitor!&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_FAULT_ADC1</cDefine>
+            <editorDecimalsDouble>2</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>3.3</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>1</showDisplay>
+            <stepDouble>0.1</stepDouble>
+            <valDouble>3</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix> V</suffix>
+            <vTx>7</vTx>
+        </fault_adc1>
+        <fault_adc2>
+            <longName>ADC2 Switch Voltage</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Voltage below this value will trigger a fault for the corresponding sensor zone. To disable this switch, set this value to 0.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic; text-decoration: underline;&quot;&gt;Hint:&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt; If voltage with no input does not settle near 0, consider a pulldown resisitor!&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_FAULT_ADC2</cDefine>
+            <editorDecimalsDouble>2</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>3.3</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>1</showDisplay>
+            <stepDouble>0.1</stepDouble>
+            <valDouble>3</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix> V</suffix>
+            <vTx>7</vTx>
+        </fault_adc2>
+        <is_footbuzz_enabled>
+            <longName>Beep on Sensor Fault</longName>
+            <type>5</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Beep when both sensors turn off above 2000erpm (beeps for as long as the sensor remains off)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_IS_FOOTBUZZ_ENABLED</cDefine>
+            <valInt>1</valInt>
+        </is_footbuzz_enabled>
+        <fault_delay_pitch>
+            <longName>Pitch Fault Delay</longName>
+            <type>2</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Delay before cutoff, in milliseconds, once a Pitch Axis Fault is detected.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_FAULT_DELAY_PITCH</cDefine>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxInt>10000</maxInt>
+            <minInt>0</minInt>
+            <showDisplay>0</showDisplay>
+            <stepInt>50</stepInt>
+            <valInt>1000</valInt>
+            <suffix> ms</suffix>
+            <vTx>3</vTx>
+        </fault_delay_pitch>
+        <fault_delay_roll>
+            <longName>Roll Fault Delay</longName>
+            <type>2</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Delay before cutoff, in milliseconds, once a Roll Axis Fault is detected.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_FAULT_DELAY_ROLL</cDefine>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxInt>10000</maxInt>
+            <minInt>0</minInt>
+            <showDisplay>0</showDisplay>
+            <stepInt>50</stepInt>
+            <valInt>1000</valInt>
+            <suffix> ms</suffix>
+            <vTx>3</vTx>
+        </fault_delay_roll>
+        <fault_delay_switch_half>
+            <longName>Half Switch Fault Delay</longName>
+            <type>2</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Delay before cutoff, in milliseconds, once a Half Switch Fault is detected.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_FAULT_DELAY_SWITCH_HALF</cDefine>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxInt>10000</maxInt>
+            <minInt>0</minInt>
+            <showDisplay>0</showDisplay>
+            <stepInt>50</stepInt>
+            <valInt>250</valInt>
+            <suffix> ms</suffix>
+            <vTx>3</vTx>
+        </fault_delay_switch_half>
+        <fault_delay_switch_full>
+            <longName>Full Switch Fault Delay</longName>
+            <type>2</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Delay before cutoff, in milliseconds, once a Full Switch Fault is detected.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_FAULT_DELAY_SWITCH_FULL</cDefine>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxInt>10000</maxInt>
+            <minInt>0</minInt>
+            <showDisplay>0</showDisplay>
+            <stepInt>50</stepInt>
+            <valInt>250</valInt>
+            <suffix> ms</suffix>
+            <vTx>3</vTx>
+        </fault_delay_switch_full>
+        <fault_adc_half_erpm>
+            <longName>ADC Half State Fault ERPM</longName>
+            <type>2</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;ERPM (absoulte value) below which a Half State on the ADC switches (sensor zones) will be considered a Fault.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;*Note: ERPM = RPM * (Motor Poles / 2)&lt;br /&gt;For an 11&amp;quot; Tire on a Hypercore Motor (30 Poles):&lt;br /&gt;1000 ERPM ≈ 2.2 mph ≈ 3.5 km/h&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_FAULT_ADC_HALF_ERPM</cDefine>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxInt>100000</maxInt>
+            <minInt>0</minInt>
+            <showDisplay>0</showDisplay>
+            <stepInt>50</stepInt>
+            <valInt>300</valInt>
+            <suffix> ERPM</suffix>
+            <vTx>3</vTx>
+        </fault_adc_half_erpm>
+        <fault_is_dual_switch>
+            <longName>Treat Both Sensors as One (Posi)</longName>
+            <type>5</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Treats both sensors as one single-zone sensor (a.k.a. Posi Sensor). Can help guarantee continued sensor engagement, especially at low speed, but disables the Half Switch Fault (Heel Lift dismount) and can present extra ghosting risk if a sensor is stuck.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;*Note: For Advanced Riders only!&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_FAULT_IS_DUAL_SWITCH</cDefine>
+            <valInt>0</valInt>
+        </fault_is_dual_switch>
+        <fault_moving_fault_disabled>
+            <longName>Disable Moving Faults</longName>
+            <type>5</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Disables ADC Faults completely as long as ERPM is positive (moving forward) and above the Half State Fault ERPM x2, as well as the Roll angle being within 40° of level. Outside of the threshold, the board will not disengage on its own, but rather just default to allowing ADC Faults to disengage the board.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;*DISCLAIMER: Requires correct speed calibration and Tail Heavy Board!! The board &lt;/span&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;WILL&lt;/span&gt;&lt;span style=&quot; font-weight:600;&quot;&gt; ghost for sure if your normal speeds read as negative or if your board is nose heavy!!&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_FAULT_MOVING_FAULT_DISABLED</cDefine>
+            <valInt>0</valInt>
+        </fault_moving_fault_disabled>
+        <fault_darkride_enabled>
+            <longName>Enable Darkride</longName>
+            <type>5</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Allows riding the board upside down without sensors. A primitive Reverse Stop (disengage when rolling backwards) is active when using Darkride to allow safe dismount and prevent ghosting.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;*DISCLAIMER: Requires correct speed calibration!! The board &lt;/span&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;WILL&lt;/span&gt;&lt;span style=&quot; font-weight:600;&quot;&gt; ghost for sure if your normal speeds are negative!!&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_FAULT_DARKRIDE_ENABLED</cDefine>
+            <valInt>0</valInt>
+        </fault_darkride_enabled>
+        <fault_reversestop_enabled>
+            <longName>Enable Reverse Stop</longName>
+            <type>5</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Allows stopping the onewheel gently by going backwards a bit. Will slowly tilt until it exceeds 15 degrees, and then turn off. It will also stop if going in reverse and staying above 5 degrees tilt for 1+ seconds, or above 10 degrees tilt for 0.5+ seconds.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;*Note: With Reverse Stop enabled, it's much harder if not impossible to balance standing still&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;*DISCLAIMER: Requires correct speed calibration!! You &lt;/span&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;WON'T&lt;/span&gt;&lt;span style=&quot; font-weight:600;&quot;&gt; be able to go forward if your normal speeds are negative!!&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_FAULT_REVERSESTOP_ENABLED</cDefine>
+            <valInt>0</valInt>
+        </fault_reversestop_enabled>
+        <tiltback_duty_angle>
+            <longName>Angle</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Desired setpoint angle for Duty Cycle Tiltback.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_TILTBACK_DUTY_ANGLE</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>30</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>1</stepDouble>
+            <valDouble>5</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> °</suffix>
+            <vTx>7</vTx>
+        </tiltback_duty_angle>
+        <tiltback_duty_speed>
+            <longName>Speed</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Rate at which nose is tilted back when exceeding Duty Cycle limit (fast tiltback can be dangerous!).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_TILTBACK_DUTY_SPEED</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>30</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.5</stepDouble>
+            <valDouble>3</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> °/s</suffix>
+            <vTx>7</vTx>
+        </tiltback_duty_speed>
+        <tiltback_duty>
+            <longName>Duty Cycle</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Duty Cycle threshold to trigger a safety tiltback (Tiltback raises the nose of the board, informing you to slow down).&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;*Note: Can be disabled by setting to 100%&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;*&lt;/span&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;DISCLAIMER&lt;/span&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;: Max Duty Cycle on a VESC is &lt;/span&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;95%&lt;/span&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;, &lt;/span&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;NOT 100%! &lt;/span&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;Reaching 95% Duty Cycle and pushing beyond &lt;/span&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;WILL &lt;/span&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;result in a nosedive. Use this knowledge to leave yourself the headroom you desire.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_TILTBACK_DUTY</cDefine>
+            <editorDecimalsDouble>2</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>1</editAsPercentage>
+            <maxDouble>1</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.01</stepDouble>
+            <valDouble>0.8</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix></suffix>
+            <vTx>7</vTx>
+        </tiltback_duty>
+        <is_dutybuzz_enabled>
+            <longName>Beep on Duty Tiltback</longName>
+            <type>5</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p align=&quot;justify&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Beep during duty cycle tiltback. It is recommended to disable this beep when enabling the surge beep or else it will be impossible to recognize the surge beep.&lt;/p&gt;
+&lt;p align=&quot;justify&quot; style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p align=&quot;justify&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Warning: buzzer may not be easily audible at high speeds!&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_IS_DUTYBUZZ_ENABLED</cDefine>
+            <valInt>0</valInt>
+        </is_dutybuzz_enabled>
+        <surge_angle>
+            <longName>Surge Angle Increment</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Angle to be used for producing the surge effect. Small angles suffice because the setpoint change is instant, producing a fairly noticeable albeit small jolt in the nose.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Set Angle to 0 to disable surge behavior entirely. &lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Angles smaller than 0.5 degrees may not be noticeable at all.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Surge happens in 3 stages. Each stage adds one increment of the surge angle to the setpoint.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;It takes lots of practice to recognize surge, this feature is &lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;NOT FOR BEGINNERS!&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Warning: use at your own risk - riding near the duty cycle limit is very dangerous!&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_SURGE_ANGLE</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>1.5</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.1</stepDouble>
+            <valDouble>0</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> °</suffix>
+            <vTx>7</vTx>
+        </surge_angle>
+        <surge_duty_start>
+            <longName>Surge Duty Cycle Start</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Starting duty cycle at which surge is triggered. Surge happens in 3 stages in 2 percent duty cycle increments.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The higher you set the duty cycle start value the riskier it gets!&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;Remember: &lt;/span&gt;The act of performing the surge may itself increase the duty cycle, getting you closer to your duty cycle limit more quickly!&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;It takes lots of practice to recognize surge, this feature is &lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;NOT FOR BEGINNERS!&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Warning: use at your own risk - riding near the duty cycle limit is very dangerous!&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_SURGE_DUTY_START</cDefine>
+            <editorDecimalsDouble>2</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>1</editAsPercentage>
+            <maxDouble>1</maxDouble>
+            <minDouble>0.8</minDouble>
+            <showDisplay>1</showDisplay>
+            <stepDouble>0.01</stepDouble>
+            <valDouble>0.88</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix></suffix>
+            <vTx>7</vTx>
+        </surge_duty_start>
+        <is_surgebuzz_enabled>
+            <longName>Beep when Surging</longName>
+            <type>5</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Beep whenever surge is triggered. Issues 1-3 beeps depending on whether the 1st, 2nd or 3rd stage surge got triggered.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Helpful when practicing to recognize surge, but shouldn't be relied on as the buzzer &lt;span style=&quot; font-weight:600;&quot;&gt;may not be easily audible at high speeds!&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_IS_SURGEBUZZ_ENABLED</cDefine>
+            <valInt>1</valInt>
+        </is_surgebuzz_enabled>
+        <tiltback_hv_angle>
+            <longName>Angle</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Desired setpoint angle for High Voltage Tiltback.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_TILTBACK_HV_ANGLE</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>30</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>1</stepDouble>
+            <valDouble>8</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> °</suffix>
+            <vTx>7</vTx>
+        </tiltback_hv_angle>
+        <tiltback_hv_speed>
+            <longName>Speed</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Rate at which nose is tilted back when exceeding High Voltage limit (fast tiltback can be dangerous!).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_TILTBACK_HV_SPEED</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>30</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.5</stepDouble>
+            <valDouble>1</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> °/s</suffix>
+            <vTx>7</vTx>
+        </tiltback_hv_speed>
+        <tiltback_hv>
+            <longName>High Voltage Threshold</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;High Voltage threshold to trigger a safety tiltback (Tiltback raises the nose of the vehicle to alert you). High voltage tiltback is most likely to be triggered when braking or going downhill on a full battery, sometimes resulting in a tail drag (take caution!).&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Recommended Value: 4.3V * Cell Count (i.e. for a 15s battery, 4.3V * 15 = 64.5V)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_TILTBACK_HV</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>150</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.5</stepDouble>
+            <valDouble>64.5</valDouble>
+            <vTxDoubleScale>10</vTxDoubleScale>
+            <suffix> V</suffix>
+            <vTx>7</vTx>
+        </tiltback_hv>
+        <tiltback_lv_angle>
+            <longName>Angle</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Desired setpoint angle for Low Voltage Tiltback.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_TILTBACK_LV_ANGLE</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>30</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>1</stepDouble>
+            <valDouble>10</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> °</suffix>
+            <vTx>7</vTx>
+        </tiltback_lv_angle>
+        <tiltback_lv_speed>
+            <longName>Speed</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Rate at which nose is tilted back when exceeding Low Voltage threshold (fast tiltback can be dangerous!).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_TILTBACK_LV_SPEED</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>30</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.5</stepDouble>
+            <valDouble>1</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> °/s</suffix>
+            <vTx>7</vTx>
+        </tiltback_lv_speed>
+        <tiltback_lv>
+            <longName>Low Voltage Threshold</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Low Voltage threshold to trigger a safety tiltback (Tiltback raises the nose of the vehicle informing you to slow down).&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Recommended Value: 3.0V * Cell Count (i.e. for a 15s battery, 3.0V * 15 = 45V)&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;*DISCLAIMER: Make sure your Voltage Cutoff Start and End (Motor CFG -&amp;gt; General -&amp;gt; Voltage) are below this threshold! LV Tiltback should be used as a notice to stop riding immediately, while the Voltage Cutoffs should be used as a last resort measure to protect the battery.&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-weight:600;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;ALWAYS RESPECT LOW VOLTAGE TILTBACK!&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_TILTBACK_LV</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>150</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.5</stepDouble>
+            <valDouble>45</valDouble>
+            <vTxDoubleScale>10</vTxDoubleScale>
+            <suffix> V</suffix>
+            <vTx>7</vTx>
+        </tiltback_lv>
+        <tiltback_return_speed>
+            <longName>Return To Level Speed</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Speed at which nose is returned back to normal after a tiltback condition has been cleared.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_TILTBACK_RETURN_SPEED</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>100</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.5</stepDouble>
+            <valDouble>5</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> °/s</suffix>
+            <vTx>7</vTx>
+        </tiltback_return_speed>
+        <tiltback_constant>
+            <longName>Constant Tiltback</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Tiltback that will be applied above a configurable minimum ERPM. AKA Nose Angle adjustment, can be downwards (negative) too.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;*Note: Should not be used to accomodate tilted rail angle! Instead, the IMU calibration should be adjusted accordingly, either manually or using the IMU Wizard. Otherwise, you will experience the opposite of the desired effect while riding backwards.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_TILTBACK_CONSTANT</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>30</maxDouble>
+            <minDouble>-80</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.5</stepDouble>
+            <valDouble>0</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix> °</suffix>
+            <vTx>7</vTx>
+        </tiltback_constant>
+        <tiltback_constant_erpm>
+            <longName>Constant Tiltback ERPM</longName>
+            <type>2</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;ERPM (absolute value) above which Constant Tiltback will be applied.&lt;br /&gt;&lt;br /&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;*Note: ERPM = RPM * (Motor Poles / 2)&lt;br /&gt;For an 11&amp;quot; Tire on a Hypercore Motor (30 Poles):&lt;br /&gt;1000 ERPM ≈ 2.2 mph ≈ 3.5 km/h&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_TILTBACK_CONSTANT_ERPM</cDefine>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxInt>100000</maxInt>
+            <minInt>200</minInt>
+            <showDisplay>0</showDisplay>
+            <stepInt>50</stepInt>
+            <valInt>500</valInt>
+            <suffix> ERPM</suffix>
+            <vTx>3</vTx>
+        </tiltback_constant_erpm>
+        <tiltback_variable>
+            <longName>Variable Tiltback Rate</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Nose Angle adjustment that will be applied depending on speed, specified in degrees per 1000 ERPM, applied linearly as the rate at which you approach Variable Tiltback Maximum. Applies in addition to Constant Tiltback.&lt;br /&gt;&lt;br /&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;*Note: ERPM = RPM * (Motor Poles / 2)&lt;br /&gt;For an 11&amp;quot; Tire on a Hypercore Motor (30 Poles):&lt;br /&gt;1000 ERPM ≈ 2.2 mph ≈ 3.5 km/h&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_TILTBACK_VARIABLE</cDefine>
+            <editorDecimalsDouble>2</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>5</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.05</stepDouble>
+            <valDouble>0.1</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix> °/1000 ERPM</suffix>
+            <vTx>7</vTx>
+        </tiltback_variable>
+        <tiltback_variable_max>
+            <longName>Variable Tiltback Maximum</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Target Angle that Variable Tiltback approaches at the specified rate (Variable Tiltback Rate). Can be negative (nose down) as well. Added in addition to Constant Tiltback and does not affect or prevent alert tiltbacks.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_TILTBACK_VARIABLE_MAX</cDefine>
+            <editorDecimalsDouble>2</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>20</maxDouble>
+            <minDouble>-20</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.5</stepDouble>
+            <valDouble>0</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> °</suffix>
+            <vTx>7</vTx>
+        </tiltback_variable_max>
+        <tiltback_variable_erpm>
+            <longName>Variable Tiltback Start ERPM</longName>
+            <type>2</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;ERPM (absolute value) above which Variable Tiltback will begin to be applied.&lt;br /&gt;&lt;br /&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;*Note: ERPM = RPM * (Motor Poles / 2)&lt;br /&gt;For an 11&amp;quot; Tire on a Hypercore Motor (30 Poles):&lt;br /&gt;1000 ERPM ≈ 2.2 mph ≈ 3.5 km/h&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_TILTBACK_VARIABLE_ERPM</cDefine>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxInt>100000</maxInt>
+            <minInt>0</minInt>
+            <showDisplay>0</showDisplay>
+            <stepInt>50</stepInt>
+            <valInt>0</valInt>
+            <suffix> ERPM</suffix>
+            <vTx>3</vTx>
+        </tiltback_variable_erpm>
+        <noseangling_speed>
+            <longName>Nose Angling Speed</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Maximum Rate at which nose will tilt to the desired angle during Constant and/or Variable Tiltback.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_NOSEANGLING_SPEED</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>100</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.5</stepDouble>
+            <valDouble>5</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> °/s</suffix>
+            <vTx>7</vTx>
+        </noseangling_speed>
+        <inputtilt_remote_type>
+            <longName>Remote Type</longName>
+            <type>4</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Select how the remote's reciever communicates with VESC (PPM or UART).&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;Note: Remote Tiltback requires an input device (such as a UART/PPM Eskate remote)! If not applicable, the type should remain as &amp;quot;&lt;/span&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;None.&lt;/span&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;&amp;quot;&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-weight:600; font-style:italic;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;Note: For PPM, make sure to keep the Buzzer &lt;/span&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;DISABLED &lt;/span&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;(under &amp;quot;Specs&amp;quot; tab)&lt;/span&gt;&lt;span style=&quot; font-weight:600;&quot;&gt; &lt;/span&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;for proper functionality. A reboot may be required following the switch.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_INPUTTILT_REMOTE_TYPE</cDefine>
+            <valInt>0</valInt>
+            <enumNames>None</enumNames>
+            <enumNames>UART</enumNames>
+            <enumNames>PPM</enumNames>
+        </inputtilt_remote_type>
+        <inputtilt_angle_limit>
+            <longName>Tiltback Angle Limit</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Maximum angle to which Remote Tiltback will tilt. Determines the scaling of throttle-to-angle (i.e. Max Angle of 10° + 50% Throttle = 5° Tilt Angle).&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;Note: Pitch Axis Faults and Quickstop will be disabled when Remote Tilt Setpoint is beyond 30°, making it safe to use for Vert.&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;WARNING: Tilting the setpoint beyond the point of nose/tail dragging will cause the board to accelerate on its own (tail dragging forward). Additionally, a high maximum tilt angle can result in unintended nose/tail diving at speed when not used carefully. BE CAUTIOUS when using maximum angles beyond 20&lt;/span&gt;°!&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_INPUTTILT_ANGLE_LIMIT</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>90</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>1</stepDouble>
+            <valDouble>10</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> °</suffix>
+            <vTx>7</vTx>
+        </inputtilt_angle_limit>
+        <inputtilt_speed>
+            <longName>Tiltback Speed</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Rate at which Remote Tiltback will tilt to the desired angle.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_INPUTTILT_SPEED</cDefine>
+            <editorDecimalsDouble>0</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>150</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>2</stepDouble>
+            <valDouble>25</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> °/s</suffix>
+            <vTx>7</vTx>
+        </inputtilt_speed>
+        <inputtilt_smoothing_factor>
+            <longName>Tiltback Smoothing Factor</longName>
+            <type>2</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Determines how much smoothing is added to Remote Tilt, such as when you start tilting and as you approach the target angle.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;0 = No Smoothing&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;3 = Maximum Smoothing&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Recommended Values: 1-2&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_INPUTTILT_SMOOTHING_FACTOR</cDefine>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxInt>3</maxInt>
+            <minInt>0</minInt>
+            <showDisplay>1</showDisplay>
+            <stepInt>1</stepInt>
+            <valInt>1</valInt>
+            <suffix></suffix>
+            <vTx>1</vTx>
+        </inputtilt_smoothing_factor>
+        <inputtilt_invert_throttle>
+            <longName>Invert Throttle</longName>
+            <type>5</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; text-decoration: underline;&quot;&gt;False:&lt;/span&gt;&lt;/p&gt;
+&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; font-weight:600;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:400;&quot;&gt;Throttle Forward = Nose Lift&lt;/span&gt;&lt;/li&gt;
+&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Throttle Backward = Nose Lower&lt;/li&gt;&lt;/ul&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; text-decoration: underline;&quot;&gt;True &lt;/span&gt;&lt;span style=&quot; font-weight:600; font-style:italic; text-decoration: underline;&quot;&gt;(Default)&lt;/span&gt;&lt;span style=&quot; font-weight:600; text-decoration: underline;&quot;&gt;:&lt;/span&gt;&lt;/p&gt;
+&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; font-weight:600;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:400;&quot;&gt;Throttle Forward = Nose Lower&lt;/span&gt;&lt;/li&gt;
+&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Throttle Backward = Nose Lift&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_INPUTTILT_INVERT_THROTTLE</cDefine>
+            <valInt>1</valInt>
+        </inputtilt_invert_throttle>
+        <inputtilt_deadband>
+            <longName>Input Deadband</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Deadband region for the center of the input throttle. Can assist with remotes that do not fully return to center.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;For example, a Deadband of 10% will only begin adjusting setpoint once the throttle reaches a value of +/- 10%. From there, it will scale as if 10% throttle was the center point (0%).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_INPUTTILT_DEADBAND</cDefine>
+            <editorDecimalsDouble>2</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>1</editAsPercentage>
+            <maxDouble>1</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>1</stepDouble>
+            <valDouble>0.1</valDouble>
+            <vTxDoubleScale>10000</vTxDoubleScale>
+            <suffix> %</suffix>
+            <vTx>7</vTx>
+        </inputtilt_deadband>
+        <remote_throttle_current_max>
+            <longName>Throttle Current Maximum</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Max Current able to be applied using Remote Throttle, allowing the control of the board using your remote's throttle when disengaged. Actual current applied is linearly scaled up to Max Current, based on your throttle percentage.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Recommended Values: 5A - 10A&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;*DISCLAIMER: Make sure your remote idles at 0% throttle!! Otherwise, current will be continually request, which can drain your battery. Reference &amp;quot;Remote Input&amp;quot; in AppUI Tab of VESC Tool. If it is not idling at 0%, you must either tweak Input Deadband above, or properly calibrate your remote.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_REMOTE_THROTTLE_CURRENT_MAX</cDefine>
+            <editorDecimalsDouble>0</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>50</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>2</stepDouble>
+            <valDouble>0</valDouble>
+            <vTxDoubleScale>10</vTxDoubleScale>
+            <suffix> A</suffix>
+            <vTx>7</vTx>
+        </remote_throttle_current_max>
+        <remote_throttle_grace_period>
+            <longName>Grace Period</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Delay after disengaging, during which Remote Throttle cannot be used.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;*DISCLAIMER: Be CAUTIOUS if using a Grace Period of/near 0 seconds!! A short delay can lead to accidental throttle if using Remote Tilt as the board disengages.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_REMOTE_THROTTLE_GRACE_PERIOD</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>60</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>1</stepDouble>
+            <valDouble>10</valDouble>
+            <vTxDoubleScale>10</vTxDoubleScale>
+            <suffix> s</suffix>
+            <vTx>7</vTx>
+        </remote_throttle_grace_period>
+        <startup_pitch_tolerance>
+            <longName>Startup Pitch Axis Angle Tolerance</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Pitch Angle range from &amp;quot;Level&amp;quot; at which the board is allowed to engage. Measured in degrees from Level (0° Pitch).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_STARTUP_PITCH_TOLERANCE</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>80</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.5</stepDouble>
+            <valDouble>5</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> °</suffix>
+            <vTx>7</vTx>
+        </startup_pitch_tolerance>
+        <startup_roll_tolerance>
+            <longName>Startup Roll Axis Angle Tolerance</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Roll Angle (Heel-to-Toe) range from &amp;quot;Flat&amp;quot; at which the board is allowed to engage. Measured in degrees from Flat (0° Roll).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_STARTUP_ROLL_TOLERANCE</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>80</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.5</stepDouble>
+            <valDouble>45</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> °</suffix>
+            <vTx>7</vTx>
+        </startup_roll_tolerance>
+        <startup_speed>
+            <longName>Startup Centering Speed</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Rate at which the board will level itself on startup.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_STARTUP_SPEED</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>100</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>5</stepDouble>
+            <valDouble>60</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> °/s</suffix>
+            <vTx>7</vTx>
+        </startup_speed>
+        <startup_click_current>
+            <longName>Startup Click Current</longName>
+            <type>2</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Strength of the noticeable &amp;quot;click&amp;quot; when engaging.&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;0A = Stealthy start&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;20A = Very noticeable click&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_STARTUP_CLICK_CURRENT</cDefine>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxInt>20</maxInt>
+            <minInt>0</minInt>
+            <showDisplay>1</showDisplay>
+            <stepInt>5</stepInt>
+            <valInt>0</valInt>
+            <suffix> A</suffix>
+            <vTx>1</vTx>
+        </startup_click_current>
+        <startup_simplestart_enabled>
+            <longName>Enable Simple Start</longName>
+            <type>5</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Allow starting with a single sensor, while still allowing heel-lift dismounts. To avoid accidental re-engagement when heel-lift dismounting, this feature is disabled for 5 seconds from the last disengagement.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_SIMPLESTART_ENABLED</cDefine>
+            <valInt>0</valInt>
+        </startup_simplestart_enabled>
+        <startup_pushstart_enabled>
+            <longName>Enable Push Start</longName>
+            <type>5</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Allow starting the board by jumping onto it, regardless of pitch angle, as long as the speed is 1000 ERPM (~2 mph) or higher. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_PUSHSTART_ENABLED</cDefine>
+            <valInt>0</valInt>
+        </startup_pushstart_enabled>
+        <startup_dirtylandings_enabled>
+            <longName>Enable Dirty Landings</longName>
+            <type>5</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Allow landing with an extra 10 degrees pitch tilt within 1 second of disengaging both sensors (not active after heel-lift dismount).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_DIRTYLANDINGS_ENABLED</cDefine>
+            <valInt>0</valInt>
+        </startup_dirtylandings_enabled>
+        <brake_current>
+            <longName>Brake Current</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Brake current to be applied when board is not actively engaged (only applied when an outside force causes motor to move).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_BRAKE_CURRENT</cDefine>
+            <editorDecimalsDouble>2</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>100</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>2</stepDouble>
+            <valDouble>6</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> A</suffix>
+            <vTx>7</vTx>
+        </brake_current>
+        <ki_limit>
+            <longName>I Term Limit</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; text-decoration: underline;&quot;&gt;I Term Limiter (Limit Integral Amps)&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Limits the amount of current the I component of PID is allowed to accumulate over time. This limits the max response in scenarios with extreme error, such as inclines/declines, as well as freespin tricks, curb nudges, etc. that may overshoot on the landing otherwise.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Recommended Value: 20A - 30A&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;*Note: 0 = Disabled (Not Recommended)&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-weight:600; font-style:italic;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;*Note: Was under the parameter &amp;quot;Deadzone&amp;quot; in previous firmware versions. The values used for that parameter before are now scaled up 10x (i.e. a previous &amp;quot;Deadzone&amp;quot; value of 3, is now an I Term Limit of 30A).&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_KI_LIMIT</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>500</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>2</stepDouble>
+            <valDouble>30</valDouble>
+            <vTxDoubleScale>10</vTxDoubleScale>
+            <suffix> A</suffix>
+            <vTx>7</vTx>
+        </ki_limit>
+        <booster_angle>
+            <longName>Start Angle</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Angle (+/-) from which onward booster current is applied when accelerating, in relation to the setpoint.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;*NOTE: Based on True Pitch (uses Mahony KP 0.2), rather than Pitch filtered by your set Mahony KP (likely heavily filtered and inaccurate).&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_BOOSTER_ANGLE</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>15</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.5</stepDouble>
+            <valDouble>8</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> °</suffix>
+            <vTx>7</vTx>
+        </booster_angle>
+        <booster_ramp>
+            <longName>Ramp Up</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Degrees over which booster will ramp from 0A to the configured Current when accelerating, starting at Start Angle (i.e. Start Angle of 8° and Ramp Up of 4° means Booster will begin at 8° nose down and strengthen to max current as the board angle approaches 12° nose down from setpoint).&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;*NOTE: Based on True Pitch&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_BOOSTER_RAMP</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>10</maxDouble>
+            <minDouble>1</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.5</stepDouble>
+            <valDouble>4</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> °</suffix>
+            <vTx>7</vTx>
+        </booster_ramp>
+        <booster_current>
+            <longName>Current Boost</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Extra current added to PID Loop, to be applied when accelerating when booster angle is reached (in relation to Setpoint). Can strengthen the board response at a desired specific angle when pushing the nose down.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_BOOSTER_CURRENT</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>100</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>2</stepDouble>
+            <valDouble>0</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> A</suffix>
+            <vTx>7</vTx>
+        </booster_current>
+        <brkbooster_angle>
+            <longName>Start Angle</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Angle (+/-) from which onward booster regen current is applied when braking, in relation to the setpoint.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;*NOTE: Based on True Pitch&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_BRKBOOSTER_ANGLE</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>15</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.5</stepDouble>
+            <valDouble>8</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> °</suffix>
+            <vTx>7</vTx>
+        </brkbooster_angle>
+        <brkbooster_ramp>
+            <longName>Ramp Up</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Degrees over which brake-booster will ramp from 0A to the configured Regen Current, starting at Start Angle (i.e. Start Angle of 8° and Ramp Up of 4° means Brake Booster will begin at 8° nose up and strengthen to max current as the board angle approaches 12° nose up from setpoint).&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;*NOTE: Based on True Pitch&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_BRKBOOSTER_RAMP</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>10</maxDouble>
+            <minDouble>1</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.5</stepDouble>
+            <valDouble>4</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> °</suffix>
+            <vTx>7</vTx>
+        </brkbooster_ramp>
+        <brkbooster_current>
+            <longName>Current Boost</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Extra current added to PID Loop, to be applied when braking when booster angle is reached (in relation to Setpoint). Can strengthen the braking intensity at a desired specific angle when raising the nose / lowering the tail.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_BRKBOOSTER_CURRENT</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>100</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>2</stepDouble>
+            <valDouble>0</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> A</suffix>
+            <vTx>7</vTx>
+        </brkbooster_current>
+        <torquetilt_start_current>
+            <longName>Start Current Threshold</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Minimum output current threshold for Torque Tiltback to start applying.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_TORQUETILT_START_CURRENT</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>100</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>1</stepDouble>
+            <valDouble>15</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> A</suffix>
+            <vTx>7</vTx>
+        </torquetilt_start_current>
+        <torquetilt_angle_limit>
+            <longName>Tilitback Angle Limit</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Maximum angle to which Torque Tiltback will tilt.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_TORQUETILT_ANGLE_LIMIT</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>30</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.5</stepDouble>
+            <valDouble>8</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> °</suffix>
+            <vTx>7</vTx>
+        </torquetilt_angle_limit>
+        <torquetilt_on_speed>
+            <longName>Max Tiltback Speed</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Max Rate at which Torque Tiltback will tilt to the desired angle (tilt will be slower if current increases slowly).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_TORQUETILT_ON_SPEED</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>100</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.5</stepDouble>
+            <valDouble>5</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> °/s</suffix>
+            <vTx>7</vTx>
+        </torquetilt_on_speed>
+        <torquetilt_off_speed>
+            <longName>Max Tiltback Release Speed</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Max Rate at which Torque Tiltback will release from the desired angle back to 0 (tilt will be slower if current decreases slowly).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_TORQUETILT_OFF_SPEED</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>100</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.5</stepDouble>
+            <valDouble>3</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> °/s</suffix>
+            <vTx>7</vTx>
+        </torquetilt_off_speed>
+        <torquetilt_strength>
+            <longName>Strength</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;How much &lt;span style=&quot; font-weight:600;&quot;&gt;Nose&lt;/span&gt; &lt;span style=&quot; font-weight:600;&quot;&gt;Lift&lt;/span&gt; should be applied based on output current &lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;(Postive / Acceleration Current Only!)&lt;/span&gt;. Can be used alongside ATR to increase aggressiveness on flat and uphill acceleration, or on its own to ensure some uphill tiltback is applied in the absence of ATR.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Recommended Values: 0 - 0.35&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_TORQUETILT_STRENGTH</cDefine>
+            <editorDecimalsDouble>2</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>1</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.05</stepDouble>
+            <valDouble>0</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix> °/A</suffix>
+            <vTx>7</vTx>
+        </torquetilt_strength>
+        <torquetilt_strength_regen>
+            <longName>Strength (Regen)</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;How much &lt;span style=&quot; font-weight:600;&quot;&gt;Nose Lowering&lt;/span&gt; should be applied based on output current &lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;(Negative / Regen Current Only!)&lt;/span&gt;. Can be used alongside ATR to increase aggressiveness on flat and downhill braking, or on its own to ensure some downhill nose lowering is applied in the absence of ATR.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Recommended Values: 0 - 0.35&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_TORQUETILT_STRENGTH_REGEN</cDefine>
+            <editorDecimalsDouble>2</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>1</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.05</stepDouble>
+            <valDouble>0</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix> °/A</suffix>
+            <vTx>7</vTx>
+        </torquetilt_strength_regen>
+        <atr_strength_up>
+            <longName>ATR Uphill Strength</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; text-decoration: underline;&quot;&gt;How much &lt;/span&gt;&lt;span style=&quot; font-weight:600; text-decoration: underline;&quot;&gt;Nose Lift&lt;/span&gt;&lt;span style=&quot; text-decoration: underline;&quot;&gt; should be applied based on ATR Response.&lt;/span&gt;&lt;br /&gt;&lt;br /&gt;Rather than judging based purely on current like Torque Tiltback does, ATR (Adaptive Torque Response) determines its behavior based on a calculation of Acceleration Difference (Expected Acceleration - Measured Acceleration). &lt;br /&gt;&lt;br /&gt;This can produce more consistent results for tilt response to uphills and downhills. It can also influence the overall ride feel, and can produce an appropriate stronger/weaker response for heavier/lighter riders, allowing riders of vastly different weights to effectively utilize the same PID tune and still experience similar behavior.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Recommended Values: 1.0 - 2.5 (Extreme!)&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;*Note: The values used for this parameter in previous firmware versions (5.3 ATR) are now scaled up 10x (i.e. a previous ATR Strength of 0.10, is now a strength of 1.0).&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_ATR_UPHILL_STRENGTH</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>3.5</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.1</stepDouble>
+            <valDouble>1</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix></suffix>
+            <vTx>7</vTx>
+        </atr_strength_up>
+        <atr_strength_down>
+            <longName>ATR Downhill Strength</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; text-decoration: underline;&quot;&gt;How much &lt;/span&gt;&lt;span style=&quot; font-weight:600; text-decoration: underline;&quot;&gt;Nose Lowering&lt;/span&gt;&lt;span style=&quot; text-decoration: underline;&quot;&gt; should be applied based on ATR Response.&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;Rather than judging based purely on current like Torque Tiltback does, ATR (Adaptive Torque Response) determines its behavior based on a calculation of Acceleration Difference (Expected Acceleration - Measured Acceleration). &lt;br /&gt;&lt;br /&gt;This can produce more consistent results for tilt response to uphills and downhills. It can also influence the overall ride feel, and can produce an appropriate stronger/weaker response for heavier/lighter riders, allowing riders of vastly different weights to effectively utilize the same PID tune and still experience similar behavior.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Recommended Values: 1.0 - 2.5 (Extreme!)&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;*Note: The values used for this parameter in previous firmware versions (5.3 ATR) are now scaled up 10x (i.e. a previous ATR Strength of 0.10, is now a strength of 1.0).&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_ATR_DOWNHILL_STRENGTH</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>3.5</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.1</stepDouble>
+            <valDouble>1</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix></suffix>
+            <vTx>7</vTx>
+        </atr_strength_down>
+        <atr_threshold_up>
+            <longName>Threshold Angle Up</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Threshold angle for acceleration/uphills below which no setpoint change is triggered. This means that if the computed ATR angle is below this threshold the setpoint will not be changed, producing a more predictable behavior in mellow terrain.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Once the ATR target angle exceeds the threshold, setpoint changes will be produced. &lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Example: If the threshold is 2 and the computed ATR angle is 3 then a 1 degree setpoint adjustment will be performed.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_ATR_THRESHOLD_UP</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>5</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.5</stepDouble>
+            <valDouble>0.5</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> °</suffix>
+            <vTx>7</vTx>
+        </atr_threshold_up>
+        <atr_threshold_down>
+            <longName>Threshold Angle Down</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Threshold angle for braking/downhills below which no setpoint change is triggered. This means that if the computed ATR angle is below this threshold the setpoint will not be changed, producing a more predictable behavior in mellow terrain.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Once the ATR target angle exceeds the threshold, setpoint changes will be produced. &lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Example: If the threshold is 2 and the computed ATR angle is 3 then a 1 degree setpoint adjustment will be performed.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_ATR_THRESHOLD_DOWN</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>5</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.5</stepDouble>
+            <valDouble>0.5</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> °</suffix>
+            <vTx>7</vTx>
+        </atr_threshold_down>
+        <atr_speed_boost>
+            <longName>Speed Boost</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Increase in ATR response at higher speeds. Torque response at higher speed needs to be more intense; this lets you control that.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_ATR_SPEED_BOOST</cDefine>
+            <editorDecimalsDouble>0</editorDecimalsDouble>
+            <editorScale>100</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>0.5</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>10</stepDouble>
+            <valDouble>0.3</valDouble>
+            <vTxDoubleScale>10000</vTxDoubleScale>
+            <suffix> %</suffix>
+            <vTx>7</vTx>
+        </atr_speed_boost>
+        <atr_angle_limit>
+            <longName>Tilitback Angle Limit</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Maximum angle to which ATR is permitted to tilt.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_ATR_ANGLE_LIMIT</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>30</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.5</stepDouble>
+            <valDouble>8</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> °</suffix>
+            <vTx>7</vTx>
+        </atr_angle_limit>
+        <atr_on_speed>
+            <longName>Max Tiltback Speed</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Max Rate at which ATR will tilt to the desired angle.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_ATR_ON_SPEED</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>100</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.5</stepDouble>
+            <valDouble>4</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> °/s</suffix>
+            <vTx>7</vTx>
+        </atr_on_speed>
+        <atr_off_speed>
+            <longName>Max Tiltback Release Speed</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Max Rate at which ATR will release from the desired angle back to 0.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_ATR_OFF_SPEED</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>100</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.5</stepDouble>
+            <valDouble>3</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> °/s</suffix>
+            <vTx>7</vTx>
+        </atr_off_speed>
+        <atr_response_boost>
+            <longName>Tiltback Response Boost</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;React more quickly to ATR responses when at high speeds. When you're riding fast and ATR increases, then you also want it to respond faster. Boost is applied twice: at 2500 and 6000 ERPM.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;*Note: ERPM = RPM * (Motor Poles / 2)&lt;br /&gt;For an 11&amp;quot; Tire on a Hypercore Motor (30 Poles):&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;2500 ERPM ≈ 5.5 mph ≈ 9 km/h&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;6000 ERPM ≈ 13 mph ≈ 21 km/h&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_ATR_RESPONSE_BOOST</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>2</maxDouble>
+            <minDouble>1</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.1</stepDouble>
+            <valDouble>1.5</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix>x</suffix>
+            <vTx>7</vTx>
+        </atr_response_boost>
+        <atr_transition_boost>
+            <longName>Tiltback Transition Boost</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Release faster during transitions. When ATR reverses (dip or peak), the slow release speed can cause a long delay for the nose/tail to get back to normal. This should help resolve this.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_ATR_TRANSITION_BOOST</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>10</maxDouble>
+            <minDouble>1</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.5</stepDouble>
+            <valDouble>3</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix>x</suffix>
+            <vTx>7</vTx>
+        </atr_transition_boost>
+        <atr_filter>
+            <longName>Current Filter</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Biquad Low-pass Filter on the current used for calculating ATR. Setting a lower value here helps smooth out spikes in the current, and prevents ATR from being twitchy. Setting a high value here improves responsiveness, but can lead to overreacting ATR during normal acceleration.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_ATR_FILTER</cDefine>
+            <editorDecimalsDouble>0</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>20</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>1</stepDouble>
+            <valDouble>5</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> Hz</suffix>
+            <vTx>7</vTx>
+        </atr_filter>
+        <atr_amps_accel_ratio>
+            <longName>Amps to Acceleration Ratio</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Determines how to effectively calculate Expected Acceleration from amps. Higher values mean weaker response (lower Expected Acceleration).&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;*NOTE: NOT MEANT TO BE MESSED WITH! This value should be kept constant and not taken advantage of for tuning, as it is meant to be used to account for motor efficiency, not weight or other factors.&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-weight:600; font-style:italic;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;Recommended Hypercore Motor Value: 9&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-weight:600; font-style:italic;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Recommended Values: 8-18&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_ATR_AMPS_ACCEL_RATIO</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>30</maxDouble>
+            <minDouble>5</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>1</stepDouble>
+            <valDouble>9</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix></suffix>
+            <vTx>7</vTx>
+        </atr_amps_accel_ratio>
+        <atr_amps_decel_ratio>
+            <longName>Amps to Deceleration Ratio</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Determines how to effectively calculate Expected Deceleration (Braking) from amps. Higher values mean weaker response (lower Expected Acceleration).&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;*NOTE: NOT MEANT TO BE MESSED WITH! This value should be kept constant and not taken advantage of for tuning, as it is meant to be used to account for motor efficiency, not weight or other factors.&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-weight:600; font-style:italic;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;Recommended Hypercore Motor Value: 8&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-weight:600; font-style:italic;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Recommended Values: 6-18&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_ATR_AMPS_DECEL_RATIO</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>30</maxDouble>
+            <minDouble>4</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>1</stepDouble>
+            <valDouble>8</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix></suffix>
+            <vTx>7</vTx>
+        </atr_amps_decel_ratio>
+        <braketilt_strength>
+            <longName>Brake Tilt Strength</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Produce a slight noselift on braking to make clearing big obstacles easier (an attempt to mimic Mission behavior). 0 disables Brake Tiltback, 20 is max intensity.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Recommended Values: 7-10&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_BRAKETILT_STRENGTH</cDefine>
+            <editorDecimalsDouble>0</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>20</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>1</stepDouble>
+            <valDouble>0</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix></suffix>
+            <vTx>7</vTx>
+        </braketilt_strength>
+        <braketilt_lingering>
+            <longName>Brake Tilt Lingering</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;How long it takes for Brake Tiltback to disappear; 1 is quick, 5 is real slow.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Recommended Value: 2&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_BRAKETILT_LINGERING</cDefine>
+            <editorDecimalsDouble>0</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>5</maxDouble>
+            <minDouble>1</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>1</stepDouble>
+            <valDouble>2</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix></suffix>
+            <vTx>7</vTx>
+        </braketilt_lingering>
+        <turntilt_strength>
+            <longName>Strength</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;How much Tiltback should be applied based on turning radius (Yaw) and speed.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_TURNTILT_STRENGTH</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>30</maxDouble>
+            <minDouble>-30</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.5</stepDouble>
+            <valDouble>6</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> </suffix>
+            <vTx>7</vTx>
+        </turntilt_strength>
+        <turntilt_angle_limit>
+            <longName>Tilitback Angle Limit</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Maximum angle to which Turn Tiltback will tilt. This wont change the power curve, only stop it at the limit.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_TURNTILT_ANGLE_LIMIT</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>30</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.5</stepDouble>
+            <valDouble>3</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> °</suffix>
+            <vTx>7</vTx>
+        </turntilt_angle_limit>
+        <turntilt_start_angle>
+            <longName>Turn Aggregate Threshold</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Minimum Yaw Angle threshold to apply Turn Tiltback. Similar to a deadzone, except after reaching the set angle, it will apply as if it started from 0.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_TURNTILT_START_ANGLE</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>45</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.5</stepDouble>
+            <valDouble>2</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> °</suffix>
+            <vTx>7</vTx>
+        </turntilt_start_angle>
+        <turntilt_start_erpm>
+            <longName>ERPM Threshold</longName>
+            <type>2</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;ERPM threshold to apply Turn Tiltback.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;*Note: ERPM = RPM * (Motor Poles / 2)&lt;br /&gt;For an 11&amp;quot; Tire on a Hypercore Motor (30 Poles):&lt;br /&gt;1000 ERPM ≈ 2.2 mph ≈ 3.5 km/h&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_TURNTILT_START_ERPM</cDefine>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxInt>100000</maxInt>
+            <minInt>100</minInt>
+            <showDisplay>0</showDisplay>
+            <stepInt>100</stepInt>
+            <valInt>1000</valInt>
+            <suffix> ERPM</suffix>
+            <vTx>3</vTx>
+        </turntilt_start_erpm>
+        <turntilt_speed>
+            <longName>Max Tiltback Speed</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Max Rate at which Turn Tiltback will tilt to the desired angle (tilt will be slower if Yaw Angle increases slowly).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_TURNTILT_SPEED</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>100</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.5</stepDouble>
+            <valDouble>5</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> °/s</suffix>
+            <vTx>7</vTx>
+        </turntilt_speed>
+        <turntilt_erpm_boost>
+            <longName>Speed Boost %</longName>
+            <type>2</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Increases the strength based on ERPM. Boost percent is added linearly from 0 ERPM (0% boost) to Max ERPM (Full configured boost % is applied).&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;*Note: ERPM = RPM * (Motor Poles / 2)&lt;br /&gt;For an 11&amp;quot; Tire on a Hypercore Motor (30 Poles):&lt;br /&gt;1000 ERPM ≈ 2.2 mph ≈ 3.5 km/h&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_TURNTILT_ERPM_BOOST</cDefine>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxInt>10000</maxInt>
+            <minInt>0</minInt>
+            <showDisplay>0</showDisplay>
+            <stepInt>5</stepInt>
+            <valInt>200</valInt>
+            <suffix> %</suffix>
+            <vTx>3</vTx>
+        </turntilt_erpm_boost>
+        <turntilt_erpm_boost_end>
+            <longName>Speed Boost Max ERPM</longName>
+            <type>2</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;ERPM (absolute value) to end boosting the Turn Tiltback effect. Above this ERPM, there will be constant boost % (at your configured boost %).&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;*Note: ERPM = RPM * (Motor Poles / 2)&lt;br /&gt;For an 11&amp;quot; Tire on a Hypercore Motor (30 Poles):&lt;br /&gt;1000 ERPM ≈ 2.2 mph ≈ 3.5 km/h&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_TURNTILT_ERPM_BOOST_END</cDefine>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxInt>100000</maxInt>
+            <minInt>100</minInt>
+            <showDisplay>0</showDisplay>
+            <stepInt>100</stepInt>
+            <valInt>5000</valInt>
+            <suffix> ERPM</suffix>
+            <vTx>3</vTx>
+        </turntilt_erpm_boost_end>
+        <turntilt_yaw_aggregate>
+            <longName>Turn Aggregate Target</longName>
+            <type>2</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The amount of turning (Yaw) required before reaching max carving strength. Higher values mean a turn must be maintained for longer in order to reach max carving strength.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_TURNTILT_YAW_AGGREGATE</cDefine>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxInt>360</maxInt>
+            <minInt>50</minInt>
+            <showDisplay>0</showDisplay>
+            <stepInt>5</stepInt>
+            <valInt>90</valInt>
+            <suffix> °</suffix>
+            <vTx>1</vTx>
+        </turntilt_yaw_aggregate>
+        <dark_pitch_offset>
+            <longName>Darkride Pitch Offset</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;How much to lift/lower the nose to make the board level when it's upside down for darkride. Shouldn't be needed with properly calibrated Gyro and Accelerometer&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_DARK_PITCH_OFFSET</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>10</maxDouble>
+            <minDouble>-10</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.5</stepDouble>
+            <valDouble>0</valDouble>
+            <vTxDoubleScale>10</vTxDoubleScale>
+            <suffix> °</suffix>
+            <vTx>7</vTx>
+        </dark_pitch_offset>
+        <is_buzzer_enabled>
+            <longName>Enable Buzzer on Servo/PPM</longName>
+            <type>5</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Enable/disable buzzer. Buzzer is controlled by Servo/PPM. Active buzzer required, 3pin version recommended.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_IS_BUZZER_ENABLED</cDefine>
+            <valInt>0</valInt>
+        </is_buzzer_enabled>
+        <float_disable>
+            <longName>Disable Float Package</longName>
+            <type>5</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;For Initial Setup Only!&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Use this option when you need to run the motor wizard or you want to troubleshoot your motor and run terminal commands. Riding won't be possible with this set to true.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_DISABLE</cDefine>
+            <valInt>0</valInt>
+        </float_disable>
+        <float_version>
+            <longName>Package Version</longName>
+            <type>1</type>
+            <transmittable>0</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Version of the Float Package.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_VERSION</cDefine>
+            <editorDecimalsDouble>2</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>1.3</maxDouble>
+            <minDouble>1.3</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>1</stepDouble>
+            <valDouble>1.3</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix></suffix>
+            <vTx>7</vTx>
+        </float_version>
+    </Params>
+    <SerOrder>
+        <ser>kp</ser>
+        <ser>kp2</ser>
+        <ser>ki</ser>
+        <ser>mahony_kp</ser>
+        <ser>kp_brake</ser>
+        <ser>kp2_brake</ser>
+        <ser>hertz</ser>
+        <ser>fault_pitch</ser>
+        <ser>fault_roll</ser>
+        <ser>fault_adc1</ser>
+        <ser>fault_adc2</ser>
+        <ser>is_footbuzz_enabled</ser>
+        <ser>fault_delay_pitch</ser>
+        <ser>fault_delay_roll</ser>
+        <ser>fault_delay_switch_half</ser>
+        <ser>fault_delay_switch_full</ser>
+        <ser>fault_adc_half_erpm</ser>
+        <ser>fault_is_dual_switch</ser>
+        <ser>fault_moving_fault_disabled</ser>
+        <ser>fault_darkride_enabled</ser>
+        <ser>fault_reversestop_enabled</ser>
+        <ser>tiltback_duty_angle</ser>
+        <ser>tiltback_duty_speed</ser>
+        <ser>tiltback_duty</ser>
+        <ser>is_dutybuzz_enabled</ser>
+        <ser>surge_angle</ser>
+        <ser>surge_duty_start</ser>
+        <ser>is_surgebuzz_enabled</ser>
+        <ser>tiltback_hv_angle</ser>
+        <ser>tiltback_hv_speed</ser>
+        <ser>tiltback_hv</ser>
+        <ser>tiltback_lv_angle</ser>
+        <ser>tiltback_lv_speed</ser>
+        <ser>tiltback_lv</ser>
+        <ser>tiltback_return_speed</ser>
+        <ser>tiltback_constant</ser>
+        <ser>tiltback_constant_erpm</ser>
+        <ser>tiltback_variable</ser>
+        <ser>tiltback_variable_max</ser>
+        <ser>tiltback_variable_erpm</ser>
+        <ser>noseangling_speed</ser>
+        <ser>inputtilt_remote_type</ser>
+        <ser>inputtilt_angle_limit</ser>
+        <ser>inputtilt_speed</ser>
+        <ser>inputtilt_smoothing_factor</ser>
+        <ser>inputtilt_invert_throttle</ser>
+        <ser>inputtilt_deadband</ser>
+        <ser>remote_throttle_current_max</ser>
+        <ser>remote_throttle_grace_period</ser>
+        <ser>startup_pitch_tolerance</ser>
+        <ser>startup_roll_tolerance</ser>
+        <ser>startup_speed</ser>
+        <ser>startup_click_current</ser>
+        <ser>startup_simplestart_enabled</ser>
+        <ser>startup_pushstart_enabled</ser>
+        <ser>startup_dirtylandings_enabled</ser>
+        <ser>brake_current</ser>
+        <ser>ki_limit</ser>
+        <ser>booster_angle</ser>
+        <ser>booster_ramp</ser>
+        <ser>booster_current</ser>
+        <ser>brkbooster_angle</ser>
+        <ser>brkbooster_ramp</ser>
+        <ser>brkbooster_current</ser>
+        <ser>torquetilt_start_current</ser>
+        <ser>torquetilt_angle_limit</ser>
+        <ser>torquetilt_on_speed</ser>
+        <ser>torquetilt_off_speed</ser>
+        <ser>torquetilt_strength</ser>
+        <ser>torquetilt_strength_regen</ser>
+        <ser>turntilt_strength</ser>
+        <ser>turntilt_angle_limit</ser>
+        <ser>turntilt_start_angle</ser>
+        <ser>turntilt_start_erpm</ser>
+        <ser>turntilt_speed</ser>
+        <ser>turntilt_erpm_boost</ser>
+        <ser>turntilt_erpm_boost_end</ser>
+        <ser>turntilt_yaw_aggregate</ser>
+        <ser>atr_strength_up</ser>
+        <ser>atr_strength_down</ser>
+        <ser>atr_threshold_up</ser>
+        <ser>atr_threshold_down</ser>
+        <ser>atr_speed_boost</ser>
+        <ser>atr_angle_limit</ser>
+        <ser>atr_on_speed</ser>
+        <ser>atr_off_speed</ser>
+        <ser>atr_response_boost</ser>
+        <ser>atr_transition_boost</ser>
+        <ser>atr_filter</ser>
+        <ser>atr_amps_accel_ratio</ser>
+        <ser>atr_amps_decel_ratio</ser>
+        <ser>braketilt_strength</ser>
+        <ser>braketilt_lingering</ser>
+        <ser>dark_pitch_offset</ser>
+        <ser>is_buzzer_enabled</ser>
+        <ser>float_disable</ser>
+        <ser>float_version</ser>
+    </SerOrder>
+    <Grouping>
+        <group>
+            <groupName>General</groupName>
+            <subgroup>
+                <subgroupName>Tune</subgroupName>
+                <subgroupParams>
+                    <param>::sep::PID</param>
+                    <param>kp</param>
+                    <param>kp2</param>
+                    <param>ki</param>
+                    <param>::sep::Filter</param>
+                    <param>mahony_kp</param>
+                    <param>ki_limit</param>
+                    <param>::sep::Brake Scaling</param>
+                    <param>kp_brake</param>
+                    <param>kp2_brake</param>
+                    <param>::sep::Booster (Acceleration)</param>
+                    <param>booster_angle</param>
+                    <param>booster_ramp</param>
+                    <param>booster_current</param>
+                    <param>::sep::Booster (Braking)</param>
+                    <param>brkbooster_angle</param>
+                    <param>brkbooster_ramp</param>
+                    <param>brkbooster_current</param>
+                </subgroupParams>
+            </subgroup>
+            <subgroup>
+                <subgroupName>Tune Modifiers</subgroupName>
+                <subgroupParams>
+                    <param>::sep::Nose Angling</param>
+                    <param>tiltback_constant</param>
+                    <param>tiltback_constant_erpm</param>
+                    <param>tiltback_variable</param>
+                    <param>tiltback_variable_max</param>
+                    <param>tiltback_variable_erpm</param>
+                    <param>noseangling_speed</param>
+                    <param>::sep::Torque Tiltback</param>
+                    <param>torquetilt_strength</param>
+                    <param>torquetilt_strength_regen</param>
+                    <param>torquetilt_start_current</param>
+                    <param>torquetilt_angle_limit</param>
+                    <param>torquetilt_on_speed</param>
+                    <param>torquetilt_off_speed</param>
+                    <param>::sep::Turn Tiltback</param>
+                    <param>turntilt_strength</param>
+                    <param>turntilt_angle_limit</param>
+                    <param>turntilt_start_erpm</param>
+                    <param>turntilt_speed</param>
+                    <param>turntilt_erpm_boost</param>
+                    <param>turntilt_erpm_boost_end</param>
+                    <param>turntilt_yaw_aggregate</param>
+                    <param>turntilt_start_angle</param>
+                </subgroupParams>
+            </subgroup>
+            <subgroup>
+                <subgroupName>ATR</subgroupName>
+                <subgroupParams>
+                    <param>::sep::Adaptive Torque Response</param>
+                    <param>atr_strength_up</param>
+                    <param>atr_strength_down</param>
+                    <param>atr_threshold_up</param>
+                    <param>atr_threshold_down</param>
+                    <param>atr_speed_boost</param>
+                    <param>::sep::Nose Angling</param>
+                    <param>atr_angle_limit</param>
+                    <param>atr_on_speed</param>
+                    <param>atr_off_speed</param>
+                    <param>atr_response_boost</param>
+                    <param>atr_transition_boost</param>
+                    <param>::sep::Advanced</param>
+                    <param>atr_amps_accel_ratio</param>
+                    <param>atr_amps_decel_ratio</param>
+                    <param>atr_filter</param>
+                    <param>::sep:: Brake Tiltback</param>
+                    <param>braketilt_strength</param>
+                    <param>braketilt_lingering</param>
+                </subgroupParams>
+            </subgroup>
+            <subgroup>
+                <subgroupName>Startup</subgroupName>
+                <subgroupParams>
+                    <param>::sep::Tolerances</param>
+                    <param>startup_pitch_tolerance</param>
+                    <param>startup_roll_tolerance</param>
+                    <param>::sep::Centering</param>
+                    <param>startup_speed</param>
+                    <param>::sep::Start Options</param>
+                    <param>startup_click_current</param>
+                    <param>startup_simplestart_enabled</param>
+                    <param>startup_pushstart_enabled</param>
+                    <param>startup_dirtylandings_enabled</param>
+                    <param>::sep::Holding</param>
+                    <param>brake_current</param>
+                </subgroupParams>
+            </subgroup>
+            <subgroup>
+                <subgroupName>Stop</subgroupName>
+                <subgroupParams>
+                    <param>::sep::Angle Faults</param>
+                    <param>fault_pitch</param>
+                    <param>fault_delay_pitch</param>
+                    <param>fault_roll</param>
+                    <param>fault_delay_roll</param>
+                    <param>::sep::Switches</param>
+                    <param>fault_delay_switch_half</param>
+                    <param>fault_delay_switch_full</param>
+                    <param>fault_adc_half_erpm</param>
+                    <param>fault_is_dual_switch</param>
+                    <param>fault_moving_fault_disabled</param>
+                    <param>::sep::Features</param>
+                    <param>fault_darkride_enabled</param>
+                    <param>fault_reversestop_enabled</param>
+                </subgroupParams>
+            </subgroup>
+            <subgroup>
+                <subgroupName>Tiltback</subgroupName>
+                <subgroupParams>
+                    <param>::sep::General Config</param>
+                    <param>tiltback_return_speed</param>
+                    <param>::sep::Duty Cycle Tiltback</param>
+                    <param>tiltback_duty</param>
+                    <param>tiltback_duty_angle</param>
+                    <param>tiltback_duty_speed</param>
+                    <param>is_dutybuzz_enabled</param>
+                    <param>::sep::Duty Surge</param>
+                    <param>surge_duty_start</param>
+                    <param>surge_angle</param>
+                    <param>is_surgebuzz_enabled</param>
+                    <param>::sep::High Voltage Tiltback</param>
+                    <param>tiltback_hv_angle</param>
+                    <param>tiltback_hv_speed</param>
+                    <param>::sep::Low Voltage Tiltback</param>
+                    <param>tiltback_lv_angle</param>
+                    <param>tiltback_lv_speed</param>
+                </subgroupParams>
+            </subgroup>
+            <subgroup>
+                <subgroupName>Remote</subgroupName>
+                <subgroupParams>
+                    <param>::sep::Remote Tiltback</param>
+                    <param>inputtilt_remote_type</param>
+                    <param>inputtilt_angle_limit</param>
+                    <param>inputtilt_speed</param>
+                    <param>inputtilt_smoothing_factor</param>
+                    <param>inputtilt_invert_throttle</param>
+                    <param>inputtilt_deadband</param>
+                    <param>::sep::Remote Throttle</param>
+                    <param>remote_throttle_current_max</param>
+                    <param>remote_throttle_grace_period</param>
+                </subgroupParams>
+            </subgroup>
+            <subgroup>
+                <subgroupName>Specs</subgroupName>
+                <subgroupParams>
+                    <param>::sep::Float Package Details</param>
+                    <param>float_version</param>
+                    <param>float_disable</param>
+                    <param>::sep::Balance Loop</param>
+                    <param>hertz</param>
+                    <param>::sep::Voltage Tiltbacks</param>
+                    <param>tiltback_hv</param>
+                    <param>tiltback_lv</param>
+                    <param>::sep::Foot Sensors</param>
+                    <param>fault_adc1</param>
+                    <param>fault_adc2</param>
+                    <param>is_footbuzz_enabled</param>
+                    <param>::sep::Miscellaneous</param>
+                    <param>dark_pitch_offset</param>
+                    <param>is_buzzer_enabled</param>
+                </subgroupParams>
+            </subgroup>
+        </group>
+    </Grouping>
+</ConfigParams>

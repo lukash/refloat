@@ -1,3 +1,7 @@
+src/package_lib.lisp
+README-pkg.md
+ui.qml
+
 conf_default.h
 confparser.c
 confparser.h
