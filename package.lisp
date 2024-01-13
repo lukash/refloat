@@ -14,8 +14,8 @@
 (if (= debug 1)
     (loopwhile t
         (progn
-            (define setpoint (ext-float-dbg 2))
-            (define tt-filtered-current (ext-float-dbg 3))
-            (define integral (ext-float-dbg 14))
+            (define setpoint (ext-dbg 2))
+            (define tt-filtered-current (ext-dbg 3))
+            (define integral (ext-dbg 14))
             (sleep 0.1)
 )))

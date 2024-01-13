@@ -30,8 +30,8 @@ typedef enum {
 } FLOAT_INPUTTILT_REMOTE_TYPE;
 
 typedef struct {
-	float float_version;
-	float float_disable;
+	float version;
+	bool disabled;
 	float kp;
 	float ki;
 	float kp2;
@@ -129,7 +129,7 @@ typedef struct {
 	bool is_surgebuzz_enabled;
 	float surge_duty_start;
 	float surge_angle;
-} float_config;
+} RefloatConfig;
 
 // DATATYPES_H_
 #endif

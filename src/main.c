@@ -63,7 +63,7 @@ typedef enum {
 	FAULT_REVERSE = 12,
 	FAULT_QUICKSTOP = 13,
 	DISABLED = 15
-} FloatState;
+} State;
 
 typedef enum {
 	BEEP_NONE = 0,
@@ -111,9 +111,9 @@ typedef enum {
 // main firmware and managed from there). This is probably the main limitation of
 // loading applications in runtime, but it is not too bad to work around.
 typedef struct {
-	lib_thread thread; // Balance Thread
+	lib_thread thread;
 
-	float_config float_conf;
+	RefloatConfig float_conf;
 
 	// Firmware version, passed in from Lisp
 	int fw_version_major, fw_version_minor, fw_version_beta;
@@ -170,7 +170,7 @@ typedef struct {
 	float turntilt_boost_per_erpm, yaw_aggregate_target;
 
 	// Rumtime state values
-	FloatState state;
+	State state;
 	float proportional;
 	float pid_prop, pid_integral, pid_rate, pid_mod;
 	float last_proportional, abs_proportional;
@@ -400,7 +400,7 @@ static void configure(data *d) {
 	// Feature: Dirty Landings
 	d->startup_pitch_trickmargin = d->float_conf.startup_dirtylandings_enabled ? 10 : 0;
 
-	// Overwrite App CFG Mahony KP to Float CFG Value
+	// Overwrite App CFG Mahony KP to package CFG Value
 	if (VESC_IF->get_cfg_float(CFG_PARAM_IMU_mahony_kp) != d->float_conf.mahony_kp) {
 		VESC_IF->set_cfg_float(CFG_PARAM_IMU_mahony_kp, d->float_conf.mahony_kp);
 	}
@@ -514,7 +514,7 @@ static void configure(data *d) {
 	d->filtered_loop_overshoot = 0.0;
 
 	d->buzzer_enabled = d->float_conf.is_buzzer_enabled;
-	if (d->float_conf.float_disable) {
+	if (d->float_conf.disabled) {
 		d->state = DISABLED;
 		beep_alert(d, 3, false);
 	}
@@ -1652,7 +1652,7 @@ static void imu_ref_callback(float *acc, float *gyro, float *mag, float dt) {
 	VESC_IF->ahrs_update_mahony_imu(gyro, acc, dt, &d->m_att_ref);
 }
 
-static void float_thd(void *arg) {
+static void refloat_thd(void *arg) {
 	data *d = (data*)arg;
 
 	app_init(d);
@@ -2166,10 +2166,10 @@ static void float_thd(void *arg) {
 }
 
 static void write_cfg_to_eeprom(data *d) {
-	uint32_t ints = sizeof(float_config) / 4 + 1;
+	uint32_t ints = sizeof(RefloatConfig) / 4 + 1;
 	uint32_t *buffer = VESC_IF->malloc(ints * sizeof(uint32_t));
 	bool write_ok = true;
-	memcpy(buffer, &(d->float_conf), sizeof(float_config));
+	memcpy(buffer, &(d->float_conf), sizeof(RefloatConfig));
 	for (uint32_t i = 0;i < ints;i++) {
 		eeprom_var v;
 		v.as_u32 = buffer[i];
@@ -2183,7 +2183,7 @@ static void write_cfg_to_eeprom(data *d) {
 
 	if (write_ok) {
 		eeprom_var v;
-		v.as_u32 = FLOAT_CONFIG_SIGNATURE;
+		v.as_u32 = REFLOATCONFIG_SIGNATURE;
 		VESC_IF->store_eeprom_var(&v, 0);
 	}
 
@@ -2194,10 +2194,10 @@ static void write_cfg_to_eeprom(data *d) {
 static void read_cfg_from_eeprom(data *d) {
 	// Read config from EEPROM if signature is correct
 	eeprom_var v;
-	uint32_t ints = sizeof(float_config) / 4 + 1;
+	uint32_t ints = sizeof(RefloatConfig) / 4 + 1;
 	uint32_t *buffer = VESC_IF->malloc(ints * sizeof(uint32_t));
 	bool read_ok = VESC_IF->read_eeprom_var(&v, 0);
-	if (read_ok && v.as_u32 == FLOAT_CONFIG_SIGNATURE) {
+	if (read_ok && v.as_u32 == REFLOATCONFIG_SIGNATURE) {
 		for (uint32_t i = 0;i < ints;i++) {
 			if (!VESC_IF->read_eeprom_var(&v, i + 1)) {
 				read_ok = false;
@@ -2210,27 +2210,27 @@ static void read_cfg_from_eeprom(data *d) {
 	}
 
 	if (read_ok) {
-		memcpy(&(d->float_conf), buffer, sizeof(float_config));
+		memcpy(&(d->float_conf), buffer, sizeof(RefloatConfig));
 
-		if (d->float_conf.float_version != APPCONF_FLOAT_VERSION) {
+		if (d->float_conf.version != CFG_DFLT_VERSION) {
 			if (!VESC_IF->app_is_output_disabled()) {
 				VESC_IF->printf("Version change since last config write (%.1f vs %.1f) !",
-								(double)d->float_conf.float_version,
-								(double)APPCONF_FLOAT_VERSION);
+								(double)d->float_conf.version,
+								(double)CFG_DFLT_VERSION);
 			}
-			d->float_conf.float_version = APPCONF_FLOAT_VERSION;
+			d->float_conf.version = CFG_DFLT_VERSION;
 		}
 	} else {
-		confparser_set_defaults_float_config(&(d->float_conf));
+		confparser_set_defaults_refloatconfig(&(d->float_conf));
 		if (!VESC_IF->app_is_output_disabled()) {
-			VESC_IF->printf("Float Package Error: Reverting to default config!\n");
+			VESC_IF->printf("Refloat Package Error: Reverting to default config!\n");
 		}
 	}
 
 	VESC_IF->free(buffer);
 }
 
-static float app_float_get_debug(int index) {
+static float app_get_debug(int index) {
 	data *d = (data*)ARG;
 
 	switch(index){
@@ -2274,30 +2274,30 @@ static float app_float_get_debug(int index) {
 }
 
 enum {
-	FLOAT_COMMAND_GET_INFO = 0,		// get version / package info
-	FLOAT_COMMAND_GET_RTDATA = 1,	// get rt data
-	FLOAT_COMMAND_RT_TUNE = 2,		// runtime tuning (don't write to eeprom)
-	FLOAT_COMMAND_TUNE_DEFAULTS = 3,// set tune to defaults (no eeprom)
-	FLOAT_COMMAND_CFG_SAVE = 4,		// save config to eeprom
-	FLOAT_COMMAND_CFG_RESTORE = 5,	// restore config from eeprom
-	FLOAT_COMMAND_TUNE_OTHER = 6,	// make runtime changes to startup/etc
-	FLOAT_COMMAND_RC_MOVE = 7,		// move motor while board is idle
-	FLOAT_COMMAND_BOOSTER = 8,		// change booster settings
-	FLOAT_COMMAND_PRINT_INFO = 9,	// print verbose info
-	FLOAT_COMMAND_GET_ALLDATA = 10,	// send all data, compact
-	FLOAT_COMMAND_EXPERIMENT = 11,  // generic cmd for sending data, used for testing/tuning new features
-	FLOAT_COMMAND_LOCK = 12,
-	FLOAT_COMMAND_HANDTEST = 13,
-	FLOAT_COMMAND_TUNE_TILT = 14,
-	FLOAT_COMMAND_FLYWHEEL = 22,
-} float_commands;
+	COMMAND_GET_INFO = 0,		// get version / package info
+	COMMAND_GET_RTDATA = 1,	// get rt data
+	COMMAND_RT_TUNE = 2,		// runtime tuning (don't write to eeprom)
+	COMMAND_TUNE_DEFAULTS = 3,// set tune to defaults (no eeprom)
+	COMMAND_CFG_SAVE = 4,		// save config to eeprom
+	COMMAND_CFG_RESTORE = 5,	// restore config from eeprom
+	COMMAND_TUNE_OTHER = 6,	// make runtime changes to startup/etc
+	COMMAND_RC_MOVE = 7,		// move motor while board is idle
+	COMMAND_BOOSTER = 8,		// change booster settings
+	COMMAND_PRINT_INFO = 9,	// print verbose info
+	COMMAND_GET_ALLDATA = 10,	// send all data, compact
+	COMMAND_EXPERIMENT = 11,  // generic cmd for sending data, used for testing/tuning new features
+	COMMAND_LOCK = 12,
+	COMMAND_HANDTEST = 13,
+	COMMAND_TUNE_TILT = 14,
+	COMMAND_FLYWHEEL = 22,
+} Commands;
 
 static void send_realtime_data(data *d){
 	#define BUFSIZE 72
 	uint8_t send_buffer[BUFSIZE];
 	int32_t ind = 0;
 	send_buffer[ind++] = 101;//Magic Number
-	send_buffer[ind++] = FLOAT_COMMAND_GET_RTDATA;
+	send_buffer[ind++] = COMMAND_GET_RTDATA;
 
 	// RT Data
 	buffer_append_float32_auto(send_buffer, d->pid_value, &ind);
@@ -2346,7 +2346,7 @@ static void cmd_send_all_data(data *d, unsigned char mode){
 	mc_fault_code fault = VESC_IF->mc_get_fault();
 
 	send_buffer[ind++] = 101;//Magic Number
-	send_buffer[ind++] = FLOAT_COMMAND_GET_ALLDATA;
+	send_buffer[ind++] = COMMAND_GET_ALLDATA;
 
 	if (fault != FAULT_CODE_NONE) {
 		send_buffer[ind++] = 69;
@@ -2441,7 +2441,7 @@ static void cmd_print_info(data *d)
 static void cmd_lock(data *d, unsigned char *cfg)
 {
 	if (d->state >= FAULT_ANGLE_PITCH) {
-		d->float_conf.float_disable = cfg[0] ? true : false;
+		d->float_conf.disabled = cfg[0] ? true : false;
 		d->state = cfg[0] ? DISABLED : STARTUP;
 		write_cfg_to_eeprom(d);
 	}
@@ -2647,57 +2647,57 @@ static void cmd_runtime_tune(data *d, unsigned char *cfg, int len)
 }
 
 static void cmd_tune_defaults(data *d){
-	d->float_conf.kp = APPCONF_FLOAT_KP;
-	d->float_conf.kp2 = APPCONF_FLOAT_KP2;
-	d->float_conf.ki = APPCONF_FLOAT_KI;
-	d->float_conf.mahony_kp = APPCONF_FLOAT_MAHONY_KP;
-	d->float_conf.kp_brake = APPCONF_FLOAT_KP_BRAKE;
-	d->float_conf.kp2_brake = APPCONF_FLOAT_KP2_BRAKE;
-	d->float_conf.ki_limit = APPCONF_FLOAT_KI_LIMIT;
-	d->float_conf.booster_angle = APPCONF_FLOAT_BOOSTER_ANGLE;
-	d->float_conf.booster_ramp = APPCONF_FLOAT_BOOSTER_RAMP;
-	d->float_conf.booster_current = APPCONF_FLOAT_BOOSTER_CURRENT;
-	d->float_conf.brkbooster_angle = APPCONF_FLOAT_BRKBOOSTER_ANGLE;
-	d->float_conf.brkbooster_ramp = APPCONF_FLOAT_BRKBOOSTER_RAMP;
-	d->float_conf.brkbooster_current = APPCONF_FLOAT_BRKBOOSTER_CURRENT;
-	d->float_conf.turntilt_strength = APPCONF_FLOAT_TURNTILT_STRENGTH;
-	d->float_conf.turntilt_angle_limit = APPCONF_FLOAT_TURNTILT_ANGLE_LIMIT;
-	d->float_conf.turntilt_start_angle = APPCONF_FLOAT_TURNTILT_START_ANGLE;
-	d->float_conf.turntilt_start_erpm = APPCONF_FLOAT_TURNTILT_START_ERPM;
-	d->float_conf.turntilt_speed = APPCONF_FLOAT_TURNTILT_SPEED;
-	d->float_conf.turntilt_erpm_boost = APPCONF_FLOAT_TURNTILT_ERPM_BOOST;
-	d->float_conf.turntilt_erpm_boost_end = APPCONF_FLOAT_TURNTILT_ERPM_BOOST_END;
-	d->float_conf.turntilt_yaw_aggregate = APPCONF_FLOAT_TURNTILT_YAW_AGGREGATE;
-	d->float_conf.atr_strength_up = APPCONF_FLOAT_ATR_UPHILL_STRENGTH;
-	d->float_conf.atr_strength_down = APPCONF_FLOAT_ATR_DOWNHILL_STRENGTH;
-	d->float_conf.atr_threshold_up = APPCONF_FLOAT_ATR_THRESHOLD_UP;
-	d->float_conf.atr_threshold_down = APPCONF_FLOAT_ATR_THRESHOLD_DOWN;
-	d->float_conf.atr_speed_boost = APPCONF_FLOAT_ATR_SPEED_BOOST;
-	d->float_conf.atr_angle_limit = APPCONF_FLOAT_ATR_ANGLE_LIMIT;
-	d->float_conf.atr_on_speed = APPCONF_FLOAT_ATR_ON_SPEED;
-	d->float_conf.atr_off_speed = APPCONF_FLOAT_ATR_OFF_SPEED;
-	d->float_conf.atr_response_boost = APPCONF_FLOAT_ATR_RESPONSE_BOOST;
-	d->float_conf.atr_transition_boost = APPCONF_FLOAT_ATR_TRANSITION_BOOST;
-	d->float_conf.atr_filter = APPCONF_FLOAT_ATR_FILTER;
-	d->float_conf.atr_amps_accel_ratio = APPCONF_FLOAT_ATR_AMPS_ACCEL_RATIO;
-	d->float_conf.atr_amps_decel_ratio = APPCONF_FLOAT_ATR_AMPS_DECEL_RATIO;
-	d->float_conf.braketilt_strength = APPCONF_FLOAT_BRAKETILT_STRENGTH;
-	d->float_conf.braketilt_lingering = APPCONF_FLOAT_BRAKETILT_LINGERING;
+	d->float_conf.kp = CFG_DFLT_KP;
+	d->float_conf.kp2 = CFG_DFLT_KP2;
+	d->float_conf.ki = CFG_DFLT_KI;
+	d->float_conf.mahony_kp = CFG_DFLT_MAHONY_KP;
+	d->float_conf.kp_brake = CFG_DFLT_KP_BRAKE;
+	d->float_conf.kp2_brake = CFG_DFLT_KP2_BRAKE;
+	d->float_conf.ki_limit = CFG_DFLT_KI_LIMIT;
+	d->float_conf.booster_angle = CFG_DFLT_BOOSTER_ANGLE;
+	d->float_conf.booster_ramp = CFG_DFLT_BOOSTER_RAMP;
+	d->float_conf.booster_current = CFG_DFLT_BOOSTER_CURRENT;
+	d->float_conf.brkbooster_angle = CFG_DFLT_BRKBOOSTER_ANGLE;
+	d->float_conf.brkbooster_ramp = CFG_DFLT_BRKBOOSTER_RAMP;
+	d->float_conf.brkbooster_current = CFG_DFLT_BRKBOOSTER_CURRENT;
+	d->float_conf.turntilt_strength = CFG_DFLT_TURNTILT_STRENGTH;
+	d->float_conf.turntilt_angle_limit = CFG_DFLT_TURNTILT_ANGLE_LIMIT;
+	d->float_conf.turntilt_start_angle = CFG_DFLT_TURNTILT_START_ANGLE;
+	d->float_conf.turntilt_start_erpm = CFG_DFLT_TURNTILT_START_ERPM;
+	d->float_conf.turntilt_speed = CFG_DFLT_TURNTILT_SPEED;
+	d->float_conf.turntilt_erpm_boost = CFG_DFLT_TURNTILT_ERPM_BOOST;
+	d->float_conf.turntilt_erpm_boost_end = CFG_DFLT_TURNTILT_ERPM_BOOST_END;
+	d->float_conf.turntilt_yaw_aggregate = CFG_DFLT_TURNTILT_YAW_AGGREGATE;
+	d->float_conf.atr_strength_up = CFG_DFLT_ATR_UPHILL_STRENGTH;
+	d->float_conf.atr_strength_down = CFG_DFLT_ATR_DOWNHILL_STRENGTH;
+	d->float_conf.atr_threshold_up = CFG_DFLT_ATR_THRESHOLD_UP;
+	d->float_conf.atr_threshold_down = CFG_DFLT_ATR_THRESHOLD_DOWN;
+	d->float_conf.atr_speed_boost = CFG_DFLT_ATR_SPEED_BOOST;
+	d->float_conf.atr_angle_limit = CFG_DFLT_ATR_ANGLE_LIMIT;
+	d->float_conf.atr_on_speed = CFG_DFLT_ATR_ON_SPEED;
+	d->float_conf.atr_off_speed = CFG_DFLT_ATR_OFF_SPEED;
+	d->float_conf.atr_response_boost = CFG_DFLT_ATR_RESPONSE_BOOST;
+	d->float_conf.atr_transition_boost = CFG_DFLT_ATR_TRANSITION_BOOST;
+	d->float_conf.atr_filter = CFG_DFLT_ATR_FILTER;
+	d->float_conf.atr_amps_accel_ratio = CFG_DFLT_ATR_AMPS_ACCEL_RATIO;
+	d->float_conf.atr_amps_decel_ratio = CFG_DFLT_ATR_AMPS_DECEL_RATIO;
+	d->float_conf.braketilt_strength = CFG_DFLT_BRAKETILT_STRENGTH;
+	d->float_conf.braketilt_lingering = CFG_DFLT_BRAKETILT_LINGERING;
 
-	d->float_conf.startup_pitch_tolerance = APPCONF_FLOAT_STARTUP_PITCH_TOLERANCE;
-	d->float_conf.startup_roll_tolerance = APPCONF_FLOAT_STARTUP_ROLL_TOLERANCE;
-	d->float_conf.startup_speed = APPCONF_FLOAT_STARTUP_SPEED;
-	d->float_conf.startup_click_current = APPCONF_FLOAT_STARTUP_CLICK_CURRENT;
-	d->float_conf.brake_current = APPCONF_FLOAT_BRAKE_CURRENT;
-	d->float_conf.is_buzzer_enabled = APPCONF_FLOAT_IS_BUZZER_ENABLED;
-	d->float_conf.tiltback_constant = APPCONF_FLOAT_TILTBACK_CONSTANT;
-	d->float_conf.tiltback_constant_erpm = APPCONF_FLOAT_TILTBACK_CONSTANT_ERPM;
-	d->float_conf.tiltback_variable = APPCONF_FLOAT_TILTBACK_VARIABLE;
-	d->float_conf.tiltback_variable_max = APPCONF_FLOAT_TILTBACK_VARIABLE_MAX;
-	d->float_conf.noseangling_speed = APPCONF_FLOAT_NOSEANGLING_SPEED;
-	d->float_conf.startup_pushstart_enabled = APPCONF_PUSHSTART_ENABLED;
-	d->float_conf.startup_simplestart_enabled = APPCONF_SIMPLESTART_ENABLED;
-	d->float_conf.startup_dirtylandings_enabled = APPCONF_DIRTYLANDINGS_ENABLED;
+	d->float_conf.startup_pitch_tolerance = CFG_DFLT_STARTUP_PITCH_TOLERANCE;
+	d->float_conf.startup_roll_tolerance = CFG_DFLT_STARTUP_ROLL_TOLERANCE;
+	d->float_conf.startup_speed = CFG_DFLT_STARTUP_SPEED;
+	d->float_conf.startup_click_current = CFG_DFLT_STARTUP_CLICK_CURRENT;
+	d->float_conf.brake_current = CFG_DFLT_BRAKE_CURRENT;
+	d->float_conf.is_buzzer_enabled = CFG_DFLT_IS_BUZZER_ENABLED;
+	d->float_conf.tiltback_constant = CFG_DFLT_TILTBACK_CONSTANT;
+	d->float_conf.tiltback_constant_erpm = CFG_DFLT_TILTBACK_CONSTANT_ERPM;
+	d->float_conf.tiltback_variable = CFG_DFLT_TILTBACK_VARIABLE;
+	d->float_conf.tiltback_variable_max = CFG_DFLT_TILTBACK_VARIABLE_MAX;
+	d->float_conf.noseangling_speed = CFG_DFLT_NOSEANGLING_SPEED;
+	d->float_conf.startup_pushstart_enabled = CFG_DFLT_PUSHSTART_ENABLED;
+	d->float_conf.startup_simplestart_enabled = CFG_DFLT_SIMPLESTART_ENABLED;
+	d->float_conf.startup_dirtylandings_enabled = CFG_DFLT_DIRTYLANDINGS_ENABLED;
 
 	// Update values normally done in configure()
 	d->atr_on_step_size = d->float_conf.atr_on_speed / d->float_conf.hertz;
@@ -3045,148 +3045,148 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
 
 	if(len < 2){
 		if (!VESC_IF->app_is_output_disabled()) {
-			VESC_IF->printf("Float App: Missing Args\n");
+			VESC_IF->printf("Refloat: Missing Args\n");
 		}
 		return;
 	}
 	if (magicnr != 101) {
 		if (!VESC_IF->app_is_output_disabled()) {
-			VESC_IF->printf("Float App: Wrong magic number %d\n", magicnr);
+			VESC_IF->printf("Refloat: Wrong magic number %d\n", magicnr);
 		}
 		return;
 	}
 
 	switch(command) {
-		case FLOAT_COMMAND_GET_INFO: {
+		case COMMAND_GET_INFO: {
 			int32_t ind = 0;
 			uint8_t send_buffer[10];
 			send_buffer[ind++] = 101;	// magic nr.
 			send_buffer[ind++] = 0x0;	// command ID
-			send_buffer[ind++] = (uint8_t) (10 * APPCONF_FLOAT_VERSION);
+			send_buffer[ind++] = (uint8_t) (10 * CFG_DFLT_VERSION);
 			send_buffer[ind++] = 2;     // build number
 			send_buffer[ind++] = 1;
 			VESC_IF->send_app_data(send_buffer, ind);
 			return;
 		}
-		case FLOAT_COMMAND_GET_RTDATA: {
+		case COMMAND_GET_RTDATA: {
 			send_realtime_data(d);
 			return;
 		}
-		case FLOAT_COMMAND_RT_TUNE: {
+		case COMMAND_RT_TUNE: {
 			cmd_runtime_tune(d, &buffer[2], len - 2);
 			return;
 		}
-		case FLOAT_COMMAND_TUNE_OTHER: {
+		case COMMAND_TUNE_OTHER: {
 			if (len >= 14) {
 				cmd_runtime_tune_other(d, &buffer[2], len - 2);
 			}
 			else {
 				if (!VESC_IF->app_is_output_disabled()) {
-					VESC_IF->printf("Float App: Command length incorrect (%d)\n", len);
+					VESC_IF->printf("Refloat: Command length incorrect (%d)\n", len);
 				}
 			}
 			return;
 		}
-		case FLOAT_COMMAND_TUNE_TILT: {
+		case COMMAND_TUNE_TILT: {
 			if (len >= 10) {
 				cmd_runtime_tune_tilt(d, &buffer[2], len - 2);
 			}
 			else {
 				if (!VESC_IF->app_is_output_disabled()) {
-					VESC_IF->printf("Float App: Command length incorrect (%d)\n", len);
+					VESC_IF->printf("Refloat: Command length incorrect (%d)\n", len);
 				}
 			}
 			return;
 		}
-		case FLOAT_COMMAND_RC_MOVE: {
+		case COMMAND_RC_MOVE: {
 			if (len == 6) {
 				cmd_rc_move(d, &buffer[2]);
 			}
 			else {
 				if (!VESC_IF->app_is_output_disabled()) {
-					VESC_IF->printf("Float App: Command length incorrect (%d)\n", len);
+					VESC_IF->printf("Refloat: Command length incorrect (%d)\n", len);
 				}
 			}
 			return;
 		}
-		case FLOAT_COMMAND_CFG_RESTORE: {
+		case COMMAND_CFG_RESTORE: {
 			read_cfg_from_eeprom(d);
 			VESC_IF->set_cfg_float(CFG_PARAM_IMU_mahony_kp + 100, d->float_conf.mahony_kp);
 			return;
 		}
-		case FLOAT_COMMAND_TUNE_DEFAULTS: {
+		case COMMAND_TUNE_DEFAULTS: {
 			cmd_tune_defaults(d);
 			VESC_IF->set_cfg_float(CFG_PARAM_IMU_mahony_kp + 100, d->float_conf.mahony_kp);
 			return;
 		}
-		case FLOAT_COMMAND_CFG_SAVE: {
+		case COMMAND_CFG_SAVE: {
 			write_cfg_to_eeprom(d);
 			return;
 		}
-		case FLOAT_COMMAND_PRINT_INFO: {
+		case COMMAND_PRINT_INFO: {
 			cmd_print_info(d);
 			return;
 		}
-		case FLOAT_COMMAND_GET_ALLDATA: {
+		case COMMAND_GET_ALLDATA: {
 			if (len == 3) {
 				cmd_send_all_data(d, buffer[2]);
 			}
                         else {
                                 if (!VESC_IF->app_is_output_disabled()) {
-                                        VESC_IF->printf("Float App: Command length incorrect (%d)\n", len);
+                                        VESC_IF->printf("Refloat: Command length incorrect (%d)\n", len);
                                 }
                         }
 			return;
 		}
-		case FLOAT_COMMAND_EXPERIMENT: {
+		case COMMAND_EXPERIMENT: {
 			cmd_experiment(d, &buffer[2]);
 			return;
 		}
-		case FLOAT_COMMAND_LOCK: {
+		case COMMAND_LOCK: {
 			cmd_lock(d, &buffer[2]);
 			return;
 		}
-		case FLOAT_COMMAND_HANDTEST: {
+		case COMMAND_HANDTEST: {
 			cmd_handtest(d, &buffer[2]);
 			return;
 		}
-		case FLOAT_COMMAND_BOOSTER: {
+		case COMMAND_BOOSTER: {
 			if (len == 6) {
 				cmd_booster(d, &buffer[2]);
 			}
 			else {
 				if (!VESC_IF->app_is_output_disabled()) {
-					VESC_IF->printf("Float App: Command length incorrect (%d)\n", len);
+					VESC_IF->printf("Refloat: Command length incorrect (%d)\n", len);
 				}
 			}
 			return;
 		}
-		case FLOAT_COMMAND_FLYWHEEL: {
+		case COMMAND_FLYWHEEL: {
 			if (len >= 8) {
 				cmd_flywheel_toggle(d, &buffer[2], len-2);
 			}
 			else {
 				if (!VESC_IF->app_is_output_disabled()) {
-					VESC_IF->printf("Float App: Command length incorrect (%d)\n", len);
+					VESC_IF->printf("Refloat: Command length incorrect (%d)\n", len);
 				}
 			}
 			return;
 		}
 		default: {
 			if (!VESC_IF->app_is_output_disabled()) {
-				VESC_IF->printf("Float App: Unknown command received %d vs %d\n", command, FLOAT_COMMAND_PRINT_INFO);
+				VESC_IF->printf("Refloat: Unknown command received %d vs %d\n", command, COMMAND_PRINT_INFO);
 			}
 		}
 	}
 }
 
 // Register get_debug as a lisp extension
-static lbm_value ext_bal_dbg(lbm_value *args, lbm_uint argn) {
+static lbm_value ext_dbg(lbm_value *args, lbm_uint argn) {
 	if (argn != 1 || !VESC_IF->lbm_is_number(args[0])) {
 		return VESC_IF->lbm_enc_sym_eerror;
 	}
 
-	return VESC_IF->lbm_enc_float(app_float_get_debug(VESC_IF->lbm_dec_as_i32(args[0])));
+	return VESC_IF->lbm_enc_float(app_get_debug(VESC_IF->lbm_dec_as_i32(args[0])));
 }
 
 // Called from Lisp on init to pass in the version info of the firmware
@@ -3205,15 +3205,15 @@ static lbm_value ext_set_fw_version(lbm_value *args, lbm_uint argn) {
 // and to make persistent read and write work
 static int get_cfg(uint8_t *buffer, bool is_default) {
 	data *d = (data*)ARG;
-	float_config *cfg = VESC_IF->malloc(sizeof(float_config));
+	RefloatConfig *cfg = VESC_IF->malloc(sizeof(RefloatConfig));
 
 	*cfg = d->float_conf;
 
 	if (is_default) {
-		confparser_set_defaults_float_config(cfg);
+		confparser_set_defaults_refloatconfig(cfg);
 	}
 
-	int res = confparser_serialize_float_config(buffer, cfg);
+	int res = confparser_serialize_refloatconfig(buffer, cfg);
 	VESC_IF->free(cfg);
 
 	return res;
@@ -3222,11 +3222,11 @@ static int get_cfg(uint8_t *buffer, bool is_default) {
 static bool set_cfg(uint8_t *buffer) {
 	data *d = (data*)ARG;
 
-	// don't let users use the Float Cfg "write" button in flywheel mode
+	// don't let users use the Refloat Cfg "write" button in flywheel mode
 	if (d->is_flywheel_mode || d->do_handtest)
 		return false;
 
-	bool res = confparser_deserialize_float_config(buffer, &(d->float_conf));
+	bool res = confparser_deserialize_refloatconfig(buffer, &(d->float_conf));
 
 	// Store to EEPROM
 	if (res) {
@@ -3238,12 +3238,12 @@ static bool set_cfg(uint8_t *buffer) {
 }
 
 static int get_cfg_xml(uint8_t **buffer) {
-	// Note: As the address of data_float_config_ is not known
+	// Note: As the address of data_refloatconfig_ is not known
 	// at compile time it will be relative to where it is in the
 	// linked binary. Therefore we add PROG_ADDR to it so that it
 	// points to where it ends up on the STM32.
-	*buffer = data_float_config_ + PROG_ADDR;
-	return DATA_FLOAT_CONFIG__SIZE;
+	*buffer = data_refloatconfig_ + PROG_ADDR;
+	return DATA_REFLOATCONFIG__SIZE;
 }
 
 // Called when code is stopped
@@ -3254,7 +3254,7 @@ static void stop(void *arg) {
 	VESC_IF->conf_custom_clear_configs();
 	VESC_IF->request_terminate(d->thread);
 	if (!VESC_IF->app_is_output_disabled()) {
-		VESC_IF->printf("Float App Terminated");
+		VESC_IF->printf("Refloat App Terminated");
 	}
 	VESC_IF->free(d);
 }
@@ -3262,14 +3262,14 @@ static void stop(void *arg) {
 INIT_FUN(lib_info *info) {
 	INIT_START
 	if (!VESC_IF->app_is_output_disabled()) {
-		VESC_IF->printf("Init Float v%.1fd\n", (double)APPCONF_FLOAT_VERSION);
+		VESC_IF->printf("Init Refloat v%.1fd\n", (double)CFG_DFLT_VERSION);
 	}
 
 	data *d = VESC_IF->malloc(sizeof(data));
 	memset(d, 0, sizeof(data));
 	if (!d) {
 		if (!VESC_IF->app_is_output_disabled()) {
-			VESC_IF->printf("Float App: Out of memory, startup failed!");
+			VESC_IF->printf("Refloat: Out of memory, startup failed!");
 		}
 		return false;
 	}
@@ -3293,10 +3293,10 @@ INIT_FUN(lib_info *info) {
 
 	VESC_IF->imu_set_read_callback(imu_ref_callback);
 
-	d->thread = VESC_IF->spawn(float_thd, 2048, "Float Main", d);
+	d->thread = VESC_IF->spawn(refloat_thd, 2048, "Refloat Main", d);
 
 	VESC_IF->set_app_data_handler(on_command_received);
-	VESC_IF->lbm_add_extension("ext-float-dbg", ext_bal_dbg);
+	VESC_IF->lbm_add_extension("ext-dbg", ext_dbg);
 	VESC_IF->lbm_add_extension("ext-set-fw-version", ext_set_fw_version);
 
 	return true;

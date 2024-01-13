@@ -37,12 +37,12 @@ Item {
     anchors.margins: 5
 
     readonly property var defaultQuicksaveNames: {
-                "Float Quicksave 1": "Quicksave 1",
-                "Float Quicksave 2": "Quicksave 2",
-                "Float Quicksave 3": "Quicksave 3",
-                "Float Quicksave 4": "Quicksave 4",
-                "Float Quicksave 5": "Quicksave 5",
-                "Float Quicksave 6": "Quicksave 6",
+                "Quicksave 1": "Quicksave 1",
+                "Quicksave 2": "Quicksave 2",
+                "Quicksave 3": "Quicksave 3",
+                "Quicksave 4": "Quicksave 4",
+                "Quicksave 5": "Quicksave 5",
+                "Quicksave 6": "Quicksave 6",
                 "IMU Quicksave 1": "IMU Quicksave 1",
                 "IMU Quicksave 2": "IMU Quicksave 2"
                 }
@@ -82,7 +82,7 @@ Item {
                 var buffer = new ArrayBuffer(6)
                 var dv = new DataView(buffer)
                 var ind = 0
-                dv.setUint8(ind, 101); ind += 1; // Float Package
+                dv.setUint8(ind, 101); ind += 1; // Package ID
                 dv.setUint8(ind, 7); ind += 1; // Command ID: RC Move
                 dv.setUint8(ind, moveSlider.value > 0 ? 1 : 0); ind += 1; // Direction
                 dv.setUint8(ind, current); ind += 1; // Current
@@ -301,9 +301,9 @@ Item {
 		}
                 if(state == 15){
                     stateString = "DISABLED"
-                    switchString = "Enable in Float Cfg: Specs"
-                    rt_state.text = "Float Package is Disabled\n\n" +
-                                    "You can re-enable it in\nFloat Cfg: Specs\n\n"
+                    switchString = "Enable in Reloat Cfg: Specs"
+                    rt_state.text = "Refloat Package is Disabled\n\n" +
+                                    "You can re-enable it in\nRefloat Cfg: Specs\n\n"
                     rt_data.text = "-- n/a --"
                     setpoints.text = "-- n/a --"
                     debug.text = "-- n/a --"
@@ -565,7 +565,7 @@ Item {
                             Layout.margins: 0
                             Layout.leftMargin: 0
                             Layout.fillWidth: true
-                            text: "Float App State"
+                            text: "Refloat App State"
                             font.underline: true
                             font.weight: Font.Black
                             font.pointSize: 14
@@ -586,7 +586,7 @@ Item {
                             Layout.margins: 0
                             Layout.leftMargin: 0
                             Layout.fillWidth: true
-                            text: "Float App RT Data"
+                            text: "Refloat App RT Data"
                             font.underline: true
                             font.weight: Font.Black
                             font.pointSize: 14
@@ -670,7 +670,7 @@ Item {
 				}
                 RowLayout {
 					Text {
-						text: "Float Package Version:"
+						text: "Refloat Package Version:"
 						color: Utility.getAppHexColor("lightText")
 						font.pointSize: 8
 					}
@@ -816,7 +816,7 @@ Item {
                             handtest_toggle = 1 - handtest_toggle
                             var buffer = new ArrayBuffer(3)
                             var dv = new DataView(buffer)
-                            dv.setUint8(0, 101);  // Float Package
+                            dv.setUint8(0, 101);  // Package ID
                             dv.setUint8(1, 13);   // Command ID: Handtest
                             dv.setUint8(2, handtest_toggle);  // Handtest On(1) vs Off(0)
                             mCommands.sendCustomAppData(buffer)
@@ -873,7 +873,7 @@ Item {
                         onClicked: {
                             var buffer = new ArrayBuffer(9)
                             var dv = new DataView(buffer)
-                            dv.setUint8(0, 101);  // Float Package
+                            dv.setUint8(0, 101);  // Package ID
                             dv.setUint8(1, 22);   // Command ID: Flywheel
                             dv.setUint8(2, 0x82); // Flywheel On (force calibration)
                             dv.setUint8(3, 0x0);  // use default kp
@@ -892,7 +892,7 @@ Item {
                         onClicked: {
                             var buffer = new ArrayBuffer(8)
                             var dv = new DataView(buffer)
-                            dv.setUint8(0, 101);  // Float Package
+                            dv.setUint8(0, 101);  // Package ID
                             dv.setUint8(1, 22);   // Command ID: Flywheel
                             dv.setUint8(2, 0x80); // Flywheel Off
                             mCommands.sendCustomAppData(buffer)
@@ -906,12 +906,12 @@ Item {
                 id: tunesColumn
 
                 Text {
-                    id: floatQuicksaveHeader
+                    id: quicksaveHeader
                     color: Utility.getAppHexColor("lightText")
                     font.family: "DejaVu Sans Mono"
                     Layout.margins: 0
                     Layout.fillWidth: true
-                    text: "Float Package Quicksave Slots"
+                    text: "Refloat Package Quicksave Slots"
                     font.underline: true
                     font.weight: Font.Black
                     font.pointSize: 14
@@ -922,18 +922,18 @@ Item {
                     columns: 3
                     Repeater {
                         model: [
-                            "Float Quicksave 1", "Float Quicksave 2", "Float Quicksave 3",
-                            "Float Quicksave 4", "Float Quicksave 5", "Float Quicksave 6"
+                            "Quicksave 1", "Quicksave 2", "Quicksave 3",
+                            "Quicksave 4", "Quicksave 5", "Quicksave 6"
                         ]
                         Button {
                             text: quicksaveNames[modelData]
                             Layout.fillWidth: true
                             Layout.preferredWidth: 0
                             onPressAndHold: {
-                                quicksaveFloat(modelData)
+                                quicksave(modelData)
                             }
                             onClicked: {
-                                quickloadFloat(modelData)
+                                quickload(modelData)
                             }
                         }
                     }
@@ -1037,10 +1037,10 @@ Item {
         }
     }
 
-    function quicksaveFloat(saveName){
+    function quicksave(saveName) {
         var params = [
-            // {"name": "float_version", "type": "Double"},
-            // {"name": "float_disable", "type": "Double"},
+            // {"name": "version", "type": "Double"},
+            // {"name": "disabled", "type": "Bool"},
             {"name": "kp", "type": "Double"},
             {"name": "ki", "type": "Double"},
             {"name": "kd", "type": "Double"},
@@ -1156,7 +1156,7 @@ Item {
         quicksavePopup.open()
     }
 
-    function quickloadFloat(saveName){
+    function quickload(saveName) {
         var json = settingStorage.value(saveName, "")
         if(!json){
             quickloadErrorPopup.open()
