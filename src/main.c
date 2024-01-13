@@ -1,22 +1,21 @@
-/*
-    Copyright 2019 - 2022 Mitch Lustig
-	Copyright 2022 Benjamin Vedder	benjamin@vedder.se
-
-	This file is part of the VESC firmware.
-
-	The VESC firmware is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    The VESC firmware is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+// Copyright 2019 - 2022 Mitch Lustig
+// Copyright 2022 Benjamin Vedder <benjamin@vedder.se>
+// Copyright 2024 Lukas Hrazky
+//
+// This file is part of the Refloat VESC package.
+//
+// Refloat VESC package is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by the
+// Free Software Foundation, either version 3 of the License, or (at your
+// option) any later version.
+//
+// Refloat VESC package is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+// or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+// more details.
+//
+// You should have received a copy of the GNU General Public License along with
+// this program. If not, see <http://www.gnu.org/licenses/>.
 
 #include "vesc_c_if.h"
 
@@ -186,13 +185,13 @@ typedef struct {
 	float braketilt_factor, braketilt_target, braketilt_interpolated;
 	float turntilt_target, turntilt_interpolated;
 	SetpointAdjustmentType setpointAdjustmentType;
-	float current_time, last_time, diff_time, loop_overshoot; // Seconds
-	float disengage_timer, nag_timer; // Seconds
+	float current_time, last_time, diff_time, loop_overshoot;
+	float disengage_timer, nag_timer;
 	float idle_voltage;
 	float filtered_loop_overshoot, loop_overshoot_alpha, filtered_diff_time;
-	float fault_angle_pitch_timer, fault_angle_roll_timer, fault_switch_timer, fault_switch_half_timer; // Seconds
+	float fault_angle_pitch_timer, fault_angle_roll_timer, fault_switch_timer, fault_switch_half_timer;
 	float motor_timeout_seconds;
-	float brake_timeout; // Seconds
+	float brake_timeout;
 	float wheelslip_timer, wheelslip_end_timer, overcurrent_timer, tb_highvoltage_timer;
 	float switch_warn_buzz_erpm;
 	float quickstop_erpm;
@@ -257,9 +256,6 @@ static void cmd_flywheel_toggle(data *d, unsigned char *cfg, int len);
 static bool flywheel_konami_check(data *d);
 static bool flywheel_konami_step(data *d, int input);
 
-/**
- * BUZZER / BEEPER on Servo Pin
- */
 const VESC_PIN buzzer_pin = VESC_PIN_PPM;
 
 #define EXT_BUZZER_ON()  VESC_IF->io_write(buzzer_pin, 1)
@@ -444,12 +440,6 @@ static void configure(data *d) {
 
 	d->max_duty_with_margin = VESC_IF->get_cfg_float(CFG_PARAM_l_max_duty) - 0.1;
 
-	/* WIP /////////////////////////////
-
-	// INSERT ASYMMETRICAL BOOSTER INIT's
-
-	///////////////////////////// WIP */
-	
 	// Feature: Reverse Stop
 	d->reverse_tolerance = 50000;
 	d->reverse_stop_step_size = 100.0 / d->float_conf.hertz;
@@ -467,8 +457,6 @@ static void configure(data *d) {
 
 	// Feature: ATR:
 	d->float_acc_diff = 0;
-
-	/* INSERT OG TT LOGIC? */
 
 	// Feature: Braketilt
 	if (d->float_conf.braketilt_strength == 0) {
@@ -591,7 +579,7 @@ static void reset_vars(data *d) {
 
 
 /**
- *	check_odometer: see if we need to write back the odometer during fault state
+ * check_odometer: see if we need to write back the odometer during fault state
  */
 static void check_odometer(data *d)
 {
@@ -632,7 +620,8 @@ static void do_rc_move(data *d)
 	else {
 		d->rc_counter = 0;
 		
-		if ((d->float_conf.remote_throttle_current_max > 0) && (d->current_time - d->disengage_timer > d->float_conf.remote_throttle_grace_period) && (fabsf(d->throttle_val) > 0.02)) { // Throttle must be greater than 2% (Help mitigate lingering throttle)
+		// Throttle must be greater than 2% (Help mitigate lingering throttle)
+		if ((d->float_conf.remote_throttle_current_max > 0) && (d->current_time - d->disengage_timer > d->float_conf.remote_throttle_grace_period) && (fabsf(d->throttle_val) > 0.02)) {
 			float servo_val = d->throttle_val;
 			servo_val *= (d->float_conf.inputtilt_invert_throttle ? -1.0 : 1.0);
 			d->rc_current = d->rc_current * 0.95 + (d->float_conf.remote_throttle_current_max * servo_val) * 0.05;
@@ -771,8 +760,10 @@ static bool check_faults(data *d){
 	}
 	else {
 		bool disable_switch_faults = d->float_conf.fault_moving_fault_disabled &&
-									 d->erpm > (d->float_conf.fault_adc_half_erpm * 2) && // Rolling forward (not backwards!)
-									 fabsf(d->roll_angle) < 40; // Not tipped over
+									 // Rolling forward (not backwards!)
+									 d->erpm > (d->float_conf.fault_adc_half_erpm * 2) &&
+									 // Not tipped over
+									 fabsf(d->roll_angle) < 40;
 
 		// Check switch
 		// Switch fully open
@@ -878,8 +869,6 @@ static bool check_faults(data *d){
 		d->fault_angle_pitch_timer = d->current_time;
 	}
 
-	// *Removed Duty Cycle Fault*
-
 	return false;
 }
 
@@ -910,8 +899,8 @@ static void calculate_setpoint_target(data *d) {
 				}
 			}
 		}
-	} else if ((fabsf(d->acceleration) > 15) &&					// this isn't normal, either wheelslip or wheel getting stuck
-			  (SIGN(d->acceleration) == SIGN(d->erpm)) &&		// we only act on wheelslip, not when the wheel gets stuck
+	} else if ((fabsf(d->acceleration) > 15) &&  // not normal, either wheelslip or wheel getting stuck
+			  (SIGN(d->acceleration) == SIGN(d->erpm)) &&
 			  (d->abs_duty_cycle > 0.3) &&
 			  (d->abs_erpm > 2000))								// acceleration can jump a lot at very low speeds
 	{
@@ -947,7 +936,7 @@ static void calculate_setpoint_target(data *d) {
 		d->state = RUNNING_TILTBACK;
 	} else if (d->abs_duty_cycle > 0.05 && input_voltage > d->float_conf.tiltback_hv) {
 		d->beep_reason = BEEP_HV;
-		beep_alert(d, 3, false);	// Triple-beep
+		beep_alert(d, 3, false);
 		if (((d->current_time - d->tb_highvoltage_timer) > .5) ||
 		   (input_voltage > d->float_conf.tiltback_hv + 1)) {
 			// 500ms have passed or voltage is another volt higher, time for some tiltback
@@ -967,7 +956,7 @@ static void calculate_setpoint_target(data *d) {
 		}
 	} else if(VESC_IF->mc_temp_fet_filtered() > d->mc_max_temp_fet){
 		// Use the angle from Low-Voltage tiltback, but slower speed from High-Voltage tiltback
-		beep_alert(d, 3, true);	// Triple-beep (long beeps)
+		beep_alert(d, 3, true);
 		d->beep_reason = BEEP_TEMPFET;
 		if(VESC_IF->mc_temp_fet_filtered() > (d->mc_max_temp_fet + 1)) {
 			if(d->erpm > 0){
@@ -985,7 +974,7 @@ static void calculate_setpoint_target(data *d) {
 		}
 	} else if(VESC_IF->mc_temp_motor_filtered() > d->mc_max_temp_mot){
 		// Use the angle from Low-Voltage tiltback, but slower speed from High-Voltage tiltback
-		beep_alert(d, 3, true);	// Triple-beep (long beeps)
+		beep_alert(d, 3, true);
 		d->beep_reason = BEEP_TEMPMOT;
 		if(VESC_IF->mc_temp_motor_filtered() > (d->mc_max_temp_mot + 1)) {
 			if(d->erpm > 0){
@@ -1002,7 +991,7 @@ static void calculate_setpoint_target(data *d) {
 			d->state = RUNNING;
 		}
 	} else if (d->abs_duty_cycle > 0.05 && input_voltage < d->float_conf.tiltback_lv) {
-		beep_alert(d, 3, false);	// Triple-beep
+		beep_alert(d, 3, false);
 		d->beep_reason = BEEP_LV;
 		float abs_motor_current = fabsf(d->motor_current);
 		float vdelta = d->float_conf.tiltback_lv - input_voltage;
@@ -1136,7 +1125,8 @@ static void apply_noseangling(data *d){
 		// Nose angle adjustment, add variable then constant tiltback
 		float noseangling_target = 0;
 
-		float variable_erpm = fmaxf(0, fabsf(d->erpm) - d->float_conf.tiltback_variable_erpm); // Variable Tiltback looks at ERPM from the reference point of the set minimum ERPM
+		// Variable Tiltback looks at ERPM from the reference point of the set minimum ERPM
+		float variable_erpm = fmaxf(0, fabsf(d->erpm) - d->float_conf.tiltback_variable_erpm);
 		if (variable_erpm > d->tiltback_variable_max_erpm) {
 			noseangling_target = d->float_conf.tiltback_variable_max * SIGN(d->erpm);
 		} else {
@@ -1159,7 +1149,7 @@ static void apply_noseangling(data *d){
 	d->setpoint += d->noseangling_interpolated;
 }
 
-static void apply_inputtilt(data *d){ // Input Tiltback
+static void apply_inputtilt(data *d){
 	float input_tiltback_target;
 	 
 	// Scale by Max Angle
@@ -1168,50 +1158,36 @@ static void apply_inputtilt(data *d){ // Input Tiltback
 	// Invert for Darkride
 	input_tiltback_target *= (d->is_upside_down ? -1.0 : 1.0);
 
-	// // Default Behavior: Nose Tilt at any speed, does not invert for reverse (Safer for slow climbs/descents & jumps)
-	// // Alternate Behavior (Negative Tilt Speed): Nose Tilt only while moving, invert to match direction of travel
-	// if (balance_conf.roll_steer_erpm_kp < 0) {
-	// 	if (state == RUNNING_WHEELSLIP) {     // During wheelslip, setpoint drifts back to level for ERPM-based Input Tilt
-	// 		inputtilt_interpolated *= 0.995;  // to prevent chain reaction between setpoint and motor direction
-	// 	} else if (erpm <= -200){
-	// 		input_tiltback_target *= -1; // Invert angles for reverse
-	// 	} else if (erpm < 200){
-	// 		input_tiltback_target = 0; // Disable Input Tiltback at standstill to mitigate oscillations
-	// 	}
-	// }
-
-	// if (d->float_conf.roll_steer_erpm_kp >= 0 || d->state != RUNNING_WHEELSLIP) { // Pause and gradually decrease ERPM-based Input Tilt during wheelslip
-	// 	if (fabsf(input_tiltback_target - d->inputtilt_interpolated) < d->inputtilt_step_size){
-	// 		d->inputtilt_interpolated = input_tiltback_target;
-	// 	} else if (input_tiltback_target - d->inputtilt_interpolated > 0){
-	// 		d->inputtilt_interpolated += d->inputtilt_step_size;
-	// 	} else {
-	// 		d->inputtilt_interpolated -= d->inputtilt_step_size;
-	// 	}
-	// }
-
 	float input_tiltback_target_diff = input_tiltback_target - d->inputtilt_interpolated;
 
-	if (d->float_conf.inputtilt_smoothing_factor > 0) { // Smoothen changes in tilt angle by ramping the step size
+	// Smoothen changes in tilt angle by ramping the step size
+	if (d->float_conf.inputtilt_smoothing_factor > 0) {
 		float smoothing_factor = 0.02;
 		for (int i = 1; i < d->float_conf.inputtilt_smoothing_factor; i++) {
 			smoothing_factor /= 2;
 		}
 
-		float smooth_center_window = 1.5 + (0.5 * d->float_conf.inputtilt_smoothing_factor); // Sets the angle away from Target that step size begins ramping down
-		if (fabsf(input_tiltback_target_diff) < smooth_center_window) { // Within X degrees of Target Angle, start ramping down step size
-			d->inputtilt_ramped_step_size = (smoothing_factor * d->inputtilt_step_size * (input_tiltback_target_diff / 2)) + ((1 - smoothing_factor) * d->inputtilt_ramped_step_size); // Target step size is reduced the closer to center you are (needed for smoothly transitioning away from center)
-			float centering_step_size = fminf(fabsf(d->inputtilt_ramped_step_size), fabsf(input_tiltback_target_diff / 2) * d->inputtilt_step_size) * SIGN(input_tiltback_target_diff); // Linearly ramped down step size is provided as minimum to prevent overshoot
+		// Sets the angle away from Target that step size begins ramping down
+		float smooth_center_window = 1.5 + (0.5 * d->float_conf.inputtilt_smoothing_factor);
+
+		// Within X degrees of Target Angle, start ramping down step size
+		if (fabsf(input_tiltback_target_diff) < smooth_center_window) {
+			// Target step size is reduced the closer to center you are (needed for smoothly transitioning away from center)
+			d->inputtilt_ramped_step_size = (smoothing_factor * d->inputtilt_step_size * (input_tiltback_target_diff / 2)) + ((1 - smoothing_factor) * d->inputtilt_ramped_step_size);
+			// Linearly ramped down step size is provided as minimum to prevent overshoot
+			float centering_step_size = fminf(fabsf(d->inputtilt_ramped_step_size), fabsf(input_tiltback_target_diff / 2) * d->inputtilt_step_size) * SIGN(input_tiltback_target_diff);
 			if (fabsf(input_tiltback_target_diff) < fabsf(centering_step_size)) {
 				d->inputtilt_interpolated = input_tiltback_target;
 			} else {
 				d->inputtilt_interpolated += centering_step_size;
 			}
-		} else { // Ramp up step size until the configured tilt speed is reached
+		} else {
+			// Ramp up step size until the configured tilt speed is reached
 			d->inputtilt_ramped_step_size = (smoothing_factor * d->inputtilt_step_size * SIGN(input_tiltback_target_diff)) + ((1 - smoothing_factor) * d->inputtilt_ramped_step_size);
 			d->inputtilt_interpolated += d->inputtilt_ramped_step_size;
 		}
-	} else { // Constant step size; no smoothing
+	} else {
+		// Constant step size; no smoothing
 		if (fabsf(input_tiltback_target_diff) < d->inputtilt_step_size){
 		d->inputtilt_interpolated = input_tiltback_target;
 	} else {
@@ -1667,7 +1643,8 @@ static void refloat_thd(void *arg) {
 		}
 
 		d->diff_time = d->current_time - d->last_time;
-		d->filtered_diff_time = 0.03 * d->diff_time + 0.97 * d->filtered_diff_time; // Purely a metric
+		// Purely a metric
+		d->filtered_diff_time = 0.03 * d->diff_time + 0.97 * d->filtered_diff_time;
 		d->last_time = d->current_time;
 
 		// Loop Time Filter (Hard Coded to 3Hz)
@@ -1728,13 +1705,13 @@ static void refloat_thd(void *arg) {
 		d->erpm = VESC_IF->mc_get_rpm();
 		d->abs_erpm = fabsf(d->erpm);
 		d->adc1 = VESC_IF->io_read_analog(VESC_PIN_ADC1);
-		d->adc2 = VESC_IF->io_read_analog(VESC_PIN_ADC2); // Returns -1.0 if the pin is missing on the hardware
+		// Returns -1.0 if the pin is missing on the hardware
+		d->adc2 = VESC_IF->io_read_analog(VESC_PIN_ADC2);
 		if (d->adc2 < 0.0) {
 			d->adc2 = 0.0;
 		}
 		d->duty_smooth = d->duty_smooth * 0.9 + d->duty_cycle * 0.1;
 
-		// UART/PPM Remote Throttle ///////////////////////
 		bool remote_connected = false;
 		float servo_val = 0;
 
@@ -1743,11 +1720,12 @@ static void refloat_thd(void *arg) {
 			servo_val = VESC_IF->get_ppm();
 			remote_connected = VESC_IF->get_ppm_age() < 1;
 			break;
-		case (INPUTTILT_UART): ; // Don't delete ";", required to avoid compiler error with first line variable init
+		case (INPUTTILT_UART): {
 			remote_state remote = VESC_IF->get_remote_state();
 			servo_val = remote.js_y;
 			remote_connected = remote.age_s < 1;
 			break;
+		}
 		case (INPUTTILT_NONE):
 			break;
 		}
@@ -1768,16 +1746,6 @@ static void refloat_thd(void *arg) {
 		}
 
 		d->throttle_val = servo_val;
-		///////////////////////////////////////////////////
-
-
-		// Torque Tilt:
-
-		/* FW SUPPORT NEEDED FOR SMOOTH ERPM //////////////////////////
-		float smooth_erpm = erpm_sign * mcpwm_foc_get_smooth_erpm();
-		float acceleration_raw = smooth_erpm - last_erpm;
-		d->last_erpm = smooth_erpm;
-		////////////////////////// FW SUPPORT NEEDED FOR SMOOTH ERPM */
 
 		float acceleration_raw = d->erpm - d->last_erpm;
 		d->last_erpm = d->erpm;
@@ -1811,7 +1779,8 @@ static void refloat_thd(void *arg) {
 		if (SIGN(d->yaw_change) != SIGN(d->yaw_aggregate))
 			d->yaw_aggregate = 0;
 		d->abs_yaw_change = fabsf(d->yaw_change);
-		if ((d->abs_yaw_change > 0.04) && !unchanged)	// don't count tiny yaw changes towards aggregate
+		// don't count tiny yaw changes towards aggregate
+		if ((d->abs_yaw_change > 0.04) && !unchanged)
 			d->yaw_aggregate += d->yaw_change;
 
 		d->switch_state = check_adcs(d);
@@ -1833,9 +1802,10 @@ static void refloat_thd(void *arg) {
 				brake(d);
 				if (VESC_IF->imu_startup_done()) {
 					reset_vars(d);
-					d->state = FAULT_STARTUP; // Trigger a fault so we need to meet start conditions to start
+					// Trigger a fault so we need to meet start conditions to start
+					d->state = FAULT_STARTUP;
 
-					// Are we within 5V of the LV tiltback threshold? Issue 1 beep for each volt below that
+					// if within 5V of LV tiltback threshold, issue 1 beep for each volt below that
 					float bat_volts = VESC_IF->mc_get_input_voltage_filtered();
 					float threshold = d->float_conf.tiltback_lv + 5;
 					if (bat_volts < threshold) {
@@ -1844,7 +1814,7 @@ static void refloat_thd(void *arg) {
 						d->beep_reason = BEEP_LOWBATT;
 					}
 					else {
-						// // Let the rider know that the board is ready (one long beep)
+						// Let the rider know that the board is ready (one long beep)
 						beep_alert(d, 1, true);
 					}
 				}
@@ -1882,20 +1852,22 @@ static void refloat_thd(void *arg) {
 			}
 
 			// Prepare Brake Scaling (ramp scale values as needed for smooth transitions)
-			if (fabsf(d->erpm) < 500) { // Nearly standstill
-				d->kp_brake_scale = 0.01 + 0.99 * d->kp_brake_scale; // All scaling should roll back to 1.0x when near a stop for a smooth stand-still and back-forth transition
+			if (fabsf(d->erpm) < 500) {
+				// All scaling should roll back to 1.0x when near a stop for a smooth stand-still and back-forth transition
+				d->kp_brake_scale = 0.01 + 0.99 * d->kp_brake_scale;
 				d->kp2_brake_scale = 0.01 + 0.99 * d->kp2_brake_scale;
 				d->kp_accel_scale = 0.01 + 0.99 * d->kp_accel_scale;
 				d->kp2_accel_scale = 0.01 + 0.99 * d->kp2_accel_scale;
-
-			} else if (d->erpm > 0){ // Moving forwards
-				d->kp_brake_scale = 0.01 * d->float_conf.kp_brake + 0.99 * d->kp_brake_scale; // Once rolling forward, brakes should transition to scaled values
+			} else if (d->erpm > 0){
+				// Once rolling forward, brakes should transition to scaled values
+				d->kp_brake_scale = 0.01 * d->float_conf.kp_brake + 0.99 * d->kp_brake_scale;
 				d->kp2_brake_scale = 0.01 * d->float_conf.kp2_brake + 0.99 * d->kp2_brake_scale;
 				d->kp_accel_scale = 0.01 + 0.99 * d->kp_accel_scale;
 				d->kp2_accel_scale = 0.01 + 0.99 * d->kp2_accel_scale;
 
-			} else { // Moving backwards
-				d->kp_brake_scale = 0.01 + 0.99 * d->kp_brake_scale; // Once rolling backward, the NEW brakes (we will use kp_accel) should transition to scaled values
+			} else {
+				// Once rolling backward, the NEW brakes (we will use kp_accel) should transition to scaled values
+				d->kp_brake_scale = 0.01 + 0.99 * d->kp_brake_scale;
 				d->kp2_brake_scale = 0.01 + 0.99 * d->kp2_brake_scale;
 				d->kp_accel_scale = 0.01 * d->float_conf.kp_brake + 0.99 * d->kp_accel_scale;
 				d->kp2_accel_scale = 0.01 * d->float_conf.kp2_brake + 0.99 * d->kp2_accel_scale;
@@ -1919,7 +1891,8 @@ static void refloat_thd(void *arg) {
 
 			// Apply P Brake Scaling
 			float scaled_kp;
-			if (d->proportional < 0) { // Choose appropriate scale based on board angle (yes, this accomodates backwards riding)
+			// Choose appropriate scale based on board angle (this accomodates backwards riding)
+			if (d->proportional < 0) {
 				scaled_kp = d->float_conf.kp * d->kp_brake_scale;
 			} else {
 				scaled_kp = d->float_conf.kp * d->kp_accel_scale;
@@ -1938,7 +1911,8 @@ static void refloat_thd(void *arg) {
 				float rate_prop = -d->gyro[1];
 
 				float scaled_kp2;
-				if (rate_prop < 0) { // Choose appropriate scale based on board angle (yes, this accomodates backwards riding)
+				// Choose appropriate scale based on board angle (this accomodates backwards riding)
+				if (rate_prop < 0) {
 					scaled_kp2 = d->float_conf.kp2 * d->kp2_brake_scale;
 				} else {
 					scaled_kp2 = d->float_conf.kp2 * d->kp2_accel_scale;
@@ -1948,7 +1922,8 @@ static void refloat_thd(void *arg) {
 
 
 				// Apply Booster (Now based on True Pitch)
-				float true_proportional = (d->setpoint - d->braketilt_interpolated) - d->true_pitch_angle; // Braketilt excluded to allow for soft brakes that strengthen when near tail-drag
+				// Braketilt excluded to allow for soft brakes that strengthen when near tail-drag
+				float true_proportional = (d->setpoint - d->braketilt_interpolated) - d->true_pitch_angle;
 				d->abs_proportional = fabsf(true_proportional);
 
 				float booster_current, booster_angle, booster_ramp;
@@ -2075,7 +2050,7 @@ static void refloat_thd(void *arg) {
 		case (FAULT_SWITCH_FULL):
 		case (FAULT_STARTUP):
 			if (d->is_flywheel_mode) {
-				if ((d->flywheel_abort) ||	// single-pad pressed while balancing upright
+				if ((d->flywheel_abort) ||
 					(d->flywheel_allow_abort && d->adc1 > 1 && d->adc2 > 1)) {
 					flywheel_stop(d);
 					break;
@@ -2089,7 +2064,7 @@ static void refloat_thd(void *arg) {
 			}
 
 			if (d->current_time - d->disengage_timer > 10) {
-				// 10 seconds of grace period between flipping the board over and allowing darkride mode...
+				// 10 seconds of grace period between flipping the board over and allowing darkride mode
 				if (d->is_upside_down) {
 					beep_alert(d, 1, true);
 				}
@@ -2106,7 +2081,7 @@ static void refloat_thd(void *arg) {
 					}
 					else {
 						d->beep_reason = BEEP_IDLE;
-						beep_alert(d, 2, 1);						// 2 long beeps
+						beep_alert(d, 2, 1);
 					}
 				}
 			}
@@ -2156,10 +2131,6 @@ static void refloat_thd(void *arg) {
 		default:;
 		}
 
-		// Debug outputs
-//		app_balance_sample_debug();
-//		app_balance_experiment();
-
 		// Delay between loops
 		VESC_IF->sleep_us((uint32_t)((d->loop_time_seconds - roundf(d->filtered_loop_overshoot)) * 1000000.0));
 	}
@@ -2187,7 +2158,6 @@ static void write_cfg_to_eeprom(data *d) {
 		VESC_IF->store_eeprom_var(&v, 0);
 	}
 
-	// Emit 1 short beep to confirm writing all settings to eeprom
 	beep_alert(d, 1, 0);
 }
 
@@ -2296,7 +2266,7 @@ static void send_realtime_data(data *d){
 	#define BUFSIZE 72
 	uint8_t send_buffer[BUFSIZE];
 	int32_t ind = 0;
-	send_buffer[ind++] = 101;//Magic Number
+	send_buffer[ind++] = 101; // Package ID
 	send_buffer[ind++] = COMMAND_GET_RTDATA;
 
 	// RT Data
@@ -2345,7 +2315,7 @@ static void cmd_send_all_data(data *d, unsigned char mode){
 	int32_t ind = 0;
 	mc_fault_code fault = VESC_IF->mc_get_fault();
 
-	send_buffer[ind++] = 101;//Magic Number
+	send_buffer[ind++] = 101; // Package ID
 	send_buffer[ind++] = COMMAND_GET_ALLDATA;
 
 	if (fault != FAULT_CODE_NONE) {
@@ -2397,9 +2367,11 @@ static void cmd_send_all_data(data *d, unsigned char mode){
 		send_buffer[ind++] = VESC_IF->mc_get_duty_cycle_now() * 100 + 128;
 		if (VESC_IF->foc_get_id != NULL)
 			send_buffer[ind++] = fabsf(VESC_IF->foc_get_id()) * 3;
-		else
-			send_buffer[ind++] = 222;	// using 222 as magic number to avoid false positives with 255
-		// ind = 35!
+		else {
+			// using 222 as magic number to avoid false positives with 255
+			send_buffer[ind++] = 222;
+			// ind = 35
+        }
 
 		if (mode >= 2) {
 			// data not required as fast as possible
@@ -2716,7 +2688,7 @@ static void cmd_tune_defaults(data *d){
 }
 
 /**
- * cmd_runtime_tune_tilt		Extract settings from 20byte message but don't write to EEPROM!
+ * cmd_runtime_tune_tilt: Extract settings from 20byte message but don't write to EEPROM!
  */
 static void cmd_runtime_tune_tilt(data *d, unsigned char *cfg, int len)
 {
@@ -2822,7 +2794,7 @@ static void cmd_runtime_tune_other(data *d, unsigned char *cfg, int len)
 	}
 }
 
-void cmd_rc_move(data *d, unsigned char *cfg)//int amps, int time)
+void cmd_rc_move(data *d, unsigned char *cfg)
 {
 	int ind = 0;
 	int direction = cfg[ind++];
@@ -2924,7 +2896,6 @@ static void cmd_flywheel_toggle(data *d, unsigned char *cfg, int len)
 		}
 
 		// Limit speed of wheel and limit amps
-		//backup_erpm = mc_interface_get_configuration()->l_max_erpm;
 		VESC_IF->set_cfg_float(CFG_PARAM_l_min_erpm + 100, -6000);
 		VESC_IF->set_cfg_float(CFG_PARAM_l_max_erpm + 100, 6000);
 		d->mc_current_max = d->mc_current_min = 40;
@@ -2986,7 +2957,7 @@ bool flywheel_konami_check(data *d)
 	} else if ((d->flywheel_konami_state == 5) && flywheel_konami_step(d, 0)) { // _
 		d->flywheel_konami_state = 6;
 		d->flywheel_konami_timer = d->current_time;
-	} else if ((d->flywheel_konami_state == 6) && flywheel_konami_step(d, 2)) { // RIGHT (ENABLE FLYWHEEL)
+	} else if ((d->flywheel_konami_state == 6) && flywheel_konami_step(d, 2)) { // RIGHT
 		d->flywheel_konami_state = 7;
 		d->flywheel_konami_timer = d->current_time;
 		return true;
@@ -3008,7 +2979,7 @@ bool flywheel_konami_step(data *d, int input)
 {
 	float fault_adc1 = d->float_conf.fault_adc1 * ADC_HAND_PRESS_SCALE;
 	float fault_adc2 = d->float_conf.fault_adc2 * ADC_HAND_PRESS_SCALE;
-	if((!d->is_flywheel_mode) && (d->true_pitch_angle > 75) && (d->true_pitch_angle < 105) && // Check that Flywheel is inactive and board is within reasonable pitch range
+	if((!d->is_flywheel_mode) && (d->true_pitch_angle > 75) && (d->true_pitch_angle < 105) &&
 	   ((d->flywheel_konami_state == 0) || (fabsf(d->true_pitch_angle - d->flywheel_konami_pitch) < 2.5)))
 	{
 		switch(input) {
@@ -3197,7 +3168,6 @@ static lbm_value ext_set_fw_version(lbm_value *args, lbm_uint argn) {
 		d->fw_version_minor = VESC_IF->lbm_dec_as_i32(args[1]);
 		d->fw_version_beta = VESC_IF->lbm_dec_as_i32(args[2]);
 	}
-	//VESC_IF->printf("Version is set: %d.%d [%d]\n", d->fw_version_major, d->fw_version_minor, d->fw_version_beta);
 	return VESC_IF->lbm_enc_sym_true;
 }
 
