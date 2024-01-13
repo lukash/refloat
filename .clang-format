@@ -1,0 +1,21 @@
+Language: Cpp
+IndentWidth: 4
+ColumnLimit: 100
+
+AlignAfterOpenBracket: BlockIndent
+AlignOperands: DontAlign
+AlignTrailingComments: Never
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowShortEnumsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: false
+AlwaysBreakAfterReturnType: None
+AlwaysBreakBeforeMultilineStrings: true
+BinPackArguments: false
+BinPackParameters: false
+BraceWrapping:
+  AfterControlStatement: MultiLine
+InsertBraces: true
+InsertNewlineAtEOF: true
+PenaltyReturnTypeOnItsOwnLine: 10000
+SpaceAfterCStyleCast: true
+SpacesBeforeTrailingComments: 2
