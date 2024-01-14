@@ -1,36 +1,55 @@
-# FLOAT PACKAGE
+# Refloat
+Self-balancing skateboard package based on the Float package by Mitch Lustig, Dado Mista and Nico Aleman: Float, Refactored.
 
-A balance vehicle package specifically tailored for one wheeled skateboards, as invented by Ben Smither in 2007: http://www.robosys.co.uk/
+The feature set of Refloat is the same as that of Float version 1.3, with the following features ported from Float 2.0:
+- Floatwheel LCM support
+- Negative ATR speed boost
 
-Includes all the basics such as PID control, ATR, and Turntilt - but also has popular features such as remote support,  dirty landings, push start, and many more. See help text in the tool/app for details on any feature.
+Refloat 1.0 adds the following main features:
+- **Separate Axis KP**
+- **Brand new full-featured GUI in VESC Tool**
+- **Advanced LED lighting control for LEDs connected directly to VESC**
 
-Now includes Quicksaves in the AppUI!
+Refloat configuration and tunes are 100% compatible with Float 1.3 (and hence also 2.0, apart from missing a few newly added options). Refloat also maintains compatibility with 3rd party apps (Floaty / Float Control), though it works best with its brand new VESC Tool interface.
 
-<H3><font color=yellow>NEW USERS: DO NOT LOAD UNTIL YOU'VE CONFIGURED MOTOR AND IMU!!!</font></H3>
+#### Separate Axis KP
+The Mahony KP can now be configured separately for each IMU axis. This feature improves the way the board handles in turns and in a significant way improves the balance profile.
 
-After loading do not forget to configure your details in the Specs tab: voltages and ADC values (default assumes 15s pack and 3.0V ADC cutoffs).
+Technical explanation: High Mahony KP works very well for balancing, but it is only desirable on the pitch axis. The mellow response of high KP has unwanted effects on the roll axis, because when the board rotates in yaw (when turning), roll becomes pitch. The board leads into a turn angled in roll (more pronounced on roundier tires), and this angle translates into pitch and lingers there for an amount of time determined by the KP, causing the nose to be down for a time, until it balances back up.
 
-Once you've adjusted your voltages the default tune should provide you with a well behaving, rideable board. If it acts weird it's most likely a motor configuration or IMU calibration issue!
+Lower roll KP makes the nose hold up better in turns. It makes the board more stable and "stiffer", especially in short carves. This means **the Turn Tilt feature may be less needed** and it may respond more aggresively.
 
-<H2>DISCLAIMER</H2>
+Mahony configuration in Firmware App Config is now independent and used for what is called "True Pitch" in Float. It is recommended to use Mahony KP 0.4 and Mahony KI 0 for that, and these values will be set automatically by Refloat if Mahony KP > 1 is encountered in the configuration.
 
-This package is not endorsed by the vesc-project. Use at your own risk.
+Make sure to read the descriptions of the new configuration options.
 
-<H2>CREDITS</H2>
+### Fresh Installation
+It's best to configure your **motor** and **IMU** before installing the package. If you install the package first, a welcome dialog will navigate you to how to disable the package temporarily to configure the **motor**. You don't need to disable the package to configure the **IMU**, just make sure you don't activate the board before you do so, as it may and most likely will behave erratically.
 
-Based on Mitch Lustig's original Balance Package, but specifically tailored for one wheeled skateboards.
+After the **motor** and **IMU** setup, install (or re-enable) the package and configure the **Low and High Tiltback voltages** on the **Specs** tab of **Refloat Cfg**. These need to be set according to your battery specs.
 
-Ported by Nico Aleman, heavily based on SurfDado's ATR Firmware: https://pev.dev/t/atr-firmware-101/43
+The options in the other tabs are set to good starting values that should provide you with a well behaving, rideable board. If it acts weird, it's most likely a **motor** configuration or **IMU** calibration issue.
 
-Removed unneeded parameters, added new features and behaviors and a more user-friendly configuration menu with usable default/min/max values and informative Help text.
+### Migrating from Float
+Backup your configuration by exporting the XML, install Refloat and load the backup. All options known to Refloat will be loaded, which entails all Float 1.3 options (with the small exception of the **Specs -> Disable** toggle, which will default to "Enabled").
 
-<H2>RELEASE NOTES</H2>
+#### Tune Quicksaves
+Tune quicksaves will be converted from Float to Refloat on first start. Your Float tunes won't be touched and if you go back to Float, you will find them unchanged.
 
-Release Changelogs: https://pev.dev/t/float-package-changelogs/499
+IMU quicksaves were removed from Refloat.
 
-<H3>BUILD INFO</H3>
+#### Tune Archive
+Refloat uses the same Tune archive as Float, the same tunes are available.
 
-Source code can be found here: https://github.com/NicoAleman/vesc_pkg-float
+### Disclaimer
+Use at your own risk. Electric vehicles are inherently dangerous, authors of this package shall not be liable for any damage or harm caused by errors in the software. Not endorsed by the VESC project.
 
-#### &nbsp;
-#### Build Info
+### Credits
+Author: Lukáš Hrázký
+
+Original Float package authors: Mitch Lustig, Dado Mista, Nico Aleman
+
+### Download and Changelog
+https://github.com/lukash/refloat/releases
+
+### Build Info
