@@ -1,0 +1,27 @@
+pre-commit:
+  commands:
+    clang-format-check:
+      glob: "*.{c,h}"
+      exclude: '^vesc_pkg_lib/'
+      run: clang-format -i --dry-run --Werror {staged_files}
+      skip: false
+    clang-format-fix:
+      glob: "*.{c,h}"
+      exclude: '^vesc_pkg_lib/'
+      stage_fixed: true
+      run: clang-format -i {staged_files}
+      skip: true
+
+clang-format-check:
+  commands:
+    check:
+      glob: "*.{c,h}"
+      exclude: '^vesc_pkg_lib/'
+      run: clang-format -i --dry-run --Werror {all_files}
+
+clang-format-fix:
+  commands:
+    fix:
+      glob: "*.{c,h}"
+      exclude: '^vesc_pkg_lib/'
+      run: clang-format -i {all_files}
