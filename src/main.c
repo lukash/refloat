@@ -20,7 +20,7 @@
 #include "vesc_c_if.h"
 
 #include "conf/buffer.h"
-#include "conf/conf_default.h"
+#include "conf/conf_general.h"
 #include "conf/confparser.h"
 #include "conf/confxml.h"
 #include "conf/datatypes.h"
@@ -2212,17 +2212,6 @@ static void read_cfg_from_eeprom(data *d) {
 
     if (read_ok) {
         memcpy(&(d->float_conf), buffer, sizeof(RefloatConfig));
-
-        if (d->float_conf.version != CFG_DFLT_VERSION) {
-            if (!VESC_IF->app_is_output_disabled()) {
-                VESC_IF->printf(
-                    "Version change since last config write (%.1f vs %.1f) !",
-                    (double) d->float_conf.version,
-                    (double) CFG_DFLT_VERSION
-                );
-            }
-            d->float_conf.version = CFG_DFLT_VERSION;
-        }
     } else {
         confparser_set_defaults_refloatconfig(&(d->float_conf));
         if (!VESC_IF->app_is_output_disabled()) {
@@ -3078,7 +3067,7 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
         uint8_t send_buffer[10];
         send_buffer[ind++] = 101;  // magic nr.
         send_buffer[ind++] = 0x0;  // command ID
-        send_buffer[ind++] = (uint8_t) (10 * CFG_DFLT_VERSION);
+        send_buffer[ind++] = (uint8_t) (10 * PACKAGE_MAJOR_MINOR_VERSION);
         send_buffer[ind++] = 2;  // build number
         send_buffer[ind++] = 1;
         VESC_IF->send_app_data(send_buffer, ind);
@@ -3274,7 +3263,7 @@ static void stop(void *arg) {
 INIT_FUN(lib_info *info) {
     INIT_START
     if (!VESC_IF->app_is_output_disabled()) {
-        VESC_IF->printf("Init Refloat v%.1fd\n", (double) CFG_DFLT_VERSION);
+        VESC_IF->printf("Init Refloat v" PACKAGE_VERSION "\n");
     }
 
     data *d = VESC_IF->malloc(sizeof(data));

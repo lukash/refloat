@@ -49,7 +49,6 @@ Item {
 
     function quicksave(saveName) {
         var params = [
-            // {"name": "float_version", "type": "Double"},
             // {"name": "float_disable", "type": "Double"},
             {"name": "kp", "type": "Double"},
             {"name": "ki", "type": "Double"},
@@ -966,18 +965,11 @@ Item {
 
                 RowLayout {
                     Text {
-                        text: "Refloat Package Version:"
+                        text: "Refloat v{{VERSION}}"
                         color: Utility.getAppHexColor("lightText")
                         font.pointSize: 8
-                    }
-
-                    Text {
-                        id: versionText
-
-                        text: "{{VERSION}}"
-                        color: Utility.getAppHexColor("lightText")
-                        font.pointSize: 10
-                        font.weight: Font.Black
+                        horizontalAlignment: Text.AlignHCenter
+                        Layout.fillWidth: true
                     }
                 }
             }

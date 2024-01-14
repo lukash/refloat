@@ -8,16 +8,16 @@ refloat.vescpkg: src package.lisp README-pkg.md ui.qml
 src:
 	$(MAKE) -C $@
 
-VERSION=`grep CFG_DFLT_VERSION src/conf/settings.xml -A10 | grep valDouble | tr -dc '[.[:digit:]]'`
+VERSION=`cat version`
 
-README-pkg.md: README.md
-	cp README.md README-pkg.md
-	echo "- Version: ${VERSION}" >> README-pkg.md
-	echo "- Build Date: `date --rfc-3339=seconds`" >> README-pkg.md
-	echo "- Git Commit: #`git rev-parse --short HEAD`" >> README-pkg.md
+README-pkg.md: README.md version
+	cp $< $@
+	echo "- Version: ${VERSION}" >> $@
+	echo "- Build Date: `date --rfc-3339=seconds`" >> $@
+	echo "- Git Commit: #`git rev-parse --short HEAD`" >> $@
 
-ui.qml: ui.qml.in
-	cat ui.qml.in | sed "s/{{VERSION}}/${VERSION}/g" > ui.qml
+ui.qml: ui.qml.in version
+	cat $< | sed "s/{{VERSION}}/${VERSION}/g" > $@
 
 clean:
 	rm -f refloat.vescpkg README-pkg.md ui.qml

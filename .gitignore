@@ -1,3 +1,4 @@
+src/conf/conf_general.h
 src/package_lib.lisp
 README-pkg.md
 ui.qml
