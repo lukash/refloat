@@ -1,5 +1,5 @@
 /*
-    Copyright 2022 Benjamin Vedder	benjamin@vedder.se
+    Copyright 2022 Benjamin Vedder benjamin@vedder.se
 
     This file is part of VESC Tool.
 
@@ -10,12 +10,12 @@
 
     VESC Tool is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-    */
+    along with this program. If not, see <http://www.gnu.org/licenses/>.
+*/
 
 import QtQuick 2.12
 import QtQuick.Controls 2.12
@@ -25,11 +25,6 @@ import Qt.labs.settings 1.0
 import Vedder.vesc.utility 1.0
 import Vedder.vesc.commands 1.0
 import Vedder.vesc.configparams 1.0
-
-// This example shows how to read and write settings using the custom
-// config. It is also possible to send and receive custom data using
-// send_app_data and set_app_data_handler on the euc-side and Commands
-// onCustomAppDataReceived and mCommands.sendCustomAppData in qml.
 
 Item {
     id: mainItem
@@ -67,7 +62,6 @@ Item {
         interval: 100
         
         onTriggered: {
-            // Poll app data
             var buffer = new ArrayBuffer(2)
             var dv = new DataView(buffer)
             var ind = 0
@@ -76,7 +70,6 @@ Item {
             mCommands.sendCustomAppData(buffer)
             mCommands.getValues()
             
-            // Process Controls
             if(moveSlider.value != 0){
                 var current = Math.abs(Math.round(moveSlider.value * 70)) + 10 
                 var buffer = new ArrayBuffer(6)
@@ -154,11 +147,7 @@ Item {
             }
         }
 
-        // This function will be called when VESC_IF->send_app_data is used. To
-        // send data back mCommands.sendCustomAppData can be used. That data
-        // will be received in the function registered with VESC_IF->set_app_data_handler
         onCustomAppDataReceived: {
-            // Ints and floats can be extracted like this from the data
             var dv = new DataView(data, 0)
             var ind = 0
             var magicnr = dv.getUint8(ind); ind += 1;
@@ -195,12 +184,9 @@ Item {
                 var motor_current = dv.getFloat32(ind); ind += 4;
                 var throttle_val = dv.getFloat32(ind); ind += 4;
 
-                // var debug1 = dv.getFloat32(ind); ind += 4;
-                // var debug2 = dv.getFloat32(ind); ind += 4;
-
                 var stateString
                 if(state == 0){
-                    stateString = "BOOT"	// we're in this state only for the first second or so then never again
+                    stateString = "BOOT"
                 }else if(state == 1){
                     stateString = "RUNNING"
                 }else if(state == 2){
@@ -283,15 +269,6 @@ Item {
                     switchString = "Off"
                 }else if(switch_state == 1){
                     switchString = "Half"
-                    /*HOW TO ACCESS CONFIG FROM QML???
-                    if (adc1 >= VescIf.mcConfig().fault_adc1)
-                        switchString += " [On|"
-                    else
-                        switchString += " [Off|"
-                    if (adc2 >= VescIf.mcConfig().fault_adc2)
-                        switchString += "On]"
-                    else
-                        switchString += "Off]"*/
                 }else{
                     switchString = "On"
                 }
@@ -993,7 +970,6 @@ Item {
                             downloadTunesButton.text = "Downloading Tunes..."
                             downloadedTunesModel.clear()
                             var http = new XMLHttpRequest()
-                            // var url = "https://docs.google.com/spreadsheets/d/1bPH-gviDFyXvxx5s2cjs5BWTjqJOmRqB4Xi59itxbJ8/export?format=csv"
                             var url = "http://us-central1-mimetic-union-377520.cloudfunctions.net/float_package_tunes_via_http"
                             http.open("GET", url, true);
                             http.onreadystatechange = function() {
@@ -1264,8 +1240,7 @@ Item {
             }
         }
 
-        return result; //JavaScript object
-        // return JSON.stringify(result); //JSON
+        return result;
     }
 
     function applyDownloadedTune(tune){
