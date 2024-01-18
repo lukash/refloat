@@ -2572,16 +2572,20 @@ static lbm_value ext_set_fw_version(lbm_value *args, lbm_uint argn) {
 // and to make persistent read and write work
 static int get_cfg(uint8_t *buffer, bool is_default) {
     data *d = (data *) ARG;
-    RefloatConfig *cfg = VESC_IF->malloc(sizeof(RefloatConfig));
 
-    *cfg = d->float_conf;
-
+    RefloatConfig *cfg;
     if (is_default) {
+        cfg = VESC_IF->malloc(sizeof(RefloatConfig));
         confparser_set_defaults_refloatconfig(cfg);
+    } else {
+        cfg = &d->float_conf;
     }
 
     int res = confparser_serialize_refloatconfig(buffer, cfg);
-    VESC_IF->free(cfg);
+
+    if (is_default) {
+        VESC_IF->free(cfg);
+    }
 
     return res;
 }
