@@ -2568,8 +2568,7 @@ static lbm_value ext_set_fw_version(lbm_value *args, lbm_uint argn) {
     return VESC_IF->lbm_enc_sym_true;
 }
 
-// These functions are used to send the config page to VESC Tool
-// and to make persistent read and write work
+// Used to send the current or default configuration to VESC Tool.
 static int get_cfg(uint8_t *buffer, bool is_default) {
     data *d = (data *) ARG;
 
@@ -2590,6 +2589,7 @@ static int get_cfg(uint8_t *buffer, bool is_default) {
     return res;
 }
 
+// Used to set and write configuration from VESC Tool.
 static bool set_cfg(uint8_t *buffer) {
     data *d = (data *) ARG;
 
@@ -2598,7 +2598,7 @@ static bool set_cfg(uint8_t *buffer) {
         return false;
     }
 
-    bool res = confparser_deserialize_refloatconfig(buffer, &(d->float_conf));
+    bool res = confparser_deserialize_refloatconfig(buffer, &d->float_conf);
 
     // Store to EEPROM
     if (res) {
