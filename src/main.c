@@ -1647,6 +1647,8 @@ static void write_cfg_to_eeprom(data *d) {
         eeprom_var v;
         v.as_u32 = REFLOATCONFIG_SIGNATURE;
         VESC_IF->store_eeprom_var(&v, 0);
+    } else {
+        log_error("Failed to write config to EEPROM.");
     }
 
     beep_alert(d, 1, 0);
@@ -1658,23 +1660,30 @@ static void read_cfg_from_eeprom(data *d) {
     uint32_t ints = sizeof(RefloatConfig) / 4 + 1;
     uint32_t *buffer = VESC_IF->malloc(ints * sizeof(uint32_t));
     bool read_ok = VESC_IF->read_eeprom_var(&v, 0);
-    if (read_ok && v.as_u32 == REFLOATCONFIG_SIGNATURE) {
-        for (uint32_t i = 0; i < ints; i++) {
-            if (!VESC_IF->read_eeprom_var(&v, i + 1)) {
-                read_ok = false;
-                break;
+    if (read_ok) {
+        if (v.as_u32 == REFLOATCONFIG_SIGNATURE) {
+            for (uint32_t i = 0; i < ints; i++) {
+                if (!VESC_IF->read_eeprom_var(&v, i + 1)) {
+                    read_ok = false;
+                    break;
+                }
+                buffer[i] = v.as_u32;
             }
-            buffer[i] = v.as_u32;
+        } else {
+            log_error(
+                "Failed signature check while reading config from EEPROM, using defaults. "
+                "This is normal when installing a package with a different configuration."
+            );
+            confparser_set_defaults_refloatconfig(&d->float_conf);
+            return;
         }
-    } else {
-        read_ok = false;
     }
 
     if (read_ok) {
         memcpy(&(d->float_conf), buffer, sizeof(RefloatConfig));
     } else {
-        confparser_set_defaults_refloatconfig(&(d->float_conf));
-        log_error("Failed to read config, reverting to default.");
+        confparser_set_defaults_refloatconfig(&d->float_conf);
+        log_error("Failed to read config from EEPROM, using defaults.");
     }
 
     VESC_IF->free(buffer);
