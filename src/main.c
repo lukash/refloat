@@ -1674,9 +1674,7 @@ static void read_cfg_from_eeprom(data *d) {
         memcpy(&(d->float_conf), buffer, sizeof(RefloatConfig));
     } else {
         confparser_set_defaults_refloatconfig(&(d->float_conf));
-        if (!VESC_IF->app_is_output_disabled()) {
-            VESC_IF->printf("Refloat Package Error: Reverting to default config!\n");
-        }
+        log_error("Failed to read config, reverting to default.");
     }
 
     VESC_IF->free(buffer);
@@ -1786,7 +1784,7 @@ static void send_realtime_data(data *d) {
     buffer_append_float32_auto(send_buffer, d->throttle_val, &ind);
 
     if (ind > BUFSIZE) {
-        VESC_IF->printf("BUFSIZE too small...\n");
+        log_error("send_realtime_data: Buffer too small, terminating.");
     }
     VESC_IF->send_app_data(send_buffer, ind);
 }
@@ -1875,7 +1873,7 @@ static void cmd_send_all_data(data *d, unsigned char mode) {
     }
 
     if (ind > SNDBUFSIZE) {
-        VESC_IF->printf("BUFSIZE too small...\n");
+        log_error("send_all_data: Buffer too small, terminating.");
     }
     VESC_IF->send_app_data(send_buffer, ind);
 }
@@ -1887,7 +1885,6 @@ static void split(unsigned char byte, int *h1, int *h2) {
 
 static void cmd_print_info(data *d) {
     UNUSED(d);
-    // VESC_IF->printf("A:%.1f, D:%.2f\n", d->surge_angle, d->float_conf.surge_duty_start);
 }
 
 static void cmd_lock(data *d, unsigned char *cfg) {
@@ -2428,15 +2425,11 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
     uint8_t command = buffer[1];
 
     if (len < 2) {
-        if (!VESC_IF->app_is_output_disabled()) {
-            VESC_IF->printf("Refloat: Missing Args\n");
-        }
+        log_error("Received command data too short.");
         return;
     }
     if (magicnr != 101) {
-        if (!VESC_IF->app_is_output_disabled()) {
-            VESC_IF->printf("Refloat: Wrong magic number %d\n", magicnr);
-        }
+        log_error("Invalid Package ID: %u", magicnr);
         return;
     }
 
@@ -2464,9 +2457,7 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
         if (len >= 14) {
             cmd_runtime_tune_other(d, &buffer[2], len - 2);
         } else {
-            if (!VESC_IF->app_is_output_disabled()) {
-                VESC_IF->printf("Refloat: Command length incorrect (%d)\n", len);
-            }
+            log_error("Command data length incorrect: %u", len);
         }
         return;
     }
@@ -2474,9 +2465,7 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
         if (len >= 10) {
             cmd_runtime_tune_tilt(d, &buffer[2], len - 2);
         } else {
-            if (!VESC_IF->app_is_output_disabled()) {
-                VESC_IF->printf("Refloat: Command length incorrect (%d)\n", len);
-            }
+            log_error("Command data length incorrect: %u", len);
         }
         return;
     }
@@ -2484,9 +2473,7 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
         if (len == 6) {
             cmd_rc_move(d, &buffer[2]);
         } else {
-            if (!VESC_IF->app_is_output_disabled()) {
-                VESC_IF->printf("Refloat: Command length incorrect (%d)\n", len);
-            }
+            log_error("Command data length incorrect: %u", len);
         }
         return;
     }
@@ -2510,9 +2497,7 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
         if (len == 3) {
             cmd_send_all_data(d, buffer[2]);
         } else {
-            if (!VESC_IF->app_is_output_disabled()) {
-                VESC_IF->printf("Refloat: Command length incorrect (%d)\n", len);
-            }
+            log_error("Command data length incorrect: %u", len);
         }
         return;
     }
@@ -2532,9 +2517,7 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
         if (len == 6) {
             cmd_booster(d, &buffer[2]);
         } else {
-            if (!VESC_IF->app_is_output_disabled()) {
-                VESC_IF->printf("Refloat: Command length incorrect (%d)\n", len);
-            }
+            log_error("Command data length incorrect: %u", len);
         }
         return;
     }
@@ -2542,17 +2525,13 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
         if (len >= 8) {
             cmd_flywheel_toggle(d, &buffer[2], len - 2);
         } else {
-            if (!VESC_IF->app_is_output_disabled()) {
-                VESC_IF->printf("Refloat: Command length incorrect (%d)\n", len);
-            }
+            log_error("Command data length incorrect: %u", len);
         }
         return;
     }
     default: {
         if (!VESC_IF->app_is_output_disabled()) {
-            VESC_IF->printf(
-                "Refloat: Unknown command received %d vs %d\n", command, COMMAND_PRINT_INFO
-            );
+            log_error("Unknown command received: %u", command);
         }
     }
     }
@@ -2631,24 +2610,18 @@ static void stop(void *arg) {
     VESC_IF->set_app_data_handler(NULL);
     VESC_IF->conf_custom_clear_configs();
     VESC_IF->request_terminate(d->thread);
-    if (!VESC_IF->app_is_output_disabled()) {
-        VESC_IF->printf("Refloat App Terminated");
-    }
+    log_msg("Terminating.");
     VESC_IF->free(d);
 }
 
 INIT_FUN(lib_info *info) {
     INIT_START
-    if (!VESC_IF->app_is_output_disabled()) {
-        VESC_IF->printf("Init Refloat v" PACKAGE_VERSION "\n");
-    }
+    log_msg("Initializing Refloat v" PACKAGE_VERSION);
 
     data *d = VESC_IF->malloc(sizeof(data));
     memset(d, 0, sizeof(data));
     if (!d) {
-        if (!VESC_IF->app_is_output_disabled()) {
-            VESC_IF->printf("Refloat: Out of memory, startup failed!");
-        }
+        log_error("Out of memory, startup failed.");
         return false;
     }
 
