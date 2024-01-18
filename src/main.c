@@ -132,8 +132,7 @@ typedef struct {
     BalanceFilterData balance_filter;
 
     // Runtime values read from elsewhere
-    float pitch_angle, last_pitch_angle, roll_angle, abs_roll_angle, abs_roll_angle_sin,
-        last_gyro_y;
+    float pitch_angle, last_pitch_angle, roll_angle, abs_roll_angle;
     float true_pitch_angle;
     float gyro[3];
 
@@ -149,13 +148,12 @@ typedef struct {
     // Rumtime state values
     State state;
     float proportional;
-    float pid_prop, pid_integral, pid_rate, pid_mod;
+    float pid_prop, pid_integral, pid_mod;
     float last_proportional, abs_proportional;
     float pid_value;
     float setpoint, setpoint_target, setpoint_target_interpolated;
     float applied_booster_current;
     float noseangling_interpolated, inputtilt_interpolated;
-    float filtered_current;
     float turntilt_target, turntilt_interpolated;
     SetpointAdjustmentType setpointAdjustmentType;
     float current_time, last_time, diff_time, loop_overshoot;
@@ -166,9 +164,8 @@ typedef struct {
         fault_switch_half_timer;
     float motor_timeout_seconds;
     float brake_timeout;
-    float wheelslip_timer, overcurrent_timer, tb_highvoltage_timer;
+    float wheelslip_timer, tb_highvoltage_timer;
     float switch_warn_buzz_erpm;
-    float quickstop_erpm;
     bool traction_control;
 
     // PID Brake Scaling
@@ -212,12 +209,6 @@ typedef struct {
     // Log values
     float float_setpoint, float_atr, float_braketilt, float_torquetilt, float_turntilt,
         float_inputtilt;
-
-    // Debug values
-    int debug_render_1, debug_render_2;
-    int debug_sample_field, debug_sample_count, debug_sample_index;
-    int debug_experiment_1, debug_experiment_2, debug_experiment_3, debug_experiment_4,
-        debug_experiment_5, debug_experiment_6;
 
     Konami flywheel_konami;
 } data;
@@ -306,9 +297,6 @@ static void reconfigure(data *d) {
 }
 
 static void configure(data *d) {
-    d->debug_render_1 = 2;
-    d->debug_render_2 = 4;
-
     // This timer is used to determine how long the board has been disengaged / idle
     d->disengage_timer = d->current_time;
 
@@ -389,9 +377,6 @@ static void configure(data *d) {
 
     // Speed above which to warn users about an impending full switch fault
     d->switch_warn_buzz_erpm = d->float_conf.is_footbuzz_enabled ? 2000 : 100000;
-
-    // Speed below which we check for quickstop conditions
-    d->quickstop_erpm = 200;
 
     // Variable nose angle adjustment / tiltback (setting is per 1000erpm, convert to per erpm)
     d->tiltback_variable = d->float_conf.tiltback_variable / 1000;
@@ -632,7 +617,7 @@ static bool check_faults(data *d) {
                 }
             }
 
-            if (d->motor.abs_erpm < d->quickstop_erpm && fabsf(d->true_pitch_angle) > 14 &&
+            if (d->motor.abs_erpm < 200 && fabsf(d->true_pitch_angle) > 14 &&
                 fabsf(d->inputtilt_interpolated) < 30 &&
                 SIGN(d->true_pitch_angle) == d->motor.erpm_sign) {
                 // QUICK STOP
@@ -1179,7 +1164,6 @@ static void refloat_thd(void *arg) {
         // Get the IMU Values
         d->roll_angle = RAD2DEG_f(VESC_IF->imu_get_roll());
         d->abs_roll_angle = fabsf(d->roll_angle);
-        d->abs_roll_angle_sin = sinf(DEG2RAD_f(d->abs_roll_angle));
 
         // Darkride:
         if (d->float_conf.fault_darkride_enabled) {
@@ -1217,7 +1201,6 @@ static void refloat_thd(void *arg) {
             d->true_pitch_angle = -d->true_pitch_angle - d->darkride_setpoint_correction;
         }
 
-        d->last_gyro_y = d->gyro[1];
         VESC_IF->imu_get_gyro(d->gyro);
 
         motor_data_update(&d->motor);
@@ -2042,7 +2025,7 @@ static void cmd_runtime_tune(data *d, unsigned char *cfg, int len) {
         }
 
         split(cfg[6], &h1, &h2);
-        d->float_conf.atr_torque_offset = h1 + 5;
+        // d->float_conf.atr_torque_offset = h1 + 5;
         d->float_conf.atr_speed_boost = ((float) (h2 * 5)) / 100;
 
         split(cfg[7], &h1, &h2);

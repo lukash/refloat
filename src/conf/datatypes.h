@@ -103,7 +103,6 @@ typedef struct {
     float atr_strength_down;
     float atr_threshold_up;
     float atr_threshold_down;
-    float atr_torque_offset;
     float atr_speed_boost;
     float atr_angle_limit;
     float atr_on_speed;
