@@ -1785,6 +1785,7 @@ static void send_realtime_data(data *d) {
 
     if (ind > BUFSIZE) {
         log_error("send_realtime_data: Buffer too small, terminating.");
+        VESC_IF->request_terminate(d->thread);
     }
     VESC_IF->send_app_data(send_buffer, ind);
 }
@@ -1874,6 +1875,7 @@ static void cmd_send_all_data(data *d, unsigned char mode) {
 
     if (ind > SNDBUFSIZE) {
         log_error("send_all_data: Buffer too small, terminating.");
+        VESC_IF->request_terminate(d->thread);
     }
     VESC_IF->send_app_data(send_buffer, ind);
 }
