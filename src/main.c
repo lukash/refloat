@@ -2418,6 +2418,7 @@ static void split(unsigned char byte, int *h1, int *h2) {
 }
 
 static void cmd_print_info(data *d) {
+    UNUSED(d);
     // VESC_IF->printf("A:%.1f, D:%.2f\n", d->surge_angle, d->float_conf.surge_duty_start);
 }
 
