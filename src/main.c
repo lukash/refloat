@@ -84,6 +84,45 @@ typedef enum {
     TILTBACK_TEMP
 } SetpointAdjustmentType;
 
+// new state
+enum {
+    STATE_DISABLED = 0,
+    STATE_STARTUP = 1,
+    STATE_READY = 2,
+    STATE_RUNNING = 3
+};
+
+// mode
+enum {
+    MODE_NORMAL = 0,
+    MODE_HANDTEST = 1,
+    MODE_FLYWHEEL = 2
+};
+
+// stop condition
+enum {
+    STOP_NONE = 0,
+    STOP_PITCH = 1,
+    STOP_ROLL = 2,
+    STOP_SWITCH_HALF = 3,
+    STOP_SWITCH_FULL = 4,
+    STOP_REVERSE_STOP = 5,
+    STOP_QUICKSTOP = 6
+};
+
+// setpoint adjustment type
+// leaving gaps for more states inbetween the different "classes" of the types
+// (normal / warning / error)
+enum {
+    SAT_NONE = 0,
+    SAT_CENTERING = 1,
+    SAT_REVERSESTOP = 2,
+    SAT_PB_DUTY = 6,
+    SAT_PB_HIGH_VOLTAGE = 10,
+    SAT_PB_LOW_VOLTAGE = 11,
+    SAT_PB_TEMPERATURE = 12
+};
+
 static const FootpadSensorState flywheel_konami_sequence[] = {
     FS_LEFT, FS_NONE, FS_RIGHT, FS_NONE, FS_LEFT, FS_NONE, FS_RIGHT
 };
@@ -1737,10 +1776,12 @@ enum {
     COMMAND_HANDTEST = 13,
     COMMAND_TUNE_TILT = 14,
     COMMAND_FLYWHEEL = 22,
+    // commands above 200 are unstable and can change protocol at any time
+    COMMAND_GET_RTDATA_2 = 201,
 } Commands;
 
 static void send_realtime_data(data *d) {
-#define BUFSIZE 72
+    static const int BUFSIZE = 72;
     uint8_t send_buffer[BUFSIZE];
     int32_t ind = 0;
     send_buffer[ind++] = 101;  // Package ID
@@ -2417,6 +2458,132 @@ void flywheel_stop(data *d) {
     configure(d);
 }
 
+static void send_realtime_data2(data *d) {
+    static const int BUFSIZE = 71;
+    uint8_t send_buffer[BUFSIZE];
+    int32_t ind = 0;
+    send_buffer[ind++] = 101;  // Package ID
+    send_buffer[ind++] = COMMAND_GET_RTDATA_2;
+
+    uint8_t state = STATE_STARTUP;
+    if (d->state > STARTUP && d->state <= RUNNING_FLYWHEEL) {
+        state = STATE_RUNNING;
+    } else if (d->state > RUNNING_FLYWHEEL && d->state <= FAULT_QUICKSTOP) {
+        state = STATE_READY;
+    } else if (d->state == DISABLED) {
+        state = STATE_DISABLED;
+    }
+
+    // mask indicates what groups of data are sent, to prevent sending data
+    // that are not useful in a given state
+    uint8_t mask = 0;
+    if (state == STATE_RUNNING) {
+        mask |= 0x1;
+    }
+
+    send_buffer[ind++] = mask;
+
+    uint8_t mode = MODE_NORMAL;
+    if (d->do_handtest) {
+        mode = MODE_HANDTEST;
+    } else if (d->is_flywheel_mode) {
+        mode = MODE_FLYWHEEL;
+    }
+
+    send_buffer[ind++] = mode << 4 | state;
+
+    uint8_t flags = 0;
+    if (d->state == RUNNING_WHEELSLIP) {
+        flags |= 0x1;
+    } else if (d->state == RUNNING_UPSIDEDOWN) {
+        flags |= 0x2;
+    }
+
+    send_buffer[ind++] = d->footpad_sensor.state << 6 | flags;
+
+    uint8_t stop_condition = STOP_NONE;
+    switch (d->state) {
+    case FAULT_ANGLE_PITCH:
+        stop_condition = STOP_PITCH;
+        break;
+    case FAULT_ANGLE_ROLL:
+        stop_condition = STOP_ROLL;
+        break;
+    case FAULT_SWITCH_HALF:
+        stop_condition = STOP_SWITCH_HALF;
+        break;
+    case FAULT_SWITCH_FULL:
+        stop_condition = STOP_SWITCH_FULL;
+        break;
+    case FAULT_REVERSE:
+        stop_condition = STOP_REVERSE_STOP;
+        break;
+    case FAULT_QUICKSTOP:
+        stop_condition = STOP_QUICKSTOP;
+        break;
+    default:
+    }
+
+    uint8_t setpoint_adjustment_type;
+    switch (d->setpointAdjustmentType) {
+    case CENTERING:
+        setpoint_adjustment_type = SAT_CENTERING;
+        break;
+    case REVERSESTOP:
+        setpoint_adjustment_type = SAT_REVERSESTOP;
+        break;
+    case TILTBACK_NONE:
+        setpoint_adjustment_type = SAT_NONE;
+        break;
+    case TILTBACK_DUTY:
+        setpoint_adjustment_type = SAT_PB_DUTY;
+        break;
+    case TILTBACK_HV:
+        setpoint_adjustment_type = SAT_PB_HIGH_VOLTAGE;
+        break;
+    case TILTBACK_LV:
+        setpoint_adjustment_type = SAT_PB_LOW_VOLTAGE;
+        break;
+    case TILTBACK_TEMP:
+        setpoint_adjustment_type = SAT_PB_TEMPERATURE;
+        break;
+    }
+
+    send_buffer[ind++] = setpoint_adjustment_type << 4 | stop_condition;
+
+    send_buffer[ind++] = d->beep_reason;
+
+    buffer_append_float32_auto(send_buffer, d->true_pitch_angle, &ind);
+    buffer_append_float32_auto(send_buffer, d->pitch_angle, &ind);
+    buffer_append_float32_auto(send_buffer, d->roll_angle, &ind);
+
+    buffer_append_float32_auto(send_buffer, d->footpad_sensor.adc1, &ind);
+    buffer_append_float32_auto(send_buffer, d->footpad_sensor.adc2, &ind);
+    buffer_append_float32_auto(send_buffer, d->throttle_val, &ind);
+
+    if (state == STATE_RUNNING) {
+        // Setpoints
+        buffer_append_float32_auto(send_buffer, d->setpoint, &ind);
+        buffer_append_float32_auto(send_buffer, d->atr.offset, &ind);
+        buffer_append_float32_auto(send_buffer, d->atr.braketilt_offset, &ind);
+        buffer_append_float32_auto(send_buffer, d->torque_tilt.offset, &ind);
+        buffer_append_float32_auto(send_buffer, d->turntilt_interpolated, &ind);
+        buffer_append_float32_auto(send_buffer, d->inputtilt_interpolated, &ind);
+
+        // DEBUG
+        buffer_append_float32_auto(send_buffer, d->pid_value, &ind);
+        buffer_append_float32_auto(send_buffer, d->motor.atr_filtered_current, &ind);
+        buffer_append_float32_auto(send_buffer, d->atr.accel_diff, &ind);
+        buffer_append_float32_auto(send_buffer, d->applied_booster_current, &ind);
+    }
+
+    if (ind > BUFSIZE) {
+        log_error("send_realtime_data2: Buffer too small, terminating.");
+        VESC_IF->request_terminate(d->thread);
+    }
+    VESC_IF->send_app_data(send_buffer, ind);
+}
+
 // Handler for incoming app commands
 static void on_command_received(unsigned char *buffer, unsigned int len) {
     data *d = (data *) ARG;
@@ -2526,6 +2693,10 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
         } else {
             log_error("Command data length incorrect: %u", len);
         }
+        return;
+    }
+    case COMMAND_GET_RTDATA_2: {
+        send_realtime_data2(d);
         return;
     }
     default: {
