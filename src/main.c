@@ -312,14 +312,7 @@ void beep_on(data *d, bool force) {
     }
 }
 
-// First start only, set initial state
 static void app_init(data *d) {
-    if (d->state != DISABLED) {
-        d->state = STARTUP;
-    }
-    d->buzzer_enabled = true;
-
-    // Allow saving of odometer
     d->odometer_dirty = 0;
     d->odometer = VESC_IF->mc_get_odometer();
 }
@@ -1175,6 +1168,7 @@ static void refloat_thd(void *arg) {
     data *d = (data *) arg;
 
     app_init(d);
+    configure(d);
 
     while (!VESC_IF->should_terminate()) {
         buzzer_update(d);
@@ -2805,8 +2799,6 @@ INIT_FUN(lib_info *info) {
     info->arg = d;
 
     VESC_IF->conf_custom_add_config(get_cfg, set_cfg, get_cfg_xml);
-
-    configure(d);
 
     if ((d->float_conf.is_buzzer_enabled) ||
         (d->float_conf.inputtilt_remote_type != INPUTTILT_PPM)) {
