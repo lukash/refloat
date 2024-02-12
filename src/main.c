@@ -41,7 +41,7 @@
 HEADER
 
 // Data type
-typedef enum {
+enum {
     STARTUP = 0,
     RUNNING = 1,
     RUNNING_TILTBACK = 2,
@@ -58,7 +58,7 @@ typedef enum {
     FAULT_REVERSE = 12,
     FAULT_QUICKSTOP = 13,
     DISABLED = 15
-} State;
+};
 
 typedef enum {
     BEEP_NONE = 0,
@@ -74,7 +74,7 @@ typedef enum {
     BEEP_ERROR = 10
 } BeepReason;
 
-typedef enum {
+enum {
     CENTERING = 0,
     REVERSESTOP,
     TILTBACK_NONE,
@@ -82,25 +82,22 @@ typedef enum {
     TILTBACK_HV,
     TILTBACK_LV,
     TILTBACK_TEMP
-} SetpointAdjustmentType;
+};
 
-// new state
-enum {
+typedef enum {
     STATE_DISABLED = 0,
     STATE_STARTUP = 1,
     STATE_READY = 2,
     STATE_RUNNING = 3
-};
+} RunState;
 
-// mode
-enum {
+typedef enum {
     MODE_NORMAL = 0,
     MODE_HANDTEST = 1,
     MODE_FLYWHEEL = 2
-};
+} Mode;
 
-// stop condition
-enum {
+typedef enum {
     STOP_NONE = 0,
     STOP_PITCH = 1,
     STOP_ROLL = 2,
@@ -108,12 +105,11 @@ enum {
     STOP_SWITCH_FULL = 4,
     STOP_REVERSE_STOP = 5,
     STOP_QUICKSTOP = 6
-};
+} StopCondition;
 
-// setpoint adjustment type
 // leaving gaps for more states inbetween the different "classes" of the types
 // (normal / warning / error)
-enum {
+typedef enum {
     SAT_NONE = 0,
     SAT_CENTERING = 1,
     SAT_REVERSESTOP = 2,
@@ -121,7 +117,37 @@ enum {
     SAT_PB_HIGH_VOLTAGE = 10,
     SAT_PB_LOW_VOLTAGE = 11,
     SAT_PB_TEMPERATURE = 12
-};
+} SetpointAdjustmentType;
+
+typedef struct {
+    RunState state;
+    Mode mode;
+    SetpointAdjustmentType sat;
+    StopCondition stop_condition;
+    bool wheelslip;
+    bool darkride;
+} State;
+
+void state_init(State *state, bool disable) {
+    state->state = disable ? STATE_DISABLED : STATE_STARTUP;
+    state->mode = MODE_NORMAL;
+    state->sat = SAT_NONE;
+    state->stop_condition = STOP_NONE;
+    state->wheelslip = false;
+    state->darkride = false;
+}
+
+void state_stop(State *state, StopCondition stop_condition) {
+    state->state = STATE_READY;
+    state->stop_condition = stop_condition;
+    state->wheelslip = false;
+}
+
+void state_engage(State *state) {
+    state->state = STATE_RUNNING;
+    state->sat = SAT_CENTERING;
+    state->stop_condition = STOP_NONE;
+}
 
 static const FootpadSensorState flywheel_konami_sequence[] = {
     FS_LEFT, FS_NONE, FS_RIGHT, FS_NONE, FS_LEFT, FS_NONE, FS_RIGHT
@@ -194,7 +220,6 @@ typedef struct {
     float applied_booster_current;
     float noseangling_interpolated, inputtilt_interpolated;
     float turntilt_target, turntilt_interpolated;
-    SetpointAdjustmentType setpointAdjustmentType;
     float current_time, last_time, diff_time, loop_overshoot;
     float disengage_timer, nag_timer;
     float idle_voltage;
@@ -214,18 +239,14 @@ typedef struct {
     float kp2_accel_scale;
 
     // Darkride aka upside down mode:
-    bool is_upside_down;  // the board is upside down
     bool is_upside_down_started;  // dark ride has been engaged
     bool enable_upside_down;  // dark ride mode is enabled (10 seconds after fault)
     float delay_upside_down_fault;
     float darkride_setpoint_correction;
 
     // Feature: Flywheel
-    bool is_flywheel_mode, flywheel_abort, flywheel_allow_abort;
+    bool flywheel_abort, flywheel_allow_abort;
     float flywheel_pitch_offset, flywheel_roll_offset;
-
-    // Feature: Handtest
-    bool do_handtest;
 
     // Feature: Reverse Stop
     float reverse_stop_step_size, reverse_tolerance, reverse_total_erpm;
@@ -325,6 +346,13 @@ static void reconfigure(data *d) {
 }
 
 static void configure(data *d) {
+    state_init(&d->state, d->float_conf.disabled);
+    if (d->state.state == STATE_DISABLED) {
+        beep_alert(d, 3, false);
+    } else {
+        beep_alert(d, 1, false);
+    }
+
     // This timer is used to determine how long the board has been disengaged / idle
     d->disengage_timer = d->current_time;
 
@@ -392,11 +420,9 @@ static void configure(data *d) {
 
     // Feature: Darkride
     d->enable_upside_down = false;
-    d->is_upside_down = false;
     d->darkride_setpoint_correction = d->float_conf.dark_pitch_offset;
 
     // Feature: Flywheel
-    d->is_flywheel_mode = false;
     d->flywheel_abort = false;
     d->flywheel_allow_abort = false;
 
@@ -420,15 +446,6 @@ static void configure(data *d) {
     d->filtered_loop_overshoot = 0.0;
 
     d->buzzer_enabled = d->float_conf.is_buzzer_enabled;
-    if (d->float_conf.disabled) {
-        d->state = DISABLED;
-        beep_alert(d, 3, false);
-    } else {
-        d->state = STARTUP;
-        beep_alert(d, 1, false);
-    }
-
-    d->do_handtest = false;
 
     konami_init(&d->flywheel_konami, flywheel_konami_sequence, sizeof(flywheel_konami_sequence));
 
@@ -451,8 +468,6 @@ static void reset_vars(data *d) {
     d->inputtilt_interpolated = 0;
     d->turntilt_target = 0;
     d->turntilt_interpolated = 0;
-    d->setpointAdjustmentType = CENTERING;
-    d->state = RUNNING;
     d->current_time = 0;
     d->last_time = 0;
     d->diff_time = 0;
@@ -482,6 +497,8 @@ static void reset_vars(data *d) {
     // RC Move:
     d->rc_steps = 0;
     d->rc_current = 0;
+
+    state_engage(&d->state);
 }
 
 /**
@@ -541,23 +558,23 @@ static void do_rc_move(data *d) {
 }
 
 static float get_setpoint_adjustment_step_size(data *d) {
-    switch (d->setpointAdjustmentType) {
-    case (CENTERING):
-        return d->startup_step_size;
-    case (TILTBACK_DUTY):
-        return d->tiltback_duty_step_size;
-    case (TILTBACK_HV):
-    case (TILTBACK_TEMP):
-        return d->tiltback_hv_step_size;
-    case (TILTBACK_LV):
-        return d->tiltback_lv_step_size;
-    case (TILTBACK_NONE):
+    switch (d->state.sat) {
+    case (SAT_NONE):
         return d->tiltback_return_step_size;
-    case (REVERSESTOP):
+    case (SAT_CENTERING):
+        return d->startup_step_size;
+    case (SAT_REVERSESTOP):
         return d->reverse_stop_step_size;
-    default:;
+    case (SAT_PB_DUTY):
+        return d->tiltback_duty_step_size;
+    case (SAT_PB_HIGH_VOLTAGE):
+    case (SAT_PB_TEMPERATURE):
+        return d->tiltback_hv_step_size;
+    case (SAT_PB_LOW_VOLTAGE):
+        return d->tiltback_lv_step_size;
+    default:
+        return 0;
     }
-    return 0;
 }
 
 bool is_engaged(const data *d) {
@@ -576,7 +593,7 @@ bool is_engaged(const data *d) {
     }
 
     // Keep the board engaged in flywheel mode
-    if (d->is_flywheel_mode) {
+    if (d->state.mode == MODE_FLYWHEEL) {
         return true;
     }
 
@@ -587,19 +604,18 @@ bool is_engaged(const data *d) {
 // angle.
 static bool check_faults(data *d) {
     // Aggressive reverse stop in case the board runs off when upside down
-    if (d->is_upside_down) {
+    if (d->state.darkride) {
         if (d->motor.erpm > 1000) {
             // erpms are also reversed when upside down!
             if (((d->current_time - d->fault_switch_timer) * 1000 > 100) || d->motor.erpm > 2000 ||
-                ((d->state == RUNNING_WHEELSLIP) &&
-                 (d->current_time - d->delay_upside_down_fault > 1) &&
+                (d->state.wheelslip && (d->current_time - d->delay_upside_down_fault > 1) &&
                  ((d->current_time - d->fault_switch_timer) * 1000 > 30))) {
 
-                // Trigger FAULT_REVERSE when board is going reverse AND
+                // Trigger Reverse Stop when board is going reverse and
                 // going > 2mph for more than 100ms
                 // going > 4mph
                 // detecting wheelslip (aka excorcist wiggle) after the first second
-                d->state = FAULT_REVERSE;
+                state_stop(&d->state, STOP_REVERSE_STOP);
                 return true;
             }
         } else {
@@ -607,7 +623,7 @@ static bool check_faults(data *d) {
             if (d->motor.erpm > 300) {
                 // erpms are also reversed when upside down!
                 if ((d->current_time - d->fault_angle_roll_timer) * 1000 > 500) {
-                    d->state = FAULT_REVERSE;
+                    state_stop(&d->state, STOP_REVERSE_STOP);
                     return true;
                 }
             } else {
@@ -616,7 +632,7 @@ static bool check_faults(data *d) {
         }
         if (is_engaged(d)) {
             // allow turning it off by engaging foot sensors
-            d->state = FAULT_SWITCH_HALF;
+            state_stop(&d->state, STOP_SWITCH_HALF);
             return true;
         }
     } else {
@@ -628,11 +644,11 @@ static bool check_faults(data *d) {
 
         // Check switch
         // Switch fully open
-        if (d->footpad_sensor.state == FS_NONE && !d->is_flywheel_mode) {
+        if (d->footpad_sensor.state == FS_NONE && d->state.mode != MODE_FLYWHEEL) {
             if (!disable_switch_faults) {
                 if ((1000.0 * (d->current_time - d->fault_switch_timer)) >
                     d->float_conf.fault_delay_switch_full) {
-                    d->state = FAULT_SWITCH_FULL;
+                    state_stop(&d->state, STOP_SWITCH_FULL);
                     return true;
                 }
                 // low speed (below 6 x half-fault threshold speed):
@@ -640,7 +656,7 @@ static bool check_faults(data *d) {
                     (d->motor.abs_erpm < d->float_conf.fault_adc_half_erpm * 6) &&
                     (1000.0 * (d->current_time - d->fault_switch_timer) >
                      d->float_conf.fault_delay_switch_half)) {
-                    d->state = FAULT_SWITCH_FULL;
+                    state_stop(&d->state, STOP_SWITCH_FULL);
                     return true;
                 }
             }
@@ -648,8 +664,7 @@ static bool check_faults(data *d) {
             if (d->motor.abs_erpm < 200 && fabsf(d->true_pitch_angle) > 14 &&
                 fabsf(d->inputtilt_interpolated) < 30 &&
                 SIGN(d->true_pitch_angle) == d->motor.erpm_sign) {
-                // QUICK STOP
-                d->state = FAULT_QUICKSTOP;
+                state_stop(&d->state, STOP_QUICKSTOP);
                 return true;
             }
         } else {
@@ -657,28 +672,28 @@ static bool check_faults(data *d) {
         }
 
         // Feature: Reverse-Stop
-        if (d->setpointAdjustmentType == REVERSESTOP) {
+        if (d->state.sat == SAT_REVERSESTOP) {
             //  Taking your foot off entirely while reversing? Ignore delays
             if (d->footpad_sensor.state == FS_NONE) {
-                d->state = FAULT_SWITCH_FULL;
+                state_stop(&d->state, STOP_SWITCH_FULL);
                 return true;
             }
             if (fabsf(d->true_pitch_angle) > 15) {
-                d->state = FAULT_REVERSE;
+                state_stop(&d->state, STOP_REVERSE_STOP);
                 return true;
             }
             // Above 10 degrees for a half a second? Switch it off
             if ((fabsf(d->true_pitch_angle) > 10) && (d->current_time - d->reverse_timer > .5)) {
-                d->state = FAULT_REVERSE;
+                state_stop(&d->state, STOP_REVERSE_STOP);
                 return true;
             }
             // Above 5 degrees for a full second? Switch it off
             if ((fabsf(d->true_pitch_angle) > 5) && (d->current_time - d->reverse_timer > 1)) {
-                d->state = FAULT_REVERSE;
+                state_stop(&d->state, STOP_REVERSE_STOP);
                 return true;
             }
             if (d->reverse_total_erpm > d->reverse_tolerance * 3) {
-                d->state = FAULT_REVERSE;
+                state_stop(&d->state, STOP_REVERSE_STOP);
                 return true;
             }
             if (fabsf(d->true_pitch_angle) < 5) {
@@ -691,7 +706,7 @@ static bool check_faults(data *d) {
             if (!is_engaged(d) && d->motor.abs_erpm < d->float_conf.fault_adc_half_erpm) {
                 if ((1000.0 * (d->current_time - d->fault_switch_half_timer)) >
                     d->float_conf.fault_delay_switch_half) {
-                    d->state = FAULT_SWITCH_HALF;
+                    state_stop(&d->state, STOP_SWITCH_HALF);
                     return true;
                 }
             } else {
@@ -703,7 +718,7 @@ static bool check_faults(data *d) {
         if (fabsf(d->roll_angle) > d->float_conf.fault_roll) {
             if ((1000.0 * (d->current_time - d->fault_angle_roll_timer)) >
                 d->float_conf.fault_delay_roll) {
-                d->state = FAULT_ANGLE_ROLL;
+                state_stop(&d->state, STOP_ROLL);
                 return true;
             }
         } else {
@@ -711,14 +726,15 @@ static bool check_faults(data *d) {
 
             if (d->float_conf.fault_darkride_enabled) {
                 if ((fabsf(d->roll_angle) > 100) && (fabsf(d->roll_angle) < 135)) {
-                    d->state = FAULT_ANGLE_ROLL;
+                    state_stop(&d->state, STOP_ROLL);
                     return true;
                 }
             }
         }
 
-        if (d->is_flywheel_mode && d->flywheel_allow_abort && d->footpad_sensor.state == FS_BOTH) {
-            d->state = FAULT_SWITCH_HALF;
+        if (d->state.mode == MODE_FLYWHEEL && d->flywheel_allow_abort &&
+            d->footpad_sensor.state == FS_BOTH) {
+            state_stop(&d->state, STOP_SWITCH_HALF);
             d->flywheel_abort = true;
             return true;
         }
@@ -729,7 +745,7 @@ static bool check_faults(data *d) {
         (fabsf(d->inputtilt_interpolated) < 30)) {
         if ((1000.0 * (d->current_time - d->fault_angle_pitch_timer)) >
             d->float_conf.fault_delay_pitch) {
-            d->state = FAULT_ANGLE_PITCH;
+            state_stop(&d->state, STOP_PITCH);
             return true;
         }
     } else {
@@ -746,11 +762,7 @@ static void calculate_setpoint_target(data *d) {
         d->tb_highvoltage_timer = d->current_time;
     }
 
-    if (d->setpointAdjustmentType == CENTERING &&
-        d->setpoint_target_interpolated != d->setpoint_target) {
-        // Ignore tiltback during centering sequence
-        d->state = RUNNING;
-    } else if (d->setpointAdjustmentType == REVERSESTOP) {
+    if (d->state.sat == SAT_REVERSESTOP) {
         // accumalete erpms:
         d->reverse_total_erpm += d->motor.erpm;
         if (fabsf(d->reverse_total_erpm) > d->reverse_tolerance) {
@@ -759,7 +771,7 @@ static void calculate_setpoint_target(data *d) {
         } else {
             if (fabsf(d->reverse_total_erpm) <= d->reverse_tolerance / 2) {
                 if (d->motor.erpm >= 0) {
-                    d->setpointAdjustmentType = TILTBACK_NONE;
+                    d->state.sat = SAT_NONE;
                     d->reverse_total_erpm = 0;
                     d->setpoint_target = 0;
                     d->pid_integral = 0;
@@ -771,13 +783,13 @@ static void calculate_setpoint_target(data *d) {
         SIGN(d->motor.acceleration) == d->motor.erpm_sign && d->motor.duty_cycle > 0.3 &&
         d->motor.abs_erpm > 2000)  // acceleration can jump a lot at very low speeds
     {
-        d->state = RUNNING_WHEELSLIP;
-        d->setpointAdjustmentType = TILTBACK_NONE;
+        d->state.wheelslip = true;
+        d->state.sat = SAT_NONE;
         d->wheelslip_timer = d->current_time;
-        if (d->is_upside_down) {
+        if (d->state.darkride) {
             d->traction_control = true;
         }
-    } else if (d->state == RUNNING_WHEELSLIP) {
+    } else if (d->state.wheelslip) {
         if (fabsf(d->motor.acceleration) < 10) {
             // acceleration is slowing down, traction control seems to have worked
             d->traction_control = false;
@@ -789,12 +801,12 @@ static void calculate_setpoint_target(data *d) {
             if (d->motor.duty_cycle < 0.7) {
                 // Leave wheelslip state only if duty < 70%
                 d->traction_control = false;
-                d->state = RUNNING;
+                d->state.wheelslip = false;
             }
         }
         if (d->float_conf.fault_reversestop_enabled && (d->motor.erpm < 0)) {
             // the 500ms wheelslip time can cause us to blow past the reverse stop condition!
-            d->setpointAdjustmentType = REVERSESTOP;
+            d->state.sat = SAT_REVERSESTOP;
             d->reverse_timer = d->current_time;
             d->reverse_total_erpm = 0;
         }
@@ -804,8 +816,7 @@ static void calculate_setpoint_target(data *d) {
         } else {
             d->setpoint_target = -d->float_conf.tiltback_duty_angle;
         }
-        d->setpointAdjustmentType = TILTBACK_DUTY;
-        d->state = RUNNING_TILTBACK;
+        d->state.sat = SAT_PB_DUTY;
     } else if (d->motor.duty_cycle > 0.05 && input_voltage > d->float_conf.tiltback_hv) {
         d->beep_reason = BEEP_HV;
         beep_alert(d, 3, false);
@@ -818,12 +829,10 @@ static void calculate_setpoint_target(data *d) {
                 d->setpoint_target = -d->float_conf.tiltback_hv_angle;
             }
 
-            d->setpointAdjustmentType = TILTBACK_HV;
-            d->state = RUNNING_TILTBACK;
+            d->state.sat = SAT_PB_HIGH_VOLTAGE;
         } else {
             // The rider has 500ms to react to the triple-beep, or maybe it was just a short spike
-            d->setpointAdjustmentType = TILTBACK_NONE;
-            d->state = RUNNING;
+            d->state.sat = SAT_NONE;
         }
     } else if (VESC_IF->mc_temp_fet_filtered() > d->mc_max_temp_fet) {
         // Use the angle from Low-Voltage tiltback, but slower speed from High-Voltage tiltback
@@ -835,12 +844,10 @@ static void calculate_setpoint_target(data *d) {
             } else {
                 d->setpoint_target = -d->float_conf.tiltback_lv_angle;
             }
-            d->setpointAdjustmentType = TILTBACK_TEMP;
-            d->state = RUNNING_TILTBACK;
+            d->state.sat = SAT_PB_TEMPERATURE;
         } else {
             // The rider has 1 degree Celsius left before we start tilting back
-            d->setpointAdjustmentType = TILTBACK_NONE;
-            d->state = RUNNING;
+            d->state.sat = SAT_NONE;
         }
     } else if (VESC_IF->mc_temp_motor_filtered() > d->mc_max_temp_mot) {
         // Use the angle from Low-Voltage tiltback, but slower speed from High-Voltage tiltback
@@ -852,12 +859,10 @@ static void calculate_setpoint_target(data *d) {
             } else {
                 d->setpoint_target = -d->float_conf.tiltback_lv_angle;
             }
-            d->setpointAdjustmentType = TILTBACK_TEMP;
-            d->state = RUNNING_TILTBACK;
+            d->state.sat = SAT_PB_TEMPERATURE;
         } else {
             // The rider has 1 degree Celsius left before we start tilting back
-            d->setpointAdjustmentType = TILTBACK_NONE;
-            d->state = RUNNING;
+            d->state.sat = SAT_NONE;
         }
     } else if (d->motor.duty_cycle > 0.05 && input_voltage < d->float_conf.tiltback_lv) {
         beep_alert(d, 3, false);
@@ -876,31 +881,27 @@ static void calculate_setpoint_target(data *d) {
                 d->setpoint_target = -d->float_conf.tiltback_lv_angle;
             }
 
-            d->setpointAdjustmentType = TILTBACK_LV;
-            d->state = RUNNING_TILTBACK;
+            d->state.sat = SAT_PB_LOW_VOLTAGE;
         } else {
-            d->setpointAdjustmentType = TILTBACK_NONE;
+            d->state.sat = SAT_NONE;
             d->setpoint_target = 0;
-            d->state = RUNNING;
         }
-    } else {
+    } else if (d->state.sat != SAT_CENTERING || d->setpoint_target_interpolated == d->setpoint_target) {
         // Normal running
-        if (d->float_conf.fault_reversestop_enabled && d->motor.erpm < -200 && !d->is_upside_down) {
-            d->setpointAdjustmentType = REVERSESTOP;
+        if (d->float_conf.fault_reversestop_enabled && d->motor.erpm < -200 && !d->state.darkride) {
+            d->state.sat = SAT_REVERSESTOP;
             d->reverse_timer = d->current_time;
             d->reverse_total_erpm = 0;
         } else {
-            d->setpointAdjustmentType = TILTBACK_NONE;
+            d->state.sat = SAT_NONE;
         }
         d->setpoint_target = 0;
-        d->state = RUNNING;
     }
 
-    if (d->state == RUNNING_WHEELSLIP && d->motor.duty_cycle > d->max_duty_with_margin) {
+    if (d->state.wheelslip && d->motor.duty_cycle > d->max_duty_with_margin) {
         d->setpoint_target = 0;
     }
-    if (d->is_upside_down && (d->state == RUNNING)) {
-        d->state = RUNNING_UPSIDEDOWN;
+    if (d->state.darkride) {
         if (!d->is_upside_down_started) {
             // right after flipping when first engaging dark ride we add a 1 second grace period
             // before aggressively checking for board wiggle (based on acceleration)
@@ -909,8 +910,8 @@ static void calculate_setpoint_target(data *d) {
         }
     }
 
-    if (d->is_flywheel_mode == false) {
-        if (d->setpointAdjustmentType == TILTBACK_DUTY) {
+    if (d->state.mode != MODE_FLYWHEEL) {
+        if (d->state.sat == SAT_PB_DUTY) {
             if (d->float_conf.is_dutybuzz_enabled || (d->float_conf.tiltback_duty_angle == 0)) {
                 beep_on(d, true);
                 d->beep_reason = BEEP_DUTY;
@@ -966,25 +967,23 @@ static void add_surge(data *d) {
 }
 
 static void apply_noseangling(data *d) {
-    if (d->state != RUNNING_WHEELSLIP) {
-        // Nose angle adjustment, add variable then constant tiltback
-        float noseangling_target = 0;
+    // Nose angle adjustment, add variable then constant tiltback
+    float noseangling_target = 0;
 
-        // Variable Tiltback looks at ERPM from the reference point of the set minimum ERPM
-        float variable_erpm = fmaxf(0, d->motor.abs_erpm - d->float_conf.tiltback_variable_erpm);
-        if (variable_erpm > d->tiltback_variable_max_erpm) {
-            noseangling_target = d->float_conf.tiltback_variable_max * d->motor.erpm_sign;
-        } else {
-            noseangling_target = d->tiltback_variable * variable_erpm * d->motor.erpm_sign *
-                SIGN(d->float_conf.tiltback_variable_max);
-        }
-
-        if (d->motor.abs_erpm > d->float_conf.tiltback_constant_erpm) {
-            noseangling_target += d->float_conf.tiltback_constant * d->motor.erpm_sign;
-        }
-
-        rate_limit(&d->noseangling_interpolated, noseangling_target, d->noseangling_step_size);
+    // Variable Tiltback looks at ERPM from the reference point of the set minimum ERPM
+    float variable_erpm = fmaxf(0, d->motor.abs_erpm - d->float_conf.tiltback_variable_erpm);
+    if (variable_erpm > d->tiltback_variable_max_erpm) {
+        noseangling_target = d->float_conf.tiltback_variable_max * d->motor.erpm_sign;
+    } else {
+        noseangling_target = d->tiltback_variable * variable_erpm * d->motor.erpm_sign *
+            SIGN(d->float_conf.tiltback_variable_max);
     }
+
+    if (d->motor.abs_erpm > d->float_conf.tiltback_constant_erpm) {
+        noseangling_target += d->float_conf.tiltback_constant * d->motor.erpm_sign;
+    }
+
+    rate_limit(&d->noseangling_interpolated, noseangling_target, d->noseangling_step_size);
 
     d->setpoint += d->noseangling_interpolated;
 }
@@ -996,7 +995,7 @@ static void apply_inputtilt(data *d) {
     input_tiltback_target = d->throttle_val * d->float_conf.inputtilt_angle_limit;
 
     // Invert for Darkride
-    input_tiltback_target *= (d->is_upside_down ? -1.0 : 1.0);
+    input_tiltback_target *= (d->state.darkride ? -1.0 : 1.0);
 
     float input_tiltback_target_diff = input_tiltback_target - d->inputtilt_interpolated;
 
@@ -1061,8 +1060,7 @@ static void apply_turntilt(data *d) {
     // Minimum threshold based on
     // a) minimum degrees per second (yaw/turn increment)
     // b) minimum yaw aggregate (to filter out wiggling on uneven road)
-    if ((abs_yaw_aggregate < d->float_conf.turntilt_start_angle) || (turn_increment < 0.04) ||
-        (d->state != RUNNING)) {
+    if (abs_yaw_aggregate < d->float_conf.turntilt_start_angle || turn_increment < 0.04) {
         d->turntilt_target = 0;
     } else {
         // Calculate desired angle
@@ -1196,13 +1194,13 @@ static void refloat_thd(void *arg) {
 
         // Darkride:
         if (d->float_conf.fault_darkride_enabled) {
-            if (d->is_upside_down) {
+            if (d->state.darkride) {
                 if (d->abs_roll_angle < 120) {
-                    d->is_upside_down = false;
+                    d->state.darkride = false;
                 }
             } else if (d->enable_upside_down) {
                 if (d->abs_roll_angle > 150) {
-                    d->is_upside_down = true;
+                    d->state.darkride = true;
                     d->is_upside_down_started = false;
                     d->pitch_angle = -d->pitch_angle;
                 }
@@ -1214,7 +1212,7 @@ static void refloat_thd(void *arg) {
         // True pitch is derived from the secondary IMU filter running with kp=0.2
         d->true_pitch_angle = RAD2DEG_f(VESC_IF->imu_get_pitch());
         d->pitch_angle = RAD2DEG_f(balance_filter_get_pitch(&d->balance_filter));
-        if (d->is_flywheel_mode) {
+        if (d->state.mode == MODE_FLYWHEEL) {
             // flip sign and use offsets
             d->true_pitch_angle = d->flywheel_pitch_offset - d->true_pitch_angle;
             d->pitch_angle = d->true_pitch_angle;
@@ -1224,7 +1222,7 @@ static void refloat_thd(void *arg) {
             } else if (d->roll_angle > 200) {
                 d->roll_angle -= 360;
             }
-        } else if (d->is_upside_down) {
+        } else if (d->state.darkride) {
             d->pitch_angle = -d->pitch_angle - d->darkride_setpoint_correction;
             ;
             d->true_pitch_angle = -d->true_pitch_angle - d->darkride_setpoint_correction;
@@ -1298,7 +1296,7 @@ static void refloat_thd(void *arg) {
 
         footpad_sensor_update(&d->footpad_sensor, &d->float_conf);
 
-        if (d->footpad_sensor.state == FS_NONE && d->state <= RUNNING_TILTBACK &&
+        if (d->footpad_sensor.state == FS_NONE && d->state.state == STATE_RUNNING &&
             d->motor.abs_erpm > d->switch_warn_buzz_erpm) {
             // If we're at riding speed and the switch is off => ALERT the user
             // set force=true since this could indicate an imminent shutdown/nosedive
@@ -1312,14 +1310,14 @@ static void refloat_thd(void *arg) {
         float new_pid_value = 0;
 
         // Control Loop State Logic
-        switch (d->state) {
-        case (STARTUP):
+        switch (d->state.state) {
+        case (STATE_STARTUP):
             // Disable output
             brake(d);
             if (VESC_IF->imu_startup_done()) {
                 reset_vars(d);
-                // Trigger a fault so we need to meet start conditions to start
-                d->state = FAULT_STARTUP;
+                // set state to READY so we need to meet start conditions to start
+                d->state.state = STATE_READY;
 
                 // if within 5V of LV tiltback threshold, issue 1 beep for each volt below that
                 float bat_volts = VESC_IF->mc_get_input_voltage_filtered();
@@ -1335,14 +1333,10 @@ static void refloat_thd(void *arg) {
             }
             break;
 
-        case (RUNNING):
-        case (RUNNING_TILTBACK):
-        case (RUNNING_WHEELSLIP):
-        case (RUNNING_UPSIDEDOWN):
-        case (RUNNING_FLYWHEEL):
+        case (STATE_RUNNING):
             // Check for faults
             if (check_faults(d)) {
-                if ((d->state == FAULT_SWITCH_FULL) && !d->is_upside_down) {
+                if (d->state.stop_condition == STOP_SWITCH_FULL && !d->state.darkride) {
                     // dirty landings: add extra margin when rightside up
                     d->startup_pitch_tolerance =
                         d->float_conf.startup_pitch_tolerance + d->startup_pitch_trickmargin;
@@ -1361,16 +1355,15 @@ static void refloat_thd(void *arg) {
             d->setpoint = d->setpoint_target_interpolated;
             add_surge(d);
             apply_inputtilt(d);  // Allow Input Tilt for Darkride
-            if (!d->is_upside_down) {
-                apply_noseangling(d);
-                apply_turntilt(d);
-
+            if (!d->state.darkride) {
                 // in case of wheelslip, don't change torque tilts, instead slightly decrease each
                 // cycle
-                if (d->state == RUNNING_WHEELSLIP) {
+                if (d->state.wheelslip) {
                     torque_tilt_winddown(&d->torque_tilt);
                     atr_and_braketilt_winddown(&d->atr);
                 } else {
+                    apply_noseangling(d);
+                    apply_turntilt(d);
                     torque_tilt_update(&d->torque_tilt, &d->motor, &d->float_conf);
                     atr_and_braketilt_update(&d->atr, &d->motor, &d->float_conf, d->proportional);
                 }
@@ -1424,7 +1417,7 @@ static void refloat_thd(void *arg) {
                 d->pid_integral = d->float_conf.ki_limit * SIGN(d->pid_integral);
             }
             // Quickly ramp down integral component during reverse stop
-            if (d->setpointAdjustmentType == REVERSESTOP) {
+            if (d->state.sat == SAT_REVERSESTOP) {
                 d->pid_integral = d->pid_integral * 0.9;
             }
 
@@ -1545,14 +1538,8 @@ static void refloat_thd(void *arg) {
 
             break;
 
-        case (FAULT_ANGLE_PITCH):
-        case (FAULT_ANGLE_ROLL):
-        case (FAULT_REVERSE):
-        case (FAULT_QUICKSTOP):
-        case (FAULT_SWITCH_HALF):
-        case (FAULT_SWITCH_FULL):
-        case (FAULT_STARTUP):
-            if (d->is_flywheel_mode) {
+        case (STATE_READY):
+            if (d->state.mode == MODE_FLYWHEEL) {
                 if (d->flywheel_abort ||
                     (d->flywheel_allow_abort && d->footpad_sensor.state == FS_BOTH)) {
                     flywheel_stop(d);
@@ -1560,7 +1547,8 @@ static void refloat_thd(void *arg) {
                 }
             }
 
-            if (!d->is_flywheel_mode && d->true_pitch_angle > 75 && d->true_pitch_angle < 105) {
+            if (d->state.mode != MODE_FLYWHEEL && d->true_pitch_angle > 75 &&
+                d->true_pitch_angle < 105) {
                 if (konami_check(&d->flywheel_konami, &d->footpad_sensor, d->current_time)) {
                     unsigned char enabled[6] = {0x82, 0, 0, 0, 0, 1};
                     cmd_flywheel_toggle(d, enabled, 6);
@@ -1570,11 +1558,11 @@ static void refloat_thd(void *arg) {
             if (d->current_time - d->disengage_timer > 10) {
                 // 10 seconds of grace period between flipping the board over and allowing darkride
                 // mode
-                if (d->is_upside_down) {
+                if (d->state.darkride) {
                     beep_alert(d, 1, true);
                 }
                 d->enable_upside_down = false;
-                d->is_upside_down = false;
+                d->state.darkride = false;
             }
             if (d->current_time - d->disengage_timer > 1800) {  // alert user after 30 minutes
                 if (d->current_time - d->nag_timer > 60) {  // beep every 60 seconds
@@ -1607,7 +1595,7 @@ static void refloat_thd(void *arg) {
                 break;
             }
             // Ignore roll for the first second while it's upside down
-            if (d->is_upside_down && (fabsf(d->pitch_angle) < d->startup_pitch_tolerance)) {
+            if (d->state.darkride && (fabsf(d->pitch_angle) < d->startup_pitch_tolerance)) {
                 if ((d->current_time - d->disengage_timer) > 1) {
                     // after 1 second:
                     if (fabsf(fabsf(d->roll_angle) - 180) < d->float_conf.startup_roll_tolerance) {
@@ -1616,7 +1604,7 @@ static void refloat_thd(void *arg) {
                     }
                 } else {
                     // 1 second or less, ignore roll-faults to allow for kick flips etc.
-                    if (d->state != FAULT_REVERSE) {
+                    if (d->state.stop_condition != STOP_REVERSE_STOP) {
                         // don't instantly re-engage after a reverse fault!
                         reset_vars(d);
                         break;
@@ -1637,9 +1625,9 @@ static void refloat_thd(void *arg) {
             // Set RC current or maintain brake current (and keep WDT happy!)
             do_rc_move(d);
             break;
-        case (DISABLED):;
+        case (STATE_DISABLED):
             // no set_current, no brake_current
-        default:;
+            break;
         }
 
         // Delay between loops
@@ -1774,6 +1762,65 @@ enum {
     COMMAND_GET_RTDATA_2 = 201,
 } Commands;
 
+static uint8_t state_compat(const State *state) {
+    switch (state->state) {
+    case STATE_DISABLED:
+        return DISABLED;
+    case STATE_STARTUP:
+        return STARTUP;
+    case STATE_READY:
+        switch (state->stop_condition) {
+        case STOP_NONE:
+            return FAULT_STARTUP;
+        case STOP_PITCH:
+            return FAULT_ANGLE_PITCH;
+        case STOP_ROLL:
+            return FAULT_ANGLE_ROLL;
+        case STOP_SWITCH_HALF:
+            return FAULT_SWITCH_HALF;
+        case STOP_SWITCH_FULL:
+            return FAULT_SWITCH_FULL;
+        case STOP_REVERSE_STOP:
+            return FAULT_REVERSE;
+        case STOP_QUICKSTOP:
+            return FAULT_QUICKSTOP;
+        }
+        return FAULT_STARTUP;
+    case STATE_RUNNING:
+        if (state->sat > SAT_PB_DUTY) {
+            return RUNNING_TILTBACK;
+        } else if (state->wheelslip) {
+            return RUNNING_WHEELSLIP;
+        } else if (state->darkride) {
+            return RUNNING_UPSIDEDOWN;
+        } else if (state->mode == MODE_FLYWHEEL) {
+            return RUNNING_FLYWHEEL;
+        }
+        return RUNNING;
+    }
+    return STARTUP;
+}
+
+static uint8_t sat_compat(const State *state) {
+    switch (state->sat) {
+    case SAT_CENTERING:
+        return CENTERING;
+    case SAT_REVERSESTOP:
+        return REVERSESTOP;
+    case SAT_NONE:
+        return TILTBACK_NONE;
+    case SAT_PB_DUTY:
+        return TILTBACK_DUTY;
+    case SAT_PB_HIGH_VOLTAGE:
+        return TILTBACK_HV;
+    case SAT_PB_LOW_VOLTAGE:
+        return TILTBACK_LV;
+    case SAT_PB_TEMPERATURE:
+        return TILTBACK_TEMP;
+    }
+    return CENTERING;
+}
+
 static void send_realtime_data(data *d) {
     static const int BUFSIZE = 72;
     uint8_t send_buffer[BUFSIZE];
@@ -1786,13 +1833,10 @@ static void send_realtime_data(data *d) {
     buffer_append_float32_auto(send_buffer, d->pitch_angle, &ind);
     buffer_append_float32_auto(send_buffer, d->roll_angle, &ind);
 
-    uint8_t state = (d->state & 0xF);
-    if ((d->is_flywheel_mode) && (d->state > 0) && (d->state < 6)) {
-        state = RUNNING_FLYWHEEL;
-    }
-    send_buffer[ind++] = (state & 0xF) + (d->setpointAdjustmentType << 4);
+    uint8_t state = (state_compat(&d->state) & 0xF);
+    send_buffer[ind++] = (state & 0xF) + (sat_compat(&d->state) << 4);
     state = footpad_sensor_state_to_switch_compat(d->footpad_sensor.state);
-    if (d->do_handtest) {
+    if (d->state.mode == MODE_HANDTEST) {
         state |= 0x8;
     }
     send_buffer[ind++] = (state & 0xF) + (d->beep_reason << 4);
@@ -1842,15 +1886,12 @@ static void cmd_send_all_data(data *d, unsigned char mode) {
         buffer_append_float16(send_buffer, d->pitch_angle, 10, &ind);
         buffer_append_float16(send_buffer, d->roll_angle, 10, &ind);
 
-        uint8_t state = (d->state & 0xF) + (d->setpointAdjustmentType << 4);
-        if ((d->is_flywheel_mode) && (d->state > 0) && (d->state < 6)) {
-            state = RUNNING_FLYWHEEL;
-        }
+        uint8_t state = (state_compat(&d->state) & 0xF) + (sat_compat(&d->state) << 4);
         send_buffer[ind++] = state;
 
         // passed switch-state includes bit3 for handtest, and bits4..7 for beep reason
         state = footpad_sensor_state_to_switch_compat(d->footpad_sensor.state);
-        if (d->do_handtest) {
+        if (d->state.mode == MODE_HANDTEST) {
             state |= 0x8;
         }
         send_buffer[ind++] = (state & 0xF) + (d->beep_reason << 4);
@@ -1922,38 +1963,44 @@ static void cmd_print_info(data *d) {
 }
 
 static void cmd_lock(data *d, unsigned char *cfg) {
-    if (d->state >= FAULT_ANGLE_PITCH) {
+    if (d->state.state < STATE_RUNNING) {
         d->float_conf.disabled = cfg[0] ? true : false;
-        d->state = cfg[0] ? DISABLED : STARTUP;
+        d->state.state = cfg[0] ? STATE_DISABLED : STATE_STARTUP;
         write_cfg_to_eeprom(d);
     }
 }
 
 static void cmd_handtest(data *d, unsigned char *cfg) {
-    if (d->state >= FAULT_ANGLE_PITCH) {
-        d->do_handtest = cfg[0] ? true : false;
-        if (d->do_handtest) {
-            // temporarily reduce max currents to make hand test safer / gentler
-            d->mc_current_max = d->mc_current_min = 7;
-            // Disable I-term and all tune modifiers and tilts
-            d->float_conf.ki = 0;
-            d->float_conf.kp_brake = 1;
-            d->float_conf.kp2_brake = 1;
-            d->float_conf.brkbooster_angle = 100;
-            d->float_conf.booster_angle = 100;
-            d->float_conf.torquetilt_strength = 0;
-            d->float_conf.torquetilt_strength_regen = 0;
-            d->float_conf.atr_strength_up = 0;
-            d->float_conf.atr_strength_down = 0;
-            d->float_conf.turntilt_strength = 0;
-            d->float_conf.tiltback_constant = 0;
-            d->float_conf.tiltback_variable = 0;
-            d->float_conf.fault_delay_pitch = 50;
-            d->float_conf.fault_delay_roll = 50;
-        } else {
-            read_cfg_from_eeprom(d);
-            configure(d);
-        }
+    if (d->state.state != STATE_READY) {
+        return;
+    }
+
+    if (d->state.mode != MODE_NORMAL && d->state.mode != MODE_HANDTEST) {
+        return;
+    }
+
+    d->state.mode = cfg[0] ? MODE_HANDTEST : MODE_NORMAL;
+    if (d->state.mode == MODE_HANDTEST) {
+        // temporarily reduce max currents to make hand test safer / gentler
+        d->mc_current_max = d->mc_current_min = 7;
+        // Disable I-term and all tune modifiers and tilts
+        d->float_conf.ki = 0;
+        d->float_conf.kp_brake = 1;
+        d->float_conf.kp2_brake = 1;
+        d->float_conf.brkbooster_angle = 100;
+        d->float_conf.booster_angle = 100;
+        d->float_conf.torquetilt_strength = 0;
+        d->float_conf.torquetilt_strength_regen = 0;
+        d->float_conf.atr_strength_up = 0;
+        d->float_conf.atr_strength_down = 0;
+        d->float_conf.turntilt_strength = 0;
+        d->float_conf.tiltback_constant = 0;
+        d->float_conf.tiltback_variable = 0;
+        d->float_conf.fault_delay_pitch = 50;
+        d->float_conf.fault_delay_roll = 50;
+    } else {
+        read_cfg_from_eeprom(d);
+        configure(d);
     }
 }
 
@@ -2313,7 +2360,7 @@ void cmd_rc_move(data *d, unsigned char *cfg) {
         current = -current;
     }
 
-    if (d->state >= FAULT_ANGLE_PITCH) {
+    if (d->state.state == STATE_READY) {
         d->rc_counter = 0;
         if (current == 0) {
             d->rc_steps = 1;
@@ -2334,7 +2381,11 @@ static void cmd_flywheel_toggle(data *d, unsigned char *cfg, int len) {
         return;
     }
 
-    if ((d->state >= RUNNING) && (d->state <= RUNNING_FLYWHEEL)) {
+    if (d->state.state != STATE_READY) {
+        return;
+    }
+
+    if (d->state.mode != MODE_NORMAL && d->state.mode != MODE_FLYWHEEL) {
         return;
     }
 
@@ -2348,14 +2399,12 @@ static void cmd_flywheel_toggle(data *d, unsigned char *cfg, int len) {
     // Optional:
     // cfg[6]: Duty TB Speed in deg/sec
     int command = cfg[0] & 0x7F;
-    d->is_flywheel_mode = (command == 0) ? false : true;
-
-    if (d->is_flywheel_mode) {
+    d->state.mode = command == 0 ? MODE_NORMAL : MODE_FLYWHEEL;
+    if (d->state.mode == MODE_FLYWHEEL) {
         if ((d->flywheel_pitch_offset == 0) || (command == 2)) {
             // accidental button press?? board isn't evn close to being upright
             if (fabsf(d->true_pitch_angle) < 70) {
-                // don't forget to set flywheel mode back to false!
-                d->is_flywheel_mode = false;
+                d->state.mode = MODE_NORMAL;
                 return;
             }
 
@@ -2443,11 +2492,8 @@ static void cmd_flywheel_toggle(data *d, unsigned char *cfg, int len) {
 }
 
 void flywheel_stop(data *d) {
-    // Just entirely restore the app settings
     beep_on(d, 1);
-    d->is_flywheel_mode = false;
-    VESC_IF->set_cfg_float(CFG_PARAM_l_min_erpm + 100, -30000);
-    VESC_IF->set_cfg_float(CFG_PARAM_l_max_erpm + 100, 30000);
+    d->state.mode = MODE_NORMAL;
     read_cfg_from_eeprom(d);
     configure(d);
 }
@@ -2459,91 +2505,20 @@ static void send_realtime_data2(data *d) {
     send_buffer[ind++] = 101;  // Package ID
     send_buffer[ind++] = COMMAND_GET_RTDATA_2;
 
-    uint8_t state = STATE_STARTUP;
-    if (d->state > STARTUP && d->state <= RUNNING_FLYWHEEL) {
-        state = STATE_RUNNING;
-    } else if (d->state > RUNNING_FLYWHEEL && d->state <= FAULT_QUICKSTOP) {
-        state = STATE_READY;
-    } else if (d->state == DISABLED) {
-        state = STATE_DISABLED;
-    }
-
     // mask indicates what groups of data are sent, to prevent sending data
     // that are not useful in a given state
     uint8_t mask = 0;
-    if (state == STATE_RUNNING) {
+    if (d->state.state == STATE_RUNNING) {
         mask |= 0x1;
     }
-
     send_buffer[ind++] = mask;
 
-    uint8_t mode = MODE_NORMAL;
-    if (d->do_handtest) {
-        mode = MODE_HANDTEST;
-    } else if (d->is_flywheel_mode) {
-        mode = MODE_FLYWHEEL;
-    }
+    send_buffer[ind++] = d->state.mode << 4 | d->state.state;
 
-    send_buffer[ind++] = mode << 4 | state;
-
-    uint8_t flags = 0;
-    if (d->state == RUNNING_WHEELSLIP) {
-        flags |= 0x1;
-    } else if (d->state == RUNNING_UPSIDEDOWN) {
-        flags |= 0x2;
-    }
-
+    uint8_t flags = d->state.darkride << 1 | d->state.wheelslip;
     send_buffer[ind++] = d->footpad_sensor.state << 6 | flags;
 
-    uint8_t stop_condition = STOP_NONE;
-    switch (d->state) {
-    case FAULT_ANGLE_PITCH:
-        stop_condition = STOP_PITCH;
-        break;
-    case FAULT_ANGLE_ROLL:
-        stop_condition = STOP_ROLL;
-        break;
-    case FAULT_SWITCH_HALF:
-        stop_condition = STOP_SWITCH_HALF;
-        break;
-    case FAULT_SWITCH_FULL:
-        stop_condition = STOP_SWITCH_FULL;
-        break;
-    case FAULT_REVERSE:
-        stop_condition = STOP_REVERSE_STOP;
-        break;
-    case FAULT_QUICKSTOP:
-        stop_condition = STOP_QUICKSTOP;
-        break;
-    default:
-    }
-
-    uint8_t setpoint_adjustment_type;
-    switch (d->setpointAdjustmentType) {
-    case CENTERING:
-        setpoint_adjustment_type = SAT_CENTERING;
-        break;
-    case REVERSESTOP:
-        setpoint_adjustment_type = SAT_REVERSESTOP;
-        break;
-    case TILTBACK_NONE:
-        setpoint_adjustment_type = SAT_NONE;
-        break;
-    case TILTBACK_DUTY:
-        setpoint_adjustment_type = SAT_PB_DUTY;
-        break;
-    case TILTBACK_HV:
-        setpoint_adjustment_type = SAT_PB_HIGH_VOLTAGE;
-        break;
-    case TILTBACK_LV:
-        setpoint_adjustment_type = SAT_PB_LOW_VOLTAGE;
-        break;
-    case TILTBACK_TEMP:
-        setpoint_adjustment_type = SAT_PB_TEMPERATURE;
-        break;
-    }
-
-    send_buffer[ind++] = setpoint_adjustment_type << 4 | stop_condition;
+    send_buffer[ind++] = d->state.sat << 4 | d->state.stop_condition;
 
     send_buffer[ind++] = d->beep_reason;
 
@@ -2555,7 +2530,7 @@ static void send_realtime_data2(data *d) {
     buffer_append_float32_auto(send_buffer, d->footpad_sensor.adc2, &ind);
     buffer_append_float32_auto(send_buffer, d->throttle_val, &ind);
 
-    if (state == STATE_RUNNING) {
+    if (d->state.state == STATE_RUNNING) {
         // Setpoints
         buffer_append_float32_auto(send_buffer, d->setpoint, &ind);
         buffer_append_float32_auto(send_buffer, d->atr.offset, &ind);
@@ -2746,8 +2721,8 @@ static int get_cfg(uint8_t *buffer, bool is_default) {
 static bool set_cfg(uint8_t *buffer) {
     data *d = (data *) ARG;
 
-    // don't let users use the Refloat Cfg "write" button in flywheel mode
-    if (d->is_flywheel_mode || d->do_handtest) {
+    // don't let users use the Refloat Cfg "write" button in special modes
+    if (d->state.mode != MODE_NORMAL) {
         return false;
     }
 
