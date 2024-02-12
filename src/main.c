@@ -40,26 +40,6 @@
 
 HEADER
 
-// Data type
-enum {
-    STARTUP = 0,
-    RUNNING = 1,
-    RUNNING_TILTBACK = 2,
-    RUNNING_WHEELSLIP = 3,
-    RUNNING_UPSIDEDOWN = 4,
-    RUNNING_FLYWHEEL = 5,  // we remain in "RUNNING" state in flywheel mode,
-                           // but then report "RUNNING_FLYWHEEL" in rt data
-    FAULT_ANGLE_PITCH = 6,  // skipped 5 for compatibility
-    FAULT_ANGLE_ROLL = 7,
-    FAULT_SWITCH_HALF = 8,
-    FAULT_SWITCH_FULL = 9,
-    FAULT_DUTY = 10,  // unused but kept for compatibility
-    FAULT_STARTUP = 11,
-    FAULT_REVERSE = 12,
-    FAULT_QUICKSTOP = 13,
-    DISABLED = 15
-};
-
 typedef enum {
     BEEP_NONE = 0,
     BEEP_LV = 1,
@@ -73,16 +53,6 @@ typedef enum {
     BEEP_IDLE = 9,
     BEEP_ERROR = 10
 } BeepReason;
-
-enum {
-    CENTERING = 0,
-    REVERSESTOP,
-    TILTBACK_NONE,
-    TILTBACK_DUTY,
-    TILTBACK_HV,
-    TILTBACK_LV,
-    TILTBACK_TEMP
-};
 
 typedef enum {
     STATE_DISABLED = 0,
@@ -1765,60 +1735,60 @@ enum {
 static uint8_t state_compat(const State *state) {
     switch (state->state) {
     case STATE_DISABLED:
-        return DISABLED;
+        return 15;  // DISABLED
     case STATE_STARTUP:
-        return STARTUP;
+        return 0;  // STARTUP
     case STATE_READY:
         switch (state->stop_condition) {
         case STOP_NONE:
-            return FAULT_STARTUP;
+            return 11;  // FAULT_STARTUP
         case STOP_PITCH:
-            return FAULT_ANGLE_PITCH;
+            return 6;  // FAULT_ANGLE_PITCH
         case STOP_ROLL:
-            return FAULT_ANGLE_ROLL;
+            return 7;  // FAULT_ANGLE_ROLL
         case STOP_SWITCH_HALF:
-            return FAULT_SWITCH_HALF;
+            return 8;  // FAULT_SWITCH_HALF
         case STOP_SWITCH_FULL:
-            return FAULT_SWITCH_FULL;
+            return 9;  // FAULT_SWITCH_FULL
         case STOP_REVERSE_STOP:
-            return FAULT_REVERSE;
+            return 12;  // FAULT_REVERSE
         case STOP_QUICKSTOP:
-            return FAULT_QUICKSTOP;
+            return 13;  // FAULT_QUICKSTOP
         }
-        return FAULT_STARTUP;
+        return 11;  // FAULT_STARTUP
     case STATE_RUNNING:
         if (state->sat > SAT_PB_DUTY) {
-            return RUNNING_TILTBACK;
+            return 2;  // RUNNING_TILTBACK
         } else if (state->wheelslip) {
-            return RUNNING_WHEELSLIP;
+            return 3;  // RUNNING_WHEELSLIP
         } else if (state->darkride) {
-            return RUNNING_UPSIDEDOWN;
+            return 4;  // RUNNING_UPSIDEDOWN
         } else if (state->mode == MODE_FLYWHEEL) {
-            return RUNNING_FLYWHEEL;
+            return 5;  // RUNNING_FLYWHEEL
         }
-        return RUNNING;
+        return 1;  // RUNNING
     }
-    return STARTUP;
+    return 0;  // STARTUP
 }
 
 static uint8_t sat_compat(const State *state) {
     switch (state->sat) {
     case SAT_CENTERING:
-        return CENTERING;
+        return 0;  // CENTERING
     case SAT_REVERSESTOP:
-        return REVERSESTOP;
+        return 1;  // REVERSESTOP
     case SAT_NONE:
-        return TILTBACK_NONE;
+        return 2;  // TILTBACK_NONE
     case SAT_PB_DUTY:
-        return TILTBACK_DUTY;
+        return 3;  // TILTBACK_DUTY
     case SAT_PB_HIGH_VOLTAGE:
-        return TILTBACK_HV;
+        return 4;  // TILTBACK_HV
     case SAT_PB_LOW_VOLTAGE:
-        return TILTBACK_LV;
+        return 5;  // TILTBACK_LV
     case SAT_PB_TEMPERATURE:
-        return TILTBACK_TEMP;
+        return 6;  // TILTBACK_TEMP
     }
-    return CENTERING;
+    return 0;  // CENTERING
 }
 
 static void send_realtime_data(data *d) {
