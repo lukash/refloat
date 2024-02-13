@@ -24,6 +24,7 @@
 #include "atr.h"
 #include "footpad_sensor.h"
 #include "motor_data.h"
+#include "state.h"
 #include "torque_tilt.h"
 #include "utils.h"
 
@@ -53,71 +54,6 @@ typedef enum {
     BEEP_IDLE = 9,
     BEEP_ERROR = 10
 } BeepReason;
-
-typedef enum {
-    STATE_DISABLED = 0,
-    STATE_STARTUP = 1,
-    STATE_READY = 2,
-    STATE_RUNNING = 3
-} RunState;
-
-typedef enum {
-    MODE_NORMAL = 0,
-    MODE_HANDTEST = 1,
-    MODE_FLYWHEEL = 2
-} Mode;
-
-typedef enum {
-    STOP_NONE = 0,
-    STOP_PITCH = 1,
-    STOP_ROLL = 2,
-    STOP_SWITCH_HALF = 3,
-    STOP_SWITCH_FULL = 4,
-    STOP_REVERSE_STOP = 5,
-    STOP_QUICKSTOP = 6
-} StopCondition;
-
-// leaving gaps for more states inbetween the different "classes" of the types
-// (normal / warning / error)
-typedef enum {
-    SAT_NONE = 0,
-    SAT_CENTERING = 1,
-    SAT_REVERSESTOP = 2,
-    SAT_PB_DUTY = 6,
-    SAT_PB_HIGH_VOLTAGE = 10,
-    SAT_PB_LOW_VOLTAGE = 11,
-    SAT_PB_TEMPERATURE = 12
-} SetpointAdjustmentType;
-
-typedef struct {
-    RunState state;
-    Mode mode;
-    SetpointAdjustmentType sat;
-    StopCondition stop_condition;
-    bool wheelslip;
-    bool darkride;
-} State;
-
-void state_init(State *state, bool disable) {
-    state->state = disable ? STATE_DISABLED : STATE_STARTUP;
-    state->mode = MODE_NORMAL;
-    state->sat = SAT_NONE;
-    state->stop_condition = STOP_NONE;
-    state->wheelslip = false;
-    state->darkride = false;
-}
-
-void state_stop(State *state, StopCondition stop_condition) {
-    state->state = STATE_READY;
-    state->stop_condition = stop_condition;
-    state->wheelslip = false;
-}
-
-void state_engage(State *state) {
-    state->state = STATE_RUNNING;
-    state->sat = SAT_CENTERING;
-    state->stop_condition = STOP_NONE;
-}
 
 static const FootpadSensorState flywheel_konami_sequence[] = {
     FS_LEFT, FS_NONE, FS_RIGHT, FS_NONE, FS_LEFT, FS_NONE, FS_RIGHT
@@ -1731,65 +1667,6 @@ enum {
     // commands above 200 are unstable and can change protocol at any time
     COMMAND_GET_RTDATA_2 = 201,
 } Commands;
-
-static uint8_t state_compat(const State *state) {
-    switch (state->state) {
-    case STATE_DISABLED:
-        return 15;  // DISABLED
-    case STATE_STARTUP:
-        return 0;  // STARTUP
-    case STATE_READY:
-        switch (state->stop_condition) {
-        case STOP_NONE:
-            return 11;  // FAULT_STARTUP
-        case STOP_PITCH:
-            return 6;  // FAULT_ANGLE_PITCH
-        case STOP_ROLL:
-            return 7;  // FAULT_ANGLE_ROLL
-        case STOP_SWITCH_HALF:
-            return 8;  // FAULT_SWITCH_HALF
-        case STOP_SWITCH_FULL:
-            return 9;  // FAULT_SWITCH_FULL
-        case STOP_REVERSE_STOP:
-            return 12;  // FAULT_REVERSE
-        case STOP_QUICKSTOP:
-            return 13;  // FAULT_QUICKSTOP
-        }
-        return 11;  // FAULT_STARTUP
-    case STATE_RUNNING:
-        if (state->sat > SAT_PB_DUTY) {
-            return 2;  // RUNNING_TILTBACK
-        } else if (state->wheelslip) {
-            return 3;  // RUNNING_WHEELSLIP
-        } else if (state->darkride) {
-            return 4;  // RUNNING_UPSIDEDOWN
-        } else if (state->mode == MODE_FLYWHEEL) {
-            return 5;  // RUNNING_FLYWHEEL
-        }
-        return 1;  // RUNNING
-    }
-    return 0;  // STARTUP
-}
-
-static uint8_t sat_compat(const State *state) {
-    switch (state->sat) {
-    case SAT_CENTERING:
-        return 0;  // CENTERING
-    case SAT_REVERSESTOP:
-        return 1;  // REVERSESTOP
-    case SAT_NONE:
-        return 2;  // TILTBACK_NONE
-    case SAT_PB_DUTY:
-        return 3;  // TILTBACK_DUTY
-    case SAT_PB_HIGH_VOLTAGE:
-        return 4;  // TILTBACK_HV
-    case SAT_PB_LOW_VOLTAGE:
-        return 5;  // TILTBACK_LV
-    case SAT_PB_TEMPERATURE:
-        return 6;  // TILTBACK_TEMP
-    }
-    return 0;  // CENTERING
-}
 
 static void send_realtime_data(data *d) {
     static const int BUFSIZE = 72;
