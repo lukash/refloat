@@ -63,7 +63,7 @@ static void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *co
             (motor->atr_filtered_current - motor->erpm_sign * torque_offset) / accel_factor;
     } else {
         // primitive linear approximation of non-linear torque-accel relationship
-        int torque_sign = SIGN(motor->atr_filtered_current);
+        int torque_sign = sign(motor->atr_filtered_current);
         expected_acc = (torque_sign * 25 - motor->erpm_sign * torque_offset) / accel_factor;
         expected_acc += torque_sign * (abs_torque - 25) / accel_factor2;
     }
@@ -104,7 +104,7 @@ static void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *co
     if (fabsf(new_atr_target) < atr_threshold) {
         new_atr_target = 0;
     } else {
-        new_atr_target -= SIGN(new_atr_target) * atr_threshold;
+        new_atr_target -= sign(new_atr_target) * atr_threshold;
     }
 
     atr->target_offset = atr->target_offset * 0.95 + 0.05 * new_atr_target;
@@ -194,7 +194,7 @@ static void braketilt_update(
     // braking also should cause setpoint change lift, causing a delayed lingering nose lift
     if (atr->braketilt_factor < 0 && motor->braking && motor->abs_erpm > 2000) {
         // negative currents alone don't necessarily consitute active braking, look at proportional:
-        if (SIGN(proportional) != motor->erpm_sign) {
+        if (sign(proportional) != motor->erpm_sign) {
             float downhill_damper = 1;
             // if we're braking on a downhill we don't want braking to lift the setpoint quite as
             // much

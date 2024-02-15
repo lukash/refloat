@@ -39,10 +39,10 @@ void motor_data_init(MotorData *m) {
 void motor_data_update(MotorData *m) {
     m->erpm = VESC_IF->mc_get_rpm();
     m->abs_erpm = fabsf(m->erpm);
-    m->erpm_sign = SIGN(m->erpm);
+    m->erpm_sign = sign(m->erpm);
 
     m->current = VESC_IF->mc_get_tot_current_directional_filtered();
-    m->braking = m->abs_erpm > 250 && SIGN(m->current) != m->erpm_sign;
+    m->braking = m->abs_erpm > 250 && sign(m->current) != m->erpm_sign;
 
     m->duty_cycle = fabsf(VESC_IF->mc_get_duty_cycle_now());
     m->duty_smooth = m->duty_smooth * 0.9f + m->duty_cycle * 0.1f;

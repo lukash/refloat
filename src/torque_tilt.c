@@ -46,7 +46,7 @@ void torque_tilt_update(TorqueTilt *tt, const MotorData *motor, const RefloatCon
                 strength,
             config->torquetilt_angle_limit
         ) *
-        SIGN(motor->atr_filtered_current);
+        sign(motor->atr_filtered_current);
 
     float step_size = 0;
     if ((tt->offset - target_offset > 0 && target_offset > 0) ||

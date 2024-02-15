@@ -19,14 +19,6 @@
 
 #include "vesc_c_if.h"
 
-// Return the sign of the argument. -1 if negative, 1 if zero or positive.
-#define SIGN(x) (((x) < 0) ? -1 : 1)
-
-#define DEG2RAD_f(deg) ((deg) * (float) (M_PI / 180.0))
-#define RAD2DEG_f(rad) ((rad) * (float) (180.0 / M_PI))
-
-#define UNUSED(x) (void) (x)
-
 #define log_msg(fmt, ...)                                                                          \
     do {                                                                                           \
         if (!VESC_IF->app_is_output_disabled()) {                                                  \
@@ -39,6 +31,11 @@
     } while (0)
 
 #define log_error(fmt, ...) log_msg("Error: " fmt __VA_OPT__(, ) __VA_ARGS__)
+
+#define sign(x) (((x) < 0) ? -1 : 1)
+
+#define deg2rad(deg) ((deg) * (M_PI / 180.0f))
+#define rad2deg(rad) ((rad) * (180.0f / M_PI))
 
 #define min(a, b)                                                                                  \
     ({                                                                                             \

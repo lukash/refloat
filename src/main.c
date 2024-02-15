@@ -569,7 +569,7 @@ static bool check_faults(data *d) {
 
             if (d->motor.abs_erpm < 200 && fabsf(d->true_pitch_angle) > 14 &&
                 fabsf(d->inputtilt_interpolated) < 30 &&
-                SIGN(d->true_pitch_angle) == d->motor.erpm_sign) {
+                sign(d->true_pitch_angle) == d->motor.erpm_sign) {
                 state_stop(&d->state, STOP_QUICKSTOP);
                 return true;
             }
@@ -686,7 +686,7 @@ static void calculate_setpoint_target(data *d) {
         }
     } else if (
         fabsf(d->motor.acceleration) > 15 &&  // not normal, either wheelslip or wheel getting stuck
-        SIGN(d->motor.acceleration) == d->motor.erpm_sign && d->motor.duty_cycle > 0.3 &&
+        sign(d->motor.acceleration) == d->motor.erpm_sign && d->motor.duty_cycle > 0.3 &&
         d->motor.abs_erpm > 2000)  // acceleration can jump a lot at very low speeds
     {
         d->state.wheelslip = true;
@@ -882,7 +882,7 @@ static void apply_noseangling(data *d) {
         noseangling_target = d->float_conf.tiltback_variable_max * d->motor.erpm_sign;
     } else {
         noseangling_target = d->tiltback_variable * variable_erpm * d->motor.erpm_sign *
-            SIGN(d->float_conf.tiltback_variable_max);
+            sign(d->float_conf.tiltback_variable_max);
     }
 
     if (d->motor.abs_erpm > d->float_conf.tiltback_constant_erpm) {
@@ -928,7 +928,7 @@ static void apply_inputtilt(data *d) {
                     fabsf(d->inputtilt_ramped_step_size),
                     fabsf(input_tiltback_target_diff / 2) * d->inputtilt_step_size
                 ) *
-                SIGN(input_tiltback_target_diff);
+                sign(input_tiltback_target_diff);
             if (fabsf(input_tiltback_target_diff) < fabsf(centering_step_size)) {
                 d->inputtilt_interpolated = input_tiltback_target;
             } else {
@@ -937,7 +937,7 @@ static void apply_inputtilt(data *d) {
         } else {
             // Ramp up step size until the configured tilt speed is reached
             d->inputtilt_ramped_step_size =
-                (smoothing_factor * d->inputtilt_step_size * SIGN(input_tiltback_target_diff)) +
+                (smoothing_factor * d->inputtilt_step_size * sign(input_tiltback_target_diff)) +
                 ((1 - smoothing_factor) * d->inputtilt_ramped_step_size);
             d->inputtilt_interpolated += d->inputtilt_ramped_step_size;
         }
@@ -946,7 +946,7 @@ static void apply_inputtilt(data *d) {
         if (fabsf(input_tiltback_target_diff) < d->inputtilt_step_size) {
             d->inputtilt_interpolated = input_tiltback_target;
         } else {
-            d->inputtilt_interpolated += d->inputtilt_step_size * SIGN(input_tiltback_target_diff);
+            d->inputtilt_interpolated += d->inputtilt_step_size * sign(input_tiltback_target_diff);
         }
     }
 
@@ -1008,7 +1008,7 @@ static void apply_turntilt(data *d) {
         // ATR interference: Reduce turntilt_target during moments of high torque response
         float atr_min = 2;
         float atr_max = 5;
-        if (SIGN(d->atr.target_offset) != SIGN(d->turntilt_target)) {
+        if (sign(d->atr.target_offset) != sign(d->turntilt_target)) {
             // further reduced turntilt during moderate to steep downhills
             atr_min = 1;
             atr_max = 4;
@@ -1062,8 +1062,7 @@ static void set_current(data *d, float current) {
     VESC_IF->mc_set_current(current);
 }
 
-static void imu_ref_callback(float *acc, float *gyro, float *mag, float dt) {
-    UNUSED(mag);
+static void imu_ref_callback(float *acc, float *gyro, [[maybe_unused]] float *mag, float dt) {
     data *d = (data *) ARG;
     balance_filter_update(&d->balance_filter, gyro, acc, dt);
 }
@@ -1095,7 +1094,7 @@ static void refloat_thd(void *arg) {
             (1.0 - d->loop_overshoot_alpha) * d->filtered_loop_overshoot;
 
         // Get the IMU Values
-        d->roll_angle = RAD2DEG_f(VESC_IF->imu_get_roll());
+        d->roll_angle = rad2deg(VESC_IF->imu_get_roll());
         d->abs_roll_angle = fabsf(d->roll_angle);
 
         // Darkride:
@@ -1116,8 +1115,8 @@ static void refloat_thd(void *arg) {
         d->last_pitch_angle = d->pitch_angle;
 
         // True pitch is derived from the secondary IMU filter running with kp=0.2
-        d->true_pitch_angle = RAD2DEG_f(VESC_IF->imu_get_pitch());
-        d->pitch_angle = RAD2DEG_f(balance_filter_get_pitch(&d->balance_filter));
+        d->true_pitch_angle = rad2deg(VESC_IF->imu_get_pitch());
+        d->pitch_angle = rad2deg(balance_filter_get_pitch(&d->balance_filter));
         if (d->state.mode == MODE_FLYWHEEL) {
             // flip sign and use offsets
             d->true_pitch_angle = d->flywheel_pitch_offset - d->true_pitch_angle;
@@ -1164,7 +1163,7 @@ static void refloat_thd(void *arg) {
             if (fabsf(servo_val) < deadband) {
                 servo_val = 0.0;
             } else {
-                servo_val = SIGN(servo_val) * (fabsf(servo_val) - deadband) / (1 - deadband);
+                servo_val = sign(servo_val) * (fabsf(servo_val) - deadband) / (1 - deadband);
             }
 
             // Invert Throttle
@@ -1191,7 +1190,7 @@ static void refloat_thd(void *arg) {
         new_change = fmaxf(new_change, -0.10);
         d->yaw_change = d->yaw_change * 0.8 + 0.2 * (new_change);
         // Clear the aggregate yaw whenever we change direction
-        if (SIGN(d->yaw_change) != SIGN(d->yaw_aggregate)) {
+        if (sign(d->yaw_change) != sign(d->yaw_aggregate)) {
             d->yaw_aggregate = 0;
         }
         d->abs_yaw_change = fabsf(d->yaw_change);
@@ -1278,9 +1277,9 @@ static void refloat_thd(void *arg) {
                 // if signs match between torque tilt and ATR + brake tilt, use the more significant
                 // one if signs do not match, they are simply added together
                 float ab_offset = d->atr.offset + d->atr.braketilt_offset;
-                if (SIGN(ab_offset) == SIGN(d->torque_tilt.offset)) {
+                if (sign(ab_offset) == sign(d->torque_tilt.offset)) {
                     d->setpoint +=
-                        SIGN(ab_offset) * fmaxf(fabsf(ab_offset), fabsf(d->torque_tilt.offset));
+                        sign(ab_offset) * fmaxf(fabsf(ab_offset), fabsf(d->torque_tilt.offset));
                 } else {
                     d->setpoint += ab_offset + d->torque_tilt.offset;
                 }
@@ -1313,14 +1312,14 @@ static void refloat_thd(void *arg) {
 
             // Do PID maths
             d->proportional = d->setpoint - d->pitch_angle;
-            bool tail_down = SIGN(d->proportional) != d->motor.erpm_sign;
+            bool tail_down = sign(d->proportional) != d->motor.erpm_sign;
 
             // Resume real PID maths
             d->pid_integral = d->pid_integral + d->proportional * d->float_conf.ki;
 
             // Apply I term Filter
             if (d->float_conf.ki_limit > 0 && fabsf(d->pid_integral) > d->float_conf.ki_limit) {
-                d->pid_integral = d->float_conf.ki_limit * SIGN(d->pid_integral);
+                d->pid_integral = d->float_conf.ki_limit * sign(d->pid_integral);
             }
             // Quickly ramp down integral component during reverse stop
             if (d->state.sat == SAT_REVERSESTOP) {
@@ -1392,10 +1391,10 @@ static void refloat_thd(void *arg) {
 
                 if (d->abs_proportional > booster_angle) {
                     if (d->abs_proportional - booster_angle < booster_ramp) {
-                        booster_current *= SIGN(true_proportional) *
+                        booster_current *= sign(true_proportional) *
                             ((d->abs_proportional - booster_angle) / booster_ramp);
                     } else {
-                        booster_current *= SIGN(true_proportional);
+                        booster_current *= sign(true_proportional);
                     }
                 } else {
                     booster_current = 0;
@@ -1407,7 +1406,7 @@ static void refloat_thd(void *arg) {
                 d->pid_mod += d->applied_booster_current;
 
                 if (d->softstart_pid_limit < d->mc_current_max) {
-                    d->pid_mod = fminf(fabs(d->pid_mod), d->softstart_pid_limit) * SIGN(d->pid_mod);
+                    d->pid_mod = fminf(fabs(d->pid_mod), d->softstart_pid_limit) * sign(d->pid_mod);
                     d->softstart_pid_limit += d->softstart_ramp_step_size;
                 }
 
@@ -1419,7 +1418,7 @@ static void refloat_thd(void *arg) {
             // Current Limiting!
             float current_limit = d->motor.braking ? d->mc_current_min : d->mc_current_max;
             if (fabsf(new_pid_value) > current_limit) {
-                new_pid_value = SIGN(new_pid_value) * current_limit;
+                new_pid_value = sign(new_pid_value) * current_limit;
             }
 
             if (d->traction_control) {
@@ -1805,8 +1804,7 @@ static void split(unsigned char byte, int *h1, int *h2) {
     *h2 = byte >> 4;
 }
 
-static void cmd_print_info(data *d) {
-    UNUSED(d);
+static void cmd_print_info([[maybe_unused]] data *d) {
 }
 
 static void cmd_lock(data *d, unsigned char *cfg) {
