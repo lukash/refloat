@@ -185,7 +185,7 @@ static void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *co
         atr_step_size /= 2;
     }
 
-    rate_limit(&atr->offset, atr->target_offset, atr_step_size);
+    rate_limitf(&atr->offset, atr->target_offset, atr_step_size);
 }
 
 static void braketilt_update(
@@ -223,7 +223,7 @@ static void braketilt_update(
         braketilt_step_size /= 2;
     }
 
-    rate_limit(&atr->braketilt_offset, atr->braketilt_target_offset, braketilt_step_size);
+    rate_limitf(&atr->braketilt_offset, atr->braketilt_target_offset, braketilt_step_size);
 }
 
 void atr_and_braketilt_update(

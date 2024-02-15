@@ -833,7 +833,7 @@ static void calculate_setpoint_target(data *d) {
 
 static void calculate_setpoint_interpolated(data *d) {
     if (d->setpoint_target_interpolated != d->setpoint_target) {
-        rate_limit(
+        rate_limitf(
             &d->setpoint_target_interpolated,
             d->setpoint_target,
             get_setpoint_adjustment_step_size(d)
@@ -889,7 +889,7 @@ static void apply_noseangling(data *d) {
         noseangling_target += d->float_conf.tiltback_constant * d->motor.erpm_sign;
     }
 
-    rate_limit(&d->noseangling_interpolated, noseangling_target, d->noseangling_step_size);
+    rate_limitf(&d->noseangling_interpolated, noseangling_target, d->noseangling_step_size);
 
     d->setpoint += d->noseangling_interpolated;
 }
@@ -1031,7 +1031,7 @@ static void apply_turntilt(data *d) {
     }
 
     // Move towards target limited by max speed
-    rate_limit(&d->turntilt_interpolated, d->turntilt_target, d->turntilt_step_size);
+    rate_limitf(&d->turntilt_interpolated, d->turntilt_target, d->turntilt_step_size);
     d->setpoint += d->turntilt_interpolated;
 }
 

@@ -19,7 +19,7 @@
 
 #include <math.h>
 
-void rate_limit(float *value, float target, float step) {
+void rate_limitf(float *value, float target, float step) {
     if (fabsf(target - *value) < step) {
         *value = target;
     } else if (target - *value > 0) {

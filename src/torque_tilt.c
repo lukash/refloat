@@ -60,7 +60,7 @@ void torque_tilt_update(TorqueTilt *tt, const MotorData *motor, const RefloatCon
         step_size /= 2;
     }
 
-    rate_limit(&tt->offset, target_offset, step_size);
+    rate_limitf(&tt->offset, target_offset, step_size);
 }
 
 void torque_tilt_winddown(TorqueTilt *tt) {

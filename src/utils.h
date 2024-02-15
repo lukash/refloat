@@ -51,6 +51,18 @@
         _a > _b ? _a : _b;                                                                         \
     })
 
+// See @rate_limitf
+#define rate_limit(value, target, step)                                                            \
+    do {                                                                                           \
+        if (abs(target - *value) < step) {                                                         \
+            *value = target;                                                                       \
+        } else if (target - *value > 0) {                                                          \
+            *value += step;                                                                        \
+        } else {                                                                                   \
+            *value -= step;                                                                        \
+        }                                                                                          \
+    } while (0)
+
 /**
  * Rate-limits @p value towards @p target by an amount of maximum value of @p step.
  *
@@ -62,4 +74,4 @@
  * @param target A target to rate-limit @p value towards.
  * @param step A maximum unit of change of @p value.
  */
-void rate_limit(float *value, float target, float step);
+void rate_limitf(float *value, float target, float step);
