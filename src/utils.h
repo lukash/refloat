@@ -40,6 +40,20 @@
 
 #define log_error(fmt, ...) log_msg("Error: " fmt __VA_OPT__(, ) __VA_ARGS__)
 
+#define min(a, b)                                                                                  \
+    ({                                                                                             \
+        __typeof__(a) _a = (a);                                                                    \
+        __typeof__(b) _b = (b);                                                                    \
+        _a < _b ? _a : _b;                                                                         \
+    })
+
+#define max(a, b)                                                                                  \
+    ({                                                                                             \
+        __typeof__(a) _a = (a);                                                                    \
+        __typeof__(b) _b = (b);                                                                    \
+        _a > _b ? _a : _b;                                                                         \
+    })
+
 /**
  * Rate-limits @p value towards @p target by an amount of maximum value of @p step.
  *
