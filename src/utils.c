@@ -28,3 +28,8 @@ void rate_limitf(float *value, float target, float step) {
         *value -= step;
     }
 }
+
+float clampf(float value, float min, float max) {
+    const float m = value < min ? min : value;
+    return m > max ? max : m;
+}

@@ -63,6 +63,8 @@
         }                                                                                          \
     } while (0)
 
+float clampf(float value, float min, float max);
+
 /**
  * Rate-limits @p value towards @p target by an amount of maximum value of @p step.
  *
