@@ -19,6 +19,8 @@
 
 #include "vesc_c_if.h"
 
+#include <stdint.h>
+
 #define log_msg(fmt, ...)                                                                          \
     do {                                                                                           \
         if (!VESC_IF->app_is_output_disabled()) {                                                  \
@@ -62,6 +64,8 @@
             *value -= step;                                                                        \
         }                                                                                          \
     } while (0)
+
+uint32_t rnd(uint32_t seed);
 
 float clampf(float value, float min, float max);
 

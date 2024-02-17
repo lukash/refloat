@@ -19,6 +19,10 @@
 
 #include <math.h>
 
+uint32_t rnd(uint32_t seed) {
+    return seed * 1664525u + 1013904223u;
+}
+
 void rate_limitf(float *value, float target, float step) {
     if (fabsf(target - *value) < step) {
         *value = target;
