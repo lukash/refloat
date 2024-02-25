@@ -103,7 +103,7 @@ typedef struct {
     BalanceFilterData balance_filter;
 
     // Runtime values read from elsewhere
-    float pitch_angle, last_pitch_angle, roll_angle, abs_roll_angle;
+    float pitch_angle, roll_angle, abs_roll_angle;
     float true_pitch_angle;
     float gyro[3];
 
@@ -1112,8 +1112,6 @@ static void refloat_thd(void *arg) {
             }
         }
 
-        d->last_pitch_angle = d->pitch_angle;
-
         // True pitch is derived from the secondary IMU filter running with kp=0.2
         d->true_pitch_angle = rad2deg(VESC_IF->imu_get_pitch());
         d->pitch_angle = rad2deg(balance_filter_get_pitch(&d->balance_filter));
@@ -1616,7 +1614,7 @@ static float app_get_debug(int index) {
     case (4):
         return d->atr.offset;
     case (5):
-        return d->last_pitch_angle - d->pitch_angle;
+        return 0;
     case (6):
         return d->motor.current;
     case (7):
