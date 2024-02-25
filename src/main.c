@@ -103,7 +103,7 @@ typedef struct {
     BalanceFilterData balance_filter;
 
     // Runtime values read from elsewhere
-    float pitch_angle, roll_angle, abs_roll_angle;
+    float pitch_angle, roll_angle;
     float true_pitch_angle;
     float gyro[3];
 
@@ -1095,16 +1095,16 @@ static void refloat_thd(void *arg) {
 
         // Get the IMU Values
         d->roll_angle = rad2deg(VESC_IF->imu_get_roll());
-        d->abs_roll_angle = fabsf(d->roll_angle);
 
         // Darkride:
         if (d->float_conf.fault_darkride_enabled) {
+            float abs_roll_angle = fabsf(d->roll_angle);
             if (d->state.darkride) {
-                if (d->abs_roll_angle < 120) {
+                if (abs_roll_angle < 120) {
                     d->state.darkride = false;
                 }
             } else if (d->enable_upside_down) {
-                if (d->abs_roll_angle > 150) {
+                if (abs_roll_angle > 150) {
                     d->state.darkride = true;
                     d->is_upside_down_started = false;
                     d->pitch_angle = -d->pitch_angle;
