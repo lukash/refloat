@@ -103,8 +103,8 @@ typedef struct {
     BalanceFilterData balance_filter;
 
     // Runtime values read from elsewhere
-    float balance_pitch, roll_angle;
-    float true_pitch_angle;
+    float pitch, roll_angle;
+    float balance_pitch;
     float gyro[3];
 
     float throttle_val;
@@ -567,9 +567,8 @@ static bool check_faults(data *d) {
                 }
             }
 
-            if (d->motor.abs_erpm < 200 && fabsf(d->true_pitch_angle) > 14 &&
-                fabsf(d->inputtilt_interpolated) < 30 &&
-                sign(d->true_pitch_angle) == d->motor.erpm_sign) {
+            if (d->motor.abs_erpm < 200 && fabsf(d->pitch) > 14 &&
+                fabsf(d->inputtilt_interpolated) < 30 && sign(d->pitch) == d->motor.erpm_sign) {
                 state_stop(&d->state, STOP_QUICKSTOP);
                 return true;
             }
@@ -584,17 +583,17 @@ static bool check_faults(data *d) {
                 state_stop(&d->state, STOP_SWITCH_FULL);
                 return true;
             }
-            if (fabsf(d->true_pitch_angle) > 15) {
+            if (fabsf(d->pitch) > 15) {
                 state_stop(&d->state, STOP_REVERSE_STOP);
                 return true;
             }
             // Above 10 degrees for a half a second? Switch it off
-            if ((fabsf(d->true_pitch_angle) > 10) && (d->current_time - d->reverse_timer > .5)) {
+            if (fabsf(d->pitch) > 10 && d->current_time - d->reverse_timer > .5) {
                 state_stop(&d->state, STOP_REVERSE_STOP);
                 return true;
             }
             // Above 5 degrees for a full second? Switch it off
-            if ((fabsf(d->true_pitch_angle) > 5) && (d->current_time - d->reverse_timer > 1)) {
+            if (fabsf(d->pitch) > 5 && d->current_time - d->reverse_timer > 1) {
                 state_stop(&d->state, STOP_REVERSE_STOP);
                 return true;
             }
@@ -602,7 +601,7 @@ static bool check_faults(data *d) {
                 state_stop(&d->state, STOP_REVERSE_STOP);
                 return true;
             }
-            if (fabsf(d->true_pitch_angle) < 5) {
+            if (fabsf(d->pitch) < 5) {
                 d->reverse_timer = d->current_time;
             }
         }
@@ -647,8 +646,7 @@ static bool check_faults(data *d) {
     }
 
     // Check pitch angle
-    if ((fabsf(d->true_pitch_angle) > d->float_conf.fault_pitch) &&
-        (fabsf(d->inputtilt_interpolated) < 30)) {
+    if (fabsf(d->pitch) > d->float_conf.fault_pitch && fabsf(d->inputtilt_interpolated) < 30) {
         if ((1000.0 * (d->current_time - d->fault_angle_pitch_timer)) >
             d->float_conf.fault_delay_pitch) {
             state_stop(&d->state, STOP_PITCH);
@@ -1113,12 +1111,12 @@ static void refloat_thd(void *arg) {
         }
 
         // True pitch is derived from the secondary IMU filter running with kp=0.2
-        d->true_pitch_angle = rad2deg(VESC_IF->imu_get_pitch());
+        d->pitch = rad2deg(VESC_IF->imu_get_pitch());
         d->balance_pitch = rad2deg(balance_filter_get_pitch(&d->balance_filter));
         if (d->state.mode == MODE_FLYWHEEL) {
             // flip sign and use offsets
-            d->true_pitch_angle = d->flywheel_pitch_offset - d->true_pitch_angle;
-            d->balance_pitch = d->true_pitch_angle;
+            d->pitch = d->flywheel_pitch_offset - d->pitch;
+            d->balance_pitch = d->pitch;
             d->roll_angle -= d->flywheel_roll_offset;
             if (d->roll_angle < -200) {
                 d->roll_angle += 360;
@@ -1127,8 +1125,7 @@ static void refloat_thd(void *arg) {
             }
         } else if (d->state.darkride) {
             d->balance_pitch = -d->balance_pitch - d->darkride_setpoint_correction;
-            ;
-            d->true_pitch_angle = -d->true_pitch_angle - d->darkride_setpoint_correction;
+            d->pitch = -d->pitch - d->darkride_setpoint_correction;
         }
 
         VESC_IF->imu_get_gyro(d->gyro);
@@ -1357,8 +1354,7 @@ static void refloat_thd(void *arg) {
 
                 // Apply Booster (Now based on True Pitch)
                 // Braketilt excluded to allow for soft brakes that strengthen when near tail-drag
-                float true_proportional =
-                    (d->setpoint - d->atr.braketilt_offset) - d->true_pitch_angle;
+                float true_proportional = d->setpoint - d->atr.braketilt_offset - d->pitch;
                 d->abs_proportional = fabsf(true_proportional);
 
                 float booster_current, booster_angle, booster_ramp;
@@ -1450,8 +1446,7 @@ static void refloat_thd(void *arg) {
                 }
             }
 
-            if (d->state.mode != MODE_FLYWHEEL && d->true_pitch_angle > 75 &&
-                d->true_pitch_angle < 105) {
+            if (d->state.mode != MODE_FLYWHEEL && d->pitch > 75 && d->pitch < 105) {
                 if (konami_check(&d->flywheel_konami, &d->footpad_sensor, d->current_time)) {
                     unsigned char enabled[6] = {0x82, 0, 0, 0, 0, 1};
                     cmd_flywheel_toggle(d, enabled, 6);
@@ -1696,7 +1691,7 @@ static void send_realtime_data(data *d) {
     buffer_append_float32_auto(send_buffer, d->inputtilt_interpolated, &ind);
 
     // DEBUG
-    buffer_append_float32_auto(send_buffer, d->true_pitch_angle, &ind);
+    buffer_append_float32_auto(send_buffer, d->pitch, &ind);
     buffer_append_float32_auto(send_buffer, d->motor.atr_filtered_current, &ind);
     buffer_append_float32_auto(send_buffer, d->atr.accel_diff, &ind);
     buffer_append_float32_auto(send_buffer, d->applied_booster_current, &ind);
@@ -1752,7 +1747,7 @@ static void cmd_send_all_data(data *d, unsigned char mode) {
         send_buffer[ind++] = d->turntilt_interpolated * 5 + 128;
         send_buffer[ind++] = d->inputtilt_interpolated * 5 + 128;
 
-        buffer_append_float16(send_buffer, d->true_pitch_angle, 10, &ind);
+        buffer_append_float16(send_buffer, d->pitch, 10, &ind);
         send_buffer[ind++] = d->applied_booster_current + 128;
 
         // Now send motor stuff:
@@ -2246,12 +2241,12 @@ static void cmd_flywheel_toggle(data *d, unsigned char *cfg, int len) {
     if (d->state.mode == MODE_FLYWHEEL) {
         if ((d->flywheel_pitch_offset == 0) || (command == 2)) {
             // accidental button press?? board isn't evn close to being upright
-            if (fabsf(d->true_pitch_angle) < 70) {
+            if (fabsf(d->pitch) < 70) {
                 d->state.mode = MODE_NORMAL;
                 return;
             }
 
-            d->flywheel_pitch_offset = d->true_pitch_angle;
+            d->flywheel_pitch_offset = d->pitch;
             d->flywheel_roll_offset = d->roll_angle;
             beep_alert(d, 1, 1);
         } else {
@@ -2365,7 +2360,7 @@ static void send_realtime_data2(data *d) {
 
     send_buffer[ind++] = d->beep_reason;
 
-    buffer_append_float32_auto(send_buffer, d->true_pitch_angle, &ind);
+    buffer_append_float32_auto(send_buffer, d->pitch, &ind);
     buffer_append_float32_auto(send_buffer, d->balance_pitch, &ind);
     buffer_append_float32_auto(send_buffer, d->roll_angle, &ind);
 
