@@ -103,7 +103,7 @@ typedef struct {
     BalanceFilterData balance_filter;
 
     // Runtime values read from elsewhere
-    float pitch, roll_angle;
+    float pitch, roll;
     float balance_pitch;
     float gyro[3];
 
@@ -546,7 +546,7 @@ static bool check_faults(data *d) {
             // Rolling forward (not backwards!)
             d->motor.erpm > (d->float_conf.fault_adc_half_erpm * 2) &&
             // Not tipped over
-            fabsf(d->roll_angle) < 40;
+            fabsf(d->roll) < 40;
 
         // Check switch
         // Switch fully open
@@ -620,7 +620,7 @@ static bool check_faults(data *d) {
         }
 
         // Check roll angle
-        if (fabsf(d->roll_angle) > d->float_conf.fault_roll) {
+        if (fabsf(d->roll) > d->float_conf.fault_roll) {
             if ((1000.0 * (d->current_time - d->fault_angle_roll_timer)) >
                 d->float_conf.fault_delay_roll) {
                 state_stop(&d->state, STOP_ROLL);
@@ -630,7 +630,7 @@ static bool check_faults(data *d) {
             d->fault_angle_roll_timer = d->current_time;
 
             if (d->float_conf.fault_darkride_enabled) {
-                if ((fabsf(d->roll_angle) > 100) && (fabsf(d->roll_angle) < 135)) {
+                if (fabsf(d->roll) > 100 && fabsf(d->roll) < 135) {
                     state_stop(&d->state, STOP_ROLL);
                     return true;
                 }
@@ -1092,17 +1092,17 @@ static void refloat_thd(void *arg) {
             (1.0 - d->loop_overshoot_alpha) * d->filtered_loop_overshoot;
 
         // Get the IMU Values
-        d->roll_angle = rad2deg(VESC_IF->imu_get_roll());
+        d->roll = rad2deg(VESC_IF->imu_get_roll());
 
         // Darkride:
         if (d->float_conf.fault_darkride_enabled) {
-            float abs_roll_angle = fabsf(d->roll_angle);
+            float abs_roll = fabsf(d->roll);
             if (d->state.darkride) {
-                if (abs_roll_angle < 120) {
+                if (abs_roll < 120) {
                     d->state.darkride = false;
                 }
             } else if (d->enable_upside_down) {
-                if (abs_roll_angle > 150) {
+                if (abs_roll > 150) {
                     d->state.darkride = true;
                     d->is_upside_down_started = false;
                     d->balance_pitch = -d->balance_pitch;
@@ -1117,11 +1117,11 @@ static void refloat_thd(void *arg) {
             // flip sign and use offsets
             d->pitch = d->flywheel_pitch_offset - d->pitch;
             d->balance_pitch = d->pitch;
-            d->roll_angle -= d->flywheel_roll_offset;
-            if (d->roll_angle < -200) {
-                d->roll_angle += 360;
-            } else if (d->roll_angle > 200) {
-                d->roll_angle -= 360;
+            d->roll -= d->flywheel_roll_offset;
+            if (d->roll < -200) {
+                d->roll += 360;
+            } else if (d->roll > 200) {
+                d->roll -= 360;
             }
         } else if (d->state.darkride) {
             d->balance_pitch = -d->balance_pitch - d->darkride_setpoint_correction;
@@ -1488,7 +1488,7 @@ static void refloat_thd(void *arg) {
 
             // Check for valid startup position and switch state
             if (fabsf(d->balance_pitch) < d->startup_pitch_tolerance &&
-                fabsf(d->roll_angle) < d->float_conf.startup_roll_tolerance && is_engaged(d)) {
+                fabsf(d->roll) < d->float_conf.startup_roll_tolerance && is_engaged(d)) {
                 reset_vars(d);
                 break;
             }
@@ -1496,7 +1496,7 @@ static void refloat_thd(void *arg) {
             if (d->state.darkride && (fabsf(d->balance_pitch) < d->startup_pitch_tolerance)) {
                 if ((d->current_time - d->disengage_timer) > 1) {
                     // after 1 second:
-                    if (fabsf(fabsf(d->roll_angle) - 180) < d->float_conf.startup_roll_tolerance) {
+                    if (fabsf(fabsf(d->roll) - 180) < d->float_conf.startup_roll_tolerance) {
                         reset_vars(d);
                         break;
                     }
@@ -1512,7 +1512,7 @@ static void refloat_thd(void *arg) {
             // Push-start aka dirty landing Part II
             if (d->float_conf.startup_pushstart_enabled && d->motor.abs_erpm > 1000 &&
                 is_engaged(d)) {
-                if ((fabsf(d->balance_pitch) < 45) && (fabsf(d->roll_angle) < 45)) {
+                if ((fabsf(d->balance_pitch) < 45) && (fabsf(d->roll) < 45)) {
                     // 45 to prevent board engaging when upright or laying sideways
                     // 45 degree tolerance is more than plenty for tricks / extreme mounts
                     reset_vars(d);
@@ -1670,7 +1670,7 @@ static void send_realtime_data(data *d) {
     // RT Data
     buffer_append_float32_auto(send_buffer, d->pid_value, &ind);
     buffer_append_float32_auto(send_buffer, d->balance_pitch, &ind);
-    buffer_append_float32_auto(send_buffer, d->roll_angle, &ind);
+    buffer_append_float32_auto(send_buffer, d->roll, &ind);
 
     uint8_t state = (state_compat(&d->state) & 0xF);
     send_buffer[ind++] = (state & 0xF) + (sat_compat(&d->state) << 4);
@@ -1723,7 +1723,7 @@ static void cmd_send_all_data(data *d, unsigned char mode) {
         // RT Data
         buffer_append_float16(send_buffer, d->pid_value, 10, &ind);
         buffer_append_float16(send_buffer, d->balance_pitch, 10, &ind);
-        buffer_append_float16(send_buffer, d->roll_angle, 10, &ind);
+        buffer_append_float16(send_buffer, d->roll, 10, &ind);
 
         uint8_t state = (state_compat(&d->state) & 0xF) + (sat_compat(&d->state) << 4);
         send_buffer[ind++] = state;
@@ -2247,7 +2247,7 @@ static void cmd_flywheel_toggle(data *d, unsigned char *cfg, int len) {
             }
 
             d->flywheel_pitch_offset = d->pitch;
-            d->flywheel_roll_offset = d->roll_angle;
+            d->flywheel_roll_offset = d->roll;
             beep_alert(d, 1, 1);
         } else {
             beep_alert(d, 3, 0);
@@ -2362,7 +2362,7 @@ static void send_realtime_data2(data *d) {
 
     buffer_append_float32_auto(send_buffer, d->pitch, &ind);
     buffer_append_float32_auto(send_buffer, d->balance_pitch, &ind);
-    buffer_append_float32_auto(send_buffer, d->roll_angle, &ind);
+    buffer_append_float32_auto(send_buffer, d->roll, &ind);
 
     buffer_append_float32_auto(send_buffer, d->footpad_sensor.adc1, &ind);
     buffer_append_float32_auto(send_buffer, d->footpad_sensor.adc2, &ind);
