@@ -16,6 +16,7 @@ DEPS = $(SOURCES:.c=.d)
 ADD_TO_CLEAN = $(CONF_GEN_FILES) $(DEPS) conf/conf_general.h
 
 VESC_C_LIB_PATH = ../vesc_pkg_lib/
+USE_STLIB = yes
 include $(VESC_C_LIB_PATH)rules.mk
 
 CFLAGS += -MMD -flto

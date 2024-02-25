@@ -27,6 +27,120 @@ typedef enum {
     INPUTTILT_PPM
 } FLOAT_INPUTTILT_REMOTE_TYPE;
 
+typedef enum {
+    LED_TYPE_NONE = 0,
+    LED_TYPE_RGB,
+    LED_TYPE_RGBW,
+    LED_TYPE_EXTERNAL,
+} LedType;
+
+typedef enum : uint8_t {
+    LED_PIN_B6 = 0,
+    LED_PIN_B7
+} LedPin;
+
+typedef enum : uint8_t {
+    COLOR_BLACK = 0,
+    COLOR_WHITE_FULL,
+    COLOR_WHITE_RGB,
+    COLOR_WHITE_SINGLE,
+    COLOR_RED,
+    COLOR_FERRARI,
+    COLOR_FLAME,
+    COLOR_CORAL,
+    COLOR_SUNSET,
+    COLOR_SUNRISE,
+    COLOR_GOLD,
+    COLOR_ORANGE,
+    COLOR_YELLOW,
+    COLOR_BANANA,
+    COLOR_LIME,
+    COLOR_ACID,
+    COLOR_SAGE,
+    COLOR_GREEN,
+    COLOR_MINT,
+    COLOR_TIFFANY,
+    COLOR_CYAN,
+    COLOR_STEEL,
+    COLOR_SKY,
+    COLOR_AZURE,
+    COLOR_SAPPHIRE,
+    COLOR_BLUE,
+    COLOR_VIOLET,
+    COLOR_AMETHYST,
+    COLOR_MAGENTA,
+    COLOR_PINK,
+    COLOR_FUCHSIA,
+    COLOR_LAVENDER,
+} LedColor;
+
+typedef enum : uint8_t {
+    LED_MODE_SOLID = 0,
+    LED_MODE_FADE,
+    LED_MODE_PULSE,
+    LED_MODE_STROBE,
+    LED_MODE_KNIGHT_RIDER
+} LedMode;
+
+typedef enum : uint8_t {
+    LED_TRANS_FADE = 0,
+    LED_TRANS_FADE_OUT_IN,
+    LED_TRANS_CIPHER,
+    LED_TRANS_MONO_CIPHER,
+} LedTransition;
+
+typedef struct {
+    float brightness;
+    LedColor color1;
+    LedColor color2;
+    LedMode mode;
+    float speed;
+} LedBar;
+
+typedef struct {
+    uint16_t idle_timeout;
+    float duty_threshold;
+    float red_bar_percentage;
+    bool show_sensors_while_running;
+    float brightness_headlights_on;
+    float brightness_headlights_off;
+} StatusBar;
+
+typedef struct {
+    bool on;
+    bool headlights_on;
+
+    LedTransition headlights_transition;
+    LedTransition direction_transition;
+
+    bool lights_off_when_lifted;
+    bool status_on_front_when_lifted;
+
+    LedBar headlights;
+    LedBar taillights;
+    LedBar front;
+    LedBar rear;
+    StatusBar status;
+    LedBar status_idle;
+} CfgLeds;
+
+typedef struct {
+    uint8_t count;
+    bool reverse;
+} CfgLedStrip;
+
+typedef struct {
+    LedType type;
+    LedPin pin;
+    CfgLedStrip status;
+    CfgLedStrip front;
+    CfgLedStrip rear;
+} CfgHwLeds;
+
+typedef struct {
+    CfgHwLeds leds;
+} CfgHardware;
+
 typedef struct {
     float version;
     bool disabled;
@@ -129,6 +243,9 @@ typedef struct {
     bool is_surgebuzz_enabled;
     float surge_duty_start;
     float surge_angle;
+
+    CfgLeds leds;
+    CfgHardware hardware;
 } RefloatConfig;
 
 // DATATYPES_H_

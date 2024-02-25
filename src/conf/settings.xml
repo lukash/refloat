@@ -2183,6 +2183,1181 @@ p, li { white-space: pre-wrap; }
             <suffix> °</suffix>
             <vTx>1</vTx>
         </turntilt_yaw_aggregate>
+        <leds.on>
+            <longName>LEDs On</longName>
+            <type>5</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Turns LEDs on or off completely.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_LEDS_ON</cDefine>
+            <valInt>1</valInt>
+        </leds.on>
+        <leds.headlights_on>
+            <longName>Headlights On</longName>
+            <type>5</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Turns headlights and tail lights on or off. Headlights and taillights activate when you engage the board (using the Headlights Transition). They switch according to the direction you ride.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Primary use of headlights is the white and red light for riding at night, but the settings are the exact same for Headlights, Taillights, Front and Rear. Use headlights to get whatever cool effect you want that'll switch to nose/tail according to the direction you ride.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_LEDS_HEADLIGHTS_ON</cDefine>
+            <valInt>1</valInt>
+        </leds.headlights_on>
+        <leds.headlights_transition>
+            <longName>Headlights Transition</longName>
+            <type>4</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Transition to and from headlights and taillights. Occurs when you engage the board if you have the headlights on.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_LEDS_HEADLIGHTS_TRANSITION</cDefine>
+            <valInt>0</valInt>
+            <enumNames>Fade</enumNames>
+            <enumNames>Fade Out Fade In</enumNames>
+            <enumNames>Cipher</enumNames>
+            <enumNames>Mono Cipher</enumNames>
+        </leds.headlights_transition>
+        <leds.direction_transition>
+            <longName>Direction Transition</longName>
+            <type>4</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Transition used when you change ride direction to switch from headlights to taillights on the front and back LED strips. Not used if you have headlights off.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_LEDS_DIRECTION_TRANSITION</cDefine>
+            <valInt>0</valInt>
+            <enumNames>Fade</enumNames>
+            <enumNames>Fade Out Fade In</enumNames>
+            <enumNames>Cipher</enumNames>
+            <enumNames>Mono Cipher</enumNames>
+        </leds.direction_transition>
+        <leds.lights_off_when_lifted>
+            <longName>Lights Off When Lifted</longName>
+            <type>5</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;When enabled, turns off front and rear leds when you lift the board nose up (pitch angle &amp;gt; 75°). So that the LEDs don't blast into your eyes when you carry it.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_LEDS_LIGHTS_OFF_WHEN_LIFTED</cDefine>
+            <valInt>1</valInt>
+        </leds.lights_off_when_lifted>
+        <leds.status_on_front_when_lifted>
+            <longName>Status On Front When Lifted</longName>
+            <type>5</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Show the status bar on the front LED strip when you lift the board nose up (pitch angle &amp;gt; 75°).&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;If you have Lights Off When Lifted on at the same time, will go dark after 3 seconds. You can make it show again by pressing the footpad sensor.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_LEDS_STATUS_ON_FRONT_WHEN_LIFTED</cDefine>
+            <valInt>1</valInt>
+        </leds.status_on_front_when_lifted>
+        <leds.front.mode>
+            <longName>Front Mode</longName>
+            <type>4</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Front LED strip mode (effect) when headlights are off.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_LEDS_FRONT_MODE</cDefine>
+            <valInt>4</valInt>
+            <enumNames>Solid</enumNames>
+            <enumNames>Fade</enumNames>
+            <enumNames>Pulse</enumNames>
+            <enumNames>Strobe</enumNames>
+            <enumNames>Knight Rider</enumNames>
+        </leds.front.mode>
+        <leds.front.brightness>
+            <longName>Front Brightness</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Front LED strip brightness when headlights are off.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Note: On very low brightness levels the LEDs will lose color precision and eventually turn off completely. This is a limitation of the LED strips and can't be alleviated.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_LEDS_FRONT_BRIGHTNESS</cDefine>
+            <editorDecimalsDouble>0</editorDecimalsDouble>
+            <editorScale>100</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>1</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>1</showDisplay>
+            <stepDouble>5</stepDouble>
+            <valDouble>0.5</valDouble>
+            <vTxDoubleScale>10000</vTxDoubleScale>
+            <suffix>%</suffix>
+            <vTx>7</vTx>
+        </leds.front.brightness>
+        <leds.front.color1>
+            <longName>Front Primary Color</longName>
+            <type>4</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Front primary color.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Note: There are three whites due to the extra white channel on RGBW LEDs:&lt;/p&gt;
+&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;White (full) is full brightness on all four channels, the brightest it can be. It also consumes the most power. On RGB LEDs, this is the same as White (rgb).&lt;/li&gt;
+&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;White (rgb) is the white of the three RGB channels.&lt;/li&gt;
+&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;White (single) only works on RGBW and is the single white channel. It's black on RGB-only LEDs. Less bright than White (full), but consumes significantly less power.&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_LEDS_FRONT_COLOR1</cDefine>
+            <valInt>4</valInt>
+            <enumNames>Black</enumNames>
+            <enumNames>White (full)</enumNames>
+            <enumNames>White (rgb)</enumNames>
+            <enumNames>White (single)</enumNames>
+            <enumNames>Red</enumNames>
+            <enumNames>Ferrari</enumNames>
+            <enumNames>Flame</enumNames>
+            <enumNames>Coral</enumNames>
+            <enumNames>Sunset</enumNames>
+            <enumNames>Sunrise</enumNames>
+            <enumNames>Gold</enumNames>
+            <enumNames>Orange</enumNames>
+            <enumNames>Yellow</enumNames>
+            <enumNames>Banana</enumNames>
+            <enumNames>Lime</enumNames>
+            <enumNames>Acid</enumNames>
+            <enumNames>Sage</enumNames>
+            <enumNames>Green</enumNames>
+            <enumNames>Mint</enumNames>
+            <enumNames>Tiffany</enumNames>
+            <enumNames>Cyan</enumNames>
+            <enumNames>Steel</enumNames>
+            <enumNames>Sky</enumNames>
+            <enumNames>Azure</enumNames>
+            <enumNames>Sapphire</enumNames>
+            <enumNames>Blue</enumNames>
+            <enumNames>Violet</enumNames>
+            <enumNames>Amethyst</enumNames>
+            <enumNames>Magenta</enumNames>
+            <enumNames>Pink</enumNames>
+            <enumNames>Fuchsia</enumNames>
+            <enumNames>Lavender</enumNames>
+        </leds.front.color1>
+        <leds.front.color2>
+            <longName>Front Secondary Color</longName>
+            <type>4</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Front secondary color.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Note: There are three whites due to the extra white channel on RGBW LEDs:&lt;/p&gt;
+&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;White (full) is full brightness on all four channels, the brightest it can be. It also consumes the most power. On RGB LEDs, this is the same as White (rgb).&lt;/li&gt;
+&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;White (rgb) is the white of the three RGB channels.&lt;/li&gt;
+&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;White (single) only works on RGBW and is the single white channel. It's black on RGB-only LEDs. Less bright than White (full), but consumes significantly less power.&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_LEDS_FRONT_COLOR2</cDefine>
+            <valInt>0</valInt>
+            <enumNames>Black</enumNames>
+            <enumNames>White (full)</enumNames>
+            <enumNames>White (rgb)</enumNames>
+            <enumNames>White (single)</enumNames>
+            <enumNames>Red</enumNames>
+            <enumNames>Ferrari</enumNames>
+            <enumNames>Flame</enumNames>
+            <enumNames>Coral</enumNames>
+            <enumNames>Sunset</enumNames>
+            <enumNames>Sunrise</enumNames>
+            <enumNames>Gold</enumNames>
+            <enumNames>Orange</enumNames>
+            <enumNames>Yellow</enumNames>
+            <enumNames>Banana</enumNames>
+            <enumNames>Lime</enumNames>
+            <enumNames>Acid</enumNames>
+            <enumNames>Sage</enumNames>
+            <enumNames>Green</enumNames>
+            <enumNames>Mint</enumNames>
+            <enumNames>Tiffany</enumNames>
+            <enumNames>Cyan</enumNames>
+            <enumNames>Steel</enumNames>
+            <enumNames>Sky</enumNames>
+            <enumNames>Azure</enumNames>
+            <enumNames>Sapphire</enumNames>
+            <enumNames>Blue</enumNames>
+            <enumNames>Violet</enumNames>
+            <enumNames>Amethyst</enumNames>
+            <enumNames>Magenta</enumNames>
+            <enumNames>Pink</enumNames>
+            <enumNames>Fuchsia</enumNames>
+            <enumNames>Lavender</enumNames>
+        </leds.front.color2>
+        <leds.front.speed>
+            <longName>Front Speed</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Front animation speed.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_LEDS_FRONT_SPEED</cDefine>
+            <editorDecimalsDouble>2</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>15</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.5</stepDouble>
+            <valDouble>1</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix></suffix>
+            <vTx>7</vTx>
+        </leds.front.speed>
+        <leds.rear.mode>
+            <longName>Rear Mode</longName>
+            <type>4</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Rear LED strip mode (effect) when headlights are off.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_LEDS_REAR_MODE</cDefine>
+            <valInt>2</valInt>
+            <enumNames>Solid</enumNames>
+            <enumNames>Fade</enumNames>
+            <enumNames>Pulse</enumNames>
+            <enumNames>Strobe</enumNames>
+            <enumNames>Knight Rider</enumNames>
+        </leds.rear.mode>
+        <leds.rear.brightness>
+            <longName>Rear Brightness</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Rear LED strip brightness when headlights are off.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Note: On very low brightness levels the LEDs will lose color precision and eventually turn off completely. This is a limitation of the LED strips and can't be alleviated.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_LEDS_REAR_BRIGHTNESS</cDefine>
+            <editorDecimalsDouble>0</editorDecimalsDouble>
+            <editorScale>100</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>1</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>1</showDisplay>
+            <stepDouble>5</stepDouble>
+            <valDouble>0.5</valDouble>
+            <vTxDoubleScale>10000</vTxDoubleScale>
+            <suffix>%</suffix>
+            <vTx>7</vTx>
+        </leds.rear.brightness>
+        <leds.rear.color1>
+            <longName>Rear Primary Color</longName>
+            <type>4</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Rear primary color.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Note: There are three whites due to the extra white channel on RGBW LEDs:&lt;/p&gt;
+&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;White (full) is full brightness on all four channels, the brightest it can be. It also consumes the most power. On RGB LEDs, this is the same as White (rgb).&lt;/li&gt;
+&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;White (rgb) is the white of the three RGB channels.&lt;/li&gt;
+&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;White (single) only works on RGBW and is the single white channel. It's black on RGB-only LEDs. Less bright than White (full), but consumes significantly less power.&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_LEDS_REAR_COLOR1</cDefine>
+            <valInt>23</valInt>
+            <enumNames>Black</enumNames>
+            <enumNames>White (full)</enumNames>
+            <enumNames>White (rgb)</enumNames>
+            <enumNames>White (single)</enumNames>
+            <enumNames>Red</enumNames>
+            <enumNames>Ferrari</enumNames>
+            <enumNames>Flame</enumNames>
+            <enumNames>Coral</enumNames>
+            <enumNames>Sunset</enumNames>
+            <enumNames>Sunrise</enumNames>
+            <enumNames>Gold</enumNames>
+            <enumNames>Orange</enumNames>
+            <enumNames>Yellow</enumNames>
+            <enumNames>Banana</enumNames>
+            <enumNames>Lime</enumNames>
+            <enumNames>Acid</enumNames>
+            <enumNames>Sage</enumNames>
+            <enumNames>Green</enumNames>
+            <enumNames>Mint</enumNames>
+            <enumNames>Tiffany</enumNames>
+            <enumNames>Cyan</enumNames>
+            <enumNames>Steel</enumNames>
+            <enumNames>Sky</enumNames>
+            <enumNames>Azure</enumNames>
+            <enumNames>Sapphire</enumNames>
+            <enumNames>Blue</enumNames>
+            <enumNames>Violet</enumNames>
+            <enumNames>Amethyst</enumNames>
+            <enumNames>Magenta</enumNames>
+            <enumNames>Pink</enumNames>
+            <enumNames>Fuchsia</enumNames>
+            <enumNames>Lavender</enumNames>
+        </leds.rear.color1>
+        <leds.rear.color2>
+            <longName>Rear Secondary Color</longName>
+            <type>4</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Rear secondary color.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Note: There are three whites due to the extra white channel on RGBW LEDs:&lt;/p&gt;
+&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;White (full) is full brightness on all four channels, the brightest it can be. It also consumes the most power. On RGB LEDs, this is the same as White (rgb).&lt;/li&gt;
+&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;White (rgb) is the white of the three RGB channels.&lt;/li&gt;
+&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;White (single) only works on RGBW and is the single white channel. It's black on RGB-only LEDs. Less bright than White (full), but consumes significantly less power.&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_LEDS_REAR_COLOR2</cDefine>
+            <valInt>0</valInt>
+            <enumNames>Black</enumNames>
+            <enumNames>White (full)</enumNames>
+            <enumNames>White (rgb)</enumNames>
+            <enumNames>White (single)</enumNames>
+            <enumNames>Red</enumNames>
+            <enumNames>Ferrari</enumNames>
+            <enumNames>Flame</enumNames>
+            <enumNames>Coral</enumNames>
+            <enumNames>Sunset</enumNames>
+            <enumNames>Sunrise</enumNames>
+            <enumNames>Gold</enumNames>
+            <enumNames>Orange</enumNames>
+            <enumNames>Yellow</enumNames>
+            <enumNames>Banana</enumNames>
+            <enumNames>Lime</enumNames>
+            <enumNames>Acid</enumNames>
+            <enumNames>Sage</enumNames>
+            <enumNames>Green</enumNames>
+            <enumNames>Mint</enumNames>
+            <enumNames>Tiffany</enumNames>
+            <enumNames>Cyan</enumNames>
+            <enumNames>Steel</enumNames>
+            <enumNames>Sky</enumNames>
+            <enumNames>Azure</enumNames>
+            <enumNames>Sapphire</enumNames>
+            <enumNames>Blue</enumNames>
+            <enumNames>Violet</enumNames>
+            <enumNames>Amethyst</enumNames>
+            <enumNames>Magenta</enumNames>
+            <enumNames>Pink</enumNames>
+            <enumNames>Fuchsia</enumNames>
+            <enumNames>Lavender</enumNames>
+        </leds.rear.color2>
+        <leds.rear.speed>
+            <longName>Rear Speed</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Rear animation speed.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_LEDS_REAR_SPEED</cDefine>
+            <editorDecimalsDouble>2</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>15</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.5</stepDouble>
+            <valDouble>1</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix></suffix>
+            <vTx>7</vTx>
+        </leds.rear.speed>
+        <leds.headlights.mode>
+            <longName>Headlights Mode</longName>
+            <type>4</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Forward-facing strip (switches according to ride direction) mode (effect) when headlights are on.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_LEDS_HEADLIGHTS_MODE</cDefine>
+            <valInt>0</valInt>
+            <enumNames>Solid</enumNames>
+            <enumNames>Fade</enumNames>
+            <enumNames>Pulse</enumNames>
+            <enumNames>Strobe</enumNames>
+            <enumNames>Knight Rider</enumNames>
+        </leds.headlights.mode>
+        <leds.headlights.brightness>
+            <longName>Headlights Brightness</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Forward-facing strip (switches according to ride direction) brightness when headlights are on.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Note: Default is conservatively set to 50%. Set to 100% to get the maximum headlights brightness.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Note: On very low brightness levels the LEDs will lose color precision and eventually turn off completely. This is a limitation of the LED strips and can't be alleviated.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_LEDS_HEADLIGHTS_BRIGHTNESS</cDefine>
+            <editorDecimalsDouble>0</editorDecimalsDouble>
+            <editorScale>100</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>1</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>1</showDisplay>
+            <stepDouble>5</stepDouble>
+            <valDouble>0.5</valDouble>
+            <vTxDoubleScale>10000</vTxDoubleScale>
+            <suffix>%</suffix>
+            <vTx>7</vTx>
+        </leds.headlights.brightness>
+        <leds.headlights.color1>
+            <longName>Headlights Primary Color</longName>
+            <type>4</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Headlights primary color.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Note: There are three whites due to the extra white channel on RGBW LEDs:&lt;/p&gt;
+&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;White (full) is full brightness on all four channels, the brightest it can be. It also consumes the most power. On RGB LEDs, this is the same as White (rgb).&lt;/li&gt;
+&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;White (rgb) is the white of the three RGB channels.&lt;/li&gt;
+&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;White (single) only works on RGBW and is the single white channel. It's black on RGB-only LEDs. Less bright than White (full), but consumes significantly less power.&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_LEDS_HEADLIGHTS_COLOR1</cDefine>
+            <valInt>1</valInt>
+            <enumNames>Black</enumNames>
+            <enumNames>White (full)</enumNames>
+            <enumNames>White (rgb)</enumNames>
+            <enumNames>White (single)</enumNames>
+            <enumNames>Red</enumNames>
+            <enumNames>Ferrari</enumNames>
+            <enumNames>Flame</enumNames>
+            <enumNames>Coral</enumNames>
+            <enumNames>Sunset</enumNames>
+            <enumNames>Sunrise</enumNames>
+            <enumNames>Gold</enumNames>
+            <enumNames>Orange</enumNames>
+            <enumNames>Yellow</enumNames>
+            <enumNames>Banana</enumNames>
+            <enumNames>Lime</enumNames>
+            <enumNames>Acid</enumNames>
+            <enumNames>Sage</enumNames>
+            <enumNames>Green</enumNames>
+            <enumNames>Mint</enumNames>
+            <enumNames>Tiffany</enumNames>
+            <enumNames>Cyan</enumNames>
+            <enumNames>Steel</enumNames>
+            <enumNames>Sky</enumNames>
+            <enumNames>Azure</enumNames>
+            <enumNames>Sapphire</enumNames>
+            <enumNames>Blue</enumNames>
+            <enumNames>Violet</enumNames>
+            <enumNames>Amethyst</enumNames>
+            <enumNames>Magenta</enumNames>
+            <enumNames>Pink</enumNames>
+            <enumNames>Fuchsia</enumNames>
+            <enumNames>Lavender</enumNames>
+        </leds.headlights.color1>
+        <leds.headlights.color2>
+            <longName>Headlights Secondary Color</longName>
+            <type>4</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Headlights secondary color.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Note: There are three whites due to the extra white channel on RGBW LEDs:&lt;/p&gt;
+&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;White (full) is full brightness on all four channels, the brightest it can be. It also consumes the most power. On RGB LEDs, this is the same as White (rgb).&lt;/li&gt;
+&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;White (rgb) is the white of the three RGB channels.&lt;/li&gt;
+&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;White (single) only works on RGBW and is the single white channel. It's black on RGB-only LEDs. Less bright than White (full), but consumes significantly less power.&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_LEDS_HEADLIGHTS_COLOR2</cDefine>
+            <valInt>0</valInt>
+            <enumNames>Black</enumNames>
+            <enumNames>White (full)</enumNames>
+            <enumNames>White (rgb)</enumNames>
+            <enumNames>White (single)</enumNames>
+            <enumNames>Red</enumNames>
+            <enumNames>Ferrari</enumNames>
+            <enumNames>Flame</enumNames>
+            <enumNames>Coral</enumNames>
+            <enumNames>Sunset</enumNames>
+            <enumNames>Sunrise</enumNames>
+            <enumNames>Gold</enumNames>
+            <enumNames>Orange</enumNames>
+            <enumNames>Yellow</enumNames>
+            <enumNames>Banana</enumNames>
+            <enumNames>Lime</enumNames>
+            <enumNames>Acid</enumNames>
+            <enumNames>Sage</enumNames>
+            <enumNames>Green</enumNames>
+            <enumNames>Mint</enumNames>
+            <enumNames>Tiffany</enumNames>
+            <enumNames>Cyan</enumNames>
+            <enumNames>Steel</enumNames>
+            <enumNames>Sky</enumNames>
+            <enumNames>Azure</enumNames>
+            <enumNames>Sapphire</enumNames>
+            <enumNames>Blue</enumNames>
+            <enumNames>Violet</enumNames>
+            <enumNames>Amethyst</enumNames>
+            <enumNames>Magenta</enumNames>
+            <enumNames>Pink</enumNames>
+            <enumNames>Fuchsia</enumNames>
+            <enumNames>Lavender</enumNames>
+        </leds.headlights.color2>
+        <leds.headlights.speed>
+            <longName>Headlights Speed</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Headlights animation speed.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_LEDS_HEADLIGHTS_SPEED</cDefine>
+            <editorDecimalsDouble>2</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>15</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.5</stepDouble>
+            <valDouble>1</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix></suffix>
+            <vTx>7</vTx>
+        </leds.headlights.speed>
+        <leds.taillights.mode>
+            <longName>Taillights Mode</longName>
+            <type>4</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Backwards-facing strip (switches according to ride direction) mode (effect) when headlights are on.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_LEDS_TAILLIGHTS_MODE</cDefine>
+            <valInt>0</valInt>
+            <enumNames>Solid</enumNames>
+            <enumNames>Fade</enumNames>
+            <enumNames>Pulse</enumNames>
+            <enumNames>Strobe</enumNames>
+            <enumNames>Knight Rider</enumNames>
+        </leds.taillights.mode>
+        <leds.taillights.brightness>
+            <longName>Taillights Brightness</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Backwards-facing strip (switches according to ride direction) brightness when headlights are on.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Note: On very low brightness levels the LEDs will lose color precision and eventually turn off completely. This is a limitation of the LED strips and can't be alleviated.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_LEDS_TAILLIGHTS_BRIGHTNESS</cDefine>
+            <editorDecimalsDouble>0</editorDecimalsDouble>
+            <editorScale>100</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>1</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>1</showDisplay>
+            <stepDouble>5</stepDouble>
+            <valDouble>0.5</valDouble>
+            <vTxDoubleScale>10000</vTxDoubleScale>
+            <suffix>%</suffix>
+            <vTx>7</vTx>
+        </leds.taillights.brightness>
+        <leds.taillights.color1>
+            <longName>Taillights Primary Color</longName>
+            <type>4</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Taillights primary color.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Note: There are three whites due to the extra white channel on RGBW LEDs:&lt;/p&gt;
+&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;White (full) is full brightness on all four channels, the brightest it can be. It also consumes the most power. On RGB LEDs, this is the same as White (rgb).&lt;/li&gt;
+&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;White (rgb) is the white of the three RGB channels.&lt;/li&gt;
+&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;White (single) only works on RGBW and is the single white channel. It's black on RGB-only LEDs. Less bright than White (full), but consumes significantly less power.&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_LEDS_TAILLIGHTS_COLOR1</cDefine>
+            <valInt>4</valInt>
+            <enumNames>Black</enumNames>
+            <enumNames>White (full)</enumNames>
+            <enumNames>White (rgb)</enumNames>
+            <enumNames>White (single)</enumNames>
+            <enumNames>Red</enumNames>
+            <enumNames>Ferrari</enumNames>
+            <enumNames>Flame</enumNames>
+            <enumNames>Coral</enumNames>
+            <enumNames>Sunset</enumNames>
+            <enumNames>Sunrise</enumNames>
+            <enumNames>Gold</enumNames>
+            <enumNames>Orange</enumNames>
+            <enumNames>Yellow</enumNames>
+            <enumNames>Banana</enumNames>
+            <enumNames>Lime</enumNames>
+            <enumNames>Acid</enumNames>
+            <enumNames>Sage</enumNames>
+            <enumNames>Green</enumNames>
+            <enumNames>Mint</enumNames>
+            <enumNames>Tiffany</enumNames>
+            <enumNames>Cyan</enumNames>
+            <enumNames>Steel</enumNames>
+            <enumNames>Sky</enumNames>
+            <enumNames>Azure</enumNames>
+            <enumNames>Sapphire</enumNames>
+            <enumNames>Blue</enumNames>
+            <enumNames>Violet</enumNames>
+            <enumNames>Amethyst</enumNames>
+            <enumNames>Magenta</enumNames>
+            <enumNames>Pink</enumNames>
+            <enumNames>Fuchsia</enumNames>
+            <enumNames>Lavender</enumNames>
+        </leds.taillights.color1>
+        <leds.taillights.color2>
+            <longName>Taillights Secondary Color</longName>
+            <type>4</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Taillights secondary color.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Note: There are three whites due to the extra white channel on RGBW LEDs:&lt;/p&gt;
+&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;White (full) is full brightness on all four channels, the brightest it can be. It also consumes the most power. On RGB LEDs, this is the same as White (rgb).&lt;/li&gt;
+&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;White (rgb) is the white of the three RGB channels.&lt;/li&gt;
+&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;White (single) only works on RGBW and is the single white channel. It's black on RGB-only LEDs. Less bright than White (full), but consumes significantly less power.&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_LEDS_TAILLIGHTS_COLOR2</cDefine>
+            <valInt>0</valInt>
+            <enumNames>Black</enumNames>
+            <enumNames>White (full)</enumNames>
+            <enumNames>White (rgb)</enumNames>
+            <enumNames>White (single)</enumNames>
+            <enumNames>Red</enumNames>
+            <enumNames>Ferrari</enumNames>
+            <enumNames>Flame</enumNames>
+            <enumNames>Coral</enumNames>
+            <enumNames>Sunset</enumNames>
+            <enumNames>Sunrise</enumNames>
+            <enumNames>Gold</enumNames>
+            <enumNames>Orange</enumNames>
+            <enumNames>Yellow</enumNames>
+            <enumNames>Banana</enumNames>
+            <enumNames>Lime</enumNames>
+            <enumNames>Acid</enumNames>
+            <enumNames>Sage</enumNames>
+            <enumNames>Green</enumNames>
+            <enumNames>Mint</enumNames>
+            <enumNames>Tiffany</enumNames>
+            <enumNames>Cyan</enumNames>
+            <enumNames>Steel</enumNames>
+            <enumNames>Sky</enumNames>
+            <enumNames>Azure</enumNames>
+            <enumNames>Sapphire</enumNames>
+            <enumNames>Blue</enumNames>
+            <enumNames>Violet</enumNames>
+            <enumNames>Amethyst</enumNames>
+            <enumNames>Magenta</enumNames>
+            <enumNames>Pink</enumNames>
+            <enumNames>Fuchsia</enumNames>
+            <enumNames>Lavender</enumNames>
+        </leds.taillights.color2>
+        <leds.taillights.speed>
+            <longName>Taillights Speed</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Taillights animation speed.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_LEDS_TAILLIGHTS_SPEED</cDefine>
+            <editorDecimalsDouble>2</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>15</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.5</stepDouble>
+            <valDouble>1</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix></suffix>
+            <vTx>7</vTx>
+        </leds.taillights.speed>
+        <leds.status.brightness_headlights_off>
+            <longName>Status Brightness (Headlights Off)</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Status brightness when headlights are off, intended to be daylight-level brightness. Set high so that you can see the status in direct sunlight.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Note: On very low brightness levels the LEDs will lose color precision and eventually turn off completely. This is a limitation of the LED strips and can't be alleviated.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_LEDS_STATUS_BRIGHTNESS_HEADLIGHTS_OFF</cDefine>
+            <editorDecimalsDouble>0</editorDecimalsDouble>
+            <editorScale>100</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>1</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>1</showDisplay>
+            <stepDouble>5</stepDouble>
+            <valDouble>0.5</valDouble>
+            <vTxDoubleScale>10000</vTxDoubleScale>
+            <suffix>%</suffix>
+            <vTx>7</vTx>
+        </leds.status.brightness_headlights_off>
+        <leds.status.brightness_headlights_on>
+            <longName>Status Brightness (Headlights On)</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Status brightness when headlights are on, intended to be night-time brightness. Set low so that the status bar doesn't glare into your eyes when it's dark.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Note: On very low brightness levels the LEDs will lose color precision and eventually turn off completely. This is a limitation of the LED strips and can't be alleviated.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_LEDS_STATUS_BRIGHTNESS_HEADLIGHTS_ON</cDefine>
+            <editorDecimalsDouble>0</editorDecimalsDouble>
+            <editorScale>100</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>1</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>1</showDisplay>
+            <stepDouble>5</stepDouble>
+            <valDouble>0.2</valDouble>
+            <vTxDoubleScale>10000</vTxDoubleScale>
+            <suffix>%</suffix>
+            <vTx>7</vTx>
+        </leds.status.brightness_headlights_on>
+        <leds.status.show_sensors_while_running>
+            <longName>Show Sensor Indicators While Running</longName>
+            <type>5</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;When on, the blue footpad sensor indicators will show while running, if at least one of the sensors is deactivated. When off, no footpad sensor indicators will be shown.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_LEDS_STATUS_SHOW_SENSORS_WHILE_RUNNING</cDefine>
+            <valInt>1</valInt>
+        </leds.status.show_sensors_while_running>
+        <leds.status.duty_threshold>
+            <longName>Status Duty Threshold</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Duty threshold at which the duty is shown on the status bar instead of the battery. Note there is a 10% hysteresis, meaning if you duty shows at 20%, it will be shown until it drops below 10% (to avoid constant blinking). Values below 15% set the threshold to 15%.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Set to 0 to not show the duty bar.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Note: Since duty above 95% is not achievable and you're unlikely to ever benefit from values above 90% being shown on your status bar, duty level of 90% is scaled to 100% on the status bar to make full use of its real estate.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_HARDWARE_LEDS_STATUS_DUTY_THRESHOLD</cDefine>
+            <editorDecimalsDouble>0</editorDecimalsDouble>
+            <editorScale>100</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>1</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>5</stepDouble>
+            <valDouble>0.2</valDouble>
+            <vTxDoubleScale>10000</vTxDoubleScale>
+            <suffix>%</suffix>
+            <vTx>7</vTx>
+        </leds.status.duty_threshold>
+        <leds.status.red_bar_percentage>
+            <longName>Red Color Bar Percentage</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Percent threshold at which the low end of the battery bar and the hight end of the duty bar will be colored red. Mainly inteded to fine-tune the amount of red LEDs on status bars with different LED counts.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_HARDWARE_LEDS_STATUS_RED_BAR_PERCENTAGE</cDefine>
+            <editorDecimalsDouble>0</editorDecimalsDouble>
+            <editorScale>100</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>0.5</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>5</stepDouble>
+            <valDouble>0.2</valDouble>
+            <vTxDoubleScale>10000</vTxDoubleScale>
+            <suffix>%</suffix>
+            <vTx>7</vTx>
+        </leds.status.red_bar_percentage>
+        <leds.status.idle_timeout>
+            <longName>Status Idle Timeout</longName>
+            <type>2</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Amount of seconds after which the status bar hoes into Idle. In Idle the status bar shows an animation which can be configured just like the Front / Rear animations.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Set to 0 to disable Idle.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_HARDWARE_LEDS_STATUS_IDLE_TIMEOUT</cDefine>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxInt>300</maxInt>
+            <minInt>0</minInt>
+            <showDisplay>0</showDisplay>
+            <stepInt>10</stepInt>
+            <valInt>0</valInt>
+            <suffix>s</suffix>
+            <vTx>3</vTx>
+        </leds.status.idle_timeout>
+        <leds.status_idle.mode>
+            <longName>Status Idle Mode</longName>
+            <type>4</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Status Idle mode (effect). Set Status Idle Timeout to a non-zero value to enable the Status Idle mode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_LEDS_STATUS_IDLE_MODE</cDefine>
+            <valInt>4</valInt>
+            <enumNames>Solid</enumNames>
+            <enumNames>Fade</enumNames>
+            <enumNames>Pulse</enumNames>
+            <enumNames>Strobe</enumNames>
+            <enumNames>Knight Rider</enumNames>
+        </leds.status_idle.mode>
+        <leds.status_idle.brightness>
+            <longName>Status Idle Brightness</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Status brightness when in Idle.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Note: On very low brightness levels the LEDs will lose color precision and eventually turn off completely. This is a limitation of the LED strips and can't be alleviated.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_LEDS_STATUS_IDLE_BRIGHTNESS</cDefine>
+            <editorDecimalsDouble>0</editorDecimalsDouble>
+            <editorScale>100</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>1</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>1</showDisplay>
+            <stepDouble>5</stepDouble>
+            <valDouble>0.3</valDouble>
+            <vTxDoubleScale>10000</vTxDoubleScale>
+            <suffix>%</suffix>
+            <vTx>7</vTx>
+        </leds.status_idle.brightness>
+        <leds.status_idle.color1>
+            <longName>Status Idle Primary Color</longName>
+            <type>4</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Status Idle primary color.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Note: There are three whites due to the extra white channel on RGBW LEDs:&lt;/p&gt;
+&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;White (full) is full brightness on all four channels, the brightest it can be. It also consumes the most power. On RGB LEDs, this is the same as White (rgb).&lt;/li&gt;
+&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;White (rgb) is the white of the three RGB channels.&lt;/li&gt;
+&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;White (single) only works on RGBW and is the single white channel. It's black on RGB-only LEDs. Less bright than White (full), but consumes significantly less power.&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_LEDS_STATUS_IDLE_COLOR1</cDefine>
+            <valInt>4</valInt>
+            <enumNames>Black</enumNames>
+            <enumNames>White (full)</enumNames>
+            <enumNames>White (rgb)</enumNames>
+            <enumNames>White (single)</enumNames>
+            <enumNames>Red</enumNames>
+            <enumNames>Ferrari</enumNames>
+            <enumNames>Flame</enumNames>
+            <enumNames>Coral</enumNames>
+            <enumNames>Sunset</enumNames>
+            <enumNames>Sunrise</enumNames>
+            <enumNames>Gold</enumNames>
+            <enumNames>Orange</enumNames>
+            <enumNames>Yellow</enumNames>
+            <enumNames>Banana</enumNames>
+            <enumNames>Lime</enumNames>
+            <enumNames>Acid</enumNames>
+            <enumNames>Sage</enumNames>
+            <enumNames>Green</enumNames>
+            <enumNames>Mint</enumNames>
+            <enumNames>Tiffany</enumNames>
+            <enumNames>Cyan</enumNames>
+            <enumNames>Steel</enumNames>
+            <enumNames>Sky</enumNames>
+            <enumNames>Azure</enumNames>
+            <enumNames>Sapphire</enumNames>
+            <enumNames>Blue</enumNames>
+            <enumNames>Violet</enumNames>
+            <enumNames>Amethyst</enumNames>
+            <enumNames>Magenta</enumNames>
+            <enumNames>Pink</enumNames>
+            <enumNames>Fuchsia</enumNames>
+            <enumNames>Lavender</enumNames>
+        </leds.status_idle.color1>
+        <leds.status_idle.color2>
+            <longName>Status Idle Secondary Color</longName>
+            <type>4</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Satus Idle secondary color.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Note: There are three whites due to the extra white channel on RGBW LEDs:&lt;/p&gt;
+&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;White (full) is full brightness on all four channels, the brightest it can be. It also consumes the most power. On RGB LEDs, this is the same as White (rgb).&lt;/li&gt;
+&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;White (rgb) is the white of the three RGB channels.&lt;/li&gt;
+&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;White (single) only works on RGBW and is the single white channel. It's black on RGB-only LEDs. Less bright than White (full), but consumes significantly less power.&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_LEDS_STATUS_IDLE_COLOR2</cDefine>
+            <valInt>0</valInt>
+            <enumNames>Black</enumNames>
+            <enumNames>White (full)</enumNames>
+            <enumNames>White (rgb)</enumNames>
+            <enumNames>White (single)</enumNames>
+            <enumNames>Red</enumNames>
+            <enumNames>Ferrari</enumNames>
+            <enumNames>Flame</enumNames>
+            <enumNames>Coral</enumNames>
+            <enumNames>Sunset</enumNames>
+            <enumNames>Sunrise</enumNames>
+            <enumNames>Gold</enumNames>
+            <enumNames>Orange</enumNames>
+            <enumNames>Yellow</enumNames>
+            <enumNames>Banana</enumNames>
+            <enumNames>Lime</enumNames>
+            <enumNames>Acid</enumNames>
+            <enumNames>Sage</enumNames>
+            <enumNames>Green</enumNames>
+            <enumNames>Mint</enumNames>
+            <enumNames>Tiffany</enumNames>
+            <enumNames>Cyan</enumNames>
+            <enumNames>Steel</enumNames>
+            <enumNames>Sky</enumNames>
+            <enumNames>Azure</enumNames>
+            <enumNames>Sapphire</enumNames>
+            <enumNames>Blue</enumNames>
+            <enumNames>Violet</enumNames>
+            <enumNames>Amethyst</enumNames>
+            <enumNames>Magenta</enumNames>
+            <enumNames>Pink</enumNames>
+            <enumNames>Fuchsia</enumNames>
+            <enumNames>Lavender</enumNames>
+        </leds.status_idle.color2>
+        <leds.status_idle.speed>
+            <longName>Satus Idle Speed</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Status Idle animation speed.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_LEDS_STATUS_IDLE_SPEED</cDefine>
+            <editorDecimalsDouble>2</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>15</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.5</stepDouble>
+            <valDouble>1</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix></suffix>
+            <vTx>7</vTx>
+        </leds.status_idle.speed>
+        <hardware.leds.type>
+            <longName>LED Type</longName>
+            <type>4</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;LED Strip Type&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;None: Disable LED controls&lt;/li&gt;&lt;/ul&gt;
+&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;RGB: 3 channel LEDs (WS2811, WS2812b, etc.)&lt;/li&gt;
+&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;RGBW: 4 channel LEDs with white channel (WS2815, SK2812, SK6812, etc.)&lt;/li&gt;
+&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;External Module: External LED control modules, such as the Floatwheel LCM&lt;/li&gt;&lt;/ul&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Board restart required for changes to take effect.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Note: Pressing both footpad sensors when turning on the board will disable the LED initialization. Use if the LEDs break your VESC in a way that prevents you to connect and change configuration (e.g. due to an overcurrent).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_HARDWARE_LED_TYPE</cDefine>
+            <valInt>0</valInt>
+            <enumNames>None</enumNames>
+            <enumNames>RGB</enumNames>
+            <enumNames>RGBW</enumNames>
+            <enumNames>External Module</enumNames>
+        </hardware.leds.type>
+        <hardware.leds.pin>
+            <longName>LED Pin</longName>
+            <type>4</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The pin to which the LEDs are connected on the VESC.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;B6: Little FOCer v3.x, Tronic 250R, Ubox V2 75V/100V (PPM/servo pin)&lt;/li&gt;
+&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;B7: Little FOCer v4.x, Thor 300 (Dedicated LED pin)&lt;/li&gt;&lt;/ul&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Board restart required for changes to take effect.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Note: For the PPM/servo pin to work, you need to remove a capacitor from the VESC. For Little FOCer / Tronic it's the C3 capacitor.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_HARDWARE_LED_PIN</cDefine>
+            <valInt>1</valInt>
+            <enumNames>B6</enumNames>
+            <enumNames>B7</enumNames>
+        </hardware.leds.pin>
+        <hardware.leds.status.count>
+            <longName>Status LED Strip Length</longName>
+            <type>2</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Number of LEDs in your status bar strip. The status bar strip must be the first in the chain of LEDs. If you dont have a status bar, set this to 0.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Board restart required for changes to take effect.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_HARDWARE_LEDS_STATUS_COUNT</cDefine>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxInt>20</maxInt>
+            <minInt>0</minInt>
+            <showDisplay>0</showDisplay>
+            <stepInt>1</stepInt>
+            <valInt>10</valInt>
+            <suffix></suffix>
+            <vTx>1</vTx>
+        </hardware.leds.status.count>
+        <hardware.leds.status.reverse>
+            <longName>Reverse Status LED Direction</longName>
+            <type>5</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Reverse the direction of the status bar LED strip.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Board restart required for changes to take effect.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_HARDWARE_LEDS_STATUS_REVERSE</cDefine>
+            <valInt>0</valInt>
+        </hardware.leds.status.reverse>
+        <hardware.leds.front.count>
+            <longName>Front LED Strip Length</longName>
+            <type>2</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The number of LEDs in your front LED strip. This strip must be the 2nd in your chain of LEDs, wired after the status LEDs and before the rear LEDs. Set to 0 if you don't have a front LED strip.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Board restart required for changes to take effect.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_HARDWARE_LEDS_FRONT_COUNT</cDefine>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxInt>30</maxInt>
+            <minInt>0</minInt>
+            <showDisplay>0</showDisplay>
+            <stepInt>1</stepInt>
+            <valInt>20</valInt>
+            <suffix></suffix>
+            <vTx>1</vTx>
+        </hardware.leds.front.count>
+        <hardware.leds.front.reverse>
+            <longName>Reverse Front LED Direction</longName>
+            <type>5</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Reverse the direction of the front LED strip.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Board restart required for changes to take effect.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_HARDWARE_LEDS_FRONT_REVERSE</cDefine>
+            <valInt>0</valInt>
+        </hardware.leds.front.reverse>
+        <hardware.leds.rear.count>
+            <longName>Rear LED Strip Length</longName>
+            <type>2</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The number of LEDs in your rear LED strip. This strip must be the 3rd in your chain of LEDs, wired after the status LEDs and front LEDs. Set to 0 if you don't have a rear LED strip.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Board restart required for changes to take effect.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_HARDWARE_LEDS_REAR_COUNT</cDefine>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxInt>30</maxInt>
+            <minInt>0</minInt>
+            <showDisplay>0</showDisplay>
+            <stepInt>1</stepInt>
+            <valInt>20</valInt>
+            <suffix></suffix>
+            <vTx>1</vTx>
+        </hardware.leds.rear.count>
+        <hardware.leds.rear.reverse>
+            <longName>Reverse Rear LED Direction</longName>
+            <type>5</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Reverse the direction of the rear LED strip.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Board restart required for changes to take effect.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_HARDWARE_LEDS_REAR_REVERSE</cDefine>
+            <valInt>0</valInt>
+        </hardware.leds.rear.reverse>
         <dark_pitch_offset>
             <longName>Darkride Pitch Offset</longName>
             <type>1</type>
@@ -2328,6 +3503,51 @@ p, li { white-space: pre-wrap; }
         <ser>atr_amps_decel_ratio</ser>
         <ser>braketilt_strength</ser>
         <ser>braketilt_lingering</ser>
+        <ser>leds.on</ser>
+        <ser>leds.headlights_on</ser>
+        <ser>leds.headlights_transition</ser>
+        <ser>leds.direction_transition</ser>
+        <ser>leds.lights_off_when_lifted</ser>
+        <ser>leds.status_on_front_when_lifted</ser>
+        <ser>leds.front.mode</ser>
+        <ser>leds.front.brightness</ser>
+        <ser>leds.front.color1</ser>
+        <ser>leds.front.color2</ser>
+        <ser>leds.front.speed</ser>
+        <ser>leds.rear.mode</ser>
+        <ser>leds.rear.brightness</ser>
+        <ser>leds.rear.color1</ser>
+        <ser>leds.rear.color2</ser>
+        <ser>leds.rear.speed</ser>
+        <ser>leds.headlights.mode</ser>
+        <ser>leds.headlights.brightness</ser>
+        <ser>leds.headlights.color1</ser>
+        <ser>leds.headlights.color2</ser>
+        <ser>leds.headlights.speed</ser>
+        <ser>leds.taillights.mode</ser>
+        <ser>leds.taillights.brightness</ser>
+        <ser>leds.taillights.color1</ser>
+        <ser>leds.taillights.color2</ser>
+        <ser>leds.taillights.speed</ser>
+        <ser>leds.status.brightness_headlights_off</ser>
+        <ser>leds.status.brightness_headlights_on</ser>
+        <ser>leds.status.show_sensors_while_running</ser>
+        <ser>leds.status.duty_threshold</ser>
+        <ser>leds.status.red_bar_percentage</ser>
+        <ser>leds.status.idle_timeout</ser>
+        <ser>leds.status_idle.mode</ser>
+        <ser>leds.status_idle.brightness</ser>
+        <ser>leds.status_idle.color1</ser>
+        <ser>leds.status_idle.color2</ser>
+        <ser>leds.status_idle.speed</ser>
+        <ser>hardware.leds.type</ser>
+        <ser>hardware.leds.pin</ser>
+        <ser>hardware.leds.status.count</ser>
+        <ser>hardware.leds.status.reverse</ser>
+        <ser>hardware.leds.front.count</ser>
+        <ser>hardware.leds.front.reverse</ser>
+        <ser>hardware.leds.rear.count</ser>
+        <ser>hardware.leds.rear.reverse</ser>
         <ser>dark_pitch_offset</ser>
         <ser>is_buzzer_enabled</ser>
         <ser>disabled</ser>
@@ -2487,6 +3707,55 @@ p, li { white-space: pre-wrap; }
                 </subgroupParams>
             </subgroup>
             <subgroup>
+                <subgroupName>LEDs</subgroupName>
+                <subgroupParams>
+                    <param>::sep::General</param>
+                    <param>leds.on</param>
+                    <param>leds.headlights_on</param>
+                    <param>leds.headlights_transition</param>
+                    <param>leds.direction_transition</param>
+                    <param>leds.lights_off_when_lifted</param>
+                    <param>leds.status_on_front_when_lifted</param>
+                    <param>::sep::Front</param>
+                    <param>leds.front.mode</param>
+                    <param>leds.front.brightness</param>
+                    <param>leds.front.color1</param>
+                    <param>leds.front.color2</param>
+                    <param>leds.front.speed</param>
+                    <param>::sep::Rear</param>
+                    <param>leds.rear.mode</param>
+                    <param>leds.rear.brightness</param>
+                    <param>leds.rear.color1</param>
+                    <param>leds.rear.color2</param>
+                    <param>leds.rear.speed</param>
+                    <param>::sep::Headlights</param>
+                    <param>leds.headlights.mode</param>
+                    <param>leds.headlights.brightness</param>
+                    <param>leds.headlights.color1</param>
+                    <param>leds.headlights.color2</param>
+                    <param>leds.headlights.speed</param>
+                    <param>::sep::Taillights</param>
+                    <param>leds.taillights.mode</param>
+                    <param>leds.taillights.brightness</param>
+                    <param>leds.taillights.color1</param>
+                    <param>leds.taillights.color2</param>
+                    <param>leds.taillights.speed</param>
+                    <param>::sep::Status</param>
+                    <param>leds.status.brightness_headlights_off</param>
+                    <param>leds.status.brightness_headlights_on</param>
+                    <param>leds.status.show_sensors_while_running</param>
+                    <param>leds.status.duty_threshold</param>
+                    <param>leds.status.red_bar_percentage</param>
+                    <param>leds.status.idle_timeout</param>
+                    <param>::sep::Status Idle</param>
+                    <param>leds.status_idle.mode</param>
+                    <param>leds.status_idle.brightness</param>
+                    <param>leds.status_idle.color1</param>
+                    <param>leds.status_idle.color2</param>
+                    <param>leds.status_idle.speed</param>
+                </subgroupParams>
+            </subgroup>
+            <subgroup>
                 <subgroupName>Specs</subgroupName>
                 <subgroupParams>
                     <param>::sep::Refloat Package Details</param>
@@ -2503,6 +3772,15 @@ p, li { white-space: pre-wrap; }
                     <param>::sep::Miscellaneous</param>
                     <param>dark_pitch_offset</param>
                     <param>is_buzzer_enabled</param>
+                    <param>::sep::Leds (changes require reboot)</param>
+                    <param>hardware.leds.type</param>
+                    <param>hardware.leds.pin</param>
+                    <param>hardware.leds.status.count</param>
+                    <param>hardware.leds.status.reverse</param>
+                    <param>hardware.leds.front.count</param>
+                    <param>hardware.leds.front.reverse</param>
+                    <param>hardware.leds.rear.count</param>
+                    <param>hardware.leds.rear.reverse</param>
                 </subgroupParams>
             </subgroup>
         </group>

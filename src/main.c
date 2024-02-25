@@ -23,6 +23,7 @@
 
 #include "atr.h"
 #include "footpad_sensor.h"
+#include "leds.h"
 #include "motor_data.h"
 #include "state.h"
 #include "torque_tilt.h"
@@ -65,7 +66,8 @@ static const FootpadSensorState flywheel_konami_sequence[] = {
 // main firmware and managed from there). This is probably the main limitation of
 // loading applications in runtime, but it is not too bad to work around.
 typedef struct {
-    lib_thread thread;
+    lib_thread main_thread;
+    lib_thread led_thread;
 
     RefloatConfig float_conf;
 
@@ -82,6 +84,8 @@ typedef struct {
     int beep_countdown;
     int beep_reason;
     bool buzzer_enabled;
+
+    Leds leds;
 
     // Config values
     uint32_t loop_time_us;
@@ -1517,6 +1521,15 @@ static void write_cfg_to_eeprom(data *d) {
     beep_alert(d, 1, 0);
 }
 
+static void led_thd(void *arg) {
+    data *d = (data *) arg;
+
+    while (!VESC_IF->should_terminate()) {
+        leds_update(&d->leds, &d->state, d->footpad_sensor.state);
+        VESC_IF->sleep_us(1e6 / LEDS_REFRESH_RATE);
+    }
+}
+
 static void read_cfg_from_eeprom(data *d) {
     // Read config from EEPROM if signature is correct
     eeprom_var v;
@@ -1640,7 +1653,7 @@ static void send_realtime_data(data *d) {
 
     if (ind > BUFSIZE) {
         log_error("send_realtime_data: Buffer too small, terminating.");
-        VESC_IF->request_terminate(d->thread);
+        VESC_IF->request_terminate(d->main_thread);
     }
     VESC_IF->send_app_data(send_buffer, ind);
 }
@@ -1727,7 +1740,7 @@ static void cmd_send_all_data(data *d, unsigned char mode) {
 
     if (ind > SNDBUFSIZE) {
         log_error("send_all_data: Buffer too small, terminating.");
-        VESC_IF->request_terminate(d->thread);
+        VESC_IF->request_terminate(d->main_thread);
     }
     VESC_IF->send_app_data(send_buffer, ind);
 }
@@ -2326,7 +2339,7 @@ static void send_realtime_data2(data *d) {
 
     if (ind > BUFSIZE) {
         log_error("send_realtime_data2: Buffer too small, terminating.");
-        VESC_IF->request_terminate(d->thread);
+        VESC_IF->request_terminate(d->main_thread);
     }
     VESC_IF->send_app_data(send_buffer, ind);
 }
@@ -2510,6 +2523,7 @@ static bool set_cfg(uint8_t *buffer) {
     if (res) {
         write_cfg_to_eeprom(d);
         configure(d);
+        leds_configure(&d->leds, &d->float_conf.leds);
     }
 
     return res;
@@ -2530,8 +2544,10 @@ static void stop(void *arg) {
     VESC_IF->imu_set_read_callback(NULL);
     VESC_IF->set_app_data_handler(NULL);
     VESC_IF->conf_custom_clear_configs();
-    VESC_IF->request_terminate(d->thread);
+    VESC_IF->request_terminate(d->led_thread);
+    VESC_IF->request_terminate(d->main_thread);
     log_msg("Terminating.");
+    leds_destroy(&d->leds);
     VESC_IF->free(d);
 }
 
@@ -2561,7 +2577,25 @@ INIT_FUN(lib_info *info) {
     balance_filter_init(&d->balance_filter);
     VESC_IF->imu_set_read_callback(imu_ref_callback);
 
-    d->thread = VESC_IF->spawn(refloat_thd, 2048, "Refloat Main", d);
+    footpad_sensor_update(&d->footpad_sensor, &d->float_conf);
+
+    d->main_thread = VESC_IF->spawn(refloat_thd, 1024, "Refloat Main", d);
+    if (!d->main_thread) {
+        log_error("Failed to spawn Refloat Main thread.");
+        return false;
+    }
+
+    bool have_leds = leds_init(
+        &d->leds, &d->float_conf.hardware.leds, &d->float_conf.leds, d->footpad_sensor.state
+    );
+
+    if (have_leds) {
+        d->led_thread = VESC_IF->spawn(led_thd, 1024, "Refloat LEDs", d);
+        if (!d->led_thread) {
+            log_error("Failed to spawn Refloat LEDs thread.");
+            leds_destroy(&d->leds);
+        }
+    }
 
     VESC_IF->set_app_data_handler(on_command_received);
     VESC_IF->lbm_add_extension("ext-dbg", ext_dbg);
