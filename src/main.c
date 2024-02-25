@@ -103,7 +103,7 @@ typedef struct {
     BalanceFilterData balance_filter;
 
     // Runtime values read from elsewhere
-    float pitch_angle, roll_angle;
+    float balance_pitch, roll_angle;
     float true_pitch_angle;
     float gyro[3];
 
@@ -366,8 +366,8 @@ static void reset_vars(data *d) {
     // Clear accumulated values.
     d->last_proportional = 0;
     // Set values for startup
-    d->setpoint = d->pitch_angle;
-    d->setpoint_target_interpolated = d->pitch_angle;
+    d->setpoint = d->balance_pitch;
+    d->setpoint_target_interpolated = d->balance_pitch;
     d->setpoint_target = 0;
     d->applied_booster_current = 0;
     d->noseangling_interpolated = 0;
@@ -1023,7 +1023,7 @@ static void apply_turntilt(data *d) {
             }
             d->turntilt_target *= atr_scaling;
         }
-        if (fabsf(d->pitch_angle - d->noseangling_interpolated) > 4) {
+        if (fabsf(d->balance_pitch - d->noseangling_interpolated) > 4) {
             // no setpoint changes during heavy acceleration or braking
             d->turntilt_target = 0;
             d->yaw_aggregate = 0;
@@ -1107,18 +1107,18 @@ static void refloat_thd(void *arg) {
                 if (abs_roll_angle > 150) {
                     d->state.darkride = true;
                     d->is_upside_down_started = false;
-                    d->pitch_angle = -d->pitch_angle;
+                    d->balance_pitch = -d->balance_pitch;
                 }
             }
         }
 
         // True pitch is derived from the secondary IMU filter running with kp=0.2
         d->true_pitch_angle = rad2deg(VESC_IF->imu_get_pitch());
-        d->pitch_angle = rad2deg(balance_filter_get_pitch(&d->balance_filter));
+        d->balance_pitch = rad2deg(balance_filter_get_pitch(&d->balance_filter));
         if (d->state.mode == MODE_FLYWHEEL) {
             // flip sign and use offsets
             d->true_pitch_angle = d->flywheel_pitch_offset - d->true_pitch_angle;
-            d->pitch_angle = d->true_pitch_angle;
+            d->balance_pitch = d->true_pitch_angle;
             d->roll_angle -= d->flywheel_roll_offset;
             if (d->roll_angle < -200) {
                 d->roll_angle += 360;
@@ -1126,7 +1126,7 @@ static void refloat_thd(void *arg) {
                 d->roll_angle -= 360;
             }
         } else if (d->state.darkride) {
-            d->pitch_angle = -d->pitch_angle - d->darkride_setpoint_correction;
+            d->balance_pitch = -d->balance_pitch - d->darkride_setpoint_correction;
             ;
             d->true_pitch_angle = -d->true_pitch_angle - d->darkride_setpoint_correction;
         }
@@ -1309,7 +1309,7 @@ static void refloat_thd(void *arg) {
             }
 
             // Do PID maths
-            d->proportional = d->setpoint - d->pitch_angle;
+            d->proportional = d->setpoint - d->balance_pitch;
             bool tail_down = sign(d->proportional) != d->motor.erpm_sign;
 
             // Resume real PID maths
@@ -1492,13 +1492,13 @@ static void refloat_thd(void *arg) {
             check_odometer(d);
 
             // Check for valid startup position and switch state
-            if (fabsf(d->pitch_angle) < d->startup_pitch_tolerance &&
+            if (fabsf(d->balance_pitch) < d->startup_pitch_tolerance &&
                 fabsf(d->roll_angle) < d->float_conf.startup_roll_tolerance && is_engaged(d)) {
                 reset_vars(d);
                 break;
             }
             // Ignore roll for the first second while it's upside down
-            if (d->state.darkride && (fabsf(d->pitch_angle) < d->startup_pitch_tolerance)) {
+            if (d->state.darkride && (fabsf(d->balance_pitch) < d->startup_pitch_tolerance)) {
                 if ((d->current_time - d->disengage_timer) > 1) {
                     // after 1 second:
                     if (fabsf(fabsf(d->roll_angle) - 180) < d->float_conf.startup_roll_tolerance) {
@@ -1517,7 +1517,7 @@ static void refloat_thd(void *arg) {
             // Push-start aka dirty landing Part II
             if (d->float_conf.startup_pushstart_enabled && d->motor.abs_erpm > 1000 &&
                 is_engaged(d)) {
-                if ((fabsf(d->pitch_angle) < 45) && (fabsf(d->roll_angle) < 45)) {
+                if ((fabsf(d->balance_pitch) < 45) && (fabsf(d->roll_angle) < 45)) {
                     // 45 to prevent board engaging when upright or laying sideways
                     // 45 degree tolerance is more than plenty for tricks / extreme mounts
                     reset_vars(d);
@@ -1674,7 +1674,7 @@ static void send_realtime_data(data *d) {
 
     // RT Data
     buffer_append_float32_auto(send_buffer, d->pid_value, &ind);
-    buffer_append_float32_auto(send_buffer, d->pitch_angle, &ind);
+    buffer_append_float32_auto(send_buffer, d->balance_pitch, &ind);
     buffer_append_float32_auto(send_buffer, d->roll_angle, &ind);
 
     uint8_t state = (state_compat(&d->state) & 0xF);
@@ -1727,7 +1727,7 @@ static void cmd_send_all_data(data *d, unsigned char mode) {
 
         // RT Data
         buffer_append_float16(send_buffer, d->pid_value, 10, &ind);
-        buffer_append_float16(send_buffer, d->pitch_angle, 10, &ind);
+        buffer_append_float16(send_buffer, d->balance_pitch, 10, &ind);
         buffer_append_float16(send_buffer, d->roll_angle, 10, &ind);
 
         uint8_t state = (state_compat(&d->state) & 0xF) + (sat_compat(&d->state) << 4);
@@ -2366,7 +2366,7 @@ static void send_realtime_data2(data *d) {
     send_buffer[ind++] = d->beep_reason;
 
     buffer_append_float32_auto(send_buffer, d->true_pitch_angle, &ind);
-    buffer_append_float32_auto(send_buffer, d->pitch_angle, &ind);
+    buffer_append_float32_auto(send_buffer, d->balance_pitch, &ind);
     buffer_append_float32_auto(send_buffer, d->roll_angle, &ind);
 
     buffer_append_float32_auto(send_buffer, d->footpad_sensor.adc1, &ind);
