@@ -31,10 +31,6 @@ typedef struct {
     FootpadSensorState state;
 } FootpadSensor;
 
-FootpadSensorState footpad_sensor_state_evaluate(
-    const FootpadSensor *fs, const RefloatConfig *config
-);
-
 void footpad_sensor_update(FootpadSensor *fs, const RefloatConfig *config);
 
 int footpad_sensor_state_to_switch_compat(FootpadSensorState v);

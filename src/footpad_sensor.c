@@ -19,36 +19,6 @@
 
 #include "vesc_c_if.h"
 
-FootpadSensorState footpad_sensor_state_evaluate(
-    const FootpadSensor *fs, const RefloatConfig *config
-) {
-    if (config->fault_adc1 == 0 && config->fault_adc2 == 0) {  // No sensors
-        return FS_BOTH;
-    } else if (config->fault_adc2 == 0) {  // Single sensor on ADC1
-        if (fs->adc1 > config->fault_adc1) {
-            return FS_BOTH;
-        }
-    } else if (config->fault_adc1 == 0) {  // Single sensor on ADC2
-        if (fs->adc2 > config->fault_adc2) {
-            return FS_BOTH;
-        }
-    } else {  // Double sensor
-        if (fs->adc1 > config->fault_adc1) {
-            if (fs->adc2 > config->fault_adc2) {
-                return FS_BOTH;
-            } else {
-                return FS_LEFT;
-            }
-        } else {
-            if (fs->adc2 > config->fault_adc2) {
-                return FS_RIGHT;
-            }
-        }
-    }
-
-    return FS_NONE;
-}
-
 void footpad_sensor_update(FootpadSensor *fs, const RefloatConfig *config) {
     fs->adc1 = VESC_IF->io_read_analog(VESC_PIN_ADC1);
     // Returns -1.0 if the pin is missing on the hardware
@@ -57,7 +27,31 @@ void footpad_sensor_update(FootpadSensor *fs, const RefloatConfig *config) {
         fs->adc2 = 0.0;
     }
 
-    fs->state = footpad_sensor_state_evaluate(fs, config);
+    fs->state = FS_NONE;
+
+    if (config->fault_adc1 == 0 && config->fault_adc2 == 0) {  // No sensors
+        fs->state = FS_BOTH;
+    } else if (config->fault_adc2 == 0) {  // Single sensor on ADC1
+        if (fs->adc1 > config->fault_adc1) {
+            fs->state = FS_BOTH;
+        }
+    } else if (config->fault_adc1 == 0) {  // Single sensor on ADC2
+        if (fs->adc2 > config->fault_adc2) {
+            fs->state = FS_BOTH;
+        }
+    } else {  // Double sensor
+        if (fs->adc1 > config->fault_adc1) {
+            if (fs->adc2 > config->fault_adc2) {
+                fs->state = FS_BOTH;
+            } else {
+                fs->state = FS_LEFT;
+            }
+        } else {
+            if (fs->adc2 > config->fault_adc2) {
+                fs->state = FS_RIGHT;
+            }
+        }
+    }
 }
 
 int footpad_sensor_state_to_switch_compat(FootpadSensorState v) {
