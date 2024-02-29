@@ -120,7 +120,6 @@ typedef struct {
     State state;
     float proportional;
     float pid_prop, pid_integral, pid_mod;
-    float abs_proportional;
     float pid_value;
     float setpoint, setpoint_target, setpoint_target_interpolated;
     float applied_booster_current;
@@ -1348,7 +1347,7 @@ static void refloat_thd(void *arg) {
                 // Apply Booster (Now based on True Pitch)
                 // Braketilt excluded to allow for soft brakes that strengthen when near tail-drag
                 float true_proportional = d->setpoint - d->atr.braketilt_offset - d->pitch;
-                d->abs_proportional = fabsf(true_proportional);
+                float abs_proportional = fabsf(true_proportional);
 
                 float booster_current, booster_angle, booster_ramp;
                 if (tail_down) {
@@ -1376,10 +1375,10 @@ static void refloat_thd(void *arg) {
                     }
                 }
 
-                if (d->abs_proportional > booster_angle) {
-                    if (d->abs_proportional - booster_angle < booster_ramp) {
+                if (abs_proportional > booster_angle) {
+                    if (abs_proportional - booster_angle < booster_ramp) {
                         booster_current *= sign(true_proportional) *
-                            ((d->abs_proportional - booster_angle) / booster_ramp);
+                            ((abs_proportional - booster_angle) / booster_ramp);
                     } else {
                         booster_current *= sign(true_proportional);
                     }
