@@ -1091,8 +1091,9 @@ static void refloat_thd(void *arg) {
         d->filtered_loop_overshoot = d->loop_overshoot_alpha * d->loop_overshoot +
             (1.0 - d->loop_overshoot_alpha) * d->filtered_loop_overshoot;
 
-        // Get the IMU Values
+        d->pitch = rad2deg(VESC_IF->imu_get_pitch());
         d->roll = rad2deg(VESC_IF->imu_get_roll());
+        d->balance_pitch = rad2deg(balance_filter_get_pitch(&d->balance_filter));
 
         // Darkride:
         if (d->float_conf.fault_darkride_enabled) {
@@ -1105,14 +1106,10 @@ static void refloat_thd(void *arg) {
                 if (abs_roll > 150) {
                     d->state.darkride = true;
                     d->is_upside_down_started = false;
-                    d->balance_pitch = -d->balance_pitch;
                 }
             }
         }
 
-        // True pitch is derived from the secondary IMU filter running with kp=0.2
-        d->pitch = rad2deg(VESC_IF->imu_get_pitch());
-        d->balance_pitch = rad2deg(balance_filter_get_pitch(&d->balance_filter));
         if (d->state.mode == MODE_FLYWHEEL) {
             // flip sign and use offsets
             d->pitch = d->flywheel_pitch_offset - d->pitch;
