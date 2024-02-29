@@ -118,9 +118,12 @@ typedef struct {
 
     // Rumtime state values
     State state;
+
     float proportional;
-    float pid_integral, pid_mod;
+    float integral;
+    float rate_p;
     float pid_value;
+
     float setpoint, setpoint_target, setpoint_target_interpolated;
     float applied_booster_current;
     float noseangling_interpolated, inputtilt_interpolated;
@@ -377,8 +380,8 @@ static void reset_vars(data *d) {
     d->brake_timeout = 0;
     d->traction_control = false;
     d->pid_value = 0;
-    d->pid_mod = 0;
-    d->pid_integral = 0;
+    d->rate_p = 0;
+    d->integral = 0;
     d->softstart_pid_limit = 0;
     d->startup_pitch_tolerance = d->float_conf.startup_pitch_tolerance;
     d->surge_adder = 0;
@@ -674,7 +677,7 @@ static void calculate_setpoint_target(data *d) {
                     d->state.sat = SAT_NONE;
                     d->reverse_total_erpm = 0;
                     d->setpoint_target = 0;
-                    d->pid_integral = 0;
+                    d->integral = 0;
                 }
             }
         }
@@ -1303,15 +1306,15 @@ static void refloat_thd(void *arg) {
             bool tail_down = sign(d->proportional) != d->motor.erpm_sign;
 
             // Resume real PID maths
-            d->pid_integral = d->pid_integral + d->proportional * d->float_conf.ki;
+            d->integral = d->integral + d->proportional * d->float_conf.ki;
 
             // Apply I term Filter
-            if (d->float_conf.ki_limit > 0 && fabsf(d->pid_integral) > d->float_conf.ki_limit) {
-                d->pid_integral = d->float_conf.ki_limit * sign(d->pid_integral);
+            if (d->float_conf.ki_limit > 0 && fabsf(d->integral) > d->float_conf.ki_limit) {
+                d->integral = d->float_conf.ki_limit * sign(d->integral);
             }
             // Quickly ramp down integral component during reverse stop
             if (d->state.sat == SAT_REVERSESTOP) {
-                d->pid_integral = d->pid_integral * 0.9;
+                d->integral = d->integral * 0.9;
             }
 
             // Apply P Brake Scaling
@@ -1323,7 +1326,7 @@ static void refloat_thd(void *arg) {
                 scaled_kp = d->float_conf.kp * d->kp_accel_scale;
             }
 
-            new_pid_value = scaled_kp * d->proportional + d->pid_integral;
+            new_pid_value = scaled_kp * d->proportional + d->integral;
 
             // Start Rate PID and Booster portion a few cycles later, after the start clicks have
             // been emitted this keeps the start smooth and predictable
@@ -1332,15 +1335,15 @@ static void refloat_thd(void *arg) {
                 // Rate P (Angle + Rate, rather than Angle-Rate Cascading)
                 float rate_prop = -d->gyro[1];
 
-                float scaled_kp2;
+                float scaled_rate_p;
                 // Choose appropriate scale based on board angle (this accomodates backwards riding)
                 if (rate_prop < 0) {
-                    scaled_kp2 = d->float_conf.kp2 * d->kp2_brake_scale;
+                    scaled_rate_p = d->float_conf.kp2 * d->kp2_brake_scale;
                 } else {
-                    scaled_kp2 = d->float_conf.kp2 * d->kp2_accel_scale;
+                    scaled_rate_p = d->float_conf.kp2 * d->kp2_accel_scale;
                 }
 
-                d->pid_mod = (scaled_kp2 * rate_prop);
+                d->rate_p = scaled_rate_p * rate_prop;
 
                 // Apply Booster (Now based on True Pitch)
                 // Braketilt excluded to allow for soft brakes that strengthen when near tail-drag
@@ -1387,16 +1390,16 @@ static void refloat_thd(void *arg) {
                 // No harsh changes in booster current (effective delay <= 100ms)
                 d->applied_booster_current =
                     0.01 * booster_current + 0.99 * d->applied_booster_current;
-                d->pid_mod += d->applied_booster_current;
+                d->rate_p += d->applied_booster_current;
 
                 if (d->softstart_pid_limit < d->mc_current_max) {
-                    d->pid_mod = fminf(fabs(d->pid_mod), d->softstart_pid_limit) * sign(d->pid_mod);
+                    d->rate_p = fminf(fabs(d->rate_p), d->softstart_pid_limit) * sign(d->rate_p);
                     d->softstart_pid_limit += d->softstart_ramp_step_size;
                 }
 
-                new_pid_value += d->pid_mod;
+                new_pid_value += d->rate_p;
             } else {
-                d->pid_mod = 0;
+                d->rate_p = 0;
             }
 
             // Current Limiting!
@@ -1617,9 +1620,9 @@ static float app_get_debug(int index) {
     case (13):
         return d->filtered_diff_time;
     case (14):
-        return d->pid_integral / d->float_conf.ki;
+        return d->integral / d->float_conf.ki;
     case (15):
-        return d->pid_integral;
+        return d->integral;
     case (16):
         return 0;
     case (17):
