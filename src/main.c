@@ -1497,6 +1497,11 @@ static void refloat_thd(void *arg) {
 static void write_cfg_to_eeprom(data *d) {
     uint32_t ints = sizeof(RefloatConfig) / 4 + 1;
     uint32_t *buffer = VESC_IF->malloc(ints * sizeof(uint32_t));
+    if (!buffer) {
+        log_error("Failed to write config to EEPROM: Out of memory.");
+        return;
+    }
+
     bool write_ok = true;
     memcpy(buffer, &(d->float_conf), sizeof(RefloatConfig));
     for (uint32_t i = 0; i < ints; i++) {
@@ -1531,10 +1536,14 @@ static void led_thd(void *arg) {
 }
 
 static void read_cfg_from_eeprom(data *d) {
-    // Read config from EEPROM if signature is correct
-    eeprom_var v;
     uint32_t ints = sizeof(RefloatConfig) / 4 + 1;
     uint32_t *buffer = VESC_IF->malloc(ints * sizeof(uint32_t));
+    if (!buffer) {
+        log_error("Failed to read config from EEPROM: Out of memory.");
+        return;
+    }
+
+    eeprom_var v;
     bool read_ok = VESC_IF->read_eeprom_var(&v, 0);
     if (read_ok) {
         if (v.as_u32 == REFLOATCONFIG_SIGNATURE) {
@@ -1546,10 +1555,7 @@ static void read_cfg_from_eeprom(data *d) {
                 buffer[i] = v.as_u32;
             }
         } else {
-            log_error(
-                "Failed signature check while reading config from EEPROM, using defaults. "
-                "This is normal when installing a package with a different configuration."
-            );
+            log_error("Failed signature check while reading config from EEPROM, using defaults.");
             confparser_set_defaults_refloatconfig(&d->float_conf);
             return;
         }
@@ -2494,6 +2500,10 @@ static int get_cfg(uint8_t *buffer, bool is_default) {
     RefloatConfig *cfg;
     if (is_default) {
         cfg = VESC_IF->malloc(sizeof(RefloatConfig));
+        if (!cfg) {
+            log_error("Failed to send default config to VESC tool: Out of memory.");
+            return 0;
+        }
         confparser_set_defaults_refloatconfig(cfg);
     } else {
         cfg = &d->float_conf;
