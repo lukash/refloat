@@ -237,10 +237,10 @@ typedef struct {
     uint16_t turntilt_erpm_boost_end;
     int turntilt_yaw_aggregate;
     float dark_pitch_offset;
-    bool is_buzzer_enabled;
-    bool is_dutybuzz_enabled;
-    bool is_footbuzz_enabled;
-    bool is_surgebuzz_enabled;
+    bool is_beeper_enabled;
+    bool is_dutybeep_enabled;
+    bool is_footbeep_enabled;
+    bool is_surgebeep_enabled;
     float surge_duty_start;
     float surge_angle;
 
