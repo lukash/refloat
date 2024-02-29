@@ -1594,39 +1594,23 @@ static float app_get_debug(int index) {
 
     switch (index) {
     case (1):
-        return d->setpoint;
+        return d->pid_value;
     case (2):
-        return d->setpoint;
+        return d->proportional;
     case (3):
-        return d->motor.atr_filtered_current;
+        return d->integral;
     case (4):
-        return d->atr.offset;
+        return d->rate_p;
     case (5):
-        return 0;
+        return d->setpoint;
     case (6):
-        return d->motor.current;
+        return d->atr.offset;
     case (7):
         return d->motor.erpm;
     case (8):
-        return d->motor.abs_erpm;
+        return d->motor.current;
     case (9):
-        return d->loop_time_seconds;
-    case (10):
-        return d->diff_time;
-    case (11):
-        return d->loop_overshoot;
-    case (12):
-        return d->filtered_loop_overshoot;
-    case (13):
-        return d->filtered_diff_time;
-    case (14):
-        return d->integral / d->float_conf.ki;
-    case (15):
-        return d->integral;
-    case (16):
-        return 0;
-    case (17):
-        return 0;
+        return d->motor.atr_filtered_current;
     default:
         return 0;
     }

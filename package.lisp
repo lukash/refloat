@@ -8,14 +8,20 @@
 ; Set firmware version:
 (apply ext-set-fw-version (sysinfo 'fw-ver))
 
-; Set to 1 to monitor some debug variables using the extension ext-euc-dbg
+; Set to 1 to monitor debug variables
 (define debug 1)
 
 (if (= debug 1)
     (loopwhile t
         (progn
-            (define setpoint (ext-dbg 2))
-            (define tt-filtered-current (ext-dbg 3))
-            (define integral (ext-dbg 14))
+            (define pid_value (ext-dbg 1))
+            (define proportional (ext-dbg 2))
+            (define integral (ext-dbg 3))
+            (define rate_p (ext-dbg 4))
+            (define setpoint (ext-dbg 5))
+            (define atr_offset (ext-dbg 6))
+            (define erpm (ext-dbg 7))
+            (define current (ext-dbg 8))
+            (define atr_filtered_current (ext-dbg 9))
             (sleep 0.1)
 )))
