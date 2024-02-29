@@ -120,7 +120,7 @@ typedef struct {
     State state;
     float proportional;
     float pid_prop, pid_integral, pid_mod;
-    float last_proportional, abs_proportional;
+    float abs_proportional;
     float pid_value;
     float setpoint, setpoint_target, setpoint_target_interpolated;
     float applied_booster_current;
@@ -363,8 +363,6 @@ static void reset_vars(data *d) {
     atr_init(&d->atr);
     torque_tilt_init(&d->torque_tilt);
 
-    // Clear accumulated values.
-    d->last_proportional = 0;
     // Set values for startup
     d->setpoint = d->balance_pitch;
     d->setpoint_target_interpolated = d->balance_pitch;
@@ -1329,8 +1327,6 @@ static void refloat_thd(void *arg) {
 
             d->pid_prop = scaled_kp * d->proportional;
             new_pid_value = d->pid_prop + d->pid_integral;
-
-            d->last_proportional = d->proportional;
 
             // Start Rate PID and Booster portion a few cycles later, after the start clicks have
             // been emitted this keeps the start smooth and predictable
