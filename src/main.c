@@ -176,6 +176,11 @@ typedef struct {
     Konami flywheel_konami;
 } data;
 
+static void data_init(data *d) {
+    memset(d, 0, sizeof(data));
+    d->odometer = VESC_IF->mc_get_odometer();
+}
+
 static void brake(data *d);
 static void set_current(data *d, float current);
 static void flywheel_stop(data *d);
@@ -238,11 +243,6 @@ void beep_on(data *d, bool force) {
     if (force || (d->beep_num_left == 0)) {
         EXT_BUZZER_ON();
     }
-}
-
-static void app_init(data *d) {
-    d->odometer_dirty = 0;
-    d->odometer = VESC_IF->mc_get_odometer();
 }
 
 static void reconfigure(data *d) {
@@ -1048,7 +1048,6 @@ static void imu_ref_callback(float *acc, float *gyro, [[maybe_unused]] float *ma
 static void refloat_thd(void *arg) {
     data *d = (data *) arg;
 
-    app_init(d);
     configure(d);
 
     while (!VESC_IF->should_terminate()) {
@@ -2541,11 +2540,11 @@ INIT_FUN(lib_info *info) {
     log_msg("Initializing Refloat v" PACKAGE_VERSION);
 
     data *d = VESC_IF->malloc(sizeof(data));
-    memset(d, 0, sizeof(data));
     if (!d) {
         log_error("Out of memory, startup failed.");
         return false;
     }
+    data_init(d);
 
     read_cfg_from_eeprom(d);
 
