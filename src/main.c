@@ -1900,8 +1900,10 @@ static void cmd_runtime_tune(data *d, unsigned char *cfg, int len) {
         }
 
         split(cfg[6], &h1, &h2);
-        // d->float_conf.atr_torque_offset = h1 + 5;
         d->float_conf.atr_speed_boost = ((float) (h2 * 5)) / 100;
+        if (h1 != 0) {
+            d->float_conf.atr_speed_boost *= -1;
+        }
 
         split(cfg[7], &h1, &h2);
         d->float_conf.atr_angle_limit = h1 + 5;

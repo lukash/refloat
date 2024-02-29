@@ -35,6 +35,13 @@ void atr_configure(ATR *atr, const RefloatConfig *config) {
     atr->on_step_size = config->atr_on_speed / config->hertz;
     atr->off_step_size = config->atr_off_speed / config->hertz;
 
+    atr->speed_boost_mult = 1.0f / 3000.0f;
+    if (fabsf(config->atr_speed_boost) > 0.4f) {
+        // above 0.4 we add 500erpm for each extra 10% of speed boost, so at
+        // most +6000 for 100% speed boost
+        atr->speed_boost_mult = 1.0f / ((fabsf(config->atr_speed_boost) - 0.4f) * 5000 + 3000.0f);
+    }
+
     if (config->braketilt_strength == 0) {
         atr->braketilt_factor = 0;
     } else {
@@ -92,9 +99,12 @@ static void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *co
     float atr_strength =
         forward == (atr->accel_gap > 0) ? config->atr_strength_up : config->atr_strength_down;
 
-    // from 3000 to 6000 erpm gradually crank up the torque response
+    // from 3000 to 6000..9000 erpm gradually crank up the torque response
     if (motor->abs_erpm > 3000 && !motor->braking) {
-        float speedboost = (motor->abs_erpm - 3000) / 3000;
+        float speedboost = (motor->abs_erpm - 3000) * atr->speed_boost_mult;
+        // configured speedboost can now also be negative (-1..1)
+        // -1 brings it to 0 (if erpm exceeds 9000)
+        // +1 doubles it     (if erpm exceeds 9000)
         speedboost = fminf(1, speedboost) * config->atr_speed_boost;
         atr_strength += atr_strength * speedboost;
     }

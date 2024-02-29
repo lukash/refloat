@@ -32,6 +32,8 @@ typedef struct {
     float target_offset;  // setpoint target offset
     float offset;  // rate-limited setpoint offset
 
+    float speed_boost_mult;
+
     float braketilt_factor;
     float braketilt_target_offset;  // braketilt setpoint target offset
     float braketilt_offset;  // rate-limited braketilt setpoint offset
