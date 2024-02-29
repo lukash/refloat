@@ -206,10 +206,6 @@ typedef struct {
     float rc_current_target;
     float rc_current;
 
-    // Log values
-    float float_setpoint, float_atr, float_braketilt, float_torquetilt, float_turntilt,
-        float_inputtilt;
-
     Konami flywheel_konami;
 } data;
 
@@ -1280,14 +1276,6 @@ static void refloat_thd(void *arg) {
             beep_off(d, false);
         }
 
-        // Log Values
-        d->float_setpoint = d->setpoint;
-        d->float_atr = d->atr.offset;
-        d->float_braketilt = d->atr.braketilt_offset;
-        d->float_torquetilt = d->torque_tilt.offset;
-        d->float_turntilt = d->turntilt_interpolated;
-        d->float_inputtilt = d->inputtilt_interpolated;
-
         float new_pid_value = 0;
 
         // Control Loop State Logic
@@ -1696,11 +1684,11 @@ static float app_get_debug(int index) {
     case (1):
         return d->setpoint;
     case (2):
-        return d->float_setpoint;
+        return d->setpoint;
     case (3):
         return d->motor.atr_filtered_current;
     case (4):
-        return d->float_atr;
+        return d->atr.offset;
     case (5):
         return d->last_pitch_angle - d->pitch_angle;
     case (6):
@@ -1777,12 +1765,12 @@ static void send_realtime_data(data *d) {
     buffer_append_float32_auto(send_buffer, d->footpad_sensor.adc2, &ind);
 
     // Setpoints
-    buffer_append_float32_auto(send_buffer, d->float_setpoint, &ind);
-    buffer_append_float32_auto(send_buffer, d->float_atr, &ind);
-    buffer_append_float32_auto(send_buffer, d->float_braketilt, &ind);
-    buffer_append_float32_auto(send_buffer, d->float_torquetilt, &ind);
-    buffer_append_float32_auto(send_buffer, d->float_turntilt, &ind);
-    buffer_append_float32_auto(send_buffer, d->float_inputtilt, &ind);
+    buffer_append_float32_auto(send_buffer, d->setpoint, &ind);
+    buffer_append_float32_auto(send_buffer, d->atr.offset, &ind);
+    buffer_append_float32_auto(send_buffer, d->atr.braketilt_offset, &ind);
+    buffer_append_float32_auto(send_buffer, d->torque_tilt.offset, &ind);
+    buffer_append_float32_auto(send_buffer, d->turntilt_interpolated, &ind);
+    buffer_append_float32_auto(send_buffer, d->inputtilt_interpolated, &ind);
 
     // DEBUG
     buffer_append_float32_auto(send_buffer, d->true_pitch_angle, &ind);
@@ -1837,12 +1825,12 @@ static void cmd_send_all_data(data *d, unsigned char mode) {
         send_buffer[ind++] = d->footpad_sensor.adc2 * 50;
 
         // Setpoints (can be positive or negative)
-        send_buffer[ind++] = d->float_setpoint * 5 + 128;
-        send_buffer[ind++] = d->float_atr * 5 + 128;
-        send_buffer[ind++] = d->float_braketilt * 5 + 128;
-        send_buffer[ind++] = d->float_torquetilt * 5 + 128;
-        send_buffer[ind++] = d->float_turntilt * 5 + 128;
-        send_buffer[ind++] = d->float_inputtilt * 5 + 128;
+        send_buffer[ind++] = d->setpoint * 5 + 128;
+        send_buffer[ind++] = d->atr.offset * 5 + 128;
+        send_buffer[ind++] = d->atr.braketilt_offset * 5 + 128;
+        send_buffer[ind++] = d->torque_tilt.offset * 5 + 128;
+        send_buffer[ind++] = d->turntilt_interpolated * 5 + 128;
+        send_buffer[ind++] = d->inputtilt_interpolated * 5 + 128;
 
         buffer_append_float16(send_buffer, d->true_pitch_angle, 10, &ind);
         send_buffer[ind++] = d->applied_booster_current + 128;
