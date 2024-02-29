@@ -84,7 +84,7 @@ typedef struct {
     bool buzzer_enabled;
 
     // Config values
-    float loop_time_seconds;
+    uint32_t loop_time_us;
     unsigned int start_counter_clicks, start_counter_clicks_max;
     float startup_pitch_trickmargin, startup_pitch_tolerance;
     float startup_step_size;
@@ -128,13 +128,12 @@ typedef struct {
     float applied_booster_current;
     float noseangling_interpolated, inputtilt_interpolated;
     float turntilt_target, turntilt_interpolated;
-    float current_time, last_time, diff_time, loop_overshoot;
+    float current_time;
     float disengage_timer, nag_timer;
     float idle_voltage;
-    float filtered_loop_overshoot, loop_overshoot_alpha, filtered_diff_time;
     float fault_angle_pitch_timer, fault_angle_roll_timer, fault_switch_timer,
         fault_switch_half_timer;
-    float motor_timeout_seconds;
+    float motor_timeout_s;
     float brake_timeout;
     float wheelslip_timer, tb_highvoltage_timer;
     float switch_warn_buzz_erpm;
@@ -264,10 +263,11 @@ static void configure(data *d) {
     // This timer is used to determine how long the board has been disengaged / idle
     d->disengage_timer = d->current_time;
 
-    // Set calculated values from config
-    d->loop_time_seconds = 1.0 / d->float_conf.hertz;
+    // Loop time in microseconds
+    d->loop_time_us = 1e6 / d->float_conf.hertz;
 
-    d->motor_timeout_seconds = d->loop_time_seconds * 20;  // Times 20 for a nice long grace period
+    // Loop time in seconds times 20 for a nice long grace period
+    d->motor_timeout_s = 20.0f / d->float_conf.hertz;
 
     d->startup_step_size = d->float_conf.startup_speed / d->float_conf.hertz;
     d->tiltback_duty_step_size = d->float_conf.tiltback_duty_speed / d->float_conf.hertz;
@@ -315,12 +315,6 @@ static void configure(data *d) {
     d->reverse_tolerance = 50000;
     d->reverse_stop_step_size = 100.0 / d->float_conf.hertz;
 
-    // Init Filters
-    float loop_time_filter = 3.0;  // Originally Parameter, now hard-coded to 3Hz
-    d->loop_overshoot_alpha = 2.0 * M_PI * ((float) 1.0 / (float) d->float_conf.hertz) *
-        loop_time_filter /
-        (2.0 * M_PI * (1.0 / (float) d->float_conf.hertz) * loop_time_filter + 1.0);
-
     // Feature: Turntilt
     d->yaw_aggregate_target = fmaxf(50, d->float_conf.turntilt_yaw_aggregate);
     d->turntilt_boost_per_erpm = (float) d->float_conf.turntilt_erpm_boost / 100.0 /
@@ -349,10 +343,6 @@ static void configure(data *d) {
         d->tiltback_variable_max_erpm = 100000;
     }
 
-    // Reset loop time variables
-    d->last_time = 0.0;
-    d->filtered_loop_overshoot = 0.0;
-
     d->buzzer_enabled = d->float_conf.is_buzzer_enabled;
 
     konami_init(&d->flywheel_konami, flywheel_konami_sequence, sizeof(flywheel_konami_sequence));
@@ -374,9 +364,6 @@ static void reset_vars(data *d) {
     d->inputtilt_interpolated = 0;
     d->turntilt_target = 0;
     d->turntilt_interpolated = 0;
-    d->current_time = 0;
-    d->last_time = 0;
-    d->diff_time = 0;
     d->brake_timeout = 0;
     d->traction_control = false;
     d->pid_value = 0;
@@ -1043,19 +1030,13 @@ static void brake(data *d) {
         return;
     }
 
-    // Reset the timeout
     VESC_IF->timeout_reset();
-
-    // Set current
     VESC_IF->mc_set_brake_current(d->float_conf.brake_current);
 }
 
 static void set_current(data *d, float current) {
-    // Reset the timeout
     VESC_IF->timeout_reset();
-    // Set the current delay
-    VESC_IF->mc_set_current_off_delay(d->motor_timeout_seconds);
-    // Set Current
+    VESC_IF->mc_set_current_off_delay(d->motor_timeout_s);
     VESC_IF->mc_set_current(current);
 }
 
@@ -1073,22 +1054,7 @@ static void refloat_thd(void *arg) {
     while (!VESC_IF->should_terminate()) {
         buzzer_update(d);
 
-        // Update times
         d->current_time = VESC_IF->system_time();
-        if (d->last_time == 0) {
-            d->last_time = d->current_time;
-        }
-
-        d->diff_time = d->current_time - d->last_time;
-        // Purely a metric
-        d->filtered_diff_time = 0.03 * d->diff_time + 0.97 * d->filtered_diff_time;
-        d->last_time = d->current_time;
-
-        // Loop Time Filter (Hard Coded to 3Hz)
-        d->loop_overshoot =
-            d->diff_time - (d->loop_time_seconds - roundf(d->filtered_loop_overshoot));
-        d->filtered_loop_overshoot = d->loop_overshoot_alpha * d->loop_overshoot +
-            (1.0 - d->loop_overshoot_alpha) * d->filtered_loop_overshoot;
 
         d->pitch = rad2deg(VESC_IF->imu_get_pitch());
         d->roll = rad2deg(VESC_IF->imu_get_roll());
@@ -1521,9 +1487,7 @@ static void refloat_thd(void *arg) {
             break;
         }
 
-        // Delay between loops
-        VESC_IF->sleep_us((uint32_t) ((d->loop_time_seconds - roundf(d->filtered_loop_overshoot)) *
-                                      1000000.0));
+        VESC_IF->sleep_us(d->loop_time_us);
     }
 }
 
