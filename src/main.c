@@ -119,7 +119,7 @@ typedef struct {
     // Rumtime state values
     State state;
     float proportional;
-    float pid_prop, pid_integral, pid_mod;
+    float pid_integral, pid_mod;
     float pid_value;
     float setpoint, setpoint_target, setpoint_target_interpolated;
     float applied_booster_current;
@@ -378,7 +378,6 @@ static void reset_vars(data *d) {
     d->traction_control = false;
     d->pid_value = 0;
     d->pid_mod = 0;
-    d->pid_prop = 0;
     d->pid_integral = 0;
     d->softstart_pid_limit = 0;
     d->startup_pitch_tolerance = d->float_conf.startup_pitch_tolerance;
@@ -1324,8 +1323,7 @@ static void refloat_thd(void *arg) {
                 scaled_kp = d->float_conf.kp * d->kp_accel_scale;
             }
 
-            d->pid_prop = scaled_kp * d->proportional;
-            new_pid_value = d->pid_prop + d->pid_integral;
+            new_pid_value = scaled_kp * d->proportional + d->pid_integral;
 
             // Start Rate PID and Booster portion a few cycles later, after the start clicks have
             // been emitted this keeps the start smooth and predictable
