@@ -2026,7 +2026,7 @@ p, li { white-space: pre-wrap; }
             <minDouble>-30</minDouble>
             <showDisplay>0</showDisplay>
             <stepDouble>0.5</stepDouble>
-            <valDouble>6</valDouble>
+            <valDouble>0</valDouble>
             <vTxDoubleScale>100</vTxDoubleScale>
             <suffix> </suffix>
             <vTx>7</vTx>
