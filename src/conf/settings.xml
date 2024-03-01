@@ -124,7 +124,7 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Recommended Values: 1.5 - 2.5 (Caution with higher values!)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_MAHONY_KP</cDefine>
-            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorDecimalsDouble>2</editorDecimalsDouble>
             <editorScale>1</editorScale>
             <editAsPercentage>0</editAsPercentage>
             <maxDouble>3</maxDouble>
@@ -132,7 +132,7 @@ p, li { white-space: pre-wrap; }
             <showDisplay>0</showDisplay>
             <stepDouble>0.1</stepDouble>
             <valDouble>2</valDouble>
-            <vTxDoubleScale>100</vTxDoubleScale>
+            <vTxDoubleScale>10000</vTxDoubleScale>
             <suffix></suffix>
             <vTx>7</vTx>
         </mahony_kp>
@@ -155,7 +155,7 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Recommended Values: 0.8 - 1.8&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_MAHONY_KP_ROLL</cDefine>
-            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorDecimalsDouble>2</editorDecimalsDouble>
             <editorScale>1</editorScale>
             <editAsPercentage>0</editAsPercentage>
             <maxDouble>3</maxDouble>
@@ -163,7 +163,7 @@ p, li { white-space: pre-wrap; }
             <showDisplay>0</showDisplay>
             <stepDouble>0.1</stepDouble>
             <valDouble>1.4</valDouble>
-            <vTxDoubleScale>100</vTxDoubleScale>
+            <vTxDoubleScale>10000</vTxDoubleScale>
             <suffix></suffix>
             <vTx>7</vTx>
         </mahony_kp_roll>
@@ -184,7 +184,7 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Due to the above and out of ignorance of the mathematics behind the Mahony filter, the recommended value is right inbetween your Pitch KP and Roll KP.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_MAHONY_KP_YAW</cDefine>
-            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorDecimalsDouble>2</editorDecimalsDouble>
             <editorScale>1</editorScale>
             <editAsPercentage>0</editAsPercentage>
             <maxDouble>3</maxDouble>
@@ -192,7 +192,7 @@ p, li { white-space: pre-wrap; }
             <showDisplay>0</showDisplay>
             <stepDouble>0.1</stepDouble>
             <valDouble>1.7</valDouble>
-            <vTxDoubleScale>100</vTxDoubleScale>
+            <vTxDoubleScale>10000</vTxDoubleScale>
             <suffix></suffix>
             <vTx>7</vTx>
         </mahony_kp_yaw>
