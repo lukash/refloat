@@ -60,6 +60,7 @@ typedef struct {
     Mode mode;
     SetpointAdjustmentType sat;
     StopCondition stop_condition;
+    bool charging;
     bool wheelslip;
     bool darkride;
 } State;

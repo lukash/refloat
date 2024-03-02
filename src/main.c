@@ -22,6 +22,7 @@
 #include "vesc_c_if.h"
 
 #include "atr.h"
+#include "charging.h"
 #include "footpad_sensor.h"
 #include "lcm.h"
 #include "leds.h"
@@ -90,6 +91,8 @@ typedef struct {
 
     // Lights Control Module - external lights control
     LcmData lcm;
+
+    Charging charging;
 
     // Config values
     uint32_t loop_time_us;
@@ -189,6 +192,7 @@ static void data_init(data *d) {
     d->odometer = VESC_IF->mc_get_odometer();
 
     lcm_init(&d->lcm);
+    charging_init(&d->charging);
 }
 
 static void brake(data *d);
@@ -1065,6 +1069,8 @@ static void refloat_thd(void *arg) {
     while (!VESC_IF->should_terminate()) {
         beeper_update(d);
 
+        charging_timeout(&d->charging, &d->state);
+
         d->current_time = VESC_IF->system_time();
 
         d->pitch = rad2deg(VESC_IF->imu_get_pitch());
@@ -1608,6 +1614,7 @@ static float app_get_debug(int index) {
 
 // See also:
 // LcmCommands in lcm.h
+// ChargingCommands in charging.h
 enum {
     COMMAND_GET_INFO = 0,  // get version / package info
     COMMAND_GET_RTDATA = 1,  // get rt data
@@ -1664,8 +1671,13 @@ static void send_realtime_data(data *d) {
     buffer_append_float32_auto(buffer, d->pitch, &ind);
     buffer_append_float32_auto(buffer, d->motor.atr_filtered_current, &ind);
     buffer_append_float32_auto(buffer, d->atr.accel_diff, &ind);
-    buffer_append_float32_auto(buffer, d->applied_booster_current, &ind);
-    buffer_append_float32_auto(buffer, d->motor.current, &ind);
+    if (d->state.charging) {
+        buffer_append_float32_auto(buffer, d->charging.current, &ind);
+        buffer_append_float32_auto(buffer, d->charging.voltage, &ind);
+    } else {
+        buffer_append_float32_auto(buffer, d->applied_booster_current, &ind);
+        buffer_append_float32_auto(buffer, d->motor.current, &ind);
+    }
     buffer_append_float32_auto(buffer, d->throttle_val, &ind);
 
     SEND_APP_DATA(buffer, bufsize, ind);
@@ -1748,6 +1760,12 @@ static void cmd_send_all_data(data *d, unsigned char mode) {
             buffer_append_float16(buffer, VESC_IF->mc_get_watt_hours_charged(false), 1, &ind);
             buffer[ind++] = fmaxf(0, fminf(125, VESC_IF->mc_get_battery_level(NULL))) * 2;
             // ind = 55
+        }
+        if (mode >= 4) {
+            // make charge current and voltage available in mode 4
+            buffer_append_float16(buffer, d->charging.current, 10, &ind);
+            buffer_append_float16(buffer, d->charging.voltage, 10, &ind);
+            // ind = 59
         }
     }
 
@@ -2316,11 +2334,16 @@ static void send_realtime_data2(data *d) {
     if (d->state.state == STATE_RUNNING) {
         mask |= 0x1;
     }
+
+    if (d->state.charging) {
+        mask |= 0x2;
+    }
+
     buffer[ind++] = mask;
 
     buffer[ind++] = d->state.mode << 4 | d->state.state;
 
-    uint8_t flags = d->state.darkride << 1 | d->state.wheelslip;
+    uint8_t flags = d->state.charging << 5 | d->state.darkride << 1 | d->state.wheelslip;
     buffer[ind++] = d->footpad_sensor.state << 6 | flags;
 
     buffer[ind++] = d->state.sat << 4 | d->state.stop_condition;
@@ -2349,6 +2372,11 @@ static void send_realtime_data2(data *d) {
         buffer_append_float32_auto(buffer, d->motor.atr_filtered_current, &ind);
         buffer_append_float32_auto(buffer, d->atr.accel_diff, &ind);
         buffer_append_float32_auto(buffer, d->applied_booster_current, &ind);
+    }
+
+    if (d->state.charging) {
+        buffer_append_float32_auto(buffer, d->charging.current, &ind);
+        buffer_append_float32_auto(buffer, d->charging.voltage, &ind);
     }
 
     SEND_APP_DATA(buffer, bufsize, ind);
@@ -2487,6 +2515,10 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
     }
     case COMMAND_LCM_GET_BATTERY: {
         lcm_get_battery_response();
+        return;
+    }
+    case COMMAND_CHARGING_STATE: {
+        charging_state_request(&d->charging, &buffer[2], len - 2, &d->state);
         return;
     }
     case COMMAND_GET_RTDATA_2: {

@@ -22,6 +22,7 @@ void state_init(State *state, bool disable) {
     state->mode = MODE_NORMAL;
     state->sat = SAT_NONE;
     state->stop_condition = STOP_NONE;
+    state->charging = false;
     state->wheelslip = false;
     state->darkride = false;
 }
@@ -33,12 +34,18 @@ void state_stop(State *state, StopCondition stop_condition) {
 }
 
 void state_engage(State *state) {
-    state->state = STATE_RUNNING;
-    state->sat = SAT_CENTERING;
-    state->stop_condition = STOP_NONE;
+    if (!state->charging) {
+        state->state = STATE_RUNNING;
+        state->sat = SAT_CENTERING;
+        state->stop_condition = STOP_NONE;
+    }
 }
 
 uint8_t state_compat(const State *state) {
+    if (state->charging) {
+        return 14;  // CHARGING
+    }
+
     switch (state->state) {
     case STATE_DISABLED:
         return 15;  // DISABLED

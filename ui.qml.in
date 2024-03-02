@@ -487,7 +487,9 @@ Item {
                     state.fsState = state.fs_Both;
                 }
             } else if (msgtype === c_GET_RT_DATA_2) {
-                var hasRuntime = !!(dv.getUint8(ind++) & 0x1);
+                var mask = dv.getUint8(ind++);
+                var hasRuntime = !!(mask & 0x1);
+                var hasCharging = !!(mask & 0x2);
 
                 var modeAndState = dv.getUint8(ind++);
                 state.pkgMode = modeAndState >> 4;
@@ -495,8 +497,9 @@ Item {
 
                 var sensorAndFlags = dv.getUint8(ind++);
                 state.fsState = sensorAndFlags >> 6;
-                state.wheelslip = sensorAndFlags & 0b01;
-                state.darkride = sensorAndFlags & 0b10;
+                state.wheelslip = sensorAndFlags & 0b00000001;
+                state.darkride = sensorAndFlags & 0b00000010;
+                state.charging = sensorAndFlags & 0b00100000;
 
                 var setpointAndStop = dv.getUint8(ind++);
                 state.setpointAdjustmentType = setpointAndStop >> 4;
@@ -524,6 +527,11 @@ Item {
                     debugFilteredCurrent.rValue = dv.getFloat32(ind); ind += 4;
                     debugAccDiff.rValue = dv.getFloat32(ind); ind += 4;
                     debugBoosterCurrent.rValue = dv.getFloat32(ind); ind += 4;
+                }
+
+                if (hasCharging) {
+                    chargingInfo.current = dv.getFloat32(ind); ind += 4;
+                    chargingInfo.voltage = dv.getFloat32(ind); ind += 4;
                 }
             }
 
@@ -890,6 +898,7 @@ Item {
 
         property bool darkride: false
         property bool wheelslip: false
+        property bool charging: false
 
         readonly property var beepReasonToString: new Map([
             [0, ""],
@@ -2045,7 +2054,8 @@ Item {
 
                 LText {
                     id: batteryBarVoltageValue
-                    anchors.left: batteryBarValue.right
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.horizontalCenterOffset: -parent.width / 4
                     anchors.baseline: batteryBarValue.baseline
                     anchors.leftMargin: 0.3 * unit
                     z: 2
@@ -2066,6 +2076,42 @@ Item {
                         }
 
                         return voltageString;
+                    }
+                }
+
+                Item {
+                    id: chargingInfo
+                    anchors.centerIn: parent
+                    anchors.horizontalCenterOffset: parent.width / 4
+                    height: parent.height - 0.08 * unit
+                    width: 2 * unit
+                    z: 2
+
+                    property real current: 0
+                    property real voltage: 0
+                    visible: state.charging
+
+                    LText {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        font.pixelSize: fontSizeSmall
+                        text: "charging"
+                    }
+
+                    LText {
+                        anchors.bottom: parent.bottom
+                        width: parent.width / 2
+                        font.pixelSize: fontSizeSmall
+                        horizontalAlignment: Text.AlignHCenter
+                        text: "%1A".arg(toFixed1Zero(parent.current))
+                    }
+
+                    LText {
+                        anchors.bottom: parent.bottom
+                        anchors.right: parent.right
+                        width: parent.width / 2
+                        font.pixelSize: fontSizeSmall
+                        horizontalAlignment: Text.AlignHCenter
+                        text: "%1V".arg(toFixed1Zero(parent.voltage))
                     }
                 }
             }
