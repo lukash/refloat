@@ -1620,135 +1620,127 @@ enum {
 } Commands;
 
 static void send_realtime_data(data *d) {
-    static const int BUFSIZE = 72;
-    uint8_t send_buffer[BUFSIZE];
+    static const int bufsize = 72;
+    uint8_t buffer[bufsize];
     int32_t ind = 0;
-    send_buffer[ind++] = 101;  // Package ID
-    send_buffer[ind++] = COMMAND_GET_RTDATA;
+    buffer[ind++] = 101;  // Package ID
+    buffer[ind++] = COMMAND_GET_RTDATA;
 
     // RT Data
-    buffer_append_float32_auto(send_buffer, d->pid_value, &ind);
-    buffer_append_float32_auto(send_buffer, d->balance_pitch, &ind);
-    buffer_append_float32_auto(send_buffer, d->roll, &ind);
+    buffer_append_float32_auto(buffer, d->pid_value, &ind);
+    buffer_append_float32_auto(buffer, d->balance_pitch, &ind);
+    buffer_append_float32_auto(buffer, d->roll, &ind);
 
     uint8_t state = (state_compat(&d->state) & 0xF);
-    send_buffer[ind++] = (state & 0xF) + (sat_compat(&d->state) << 4);
+    buffer[ind++] = (state & 0xF) + (sat_compat(&d->state) << 4);
     state = footpad_sensor_state_to_switch_compat(d->footpad_sensor.state);
     if (d->state.mode == MODE_HANDTEST) {
         state |= 0x8;
     }
-    send_buffer[ind++] = (state & 0xF) + (d->beep_reason << 4);
-    buffer_append_float32_auto(send_buffer, d->footpad_sensor.adc1, &ind);
-    buffer_append_float32_auto(send_buffer, d->footpad_sensor.adc2, &ind);
+    buffer[ind++] = (state & 0xF) + (d->beep_reason << 4);
+    buffer_append_float32_auto(buffer, d->footpad_sensor.adc1, &ind);
+    buffer_append_float32_auto(buffer, d->footpad_sensor.adc2, &ind);
 
     // Setpoints
-    buffer_append_float32_auto(send_buffer, d->setpoint, &ind);
-    buffer_append_float32_auto(send_buffer, d->atr.offset, &ind);
-    buffer_append_float32_auto(send_buffer, d->atr.braketilt_offset, &ind);
-    buffer_append_float32_auto(send_buffer, d->torque_tilt.offset, &ind);
-    buffer_append_float32_auto(send_buffer, d->turntilt_interpolated, &ind);
-    buffer_append_float32_auto(send_buffer, d->inputtilt_interpolated, &ind);
+    buffer_append_float32_auto(buffer, d->setpoint, &ind);
+    buffer_append_float32_auto(buffer, d->atr.offset, &ind);
+    buffer_append_float32_auto(buffer, d->atr.braketilt_offset, &ind);
+    buffer_append_float32_auto(buffer, d->torque_tilt.offset, &ind);
+    buffer_append_float32_auto(buffer, d->turntilt_interpolated, &ind);
+    buffer_append_float32_auto(buffer, d->inputtilt_interpolated, &ind);
 
     // DEBUG
-    buffer_append_float32_auto(send_buffer, d->pitch, &ind);
-    buffer_append_float32_auto(send_buffer, d->motor.atr_filtered_current, &ind);
-    buffer_append_float32_auto(send_buffer, d->atr.accel_diff, &ind);
-    buffer_append_float32_auto(send_buffer, d->applied_booster_current, &ind);
-    buffer_append_float32_auto(send_buffer, d->motor.current, &ind);
-    buffer_append_float32_auto(send_buffer, d->throttle_val, &ind);
+    buffer_append_float32_auto(buffer, d->pitch, &ind);
+    buffer_append_float32_auto(buffer, d->motor.atr_filtered_current, &ind);
+    buffer_append_float32_auto(buffer, d->atr.accel_diff, &ind);
+    buffer_append_float32_auto(buffer, d->applied_booster_current, &ind);
+    buffer_append_float32_auto(buffer, d->motor.current, &ind);
+    buffer_append_float32_auto(buffer, d->throttle_val, &ind);
 
-    if (ind > BUFSIZE) {
-        log_error("send_realtime_data: Buffer too small, terminating.");
-        VESC_IF->request_terminate(d->main_thread);
-    }
-    VESC_IF->send_app_data(send_buffer, ind);
+    SEND_APP_DATA(buffer, bufsize, ind);
 }
 
 static void cmd_send_all_data(data *d, unsigned char mode) {
-#define SNDBUFSIZE 60
-    uint8_t send_buffer[SNDBUFSIZE];
+    static const int bufsize = 60;
+    uint8_t buffer[bufsize];
     int32_t ind = 0;
+
+    buffer[ind++] = 101;  // Package ID
+    buffer[ind++] = COMMAND_GET_ALLDATA;
+
     mc_fault_code fault = VESC_IF->mc_get_fault();
-
-    send_buffer[ind++] = 101;  // Package ID
-    send_buffer[ind++] = COMMAND_GET_ALLDATA;
-
     if (fault != FAULT_CODE_NONE) {
-        send_buffer[ind++] = 69;
-        send_buffer[ind++] = fault;
+        buffer[ind++] = 69;
+        buffer[ind++] = fault;
     } else {
-        send_buffer[ind++] = mode;
+        buffer[ind++] = mode;
 
         // RT Data
-        buffer_append_float16(send_buffer, d->pid_value, 10, &ind);
-        buffer_append_float16(send_buffer, d->balance_pitch, 10, &ind);
-        buffer_append_float16(send_buffer, d->roll, 10, &ind);
+        buffer_append_float16(buffer, d->pid_value, 10, &ind);
+        buffer_append_float16(buffer, d->balance_pitch, 10, &ind);
+        buffer_append_float16(buffer, d->roll, 10, &ind);
 
         uint8_t state = (state_compat(&d->state) & 0xF) + (sat_compat(&d->state) << 4);
-        send_buffer[ind++] = state;
+        buffer[ind++] = state;
 
         // passed switch-state includes bit3 for handtest, and bits4..7 for beep reason
         state = footpad_sensor_state_to_switch_compat(d->footpad_sensor.state);
         if (d->state.mode == MODE_HANDTEST) {
             state |= 0x8;
         }
-        send_buffer[ind++] = (state & 0xF) + (d->beep_reason << 4);
+        buffer[ind++] = (state & 0xF) + (d->beep_reason << 4);
         d->beep_reason = BEEP_NONE;
 
-        send_buffer[ind++] = d->footpad_sensor.adc1 * 50;
-        send_buffer[ind++] = d->footpad_sensor.adc2 * 50;
+        buffer[ind++] = d->footpad_sensor.adc1 * 50;
+        buffer[ind++] = d->footpad_sensor.adc2 * 50;
 
         // Setpoints (can be positive or negative)
-        send_buffer[ind++] = d->setpoint * 5 + 128;
-        send_buffer[ind++] = d->atr.offset * 5 + 128;
-        send_buffer[ind++] = d->atr.braketilt_offset * 5 + 128;
-        send_buffer[ind++] = d->torque_tilt.offset * 5 + 128;
-        send_buffer[ind++] = d->turntilt_interpolated * 5 + 128;
-        send_buffer[ind++] = d->inputtilt_interpolated * 5 + 128;
+        buffer[ind++] = d->setpoint * 5 + 128;
+        buffer[ind++] = d->atr.offset * 5 + 128;
+        buffer[ind++] = d->atr.braketilt_offset * 5 + 128;
+        buffer[ind++] = d->torque_tilt.offset * 5 + 128;
+        buffer[ind++] = d->turntilt_interpolated * 5 + 128;
+        buffer[ind++] = d->inputtilt_interpolated * 5 + 128;
 
-        buffer_append_float16(send_buffer, d->pitch, 10, &ind);
-        send_buffer[ind++] = d->applied_booster_current + 128;
+        buffer_append_float16(buffer, d->pitch, 10, &ind);
+        buffer[ind++] = d->applied_booster_current + 128;
 
         // Now send motor stuff:
-        buffer_append_float16(send_buffer, VESC_IF->mc_get_input_voltage_filtered(), 10, &ind);
-        buffer_append_int16(send_buffer, VESC_IF->mc_get_rpm(), &ind);
-        buffer_append_float16(send_buffer, VESC_IF->mc_get_speed(), 10, &ind);
-        buffer_append_float16(send_buffer, VESC_IF->mc_get_tot_current(), 10, &ind);
-        buffer_append_float16(send_buffer, VESC_IF->mc_get_tot_current_in(), 10, &ind);
-        send_buffer[ind++] = VESC_IF->mc_get_duty_cycle_now() * 100 + 128;
+        buffer_append_float16(buffer, VESC_IF->mc_get_input_voltage_filtered(), 10, &ind);
+        buffer_append_int16(buffer, VESC_IF->mc_get_rpm(), &ind);
+        buffer_append_float16(buffer, VESC_IF->mc_get_speed(), 10, &ind);
+        buffer_append_float16(buffer, VESC_IF->mc_get_tot_current(), 10, &ind);
+        buffer_append_float16(buffer, VESC_IF->mc_get_tot_current_in(), 10, &ind);
+        buffer[ind++] = VESC_IF->mc_get_duty_cycle_now() * 100 + 128;
         if (VESC_IF->foc_get_id != NULL) {
-            send_buffer[ind++] = fabsf(VESC_IF->foc_get_id()) * 3;
+            buffer[ind++] = fabsf(VESC_IF->foc_get_id()) * 3;
         } else {
             // using 222 as magic number to avoid false positives with 255
-            send_buffer[ind++] = 222;
+            buffer[ind++] = 222;
             // ind = 35
         }
 
         if (mode >= 2) {
             // data not required as fast as possible
-            buffer_append_float32_auto(send_buffer, VESC_IF->mc_get_distance_abs(), &ind);
-            send_buffer[ind++] = fmaxf(0, VESC_IF->mc_temp_fet_filtered() * 2);
-            send_buffer[ind++] = fmaxf(0, VESC_IF->mc_temp_motor_filtered() * 2);
-            send_buffer[ind++] = 0;  // fmaxf(VESC_IF->mc_batt_temp() * 2);
+            buffer_append_float32_auto(buffer, VESC_IF->mc_get_distance_abs(), &ind);
+            buffer[ind++] = fmaxf(0, VESC_IF->mc_temp_fet_filtered() * 2);
+            buffer[ind++] = fmaxf(0, VESC_IF->mc_temp_motor_filtered() * 2);
+            buffer[ind++] = 0;  // fmaxf(VESC_IF->mc_batt_temp() * 2);
             // ind = 42
         }
         if (mode >= 3) {
             // data required even less frequently
-            buffer_append_uint32(send_buffer, VESC_IF->mc_get_odometer(), &ind);
-            buffer_append_float16(send_buffer, VESC_IF->mc_get_amp_hours(false), 10, &ind);
-            buffer_append_float16(send_buffer, VESC_IF->mc_get_amp_hours_charged(false), 10, &ind);
-            buffer_append_float16(send_buffer, VESC_IF->mc_get_watt_hours(false), 1, &ind);
-            buffer_append_float16(send_buffer, VESC_IF->mc_get_watt_hours_charged(false), 1, &ind);
-            send_buffer[ind++] = fmaxf(0, fminf(125, VESC_IF->mc_get_battery_level(NULL))) * 2;
+            buffer_append_uint32(buffer, VESC_IF->mc_get_odometer(), &ind);
+            buffer_append_float16(buffer, VESC_IF->mc_get_amp_hours(false), 10, &ind);
+            buffer_append_float16(buffer, VESC_IF->mc_get_amp_hours_charged(false), 10, &ind);
+            buffer_append_float16(buffer, VESC_IF->mc_get_watt_hours(false), 1, &ind);
+            buffer_append_float16(buffer, VESC_IF->mc_get_watt_hours_charged(false), 1, &ind);
+            buffer[ind++] = fmaxf(0, fminf(125, VESC_IF->mc_get_battery_level(NULL))) * 2;
             // ind = 55
         }
     }
 
-    if (ind > SNDBUFSIZE) {
-        log_error("send_all_data: Buffer too small, terminating.");
-        VESC_IF->request_terminate(d->main_thread);
-    }
-    VESC_IF->send_app_data(send_buffer, ind);
+    SEND_APP_DATA(buffer, bufsize, ind);
 }
 
 static void split(unsigned char byte, int *h1, int *h2) {
@@ -2300,11 +2292,12 @@ void flywheel_stop(data *d) {
 }
 
 static void send_realtime_data2(data *d) {
-    static const int BUFSIZE = 71;
-    uint8_t send_buffer[BUFSIZE];
+    static const int bufsize = 71;
+    uint8_t buffer[bufsize];
     int32_t ind = 0;
-    send_buffer[ind++] = 101;  // Package ID
-    send_buffer[ind++] = COMMAND_GET_RTDATA_2;
+
+    buffer[ind++] = 101;  // Package ID
+    buffer[ind++] = COMMAND_GET_RTDATA_2;
 
     // mask indicates what groups of data are sent, to prevent sending data
     // that are not useful in a given state
@@ -2312,46 +2305,42 @@ static void send_realtime_data2(data *d) {
     if (d->state.state == STATE_RUNNING) {
         mask |= 0x1;
     }
-    send_buffer[ind++] = mask;
+    buffer[ind++] = mask;
 
-    send_buffer[ind++] = d->state.mode << 4 | d->state.state;
+    buffer[ind++] = d->state.mode << 4 | d->state.state;
 
     uint8_t flags = d->state.darkride << 1 | d->state.wheelslip;
-    send_buffer[ind++] = d->footpad_sensor.state << 6 | flags;
+    buffer[ind++] = d->footpad_sensor.state << 6 | flags;
 
-    send_buffer[ind++] = d->state.sat << 4 | d->state.stop_condition;
+    buffer[ind++] = d->state.sat << 4 | d->state.stop_condition;
 
-    send_buffer[ind++] = d->beep_reason;
+    buffer[ind++] = d->beep_reason;
 
-    buffer_append_float32_auto(send_buffer, d->pitch, &ind);
-    buffer_append_float32_auto(send_buffer, d->balance_pitch, &ind);
-    buffer_append_float32_auto(send_buffer, d->roll, &ind);
+    buffer_append_float32_auto(buffer, d->pitch, &ind);
+    buffer_append_float32_auto(buffer, d->balance_pitch, &ind);
+    buffer_append_float32_auto(buffer, d->roll, &ind);
 
-    buffer_append_float32_auto(send_buffer, d->footpad_sensor.adc1, &ind);
-    buffer_append_float32_auto(send_buffer, d->footpad_sensor.adc2, &ind);
-    buffer_append_float32_auto(send_buffer, d->throttle_val, &ind);
+    buffer_append_float32_auto(buffer, d->footpad_sensor.adc1, &ind);
+    buffer_append_float32_auto(buffer, d->footpad_sensor.adc2, &ind);
+    buffer_append_float32_auto(buffer, d->throttle_val, &ind);
 
     if (d->state.state == STATE_RUNNING) {
         // Setpoints
-        buffer_append_float32_auto(send_buffer, d->setpoint, &ind);
-        buffer_append_float32_auto(send_buffer, d->atr.offset, &ind);
-        buffer_append_float32_auto(send_buffer, d->atr.braketilt_offset, &ind);
-        buffer_append_float32_auto(send_buffer, d->torque_tilt.offset, &ind);
-        buffer_append_float32_auto(send_buffer, d->turntilt_interpolated, &ind);
-        buffer_append_float32_auto(send_buffer, d->inputtilt_interpolated, &ind);
+        buffer_append_float32_auto(buffer, d->setpoint, &ind);
+        buffer_append_float32_auto(buffer, d->atr.offset, &ind);
+        buffer_append_float32_auto(buffer, d->atr.braketilt_offset, &ind);
+        buffer_append_float32_auto(buffer, d->torque_tilt.offset, &ind);
+        buffer_append_float32_auto(buffer, d->turntilt_interpolated, &ind);
+        buffer_append_float32_auto(buffer, d->inputtilt_interpolated, &ind);
 
         // DEBUG
-        buffer_append_float32_auto(send_buffer, d->pid_value, &ind);
-        buffer_append_float32_auto(send_buffer, d->motor.atr_filtered_current, &ind);
-        buffer_append_float32_auto(send_buffer, d->atr.accel_diff, &ind);
-        buffer_append_float32_auto(send_buffer, d->applied_booster_current, &ind);
+        buffer_append_float32_auto(buffer, d->pid_value, &ind);
+        buffer_append_float32_auto(buffer, d->motor.atr_filtered_current, &ind);
+        buffer_append_float32_auto(buffer, d->atr.accel_diff, &ind);
+        buffer_append_float32_auto(buffer, d->applied_booster_current, &ind);
     }
 
-    if (ind > BUFSIZE) {
-        log_error("send_realtime_data2: Buffer too small, terminating.");
-        VESC_IF->request_terminate(d->main_thread);
-    }
-    VESC_IF->send_app_data(send_buffer, ind);
+    SEND_APP_DATA(buffer, bufsize, ind);
 }
 
 // Handler for incoming app commands
@@ -2616,4 +2605,8 @@ INIT_FUN(lib_info *info) {
     VESC_IF->lbm_add_extension("ext-set-fw-version", ext_set_fw_version);
 
     return true;
+}
+
+void send_app_data_overflow_terminate() {
+    VESC_IF->request_terminate(((data *) ARG)->main_thread);
 }

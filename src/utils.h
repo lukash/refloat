@@ -34,6 +34,22 @@
 
 #define log_error(fmt, ...) log_msg("Error: " fmt __VA_OPT__(, ) __VA_ARGS__)
 
+// Declaration for the SEMD_APP_DATA macro, definition needs to be in main.c.
+void send_app_data_overflow_terminate();
+
+/**
+ * DRY macro to check the buffer didn't overflow and send the app data.
+ */
+#define SEND_APP_DATA(buffer, buf_size, ind)                                                       \
+    do {                                                                                           \
+        if (ind > buf_size) {                                                                      \
+            log_error("%s: App data buffer overflow, terminating.", __func__);                     \
+            /* terminate the main thread, the memory has just been corrupted by buffer overflow */ \
+            send_app_data_overflow_terminate();                                                    \
+        }                                                                                          \
+        VESC_IF->send_app_data(buffer, ind);                                                       \
+    } while (0)
+
 #define sign(x) (((x) < 0) ? -1 : 1)
 
 #define deg2rad(deg) ((deg) * (M_PI / 180.0f))
