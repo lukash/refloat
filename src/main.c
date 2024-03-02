@@ -1635,6 +1635,7 @@ enum {
 
     // commands above 200 are unstable and can change protocol at any time
     COMMAND_GET_RTDATA_2 = 201,
+    COMMAND_LIGHTS_CONTROL = 202,
 } Commands;
 
 static void send_realtime_data(data *d) {
@@ -2382,6 +2383,35 @@ static void send_realtime_data2(data *d) {
     SEND_APP_DATA(buffer, bufsize, ind);
 }
 
+static void lights_control_request(CfgLeds *leds, uint8_t *buffer, size_t len) {
+    if (len < 2) {
+        return;
+    }
+
+    uint8_t mask = buffer[0];
+    uint8_t value = buffer[1];
+
+    if (mask & 0x1) {
+        leds->on = value & 0x1;
+    }
+
+    if (mask & 0x2) {
+        leds->headlights_on = value & 0x2;
+    }
+}
+
+static void lights_control_response(const CfgLeds *leds) {
+    static const int bufsize = 3;
+    uint8_t buffer[bufsize];
+    int32_t ind = 0;
+
+    buffer[ind++] = 101;  // Package ID
+    buffer[ind++] = COMMAND_LIGHTS_CONTROL;
+    buffer[ind++] = leds->headlights_on << 1 | leds->on;
+
+    SEND_APP_DATA(buffer, bufsize, ind);
+}
+
 // Handler for incoming app commands
 static void on_command_received(unsigned char *buffer, unsigned int len) {
     data *d = (data *) ARG;
@@ -2523,6 +2553,11 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
     }
     case COMMAND_GET_RTDATA_2: {
         send_realtime_data2(d);
+        return;
+    }
+    case COMMAND_LIGHTS_CONTROL: {
+        lights_control_request(&d->float_conf.leds, &buffer[2], len - 2);
+        lights_control_response(&d->float_conf.leds);
         return;
     }
     default: {

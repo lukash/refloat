@@ -58,7 +58,11 @@ Item {
         onTriggered: {
             vescCommands.getValuesSetup();
 
-            commands.sendGetRtData();
+            if (!commands.infoReceived) {
+                commands.sendGetInfo();
+            } else {
+                commands.sendGetRtData();
+            }
 
             if (moveSlider.value != 0) {
                 commands.sendRcMove(moveSlider.value);
@@ -67,6 +71,17 @@ Item {
             if (tiltEnabled.checked) {
                 vescCommands.lispSendReplCmd("(set-remote-state " + tiltSlider.value + " 0 0 0 0)");
             }
+        }
+    }
+
+    // 4Hz timer to poll for lights status if enabled
+    Timer {
+        running: lights.enabled
+        repeat: true
+        interval: 250
+        triggeredOnStart: true
+        onTriggered: {
+            commands.sendLightsControl();
         }
     }
 
@@ -280,11 +295,15 @@ Item {
         id: commands
         target: vescCommands
 
+        readonly property int c_GET_INFO: 0
         readonly property int c_GET_RT_DATA: 1
         readonly property int c_RC_MOVE: 7
         readonly property int c_HANDTEST: 13
         readonly property int c_FLYWHEEL: 22
         readonly property int c_GET_RT_DATA_2: 201
+        readonly property int c_LIGHTS_CONTROL: 202
+
+        property bool infoReceived: false
 
         function createData(size, command) {
             var data = new DataView(new ArrayBuffer(size));
@@ -294,8 +313,37 @@ Item {
             return data;
         }
 
+        function sendGetInfo() {
+            vescCommands.sendCustomAppData(createData(2, c_GET_INFO).buffer);
+        }
+
         function sendGetRtData() {
             vescCommands.sendCustomAppData(createData(2, c_GET_RT_DATA_2).buffer);
+        }
+
+        function sendLightsControl(on, headlightsOn) {
+            var data = createData(4, c_LIGHTS_CONTROL);
+
+            var mask = 0;
+            var value = 0;
+
+            if (on !== undefined) {
+                mask |= 0b01;
+                if (on) {
+                    value |= 0b01;
+                }
+            }
+
+            if (headlightsOn !== undefined) {
+                mask |= 0b10;
+                if (headlightsOn) {
+                    value |= 0b10;
+                }
+            }
+            data.setUint8(2, mask);
+            data.setUint8(3, value);
+
+            vescCommands.sendCustomAppData(data.buffer);
         }
 
         function sendRcMove(value) {
@@ -367,7 +415,21 @@ Item {
 
             var msgtype = dv.getUint8(ind++);
 
-            if (msgtype === c_GET_RT_DATA) {
+            if (msgtype == c_GET_INFO) {
+                ind += 2;
+                var led_type = dv.getUint8(ind++);
+                if (led_type > 0) {
+                    lights.enabled = true;
+                    if (led_type == 3) {
+                        lights.lcm = true;
+                    }
+                }
+                commands.infoReceived = true;
+            } else if (msgtype == c_LIGHTS_CONTROL) {
+                var values = dv.getUint8(ind++);
+                lights.on = values & 0b01;
+                lights.headlightsOn = values & 0b10;
+            } else if (msgtype === c_GET_RT_DATA) {
                 debugRequestedCurrent.rValue = dv.getFloat32(ind);
                 ind += 4;
                 pitch.balancePitchValue = dv.getFloat32(ind);
@@ -950,6 +1012,16 @@ Item {
                 errorDescription = "";
             }
         }
+    }
+
+    QtObject {
+        id: lights
+
+        property bool enabled: false
+        property bool lcm: false
+
+        property bool on: false
+        property bool headlightsOn: false
     }
 
     // A distance unit used for most dimensions throughout the layouts.
@@ -3237,6 +3309,38 @@ Item {
                     Item {
                         width: parent.width
                         height: 0.1 * unit
+                    }
+
+                    LText {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        visible: lights.enabled
+
+                        font.pixelSize: fontSizeBig
+                        text: "Lights"
+                    }
+
+                    RowLayout {
+                        width: parent.width
+                        visible: lights.enabled
+
+                        Button {
+                            Layout.preferredWidth: 3 * unit
+                            Layout.alignment: Qt.AlignHCenter
+                            text: lights.on ? "Lights Off" : "Lights On"
+                            onClicked: {
+                                commands.sendLightsControl(!lights.on);
+                            }
+                        }
+
+                        Button {
+                            id : headlightsButton
+                            Layout.minimumWidth: 3 * unit
+                            Layout.alignment: Qt.AlignHCenter
+                            text: lights.headlightsOn ? "Headlights Off" : "Headlights On"
+                            onClicked: {
+                                commands.sendLightsControl(undefined, !lights.headlightsOn);
+                            }
+                        }
                     }
 
                     LText {
