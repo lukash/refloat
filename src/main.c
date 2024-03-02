@@ -266,7 +266,7 @@ static void configure(data *d) {
         beep_alert(d, 1, false);
     }
 
-    lcm_configure(&d->lcm, &d->float_conf.hardware.leds, &d->float_conf.leds);
+    lcm_configure(&d->lcm, &d->float_conf.leds);
 
     // This timer is used to determine how long the board has been disengaged / idle
     d->disengage_timer = d->current_time;
@@ -1584,7 +1584,7 @@ static void data_init(data *d) {
 
     d->odometer = VESC_IF->mc_get_odometer();
 
-    lcm_init(&d->lcm);
+    lcm_init(&d->lcm, &d->float_conf.hardware.leds);
     charging_init(&d->charging);
 }
 
@@ -2386,7 +2386,7 @@ static void send_realtime_data2(data *d) {
     SEND_APP_DATA(buffer, bufsize, ind);
 }
 
-static void lights_control_request(CfgLeds *leds, uint8_t *buffer, size_t len) {
+static void lights_control_request(CfgLeds *leds, uint8_t *buffer, size_t len, LcmData *lcm) {
     if (len < 2) {
         return;
     }
@@ -2394,12 +2394,18 @@ static void lights_control_request(CfgLeds *leds, uint8_t *buffer, size_t len) {
     uint8_t mask = buffer[0];
     uint8_t value = buffer[1];
 
-    if (mask & 0x1) {
-        leds->on = value & 0x1;
-    }
+    if (mask != 0) {
+        if (mask & 0x1) {
+            leds->on = value & 0x1;
+        }
 
-    if (mask & 0x2) {
-        leds->headlights_on = value & 0x2;
+        if (mask & 0x2) {
+            leds->headlights_on = value & 0x2;
+        }
+
+        if (lcm->enabled) {
+            lcm_configure(lcm, leds);
+        }
     }
 }
 
@@ -2559,7 +2565,7 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
         return;
     }
     case COMMAND_LIGHTS_CONTROL: {
-        lights_control_request(&d->float_conf.leds, &buffer[2], len - 2);
+        lights_control_request(&d->float_conf.leds, &buffer[2], len - 2, &d->lcm);
         lights_control_response(&d->float_conf.leds);
         return;
     }

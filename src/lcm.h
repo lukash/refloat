@@ -47,9 +47,9 @@ typedef struct {
     uint8_t payload_size;
 } LcmData;
 
-void lcm_init(LcmData *lcm);
+void lcm_init(LcmData *lcm, CfgHwLeds *hw_cfg);
 
-void lcm_configure(LcmData *lcm, CfgHwLeds *hw_cfg, const CfgLeds *cfg);
+void lcm_configure(LcmData *lcm, const CfgLeds *cfg);
 
 /**
  * Poll request from LCM with any data that need to be passed to the package.

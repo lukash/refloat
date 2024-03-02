@@ -24,8 +24,8 @@
 
 #include <math.h>
 
-void lcm_init(LcmData *lcm) {
-    lcm->enabled = false;
+void lcm_init(LcmData *lcm, CfgHwLeds *hw_cfg) {
+    lcm->enabled = hw_cfg->type == LED_TYPE_EXTERNAL;
     lcm->brightness = 0;
     lcm->brightness_idle = 0;
     lcm->status_brightness = 0;
@@ -33,11 +33,21 @@ void lcm_init(LcmData *lcm) {
     lcm->payload_size = 0;
 }
 
-void lcm_configure(LcmData *lcm, CfgHwLeds *hw_cfg, const CfgLeds *cfg) {
-    lcm->enabled = hw_cfg->type == LED_TYPE_EXTERNAL;
-    lcm->brightness = cfg->headlights.brightness;
-    lcm->brightness_idle = cfg->front.brightness;
-    lcm->status_brightness = cfg->status.brightness_headlights_off;
+void lcm_configure(LcmData *lcm, const CfgLeds *cfg) {
+    if (!cfg->on) {
+        lcm->brightness = 0.0f;
+        lcm->brightness_idle = 0.0f;
+        lcm->status_brightness = 0.0f;
+    } else {
+        if (cfg->headlights_on) {
+            lcm->brightness = cfg->headlights.brightness;
+            lcm->status_brightness = cfg->status.brightness_headlights_on;
+        } else {
+            lcm->brightness = cfg->front.brightness;
+            lcm->status_brightness = cfg->status.brightness_headlights_off;
+        }
+        lcm->brightness_idle = cfg->front.brightness;
+    }
 }
 
 void lcm_poll_request(LcmData *lcm, uint8_t *buffer, size_t len) {
