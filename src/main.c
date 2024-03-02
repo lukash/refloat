@@ -187,14 +187,6 @@ typedef struct {
     Konami flywheel_konami;
 } data;
 
-static void data_init(data *d) {
-    memset(d, 0, sizeof(data));
-    d->odometer = VESC_IF->mc_get_odometer();
-
-    lcm_init(&d->lcm);
-    charging_init(&d->charging);
-}
-
 static void brake(data *d);
 static void set_current(data *d, float current);
 static void flywheel_stop(data *d);
@@ -1549,7 +1541,7 @@ static void led_thd(void *arg) {
     }
 }
 
-static void read_cfg_from_eeprom(data *d) {
+static void read_cfg_from_eeprom(RefloatConfig *config) {
     uint32_t ints = sizeof(RefloatConfig) / 4 + 1;
     uint32_t *buffer = VESC_IF->malloc(ints * sizeof(uint32_t));
     if (!buffer) {
@@ -1570,19 +1562,30 @@ static void read_cfg_from_eeprom(data *d) {
             }
         } else {
             log_error("Failed signature check while reading config from EEPROM, using defaults.");
-            confparser_set_defaults_refloatconfig(&d->float_conf);
+            confparser_set_defaults_refloatconfig(config);
             return;
         }
     }
 
     if (read_ok) {
-        memcpy(&(d->float_conf), buffer, sizeof(RefloatConfig));
+        memcpy(config, buffer, sizeof(RefloatConfig));
     } else {
-        confparser_set_defaults_refloatconfig(&d->float_conf);
+        confparser_set_defaults_refloatconfig(config);
         log_error("Failed to read config from EEPROM, using defaults.");
     }
 
     VESC_IF->free(buffer);
+}
+
+static void data_init(data *d) {
+    memset(d, 0, sizeof(data));
+
+    read_cfg_from_eeprom(&d->float_conf);
+
+    d->odometer = VESC_IF->mc_get_odometer();
+
+    lcm_init(&d->lcm);
+    charging_init(&d->charging);
 }
 
 static float app_get_debug(int index) {
@@ -1818,7 +1821,7 @@ static void cmd_handtest(data *d, unsigned char *cfg) {
         d->float_conf.fault_delay_pitch = 50;
         d->float_conf.fault_delay_roll = 50;
     } else {
-        read_cfg_from_eeprom(d);
+        read_cfg_from_eeprom(&d->float_conf);
         configure(d);
     }
 }
@@ -2317,7 +2320,7 @@ static void cmd_flywheel_toggle(data *d, unsigned char *cfg, int len) {
 void flywheel_stop(data *d) {
     beep_on(d, 1);
     d->state.mode = MODE_NORMAL;
-    read_cfg_from_eeprom(d);
+    read_cfg_from_eeprom(&d->float_conf);
     configure(d);
 }
 
@@ -2475,7 +2478,7 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
         return;
     }
     case COMMAND_CFG_RESTORE: {
-        read_cfg_from_eeprom(d);
+        read_cfg_from_eeprom(&d->float_conf);
         return;
     }
     case COMMAND_TUNE_DEFAULTS: {
@@ -2666,8 +2669,6 @@ INIT_FUN(lib_info *info) {
         return false;
     }
     data_init(d);
-
-    read_cfg_from_eeprom(d);
 
     info->stop_fun = stop;
     info->arg = d;
