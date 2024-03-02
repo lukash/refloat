@@ -41,6 +41,10 @@ void lcm_configure(LcmData *lcm, CfgHwLeds *hw_cfg, const CfgLeds *cfg) {
 }
 
 void lcm_poll_request(LcmData *lcm, uint8_t *buffer, size_t len) {
+    if (!lcm->enabled) {
+        return;
+    }
+
     // Optionally pass in LCM name and version in a single string
     if (len > 0) {
         for (size_t i = 0; i < MAX_LCM_NAME_LENGTH; i++) {
@@ -56,6 +60,10 @@ void lcm_poll_request(LcmData *lcm, uint8_t *buffer, size_t len) {
 void lcm_poll_response(
     LcmData *lcm, const State *state, FootpadSensorState fs_state, const MotorData *motor
 ) {
+    if (!lcm->enabled) {
+        return;
+    }
+
     static const int bufsize = 20 + MAX_LCM_PAYLOAD_LENGTH;
     uint8_t buffer[bufsize];
     int32_t ind = 0;
@@ -92,6 +100,10 @@ void lcm_poll_response(
 }
 
 void lcm_light_info_response(const LcmData *lcm) {
+    if (!lcm->enabled) {
+        return;
+    }
+
     static const int bufsize = 15;
     uint8_t buffer[15];
     int32_t ind = 0;
@@ -119,6 +131,10 @@ void lcm_light_info_response(const LcmData *lcm) {
 }
 
 void lcm_device_info_response(const LcmData *lcm) {
+    if (!lcm->enabled) {
+        return;
+    }
+
     static const int bufsize = MAX_LCM_NAME_LENGTH + 2;
     uint8_t buffer[bufsize];
     int32_t ind = 0;
@@ -137,7 +153,11 @@ void lcm_device_info_response(const LcmData *lcm) {
     SEND_APP_DATA(buffer, bufsize, ind);
 }
 
-void lcm_get_battery_response() {
+void lcm_get_battery_response(const LcmData *lcm) {
+    if (!lcm->enabled) {
+        return;
+    }
+
     static const int bufsize = 10;
     uint8_t buffer[bufsize];
     int32_t ind = 0;
@@ -151,9 +171,10 @@ void lcm_get_battery_response() {
 }
 
 void lcm_light_ctrl_request(LcmData *lcm, unsigned char *cfg, int len) {
-    if (len < 3) {
+    if (!lcm->enabled || len < 3) {
         return;
     }
+
     int32_t idx = 0;
 
     lcm->brightness = cfg[idx++];

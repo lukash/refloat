@@ -76,7 +76,7 @@ void lcm_device_info_response(const LcmData *lcm);
 /**
  * No idea why this exists. Seems it should have been part of lcm_poll_response().
  */
-void lcm_get_battery_response();
+void lcm_get_battery_response(const LcmData *lcm);
 
 /**
  * Command for apps to call to control LCM details (lights, behavior, etc).

@@ -2544,7 +2544,7 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
         return;
     }
     case COMMAND_LCM_GET_BATTERY: {
-        lcm_get_battery_response();
+        lcm_get_battery_response(&d->lcm);
         return;
     }
     case COMMAND_CHARGING_STATE: {
