@@ -1654,10 +1654,10 @@ enum {
     COMMAND_FLYWHEEL = 22,
 
     COMMAND_LCM_POLL = 24,  // this should only be called by external light modules
-    COMMAND_LIGHT_INFO = 25,  // to be called by apps to get lighting info
-    COMMAND_LIGHT_CTRL = 26,  // to be called by apps to change light settings
-    COMMAND_LCM_INFO = 27,  // to be called by apps to check lighting controller firmware
-    COMMAND_GET_BATTERY = 29,
+    COMMAND_LCM_LIGHT_INFO = 25,  // to be called by apps to get lighting info
+    COMMAND_LCM_LIGHT_CTRL = 26,  // to be called by apps to change light settings
+    COMMAND_LCM_DEVICE_INFO = 27,  // to be called by apps to check lighting controller firmware
+    COMMAND_LCM_GET_BATTERY = 29,
 
     COMMAND_LCM_DEBUG = 99,  // reserved for external debug purposes
 
@@ -2337,23 +2337,26 @@ void flywheel_stop(data *d) {
     configure(d);
 }
 
+static void lcm_poll_request(LcmData *lcm, uint8_t *buffer, size_t len) {
+    // Optionally pass in LCM name and version in a single string
+    if (len > 0) {
+        for (size_t i = 0; i < MAX_LCM_NAME_LENGTH; i++) {
+            if (i > len || i > MAX_LCM_NAME_LENGTH - 1 || buffer[i] == '\0') {
+                lcm->name[i] = '\0';
+                break;
+            }
+            lcm->name[i] = buffer[i];
+        }
+    }
+}
+
 /**
  * Command for the LCM to poll data from the package.
  * Also used to pass LCM name/version info (usually on 1st call).
  */
-static void cmd_lcm_poll(data *d, unsigned char *cfg, int len) {
-    // Optional: pass in name and version in a single string
-    if (len > 0) {
-        // Read name from LCM
-        for (int i = 0; i < MAX_LCM_NAME_LENGTH; i++) {
-            if (i > len || i > MAX_LCM_NAME_LENGTH - 1 || cfg[i] == '\0') {
-                d->lcm.name[i] = '\0';
-                break;
-            }
-            d->lcm.name[i] = cfg[i];
-        }
-    }
-
+static void lcm_poll_response(
+    LcmData *lcm, const State *state, FootpadSensorState fs_state, const MotorData *motor
+) {
     static const int bufsize = 20 + MAX_LCM_PAYLOAD_LENGTH;
     uint8_t buffer[bufsize];
     int32_t ind = 0;
@@ -2361,30 +2364,30 @@ static void cmd_lcm_poll(data *d, unsigned char *cfg, int len) {
     buffer[ind++] = 101;  // Package ID
     buffer[ind++] = COMMAND_LCM_POLL;
 
-    uint8_t state = state_compat(&d->state) & 0xF;
-    state += d->footpad_sensor.state << 4;
-    if (d->state.mode == MODE_HANDTEST) {
-        state |= 0x80;
+    uint8_t send_state = state_compat(state) & 0xF;
+    send_state += fs_state << 4;
+    if (state->mode == MODE_HANDTEST) {
+        send_state |= 0x80;
     }
 
-    buffer[ind++] = state;
+    buffer[ind++] = send_state;
     buffer[ind++] = VESC_IF->mc_get_fault();
 
-    buffer[ind++] = fminf(100, fabsf(d->motor.duty_cycle * 100));
-    buffer_append_float16(buffer, d->motor.erpm, 1e0, &ind);
+    buffer[ind++] = fminf(100, fabsf(motor->duty_cycle * 100));
+    buffer_append_float16(buffer, motor->erpm, 1e0, &ind);
     buffer_append_float16(buffer, VESC_IF->mc_get_tot_current_in(), 1e0, &ind);
     buffer_append_float16(buffer, VESC_IF->mc_get_input_voltage_filtered(), 1e1, &ind);
 
     // LCM control info
-    buffer[ind++] = d->lcm.brightness;
-    buffer[ind++] = d->lcm.brightness_idle;
-    buffer[ind++] = d->lcm.status_brightness;
+    buffer[ind++] = lcm->brightness;
+    buffer[ind++] = lcm->brightness_idle;
+    buffer[ind++] = lcm->status_brightness;
 
     // Relay any generic byte pairs set by cmd_light_ctrl
-    for (uint8_t i = 0; i < d->lcm.payload_size; ++i) {
-        buffer[ind++] = d->lcm.payload[i];
+    for (uint8_t i = 0; i < lcm->payload_size; ++i) {
+        buffer[ind++] = lcm->payload[i];
     }
-    d->lcm.payload_size = 0;  // Message has been processed, clear it
+    lcm->payload_size = 0;  // Message has been processed, clear it
 
     SEND_APP_DATA(buffer, bufsize, ind);
 }
@@ -2392,21 +2395,21 @@ static void cmd_lcm_poll(data *d, unsigned char *cfg, int len) {
 /**
  * Command for apps to call to get info about lighting.
  */
-static void cmd_light_info(data *d) {
+static void lcm_light_info_response(const LcmData *lcm) {
     static const int bufsize = 15;
     uint8_t buffer[15];
     int32_t ind = 0;
 
     buffer[ind++] = 101;  // Package ID
-    buffer[ind++] = COMMAND_LIGHT_INFO;
+    buffer[ind++] = COMMAND_LCM_LIGHT_INFO;
 
     // Lights control for Refloat is not compatible with this interface; Send 3
     // for LCM (3 is he identifier for external led module in Float), otherwise 0.
-    buffer[ind++] = d->lcm.enabled ? 3 : 0;
+    buffer[ind++] = lcm->enabled ? 3 : 0;
 
-    buffer[ind++] = d->lcm.brightness;
-    buffer[ind++] = d->lcm.brightness_idle;
-    buffer[ind++] = d->lcm.status_brightness;
+    buffer[ind++] = lcm->brightness;
+    buffer[ind++] = lcm->brightness_idle;
+    buffer[ind++] = lcm->status_brightness;
 
     // Don't send Float-specific configuration.
     buffer[ind++] = 0;  // led_mode
@@ -2422,18 +2425,18 @@ static void cmd_light_info(data *d) {
 /**
  * Command for apps to call to get LCM hardware info (if any).
  */
-static void cmd_lcm_info(data *d) {
+static void lcm_device_info_response(const LcmData *lcm) {
     static const int bufsize = MAX_LCM_NAME_LENGTH + 2;
     uint8_t buffer[bufsize];
     int32_t ind = 0;
 
     buffer[ind++] = 101;  // Package ID
-    buffer[ind++] = COMMAND_LCM_INFO;
+    buffer[ind++] = COMMAND_LCM_DEVICE_INFO;
 
     // Write LCM firmware name into the buffer
     for (int i = 0; i < MAX_LCM_NAME_LENGTH; i++) {
-        buffer[ind++] = d->lcm.name[i];
-        if (d->lcm.name[i] == '\0') {
+        buffer[ind++] = lcm->name[i];
+        if (lcm->name[i] == '\0') {
             break;
         }
     }
@@ -2441,13 +2444,13 @@ static void cmd_lcm_info(data *d) {
     SEND_APP_DATA(buffer, bufsize, ind);
 }
 
-static void cmd_send_battery() {
+static void lcm_get_battery_response() {
     static const int bufsize = 10;
     uint8_t buffer[bufsize];
     int32_t ind = 0;
 
     buffer[ind++] = 101;  // Package ID
-    buffer[ind++] = COMMAND_GET_BATTERY;
+    buffer[ind++] = COMMAND_LCM_GET_BATTERY;
 
     buffer_append_float32_auto(buffer, VESC_IF->mc_get_battery_level(NULL), &ind);
 
@@ -2457,22 +2460,22 @@ static void cmd_send_battery() {
 /**
  * Command for apps to call to control LCM details (lights, behavior, etc).
  */
-static void cmd_light_ctrl(data *d, unsigned char *cfg, int len) {
+static void lcm_light_ctrl_request(LcmData *lcm, unsigned char *cfg, int len) {
     if (len < 3) {
         return;
     }
     int32_t idx = 0;
 
-    d->lcm.brightness = cfg[idx++];
-    d->lcm.brightness_idle = cfg[idx++];
-    d->lcm.status_brightness = cfg[idx++];
+    lcm->brightness = cfg[idx++];
+    lcm->brightness_idle = cfg[idx++];
+    lcm->status_brightness = cfg[idx++];
 
     if (len > 3) {
-        if (d->lcm.enabled) {
+        if (lcm->enabled) {
             // Copy rest of payload into data for LCM to pull
-            d->lcm.payload_size = len - idx;
-            for (int i = 0; i < d->lcm.payload_size; i++) {
-                d->lcm.payload[i] = cfg[idx + i];
+            lcm->payload_size = len - idx;
+            for (int i = 0; i < lcm->payload_size; i++) {
+                lcm->payload[i] = cfg[idx + i];
             }
         } else {
             if (len > 5) {
@@ -2651,23 +2654,24 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
         return;
     }
     case COMMAND_LCM_POLL: {
-        cmd_lcm_poll(d, &buffer[2], len - 2);
+        lcm_poll_request(&d->lcm, &buffer[2], len - 2);
+        lcm_poll_response(&d->lcm, &d->state, d->footpad_sensor.state, &d->motor);
         return;
     }
-    case COMMAND_LIGHT_INFO: {
-        cmd_light_info(d);
+    case COMMAND_LCM_LIGHT_INFO: {
+        lcm_light_info_response(&d->lcm);
         return;
     }
-    case COMMAND_LIGHT_CTRL: {
-        cmd_light_ctrl(d, &buffer[2], len - 2);
+    case COMMAND_LCM_LIGHT_CTRL: {
+        lcm_light_ctrl_request(&d->lcm, &buffer[2], len - 2);
         return;
     }
-    case COMMAND_LCM_INFO: {
-        cmd_lcm_info(d);
+    case COMMAND_LCM_DEVICE_INFO: {
+        lcm_device_info_response(&d->lcm);
         return;
     }
-    case COMMAND_GET_BATTERY: {
-        cmd_send_battery();
+    case COMMAND_LCM_GET_BATTERY: {
+        lcm_get_battery_response();
         return;
     }
     case COMMAND_GET_RTDATA_2: {
