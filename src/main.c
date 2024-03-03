@@ -1168,7 +1168,7 @@ static void refloat_thd(void *arg) {
         footpad_sensor_update(&d->footpad_sensor, &d->float_conf);
 
         if (d->footpad_sensor.state == FS_NONE && d->state.state == STATE_RUNNING &&
-            d->motor.abs_erpm > d->switch_warn_beep_erpm) {
+            d->state.mode != MODE_FLYWHEEL && d->motor.abs_erpm > d->switch_warn_beep_erpm) {
             // If we're at riding speed and the switch is off => ALERT the user
             // set force=true since this could indicate an imminent shutdown/nosedive
             beep_on(d, true);
