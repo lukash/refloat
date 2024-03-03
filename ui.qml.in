@@ -296,7 +296,6 @@ Item {
         target: vescCommands
 
         readonly property int c_GET_INFO: 0
-        readonly property int c_GET_RT_DATA: 1
         readonly property int c_RC_MOVE: 7
         readonly property int c_HANDTEST: 13
         readonly property int c_FLYWHEEL: 22
@@ -429,125 +428,6 @@ Item {
                 var values = dv.getUint8(ind++);
                 lights.on = values & 0b01;
                 lights.headlightsOn = values & 0b10;
-            } else if (msgtype === c_GET_RT_DATA) {
-                debugRequestedCurrent.rValue = dv.getFloat32(ind);
-                ind += 4;
-                pitch.balancePitchValue = dv.getFloat32(ind);
-                ind += 4;
-                roll.value = dv.getFloat32(ind);
-                ind += 4;
-                var pkgState = dv.getInt8(ind);
-                ind += 1;
-                var setpointAdjustmentType = pkgState >> 4;
-                pkgState = pkgState & 15;
-                var switchState = dv.getInt8(ind);
-                ind += 1;
-                var handtest = !!(switchState & 8);
-                state.beepReason = switchState >> 4;
-                switchState = switchState & 3;
-                state.adc1Voltage = dv.getFloat32(ind);
-                ind += 4;
-                state.adc2Voltage = dv.getFloat32(ind);
-                ind += 4;
-                pitch.setpointValue = dv.getFloat32(ind);
-                ind += 4;
-                debugAtrSetpoint.rValue = dv.getFloat32(ind);
-                ind += 4;
-                debugBrakeTiltSetpoint.rValue = dv.getFloat32(ind);
-                ind += 4;
-                debugTorqueTiltSetpoint.rValue = dv.getFloat32(ind);
-                ind += 4;
-                debugTurnTiltSetpoint.rValue = dv.getFloat32(ind);
-                ind += 4;
-                debugRemoteTiltSetpoint.rValue = dv.getFloat32(ind);
-                ind += 4;
-                pitch.pitchValue = dv.getFloat32(ind);
-                ind += 4;
-                debugFilteredCurrent.rValue = dv.getFloat32(ind);
-                ind += 4;
-                debugAccDiff.rValue = dv.getFloat32(ind);
-                ind += 4;
-                debugBoosterCurrent.rValue = dv.getFloat32(ind);
-                ind += 4;
-                var motorCurrent = dv.getFloat32(ind);
-                ind += 4;
-                debugRemoteInput.value = Math.round((dv.getFloat32(ind) * 100));
-                ind += 4;
-
-                state.setpointAdjustmentType = state.sat_None;
-                state.darkride = false;
-                state.wheelslip = false;
-                var flywheel = false;
-                if (pkgState === 0) {
-                    state.pkgState = state.s_Startup;
-                } else if (pkgState < 6) {
-                    state.pkgState = state.s_Running;
-
-                    // reset stop reason only once engaged again
-                    state.stopCondition = state.sc_None;
-
-                    // pkgState = 2 is "RUNNING_TILTBACK"
-                    if (pkgState === 3) {
-                        state.wheelslip = true;
-                    } else if (pkgState === 4) {
-                        state.darkride = true;
-                    } else if (pkgState === 5) {
-                        flywheel = true;
-                    }
-
-                    if (setpointAdjustmentType === 0) {
-                        state.setpointAdjustmentType = state.sat_Centering;
-                    } else if (setpointAdjustmentType === 1) {
-                        state.setpointAdjustmentType = state.sat_ReverseStop;
-                    } else if (setpointAdjustmentType === 2) {
-                        state.setpointAdjustmentType = state.sat_None;
-                    } else if (setpointAdjustmentType === 3) {
-                        state.setpointAdjustmentType = state.sat_Duty;
-                    } else if (setpointAdjustmentType === 4) {
-                        state.setpointAdjustmentType = state.sat_HighVoltage;
-                    } else if (setpointAdjustmentType === 5) {
-                        state.setpointAdjustmentType = state.sat_LowVoltage;
-                    } else if (setpointAdjustmentType === 6) {
-                        state.setpointAdjustmentType = state.sat_Temperature;
-                    }
-                } else if (pkgState < 14) {
-                    state.pkgState = state.s_Ready;
-
-                    if (pkgState === 6) {
-                        state.stopCondition = state.sc_Pitch;
-                    } else if (pkgState === 7) {
-                        state.stopCondition = state.sc_Roll;
-                    } else if (pkgState === 8) {
-                        state.stopCondition = state.sc_SensorHalf;
-                    } else if (pkgState === 9) {
-                        state.stopCondition = state.sc_SensorFull;
-                    // pkgState = 11 is "FAULT_STARTUP"
-                    } else if (pkgState === 12) {
-                        state.stopCondition = state.sc_ReverseStop;
-                    } else if (pkgState === 13) {
-                        state.stopCondition = state.sc_Quickstop;
-                    }
-                } else if (pkgState === 15) {
-                    state.pkgState = state.s_Disabled;
-                } else {
-                    state.pkgState = 42;
-                }
-
-                if (handtest) {
-                    state.pkgMode = state.m_Handtest;
-                } else if (flywheel) {
-                    state.pkgMode = state.m_Flywheel;
-                } else {
-                    state.pkgMode = state.m_Normal;
-                }
-
-                if (switchState === 0) {
-                    state.fsState = state.fs_None;
-                } else if (switchState === 1) {
-                    state.fsState = state.fs_Left;
-                } else {
-                    state.fsState = state.fs_Both;
-                }
             } else if (msgtype === c_GET_RT_DATA_2) {
                 var mask = dv.getUint8(ind++);
                 var hasRuntime = !!(mask & 0x1);
