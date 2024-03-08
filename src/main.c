@@ -2205,11 +2205,14 @@ static void cmd_flywheel_toggle(data *d, unsigned char *cfg, int len) {
         return;
     }
 
-    if (d->state.state != STATE_READY) {
+    // Only proceed in NORMAL or FLYWHEEL mode
+    if (d->state.mode != MODE_NORMAL && d->state.mode != MODE_FLYWHEEL) {
         return;
     }
 
-    if (d->state.mode != MODE_NORMAL && d->state.mode != MODE_FLYWHEEL) {
+    // If state is not READY, only proceed if mode is FLYWHEEL
+    // (i.e. don't allow to turn FLYWHEEL on in any other mode than READY)
+    if (d->state.state != STATE_READY && d->state.mode != MODE_FLYWHEEL) {
         return;
     }
 
