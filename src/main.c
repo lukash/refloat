@@ -163,7 +163,7 @@ typedef struct {
     float darkride_setpoint_correction;
 
     // Feature: Flywheel
-    bool flywheel_abort, flywheel_allow_abort;
+    bool flywheel_abort;
     float flywheel_pitch_offset, flywheel_roll_offset;
 
     // Feature: Reverse Stop
@@ -334,7 +334,6 @@ static void configure(data *d) {
 
     // Feature: Flywheel
     d->flywheel_abort = false;
-    d->flywheel_allow_abort = false;
 
     // Allows smoothing of Remote Tilt
     d->inputtilt_ramped_step_size = 0;
@@ -631,8 +630,7 @@ static bool check_faults(data *d) {
             }
         }
 
-        if (d->state.mode == MODE_FLYWHEEL && d->flywheel_allow_abort &&
-            d->footpad_sensor.state == FS_BOTH) {
+        if (d->state.mode == MODE_FLYWHEEL && d->footpad_sensor.state == FS_BOTH) {
             state_stop(&d->state, STOP_SWITCH_HALF);
             d->flywheel_abort = true;
             return true;
@@ -1407,8 +1405,7 @@ static void refloat_thd(void *arg) {
 
         case (STATE_READY):
             if (d->state.mode == MODE_FLYWHEEL) {
-                if (d->flywheel_abort ||
-                    (d->flywheel_allow_abort && d->footpad_sensor.state == FS_BOTH)) {
+                if (d->flywheel_abort || d->footpad_sensor.state == FS_BOTH) {
                     flywheel_stop(d);
                     break;
                 }
@@ -2294,7 +2291,7 @@ static void cmd_flywheel_toggle(data *d, unsigned char *cfg, int len) {
         VESC_IF->set_cfg_float(CFG_PARAM_l_max_erpm + 100, 6000);
         d->mc_current_max = d->mc_current_min = 40;
 
-        d->flywheel_allow_abort = cfg[5];
+        // d->flywheel_allow_abort = cfg[5];
 
         // Disable I-term and all tune modifiers and tilts
         d->float_conf.ki = 0;
