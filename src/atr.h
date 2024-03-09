@@ -26,7 +26,6 @@ typedef struct {
     float on_step_size;
     float off_step_size;
 
-    float accel_gap;
     float accel_diff;
 
     float target_offset;  // setpoint target offset

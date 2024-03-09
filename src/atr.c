@@ -23,7 +23,6 @@
 #include <math.h>
 
 void atr_init(ATR *atr) {
-    atr->accel_gap = 0;
     atr->accel_diff = 0;
     atr->target_offset = 0;
     atr->offset = 0;
@@ -80,24 +79,23 @@ static void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *co
         forward = (expected_acc > 0);
     }
 
-    atr->accel_diff = expected_acc - measured_acc;
-
+    float new_accel_diff = expected_acc - measured_acc;
     if (motor->abs_erpm > 2000) {
-        atr->accel_gap = 0.9 * atr->accel_gap + 0.1 * atr->accel_diff;
+        atr->accel_diff = 0.9f * atr->accel_diff + 0.1f * new_accel_diff;
     } else if (motor->abs_erpm > 1000) {
-        atr->accel_gap = 0.95 * atr->accel_gap + 0.05 * atr->accel_diff;
+        atr->accel_diff = 0.95f * atr->accel_diff + 0.05f * new_accel_diff;
     } else if (motor->abs_erpm > 250) {
-        atr->accel_gap = 0.98 * atr->accel_gap + 0.02 * atr->accel_diff;
+        atr->accel_diff = 0.98f * atr->accel_diff + 0.02f * new_accel_diff;
     } else {
-        atr->accel_gap = 0;
+        atr->accel_diff = 0;
     }
 
-    // atr->accel_gap | > 0  | <= 0
+    // atr->accel_diff | > 0  | <= 0
     // -------------+------+-------
-    //      forward | up   | down
-    //     !forward | down | up
+    //         forward | up   | down
+    //        !forward | down | up
     float atr_strength =
-        forward == (atr->accel_gap > 0) ? config->atr_strength_up : config->atr_strength_down;
+        forward == (atr->accel_diff > 0) ? config->atr_strength_up : config->atr_strength_down;
 
     // from 3000 to 6000..9000 erpm gradually crank up the torque response
     if (motor->abs_erpm > 3000 && !motor->braking) {
@@ -110,7 +108,7 @@ static void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *co
     }
 
     // now ATR target is purely based on gap between expected and actual acceleration
-    float new_atr_target = atr_strength * atr->accel_gap;
+    float new_atr_target = atr_strength * atr->accel_diff;
     if (fabsf(new_atr_target) < atr_threshold) {
         new_atr_target = 0;
     } else {
@@ -208,9 +206,9 @@ static void braketilt_update(
             float downhill_damper = 1;
             // if we're braking on a downhill we don't want braking to lift the setpoint quite as
             // much
-            if ((motor->erpm > 1000 && atr->accel_gap < -1) ||
-                (motor->erpm < -1000 && atr->accel_gap > 1)) {
-                downhill_damper += fabsf(atr->accel_gap) / 2;
+            if ((motor->erpm > 1000 && atr->accel_diff < -1) ||
+                (motor->erpm < -1000 && atr->accel_diff > 1)) {
+                downhill_damper += fabsf(atr->accel_diff) / 2;
             }
             atr->braketilt_target_offset = proportional / atr->braketilt_factor / downhill_damper;
             if (downhill_damper > 2) {
