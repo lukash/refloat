@@ -27,6 +27,7 @@ typedef struct {
     float off_step_size;
 
     float accel_diff;
+    float speed_boost;
 
     float target_offset;  // setpoint target offset
     float offset;  // rate-limited setpoint offset

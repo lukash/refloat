@@ -24,6 +24,7 @@
 
 void atr_init(ATR *atr) {
     atr->accel_diff = 0;
+    atr->speed_boost = 0;
     atr->target_offset = 0;
     atr->offset = 0;
     atr->braketilt_target_offset = 0;
@@ -99,12 +100,14 @@ static void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *co
 
     // from 3000 to 6000..9000 erpm gradually crank up the torque response
     if (motor->abs_erpm > 3000 && !motor->braking) {
-        float speedboost = (motor->abs_erpm - 3000) * atr->speed_boost_mult;
+        float speed_boost_mult = (motor->abs_erpm - 3000.0f) * atr->speed_boost_mult;
         // configured speedboost can now also be negative (-1..1)
         // -1 brings it to 0 (if erpm exceeds 9000)
         // +1 doubles it     (if erpm exceeds 9000)
-        speedboost = fminf(1, speedboost) * config->atr_speed_boost;
-        atr_strength += atr_strength * speedboost;
+        atr->speed_boost = fminf(1, speed_boost_mult) * config->atr_speed_boost;
+        atr_strength += atr_strength * atr->speed_boost;
+    } else {
+        atr->speed_boost = 0.0f;
     }
 
     // now ATR target is purely based on gap between expected and actual acceleration

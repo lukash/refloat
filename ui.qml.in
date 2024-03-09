@@ -467,7 +467,8 @@ Item {
 
                     debugRequestedCurrent.rValue = dv.getFloat32(ind); ind += 4;
                     debugFilteredCurrent.rValue = dv.getFloat32(ind); ind += 4;
-                    debugAccDiff.rValue = dv.getFloat32(ind); ind += 4;
+                    debugAtrAccDiff.rValue = dv.getFloat32(ind); ind += 4;
+                    debugAtrSpeedBoost.value = Math.round(dv.getFloat32(ind) * 100); ind += 4;
                     debugBoosterCurrent.rValue = dv.getFloat32(ind); ind += 4;
                 }
 
@@ -3408,7 +3409,8 @@ Item {
 
                             RealValue {id: debugRequestedCurrent; label: "Requested current"; unit: "A";}
                             RealValue {id: debugFilteredCurrent; label: "Torque (filt. current)"; unit: "A";}
-                            RealValue {id: debugAccDiff; label: "Accel. difference";}
+                            RealValue {id: debugAtrAccDiff; label: "ATR Accel. diff.";}
+                            Value {id: debugAtrSpeedBoost; label: "ATR Speed Boost"; unit: "%"; value: "0"}
                             RealValue {id: debugBoosterCurrent; label: "Booster current"; unit: "A";}
                             Value {id: debugRemoteInput; label: "Remote input"; unit: "%";}
                         }

@@ -2325,7 +2325,7 @@ void flywheel_stop(data *d) {
 }
 
 static void send_realtime_data2(data *d) {
-    static const int bufsize = 71;
+    static const int bufsize = 75;
     uint8_t buffer[bufsize];
     int32_t ind = 0;
 
@@ -2375,6 +2375,7 @@ static void send_realtime_data2(data *d) {
         buffer_append_float32_auto(buffer, d->pid_value, &ind);
         buffer_append_float32_auto(buffer, d->motor.atr_filtered_current, &ind);
         buffer_append_float32_auto(buffer, d->atr.accel_diff, &ind);
+        buffer_append_float32_auto(buffer, d->atr.speed_boost, &ind);
         buffer_append_float32_auto(buffer, d->applied_booster_current, &ind);
     }
 
