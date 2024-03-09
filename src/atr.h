@@ -39,7 +39,7 @@ typedef struct {
     float braketilt_offset;  // rate-limited braketilt setpoint offset
 } ATR;
 
-void atr_init(ATR *atr);
+void atr_reset(ATR *atr);
 
 void atr_configure(ATR *atr, const RefloatConfig *config);
 

@@ -252,7 +252,7 @@ void beep_on(data *d, bool force) {
 }
 
 static void reconfigure(data *d) {
-    motor_data_configure_atr_filter(&d->motor, d->float_conf.atr_filter / d->float_conf.hertz);
+    motor_data_configure(&d->motor, d->float_conf.atr_filter / d->float_conf.hertz);
     balance_filter_configure(&d->balance_filter, &d->float_conf);
     torque_tilt_configure(&d->torque_tilt, &d->float_conf);
     atr_configure(&d->atr, &d->float_conf);
@@ -358,9 +358,9 @@ static void configure(data *d) {
 }
 
 static void reset_vars(data *d) {
-    motor_data_init(&d->motor);
-    atr_init(&d->atr);
-    torque_tilt_init(&d->torque_tilt);
+    motor_data_reset(&d->motor);
+    atr_reset(&d->atr);
+    torque_tilt_reset(&d->torque_tilt);
 
     // Set values for startup
     d->setpoint = d->balance_pitch;

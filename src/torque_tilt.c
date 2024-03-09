@@ -22,7 +22,7 @@
 
 #include <math.h>
 
-void torque_tilt_init(TorqueTilt *tt) {
+void torque_tilt_reset(TorqueTilt *tt) {
     tt->offset = 0;
 }
 

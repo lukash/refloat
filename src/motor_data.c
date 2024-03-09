@@ -23,7 +23,7 @@
 
 #include <math.h>
 
-void motor_data_init(MotorData *m) {
+void motor_data_reset(MotorData *m) {
     m->duty_smooth = 0;
 
     m->acceleration = 0;
@@ -32,8 +32,16 @@ void motor_data_init(MotorData *m) {
         m->accel_history[i] = 0;
     }
 
-    m->atr_filter_enabled = false;
     biquad_reset(&m->atr_current_biquad);
+}
+
+void motor_data_configure(MotorData *m, float frequency) {
+    if (frequency > 0) {
+        biquad_configure(&m->atr_current_biquad, BQ_LOWPASS, frequency);
+        m->atr_filter_enabled = true;
+    } else {
+        m->atr_filter_enabled = false;
+    }
 }
 
 void motor_data_update(MotorData *m) {
@@ -58,14 +66,5 @@ void motor_data_update(MotorData *m) {
         m->atr_filtered_current = biquad_process(&m->atr_current_biquad, m->current);
     } else {
         m->atr_filtered_current = m->current;
-    }
-}
-
-void motor_data_configure_atr_filter(MotorData *m, float frequency) {
-    if (frequency > 0) {
-        biquad_configure(&m->atr_current_biquad, BQ_LOWPASS, frequency);
-        m->atr_filter_enabled = true;
-    } else {
-        m->atr_filter_enabled = false;
     }
 }

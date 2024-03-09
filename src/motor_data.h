@@ -46,8 +46,8 @@ typedef struct {
     float atr_filtered_current;
 } MotorData;
 
-void motor_data_init(MotorData *m);
+void motor_data_reset(MotorData *m);
+
+void motor_data_configure(MotorData *m, float frequency);
 
 void motor_data_update(MotorData *m);
-
-void motor_data_configure_atr_filter(MotorData *m, float frequency);

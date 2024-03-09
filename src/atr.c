@@ -22,7 +22,7 @@
 
 #include <math.h>
 
-void atr_init(ATR *atr) {
+void atr_reset(ATR *atr) {
     atr->accel_diff = 0;
     atr->speed_boost = 0;
     atr->target_offset = 0;
