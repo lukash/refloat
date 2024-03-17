@@ -382,7 +382,7 @@ static void status_animate(
 
     float duty = 0;
     if (leds->state.state == STATE_RUNNING && leds->state.mode != MODE_FLYWHEEL) {
-        duty = fmaxf(fabsf(VESC_IF->mc_get_duty_cycle_now() * 10.0f / 9.0f), 1.0f);
+        duty = fminf(fabsf(VESC_IF->mc_get_duty_cycle_now() * 10.0f / 9.0f), 1.0f);
     }
 
     if (duty > leds->duty_threshold) {
