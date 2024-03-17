@@ -680,6 +680,8 @@ bool leds_init(Leds *leds, CfgHwLeds *hw_cfg, const CfgLeds *cfg, FootpadSensorS
 
     memset(leds->led_data, 0, sizeof(uint32_t) * leds->led_count);
 
+    leds_configure(leds, cfg);
+
     return true;
 }
 
