@@ -684,7 +684,7 @@ bool leds_init(Leds *leds, CfgHwLeds *hw_cfg, const CfgLeds *cfg, FootpadSensorS
 }
 
 void leds_configure(Leds *leds, const CfgLeds *cfg) {
-    leds->duty_threshold = fminf(cfg->status.duty_threshold, 0.15);
+    leds->duty_threshold = fmaxf(cfg->status.duty_threshold, 0.15);
 
     leds->headlights_trans.transition = cfg->headlights_transition;
     leds->dir_trans.transition = cfg->direction_transition;
