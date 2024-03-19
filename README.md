@@ -19,9 +19,11 @@ Technical explanation: High Mahony KP works very well for balancing, but it is o
 
 Lower roll KP makes the nose hold up better in turns. It makes the board more stable and "stiffer", especially in short carves. This means **the Turn Tilt feature may be less needed** and it may respond more aggresively.
 
-Mahony configuration in Firmware App Config is now independent and used for what is called "True Pitch" in Float. It is recommended to use Mahony KP 0.4 and Mahony KI 0 for that, and these values will be set automatically by Refloat if Mahony KP > 1 is encountered in the configuration.
+Mahony configuration in Firmware App Config -> IMU is now a setting independent from Refloat. It is used for general purpose pitch, roll and yaw only (this pitch is called "true pitch" in Float). It is recommended to use Mahony KP 0.4 and Mahony KI 0 there, and these values will be set automatically by Refloat if Mahony KP > 1 is encountered in the App Config -> IMU configuration.
 
-Make sure to read the descriptions of the new configuration options.
+There are three new settings in Refloat, Pitch KP (this is effectively the Mahony KP from Float), Roll KP and Yaw KP. These are now independent from Firmware App Config -> IMU.
+
+Read the descriptions of the new configuration options for more information.
 
 ### Fresh Installation
 It's best to configure your **motor** and **IMU** before installing the package. If you install the package first, a welcome dialog will navigate you to how to disable the package temporarily to configure the **motor**. You don't need to disable the package to configure the **IMU**, just make sure you don't activate the board before you do so, as it may and most likely will behave erratically.
