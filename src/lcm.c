@@ -40,13 +40,13 @@ void lcm_configure(LcmData *lcm, const CfgLeds *cfg) {
         lcm->status_brightness = 0.0f;
     } else {
         if (cfg->headlights_on) {
-            lcm->brightness = cfg->headlights.brightness;
-            lcm->status_brightness = cfg->status.brightness_headlights_on;
+            lcm->brightness = cfg->headlights.brightness * 100;
+            lcm->status_brightness = cfg->status.brightness_headlights_on * 100;
         } else {
-            lcm->brightness = cfg->front.brightness;
-            lcm->status_brightness = cfg->status.brightness_headlights_off;
+            lcm->brightness = cfg->front.brightness * 100;
+            lcm->status_brightness = cfg->status.brightness_headlights_off * 100;
         }
-        lcm->brightness_idle = cfg->front.brightness;
+        lcm->brightness_idle = cfg->front.brightness * 100;
     }
 }
 
