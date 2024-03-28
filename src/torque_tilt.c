@@ -27,8 +27,8 @@ void torque_tilt_reset(TorqueTilt *tt) {
 }
 
 void torque_tilt_configure(TorqueTilt *tt, const RefloatConfig *config) {
-    tt->on_step_size = config->atr_on_speed / config->hertz;
-    tt->off_step_size = config->atr_off_speed / config->hertz;
+    tt->on_step_size = config->torquetilt_on_speed / config->hertz;
+    tt->off_step_size = config->torquetilt_off_speed / config->hertz;
 }
 
 void torque_tilt_update(TorqueTilt *tt, const MotorData *motor, const RefloatConfig *config) {
