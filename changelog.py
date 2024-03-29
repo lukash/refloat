@@ -5,6 +5,21 @@ import git
 import re
 
 
+maintainer = "lukkash@email.cz"
+
+
+def format_entry(entry, author):
+    entry = re.sub(" *> *", "\n  \n  ", entry)
+
+    if author.email != maintainer:
+        if "\n" in entry:
+            return entry.replace("\n", " [{}]\n".format(author.name), 1)
+        else:
+            return entry + " [{}]".format(author.name)
+
+    return entry
+
+
 def main():
     parser = ArgumentParser(prog='changelog')
     args = parser.parse_args()
@@ -34,21 +49,19 @@ def main():
 
         if commit.trailers:
             if "Feature" in commit.trailers:
-                features.append(commit.trailers["Feature"])
+                features.append(format_entry(commit.trailers["Feature"], commit.author))
 
             if "Fix" in commit.trailers:
-                fixes.append(commit.trailers["Fix"])
+                fixes.append(format_entry(commit.trailers["Fix"], commit.author))
 
     def print_list(lst):
-        for item in reversed(lst):
-            with_linebreaks = re.sub(" *> *", "\n  \n  ", item)
-            print("- {}\n".format(with_linebreaks))
+        for entry in reversed(lst):
+            print("- {}\n".format(entry))
 
     print("### Features")
     print_list(features)
     print("### Fixes")
     print_list(fixes)
-
 
 
 if __name__ == '__main__':
