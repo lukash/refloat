@@ -9,7 +9,7 @@ maintainer = "lukkash@email.cz"
 
 
 def format_entry(entry, author):
-    entry = re.sub(" *> *", "\n  \n  ", entry)
+    entry = re.sub(" +> +", "\n  \n  ", entry)
 
     if author.email != maintainer:
         if "\n" in entry:
