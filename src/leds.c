@@ -128,7 +128,6 @@ static void front_rear_animation_reset(Leds *leds, float current_time) {
 
 static void full_animation_reset(Leds *leds, float current_time) {
     front_rear_animation_reset(leds, current_time);
-    leds->status_animation_start = current_time;
     leds->status_idle_time = current_time;
     leds->status_on_front_idle_time = current_time;
 }
@@ -736,6 +735,9 @@ void leds_update(Leds *leds, const State *state, FootpadSensorState fs_state) {
     } else if (leds->board_is_upright && leds->pitch < 50) {
         leds->board_is_upright = false;
         leds->status_idle_time = current_time;
+        if (leds->cfg->lights_off_when_lifted) {
+            front_rear_animation_reset(leds, current_time);
+        }
     }
 
     bool status_on_front = leds->cfg->status_on_front_when_lifted &&
