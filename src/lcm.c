@@ -31,6 +31,7 @@ void lcm_init(LcmData *lcm, CfgHwLeds *hw_cfg) {
     lcm->status_brightness = 0;
     lcm->name[0] = '\0';
     lcm->payload_size = 0;
+    lcm->lights_off_when_lifted = true;
 }
 
 void lcm_configure(LcmData *lcm, const CfgLeds *cfg) {
@@ -48,6 +49,7 @@ void lcm_configure(LcmData *lcm, const CfgLeds *cfg) {
         }
         lcm->brightness_idle = cfg->front.brightness * 100;
     }
+    lcm->lights_off_when_lifted = cfg->lights_off_when_lifted;
 }
 
 void lcm_poll_request(LcmData *lcm, uint8_t *buffer, size_t len) {
@@ -68,7 +70,11 @@ void lcm_poll_request(LcmData *lcm, uint8_t *buffer, size_t len) {
 }
 
 void lcm_poll_response(
-    LcmData *lcm, const State *state, FootpadSensorState fs_state, const MotorData *motor
+    LcmData *lcm,
+    const State *state,
+    FootpadSensorState fs_state,
+    const MotorData *motor,
+    const float pitch
 ) {
     if (!lcm->enabled) {
         return;
@@ -90,7 +96,13 @@ void lcm_poll_response(
     buffer[ind++] = send_state;
     buffer[ind++] = VESC_IF->mc_get_fault();
 
-    buffer[ind++] = fminf(100, fabsf(motor->duty_cycle * 100));
+    if (state->state == STATE_RUNNING) {
+        buffer[ind++] = fminf(100, fabsf(motor->duty_cycle * 100));
+    } else {
+        // pitch is a value between -180 and +180, so abs(pitch) fits into uint8
+        buffer[ind++] = lcm->lights_off_when_lifted ? fabsf(pitch) : 0;
+    }
+
     buffer_append_float16(buffer, motor->erpm, 1e0, &ind);
     buffer_append_float16(buffer, VESC_IF->mc_get_tot_current_in(), 1e0, &ind);
     buffer_append_float16(buffer, VESC_IF->mc_get_input_voltage_filtered(), 1e1, &ind);

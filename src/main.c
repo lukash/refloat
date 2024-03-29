@@ -2549,7 +2549,7 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
     }
     case COMMAND_LCM_POLL: {
         lcm_poll_request(&d->lcm, &buffer[2], len - 2);
-        lcm_poll_response(&d->lcm, &d->state, d->footpad_sensor.state, &d->motor);
+        lcm_poll_response(&d->lcm, &d->state, d->footpad_sensor.state, &d->motor, d->pitch);
         return;
     }
     case COMMAND_LCM_LIGHT_INFO: {

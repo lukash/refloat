@@ -41,6 +41,7 @@ typedef struct {
     uint8_t brightness;
     uint8_t brightness_idle;
     uint8_t status_brightness;
+    bool lights_off_when_lifted;
 
     char name[MAX_LCM_NAME_LENGTH];
     uint8_t payload[MAX_LCM_PAYLOAD_LENGTH];
@@ -60,7 +61,11 @@ void lcm_poll_request(LcmData *lcm, uint8_t *buffer, size_t len);
  * Response to the LCM poll request to get data from the package.
  */
 void lcm_poll_response(
-    LcmData *lcm, const State *state, FootpadSensorState fs_state, const MotorData *motor
+    LcmData *lcm,
+    const State *state,
+    FootpadSensorState fs_state,
+    const MotorData *motor,
+    const float pitch
 );
 
 /**
