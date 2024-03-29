@@ -260,11 +260,6 @@ static void reconfigure(data *d) {
 
 static void configure(data *d) {
     state_init(&d->state, d->float_conf.disabled);
-    if (d->state.state == STATE_DISABLED) {
-        beep_alert(d, 3, false);
-    } else {
-        beep_alert(d, 1, false);
-    }
 
     lcm_configure(&d->lcm, &d->float_conf.leds);
 
@@ -355,6 +350,12 @@ static void configure(data *d) {
     konami_init(&d->flywheel_konami, flywheel_konami_sequence, sizeof(flywheel_konami_sequence));
 
     reconfigure(d);
+
+    if (d->state.state == STATE_DISABLED) {
+        beep_alert(d, 3, false);
+    } else {
+        beep_alert(d, 1, false);
+    }
 }
 
 static void reset_vars(data *d) {
