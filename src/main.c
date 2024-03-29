@@ -675,6 +675,7 @@ static void calculate_setpoint_target(data *d) {
             }
         }
     } else if (
+        d->state.mode != MODE_FLYWHEEL &&
         fabsf(d->motor.acceleration) > 15 &&  // not normal, either wheelslip or wheel getting stuck
         sign(d->motor.acceleration) == d->motor.erpm_sign && d->motor.duty_cycle > 0.3 &&
         d->motor.abs_erpm > 2000)  // acceleration can jump a lot at very low speeds
@@ -712,7 +713,16 @@ static void calculate_setpoint_target(data *d) {
         } else {
             d->setpoint_target = -d->float_conf.tiltback_duty_angle;
         }
-        d->state.sat = SAT_PB_DUTY;
+
+        // FLYWHEEL relies on the duty pushback mechanism, but we don't
+        // want to show the pushback alert.
+        //
+        // TODO: Move FLYWHEEL checks out of this function and instead
+        // implement a custom simple control loop for it, which won't need most
+        // of the normal balancing features.
+        if (d->state.mode != MODE_FLYWHEEL) {
+            d->state.sat = SAT_PB_DUTY;
+        }
     } else if (d->motor.duty_cycle > 0.05 && input_voltage > d->float_conf.tiltback_hv) {
         d->beep_reason = BEEP_HV;
         beep_alert(d, 3, false);
