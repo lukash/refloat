@@ -114,7 +114,7 @@ static uint32_t color_wheel(uint8_t pos) {
 }
 
 static void sattolo_shuffle(uint32_t seed, uint8_t *array, uint8_t length) {
-    for (uint8_t i = length - 1; i > 0; --i) {
+    for (int16_t i = length - 1; i > 0; --i) {
         uint8_t j = rnd(seed + i) % i;
         uint8_t t = array[i];
         array[i] = array[j];
