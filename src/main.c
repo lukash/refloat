@@ -2670,8 +2670,12 @@ static void stop(void *arg) {
     VESC_IF->imu_set_read_callback(NULL);
     VESC_IF->set_app_data_handler(NULL);
     VESC_IF->conf_custom_clear_configs();
-    VESC_IF->request_terminate(d->led_thread);
-    VESC_IF->request_terminate(d->main_thread);
+    if (d->led_thread) {
+        VESC_IF->request_terminate(d->led_thread);
+    }
+    if (d->main_thread) {
+        VESC_IF->request_terminate(d->main_thread);
+    }
     log_msg("Terminating.");
     leds_destroy(&d->leds);
     VESC_IF->free(d);
