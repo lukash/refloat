@@ -27,6 +27,7 @@ void atr_reset(ATR *atr) {
     atr->speed_boost = 0;
     atr->target = 0;
     atr->setpoint = 0;
+    atr->ramped_step_size = 0;
 
     smooth_target_reset(&atr->smooth_target, 0.0f);
     ema_filter_reset(&atr->ema_target, 0.0f, 0.0f);
@@ -203,9 +204,14 @@ void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config, f
     } else if (config->target_filter.type == SFT_EMA3) {
         ema_filter_update(&atr->ema_target, atr->target, dt);
         atr->setpoint = atr->ema_target.value;
-    } else {
+    } else if (config->target_filter.type == SFT_THREE_STAGE) {
         smooth_target_update(&atr->smooth_target, atr->target);
         atr->setpoint = atr->smooth_target.value;
+    } else {
+        // Smoothen changes in tilt angle by ramping the step size
+        smooth_rampf(
+            &atr->setpoint, &atr->ramped_step_size, atr->target, atr_step_size, 0.05, 1.5
+        );
     }
 }
 

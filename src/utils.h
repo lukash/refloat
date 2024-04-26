@@ -129,3 +129,12 @@ float clampf(float value, float min, float max);
  * @param step A maximum unit of change of @p value.
  */
 void rate_limitf(float *value, float target, float step);
+
+void smooth_rampf(
+    float *value,
+    float *ramped_step_size,
+    float target,
+    float step,
+    float smoothing_factor,
+    float smooth_center_window
+);

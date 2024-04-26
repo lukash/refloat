@@ -248,12 +248,16 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;It's defined by the EMA Half Time config option. You can use the EMA Return Multiplier to speed up transitions returning to zero (e.g. a value of 2 means the returning to zero transitions will be two times faster).&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Nico's&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;A smoothing filter written by Nico originally for Inputtilt, it was later proposed to be used tor ATR and Torquetilt as well. Although this filter works and is reported to work very well, it has a mathematical flaw, and hence is only included for reference. The other filters are, in fact, an attempt to have correct filter(s) that work the same or better.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-weight:600;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Note: The 3-Stage and 3rd Order EMA ignore Tiltback Response Boost and Tiltback Transition Boost for ATR.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_TARGET_FILTER_TYPE</cDefine>
             <valInt>1</valInt>
             <enumNames>None</enumNames>
             <enumNames>3-Stage</enumNames>
             <enumNames>3rd Order EMA</enumNames>
+            <enumNames>Nico's</enumNames>
         </target_filter.type>
         <target_filter.tt_type>
             <longName>Filter Type (config on ATR tab)</longName>
@@ -271,6 +275,7 @@ p, li { white-space: pre-wrap; }
             <enumNames>None</enumNames>
             <enumNames>3-Stage</enumNames>
             <enumNames>3rd Order EMA</enumNames>
+            <enumNames>Nico's</enumNames>
         </target_filter.tt_type>
         <target_filter.it_type>
             <longName>Filter Type (config on ATR tab)</longName>

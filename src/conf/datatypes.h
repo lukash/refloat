@@ -182,7 +182,8 @@ typedef struct {
 typedef enum {
     SFT_NONE = 0,
     SFT_THREE_STAGE,
-    SFT_EMA3
+    SFT_EMA3,
+    SFT_NICO
 } TargetFilterType;
 
 typedef struct {
