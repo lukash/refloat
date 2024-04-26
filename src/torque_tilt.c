@@ -24,6 +24,7 @@
 
 void torque_tilt_reset(TorqueTilt *tt) {
     tt->offset = 0;
+    tt->ramped_step_size = 0;
 
     smooth_target_reset(&tt->smooth_target, 0.0f);
     ema_filter_reset(&tt->ema_target, 0.0f, 0.0f);
@@ -84,9 +85,12 @@ void torque_tilt_update(
     } else if (config->target_filter.type == SFT_EMA3) {
         ema_filter_update(&tt->ema_target, target_offset, dt);
         tt->offset = tt->ema_target.value;
-    } else {
+    } else if (config->target_filter.type == SFT_THREE_STAGE) {
         smooth_target_update(&tt->smooth_target, target_offset);
         tt->offset = tt->smooth_target.value;
+    } else {
+        // Smoothen changes in tilt angle by ramping the step size
+        smooth_rampf(&tt->offset, &tt->ramped_step_size, target_offset, step_size, 0.04, 1.5);
     }
 }
 
