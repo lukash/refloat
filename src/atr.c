@@ -27,6 +27,7 @@ void atr_reset(ATR *atr) {
     atr->speed_boost = 0;
     atr->target = 0;
     atr->setpoint = 0;
+    atr->ramped_step_size = 0;
 }
 
 void atr_configure(ATR *atr, const RefloatConfig *config) {
@@ -184,7 +185,8 @@ void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config) {
         atr_step_size /= 2;
     }
 
-    rate_limitf(&atr->setpoint, atr->target, atr_step_size);
+    // Smoothen changes in tilt angle by ramping the step size
+    smooth_rampf(&atr->setpoint, &atr->ramped_step_size, atr->target, atr_step_size, 0.05, 1.5);
 }
 
 void atr_winddown(ATR *atr) {
