@@ -29,6 +29,7 @@ void atr_reset(ATR *atr) {
     atr->offset = 0;
     atr->braketilt_target_offset = 0;
     atr->braketilt_offset = 0;
+    atr->ramped_step_size = 0;
 
     smooth_target_reset(&atr->smooth_target, 0.0f);
     ema_filter_reset(&atr->ema_target, 0.0f, 0.0f);
@@ -215,9 +216,14 @@ static void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *co
     } else if (config->target_filter.type == SFT_EMA3) {
         ema_filter_update(&atr->ema_target, atr->target_offset, dt);
         atr->offset = atr->ema_target.value;
-    } else {
+    } else if (config->target_filter.type == SFT_THREE_STAGE) {
         smooth_target_update(&atr->smooth_target, atr->target_offset);
         atr->offset = atr->smooth_target.value;
+    } else {
+        // Smoothen changes in tilt angle by ramping the step size
+        smooth_rampf(
+            &atr->offset, &atr->ramped_step_size, atr->target_offset, atr_step_size, 0.05, 1.5
+        );
     }
 }
 
@@ -248,9 +254,9 @@ static void braketilt_update(
 
     float braketilt_step_size = atr->off_step_size / config->braketilt_lingering;
     if (fabsf(atr->braketilt_target_offset) > fabsf(atr->braketilt_offset)) {
-        braketilt_step_size = atr->on_step_size * 1.5;
-    } else if (motor->abs_erpm < 800) {
         braketilt_step_size = atr->on_step_size;
+    } else if (motor->abs_erpm < 800) {
+        braketilt_step_size = atr->on_step_size * 0.5;
     }
 
     if (motor->abs_erpm < 500) {
