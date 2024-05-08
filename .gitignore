@@ -1,0 +1,15 @@
+conf_default.h
+confparser.c
+confparser.h
+confxml.c
+confxml.h
+*.list
+*.vescpkg
+
+*.bin
+*.d
+*.elf
+*.o
+*.obj
+*.so
+*.rcc
