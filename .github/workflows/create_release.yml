@@ -1,0 +1,81 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  create_release:
+    permissions:
+      contents: write
+    runs-on: ubuntu-24.04
+    outputs:
+      upload_url: ${{steps.create_release.outputs.upload_url}}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract Version
+        run: TAG="${{github.ref}}"; echo "VERSION=${TAG#refs/tags/v}" >> $GITHUB_ENV
+
+      - name: Install Dependencies
+        run: sudo apt-get install python3-git
+
+      - name: Generate Changelog
+        run: python changelog.py > changelog.md
+
+      - name: Create Release
+        id: create_release
+        uses: shogo82148/actions-create-release@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          tag_name: ${{github.ref}}
+          release_name: Release ${{env.VERSION}}
+          draft: true
+          prerelease: ${{contains(github.ref, '-beta')}}
+          body_path: changelog.md
+
+  build_release:
+    permissions:
+      contents: write
+    needs: create_release
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@v4
+      - uses: DeterminateSystems/magic-nix-cache-action@v4
+      - uses: DeterminateSystems/flake-checker-action@v4
+      - uses: rrbutani/use-nix-shell-action@v1
+        with:
+          flakes: nixpkgs#clang-tools_17, nixpkgs#gcc-arm-embedded-13, nixpkgs#gnumake, nixpkgs#lefthook, github:lukash/vesc_tool-flake/release_6_02
+
+      - name: Extract Version
+        run: TAG="${{github.ref}}"; echo "VERSION=${TAG#refs/tags/v}" >> $GITHUB_ENV
+
+      - name: Build
+        run: make -j
+
+      - name: Config Signature
+        run: cat src/conf/confparser.h | sed -n 's/^#define .\+_SIGNATURE\W\+\([0-9]*\)/\1/p' > config_signature.txt
+
+      - name: Upload Package
+        uses: shogo82148/actions-upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          upload_url: ${{needs.create_release.outputs.upload_url}}
+          asset_path: refloat.vescpkg
+          asset_name: refloat-${{env.VERSION}}.vescpkg
+          asset_content_type: application/octet-stream
+
+      - name: Upload Config Signature
+        uses: shogo82148/actions-upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          upload_url: ${{needs.create_release.outputs.upload_url}}
+          asset_path: config_signature.txt
+          asset_content_type: application/octet-stream
