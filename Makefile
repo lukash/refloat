@@ -5,8 +5,8 @@ MINIFY_QML ?= 1
 
 all: refloat.vescpkg
 
-refloat.vescpkg: src package.lisp README-pkg.md ui.qml
-	$(VESC_TOOL) --buildPkg "refloat.vescpkg:package.lisp:ui.qml:0:README-pkg.md:Refloat"
+refloat.vescpkg: src package.lisp package_README-gen.md ui.qml
+	$(VESC_TOOL) --buildPkg "refloat.vescpkg:package.lisp:ui.qml:0:package_README-gen.md:Refloat"
 
 src:
 	$(MAKE) -C $@
@@ -19,7 +19,7 @@ else
     MINIFY_CMD="cat"
 endif
 
-README-pkg.md: README.md version
+package_README-gen.md: package_README.md version
 	cp $< $@
 	echo "- Version: ${VERSION}" >> $@
 	echo "- Build Date: `date --rfc-3339=seconds`" >> $@
@@ -29,7 +29,7 @@ ui.qml: ui.qml.in version
 	cat $< | sed "s/{{VERSION}}/${VERSION}/g" | ${MINIFY_CMD} > $@
 
 clean:
-	rm -f refloat.vescpkg README-pkg.md ui.qml
+	rm -f refloat.vescpkg package_README-gen.md ui.qml
 	$(MAKE) -C src clean
 
 .PHONY: all clean src

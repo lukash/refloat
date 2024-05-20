@@ -1,6 +1,6 @@
 src/conf/conf_general.h
 src/package_lib.lisp
-README-pkg.md
+package_README-gen.md
 ui.qml
 
 conf_default.h
