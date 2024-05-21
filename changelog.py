@@ -58,10 +58,13 @@ def main():
         for entry in reversed(lst):
             print("- {}\n".format(entry))
 
-    print("### Features")
-    print_list(features)
-    print("### Fixes")
-    print_list(fixes)
+    if features:
+        print("### Features")
+        print_list(features)
+
+    if fixes:
+        print("### Fixes")
+        print_list(fixes)
 
 
 if __name__ == '__main__':
