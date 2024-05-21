@@ -1,0 +1,15 @@
+name: Build Package
+
+runs:
+  using: "composite"
+  steps:
+    - uses: DeterminateSystems/nix-installer-action@v4
+    - uses: DeterminateSystems/magic-nix-cache-action@v4
+    - uses: DeterminateSystems/flake-checker-action@v4
+    - uses: rrbutani/use-nix-shell-action@v1
+      with:
+        flakes: nixpkgs#gcc-arm-embedded-13, nixpkgs#gnumake, github:lukash/vesc_tool-flake/release_6_02
+
+    - name: Build
+      shell: bash
+      run: make -j

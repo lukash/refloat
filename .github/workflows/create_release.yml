@@ -45,18 +45,12 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - uses: DeterminateSystems/nix-installer-action@v4
-      - uses: DeterminateSystems/magic-nix-cache-action@v4
-      - uses: DeterminateSystems/flake-checker-action@v4
-      - uses: rrbutani/use-nix-shell-action@v1
-        with:
-          flakes: nixpkgs#clang-tools_17, nixpkgs#gcc-arm-embedded-13, nixpkgs#gnumake, nixpkgs#lefthook, github:lukash/vesc_tool-flake/release_6_02
 
       - name: Extract Version
         run: TAG="${{github.ref}}"; echo "VERSION=${TAG#refs/tags/v}" >> $GITHUB_ENV
 
-      - name: Build
-        run: make -j
+      - name: Build Package
+        uses: ./.github/actions/build
 
       - name: Config Signature
         run: cat src/conf/confparser.h | sed -n 's/^#define .\+_SIGNATURE\W\+\([0-9]*\)/\1/p' > config_signature.txt

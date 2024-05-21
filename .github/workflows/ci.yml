@@ -8,7 +8,7 @@ on:
 
 jobs:
   CI:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       id-token: "write"
       contents: "read"
@@ -19,13 +19,12 @@ jobs:
       - uses: DeterminateSystems/flake-checker-action@v4
       - uses: rrbutani/use-nix-shell-action@v1
         with:
-          flakes: nixpkgs#clang-tools_17, nixpkgs#gcc-arm-embedded-13, nixpkgs#gnumake, nixpkgs#lefthook, github:lukash/vesc_tool-flake/release_6_02
+          flakes: nixpkgs#clang-tools_17, nixpkgs#lefthook
 
-      - name: clang-format
+      - name: Run clang-format
         id: clang-format
         run: lefthook run clang-format-check
 
-      - name: build
-        # make this step run even if clang-format failed
+      - name: Build Package
         if: success() || (failure() && steps.clang-format.conclusion == 'failure')
-        run: make -j
+        uses: ./.github/actions/build
