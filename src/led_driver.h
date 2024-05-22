@@ -28,9 +28,12 @@ typedef struct {
     uint16_t *bitbuffer;
     uint32_t bitbuffer_length;
     LedPin pin;
+    LedColorOrder color_order;
 } LedDriver;
 
-bool led_driver_init(LedDriver *driver, LedPin pin, LedType type, uint8_t led_nr);
+bool led_driver_init(
+    LedDriver *driver, LedPin pin, LedType type, LedColorOrder color_order, uint8_t led_nr
+);
 
 void led_driver_paint(LedDriver *driver, uint32_t *data, uint32_t length);
 

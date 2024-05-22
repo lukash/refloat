@@ -127,7 +127,9 @@ static void deinit_dma(LedPin pin) {
     DMA_DeInit(get_dma_stream(pin));
 }
 
-bool led_driver_init(LedDriver *driver, LedPin pin, LedType type, uint8_t led_nr) {
+bool led_driver_init(
+    LedDriver *driver, LedPin pin, LedType type, LedColorOrder color_order, uint8_t led_nr
+) {
     if (type != LED_TYPE_RGB && type != LED_TYPE_RGBW) {
         driver->bitbuffer = NULL;
         driver->bitbuffer_length = 0;
@@ -138,6 +140,7 @@ bool led_driver_init(LedDriver *driver, LedPin pin, LedType type, uint8_t led_nr
     driver->bitbuffer_length = driver->bit_nr * led_nr + BITBUFFER_PAD;
     driver->bitbuffer = VESC_IF->malloc(sizeof(uint16_t) * driver->bitbuffer_length);
     driver->pin = pin;
+    driver->color_order = color_order;
 
     if (!driver->bitbuffer) {
         log_error("Failed to init LED driver, out of memory.");
@@ -169,10 +172,15 @@ void led_driver_paint(LedDriver *driver, uint32_t *data, uint32_t length) {
         uint8_t g = cgamma((color >> 8) & 0xFF);
         uint8_t b = cgamma(color & 0xFF);
 
-        if (driver->bit_nr == 32) {
-            color = (g << 24) | (r << 16) | (b << 8) | w;
-        } else {
+        if (driver->color_order == LED_COLOR_GRB) {
             color = (g << 16) | (r << 8) | b;
+        } else {
+            color = (r << 16) | (g << 8) | b;
+        }
+
+        if (driver->bit_nr == 32) {
+            color <<= 8;
+            color |= w;
         }
 
         for (int8_t bit = driver->bit_nr - 1; bit >= 0; --bit) {

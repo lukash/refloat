@@ -660,8 +660,9 @@ bool leds_init(Leds *leds, CfgHwLeds *hw_cfg, const CfgLeds *cfg, FootpadSensorS
     }
 
     if (driver_init) {
-        driver_init =
-            led_driver_init(&leds->led_driver, hw_cfg->pin, hw_cfg->type, leds->led_count);
+        driver_init = led_driver_init(
+            &leds->led_driver, hw_cfg->pin, hw_cfg->type, hw_cfg->color_order, leds->led_count
+        );
     }
 
     if (!driver_init) {

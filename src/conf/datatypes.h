@@ -40,6 +40,11 @@ typedef enum : uint8_t {
 } LedPin;
 
 typedef enum : uint8_t {
+    LED_COLOR_GRB = 0,
+    LED_COLOR_RGB
+} LedColorOrder;
+
+typedef enum : uint8_t {
     COLOR_BLACK = 0,
     COLOR_WHITE_FULL,
     COLOR_WHITE_RGB,
@@ -132,6 +137,7 @@ typedef struct {
 typedef struct {
     LedType type;
     LedPin pin;
+    LedColorOrder color_order;
     CfgLedStrip status;
     CfgLedStrip front;
     CfgLedStrip rear;
