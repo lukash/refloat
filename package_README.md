@@ -21,7 +21,7 @@ Lower roll KP makes the nose hold up better in turns. It makes the board more st
 
 Mahony configuration in Firmware App Config -> IMU is now a setting independent from Refloat. It is used for general purpose pitch, roll and yaw only (this pitch is called "true pitch" in Float). It is recommended to use Mahony KP 0.4 and Mahony KI 0 there, and these values will be set automatically by Refloat if Mahony KP > 1 is encountered in the App Config -> IMU configuration.
 
-There are three new settings in Refloat, Pitch KP (this is effectively the Mahony KP from Float), Roll KP and Yaw KP. These are now independent from Firmware App Config -> IMU.
+The Mahony KP setting has been renamed to Pitch KP (its effect is the same as of Mahony KP) and there is a new setting called Roll KP. These are now independent from Firmware App Config -> IMU.
 
 Read the descriptions of the new configuration options for more information.
 

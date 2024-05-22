@@ -64,7 +64,10 @@ void balance_filter_configure(BalanceFilterData *data, const RefloatConfig *conf
     data->acc_confidence_decay = config->bf_accel_confidence_decay;
     data->kp_pitch = config->mahony_kp;
     data->kp_roll = config->mahony_kp_roll;
-    data->kp_yaw = config->mahony_kp_yaw;
+    // Use middle value between Pitch KP and Roll KP. Yaw KP seems to have
+    // negligible effect on balancing and the middle value should skew the
+    // filter the least.
+    data->kp_yaw = (config->mahony_kp + config->mahony_kp_roll) / 2.0f;
 }
 
 void balance_filter_update(BalanceFilterData *data, float *gyro_xyz, float *accel_xyz, float dt) {
