@@ -137,6 +137,7 @@ bool led_driver_init(LedDriver *driver, LedPin pin, LedType type, uint8_t led_nr
     driver->bit_nr = type == LED_TYPE_RGBW ? 32 : 24;
     driver->bitbuffer_length = driver->bit_nr * led_nr + BITBUFFER_PAD;
     driver->bitbuffer = VESC_IF->malloc(sizeof(uint16_t) * driver->bitbuffer_length);
+    driver->pin = pin;
 
     if (!driver->bitbuffer) {
         log_error("Failed to init LED driver, out of memory.");
