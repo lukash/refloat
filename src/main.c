@@ -659,7 +659,11 @@ static void calculate_setpoint_target(data *d) {
         d->tb_highvoltage_timer = d->current_time;
     }
 
-    if (d->state.sat == SAT_REVERSESTOP) {
+    if (d->state.sat == SAT_CENTERING) {
+        if (d->setpoint_target_interpolated == d->setpoint_target) {
+            d->state.sat = SAT_NONE;
+        }
+    } else if (d->state.sat == SAT_REVERSESTOP) {
         // accumalete erpms:
         d->reverse_total_erpm += d->motor.erpm;
         if (fabsf(d->reverse_total_erpm) > d->reverse_tolerance) {
@@ -793,7 +797,7 @@ static void calculate_setpoint_target(data *d) {
             d->state.sat = SAT_NONE;
             d->setpoint_target = 0;
         }
-    } else if (d->state.sat != SAT_CENTERING || d->setpoint_target_interpolated == d->setpoint_target) {
+    } else {
         // Normal running
         if (d->float_conf.fault_reversestop_enabled && d->motor.erpm < -200 && !d->state.darkride) {
             d->state.sat = SAT_REVERSESTOP;
