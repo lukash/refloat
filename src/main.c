@@ -1061,7 +1061,9 @@ static void set_current(data *d, float current) {
     VESC_IF->mc_set_current(current);
 }
 
-static void imu_ref_callback(float *acc, float *gyro, [[maybe_unused]] float *mag, float dt) {
+static void imu_ref_callback(float *acc, float *gyro, float *mag, float dt) {
+    unused(mag);
+
     data *d = (data *) ARG;
     balance_filter_update(&d->balance_filter, gyro, acc, dt);
 }
@@ -1793,7 +1795,8 @@ static void split(unsigned char byte, int *h1, int *h2) {
     *h2 = byte >> 4;
 }
 
-static void cmd_print_info([[maybe_unused]] data *d) {
+static void cmd_print_info(data *d) {
+    unused(d);
 }
 
 static void cmd_lock(data *d, unsigned char *cfg) {

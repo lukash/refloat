@@ -34,17 +34,17 @@ typedef enum {
     LED_TYPE_EXTERNAL,
 } LedType;
 
-typedef enum : uint8_t {
+typedef enum {
     LED_PIN_B6 = 0,
     LED_PIN_B7
 } LedPin;
 
-typedef enum : uint8_t {
+typedef enum {
     LED_COLOR_GRB = 0,
     LED_COLOR_RGB
 } LedColorOrder;
 
-typedef enum : uint8_t {
+typedef enum {
     COLOR_BLACK = 0,
     COLOR_WHITE_FULL,
     COLOR_WHITE_RGB,
@@ -79,7 +79,7 @@ typedef enum : uint8_t {
     COLOR_LAVENDER,
 } LedColor;
 
-typedef enum : uint8_t {
+typedef enum {
     LED_MODE_SOLID = 0,
     LED_MODE_FADE,
     LED_MODE_PULSE,
@@ -87,7 +87,7 @@ typedef enum : uint8_t {
     LED_MODE_KNIGHT_RIDER
 } LedMode;
 
-typedef enum : uint8_t {
+typedef enum {
     LED_TRANS_FADE = 0,
     LED_TRANS_FADE_OUT_IN,
     LED_TRANS_CIPHER,
