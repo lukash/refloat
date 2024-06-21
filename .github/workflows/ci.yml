@@ -1,0 +1,28 @@
+name: CI
+on:
+  push:
+    branches: ["main"]
+    tags: ["*"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  ci:
+    name: CI
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - uses: DeterminateSystems/flake-checker-action@main
+      - uses: rrbutani/use-nix-shell-action@v1
+        with:
+          flakes: nixpkgs#clang-tools_17, nixpkgs#lefthook
+
+      - name: Run clang-format
+        id: clang-format
+        run: lefthook run clang-format-check
+
+      - name: Build Package
+        if: success() || (failure() && steps.clang-format.conclusion == 'failure')
+        uses: ./.github/actions/build
