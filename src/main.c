@@ -1801,6 +1801,8 @@ static void cmd_print_info(data *d) {
 
 static void cmd_lock(data *d, unsigned char *cfg) {
     if (d->state.state < STATE_RUNNING) {
+        // restore config before locking to avoid accidentally writing temporary changes
+        read_cfg_from_eeprom(&d->float_conf);
         d->float_conf.disabled = cfg[0] ? true : false;
         d->state.state = cfg[0] ? STATE_DISABLED : STATE_STARTUP;
         write_cfg_to_eeprom(d);
