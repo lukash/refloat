@@ -200,36 +200,7 @@ static void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *co
     }
 
     // Smoothen changes in tilt angle by ramping the step size
-    if (config->inputtilt_smoothing_factor > 0) {
-        float smoothing_factor = 0.05;
-        // Sets the angle away from Target that step size begins ramping down
-        float smooth_center_window = 1.5;
-        float tiltback_target_diff = atr->target_offset - atr->offset;
-
-        // Within X degrees of Target Angle, start ramping down step size
-        if (fabsf(tiltback_target_diff) < smooth_center_window) {
-            // Target step size is reduced the closer to center you are (needed for smoothly
-            // transitioning away from center)
-            atr->ramped_step_size = (smoothing_factor * step_size * (tiltback_target_diff / 2)) +
-                ((1 - smoothing_factor) * atr->ramped_step_size);
-            // Linearly ramped down step size is provided as minimum to prevent overshoot
-            float centering_step_size =
-                fminf(fabsf(atr->ramped_step_size), fabsf(tiltback_target_diff / 2) * step_size) *
-                sign(tiltback_target_diff);
-            if (fabsf(tiltback_target_diff) < fabsf(centering_step_size)) {
-                atr->offset = atr->target_offset;
-            } else {
-                atr->offset += centering_step_size;
-            }
-        } else {
-            // Ramp up step size until the configured tilt speed is reached
-            atr->ramped_step_size = (smoothing_factor * step_size * sign(tiltback_target_diff)) +
-                ((1 - smoothing_factor) * atr->ramped_step_size);
-            atr->offset += atr->ramped_step_size;
-        }
-    } else {
-        rate_limitf(&atr->offset, atr->target_offset, step_size);
-    }
+    smooth_rampf(&atr->offset, &atr->ramped_step_size, atr->target_offset, step_size, 0.05, 1.5);
 }
 
 static void braketilt_update(

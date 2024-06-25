@@ -62,36 +62,7 @@ void torque_tilt_update(TorqueTilt *tt, const MotorData *motor, const RefloatCon
     }
 
     // Smoothen changes in tilt angle by ramping the step size
-    if (config->inputtilt_smoothing_factor > 0) {
-        float smoothing_factor = 0.04;
-        // Sets the angle away from Target that step size begins ramping down
-        float smooth_center_window = 1.5;
-        float tiltback_target_diff = target_offset - tt->offset;
-
-        // Within X degrees of Target Angle, start ramping down step size
-        if (fabsf(tiltback_target_diff) < smooth_center_window) {
-            // Target step size is reduced the closer to center you are (needed for smoothly
-            // transitioning away from center)
-            tt->ramped_step_size = (smoothing_factor * step_size * (tiltback_target_diff / 2)) +
-                ((1 - smoothing_factor) * tt->ramped_step_size);
-            // Linearly ramped down step size is provided as minimum to prevent overshoot
-            float centering_step_size =
-                fminf(fabsf(tt->ramped_step_size), fabsf(tiltback_target_diff / 2) * step_size) *
-                sign(tiltback_target_diff);
-            if (fabsf(tiltback_target_diff) < fabsf(centering_step_size)) {
-                tt->offset = target_offset;
-            } else {
-                tt->offset += centering_step_size;
-            }
-        } else {
-            // Ramp up step size until the configured tilt speed is reached
-            tt->ramped_step_size = (smoothing_factor * step_size * sign(tiltback_target_diff)) +
-                ((1 - smoothing_factor) * tt->ramped_step_size);
-            tt->offset += tt->ramped_step_size;
-        }
-    } else {
-        rate_limitf(&tt->offset, target_offset, step_size);
-    }
+    smooth_rampf(&tt->offset, &tt->ramped_step_size, target_offset, step_size, 0.04, 1.5);
 }
 
 void torque_tilt_winddown(TorqueTilt *tt) {
