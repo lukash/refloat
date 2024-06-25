@@ -19,6 +19,9 @@ else
     MINIFY_CMD="cat"
 endif
 
+clang:
+	clang-format-17 -i src/*.c src/*.h
+
 package_README-gen.md: package_README.md version
 	cp $< $@
 	echo "### Build Info" >> $@
