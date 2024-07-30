@@ -3571,7 +3571,7 @@ p, li { white-space: pre-wrap; }
                     <param>kp2</param>
                     <param>ki</param>
                     <param>ki_limit</param>
-                    <param>::sep::Balance Filter</param>
+                    <param>::sep::Balance (Mahony) Filter</param>
                     <param>mahony_kp</param>
                     <param>mahony_kp_roll</param>
                     <param>bf_accel_confidence_decay</param>
