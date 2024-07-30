@@ -1052,7 +1052,22 @@ static void brake(data *d) {
     }
 
     VESC_IF->timeout_reset();
-    VESC_IF->mc_set_brake_current(d->float_conf.brake_current);
+
+    // If brake current is set to 0 don't do anything
+    if (d->float_conf.brake_current == 0) {
+        return;
+    }
+
+    // Use brake current over certain ERPM to prevent the board skidding to a stop when deactivated
+    // at speed?
+    if (d->motor.abs_erpm > 2000) {
+        VESC_IF->mc_set_brake_current(d->float_conf.brake_current);
+        return;
+    }
+
+    // Use DC control mode as it has better holding power
+    // Also improves with 6.05 shorting feature
+    VESC_IF->mc_set_duty(0);
 }
 
 static void set_current(data *d, float current) {
