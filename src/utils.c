@@ -37,3 +37,9 @@ float clampf(float value, float min, float max) {
     const float m = value < min ? min : value;
     return m > max ? max : m;
 }
+
+void set_current(float delay_sec, float current) {
+    VESC_IF->timeout_reset();
+    VESC_IF->mc_set_current_off_delay(delay_sec);
+    VESC_IF->mc_set_current(current);
+}

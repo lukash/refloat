@@ -3413,6 +3413,128 @@ p, li { white-space: pre-wrap; }
             <cDefine>CFG_DFLT_DISABLED</cDefine>
             <valInt>0</valInt>
         </disabled>
+        <haptic_feedback_intensity>
+            <longName>Haptic Feedback Intensity</longName>
+            <type>2</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Haptic Feedback uses motor current oscillations to produce audible or vibrating feedback. The intensity controls how much current to use for this effect.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_HAPTIC_FEEDBACK_INTENSITY</cDefine>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxInt>30</maxInt>
+            <minInt>0</minInt>
+            <showDisplay>0</showDisplay>
+            <stepInt>1</stepInt>
+            <valInt>0</valInt>
+            <suffix>A</suffix>
+            <vTx>1</vTx>
+        </haptic_feedback_intensity>
+        <haptic_feedback_min>
+            <longName>Haptic Feedback Minimum Intensity</longName>
+            <type>2</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Haptic Feedback uses motor current oscillations to produce audible or vibrating feedback. The intensity controls how much current to use for this effect.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;At lower speeds the full intensity will be perceived as too harsh, so it needs to be scaled down. Recommended value for Hypercore is 3A, for SuperFlux/CannonCore is 5A&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_HAPTIC_FEEDBACK_MIN</cDefine>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxInt>6</maxInt>
+            <minInt>0</minInt>
+            <showDisplay>0</showDisplay>
+            <stepInt>1</stepInt>
+            <valInt>0</valInt>
+            <suffix>A</suffix>
+            <vTx>1</vTx>
+        </haptic_feedback_min>
+        <haptic_feedback_duty>
+            <longName>Haptic Feedback</longName>
+            <type>4</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The type of Haptic Feedback to use when duty cycle exceeds the threshold.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_HAPTIC_FEEDBACK_DUTY</cDefine>
+            <valInt>0</valInt>
+            <enumNames>None</enumNames>
+            <enumNames>Audible1</enumNames>
+            <enumNames>Audible2</enumNames>
+            <enumNames>Audible3</enumNames>
+            <enumNames>Vibrating1</enumNames>
+            <enumNames>Vibrating2</enumNames>
+            <enumNames>Vibrating3</enumNames>
+            <enumNames>Alternating</enumNames>
+        </haptic_feedback_duty>
+        <haptic_feedback_hv>
+            <longName>Haptic Feedback</longName>
+            <type>4</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The type of Haptic Feedback to use when voltage exceeds the upper threshold.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_HAPTIC_FEEDBACK_HV</cDefine>
+            <valInt>0</valInt>
+            <enumNames>None</enumNames>
+            <enumNames>Audible1</enumNames>
+            <enumNames>Audible2</enumNames>
+            <enumNames>Audible3</enumNames>
+            <enumNames>Vibrating1</enumNames>
+            <enumNames>Vibrating2</enumNames>
+            <enumNames>Vibrating3</enumNames>
+            <enumNames>Alternating</enumNames>
+        </haptic_feedback_hv>
+        <haptic_feedback_lv>
+            <longName>Haptic Feedback</longName>
+            <type>4</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The type of Haptic Feedback to use when voltage exceeds the lower threshold.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_HAPTIC_FEEDBACK_LV</cDefine>
+            <valInt>0</valInt>
+            <enumNames>None</enumNames>
+            <enumNames>Audible1</enumNames>
+            <enumNames>Audible2</enumNames>
+            <enumNames>Audible3</enumNames>
+            <enumNames>Vibrating1</enumNames>
+            <enumNames>Vibrating2</enumNames>
+            <enumNames>Vibrating3</enumNames>
+            <enumNames>Alternating</enumNames>
+        </haptic_feedback_lv>
+        <haptic_feedback_temp>
+            <longName>Haptic Feedback - Temperature</longName>
+            <type>4</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The type of Haptic Feedback to use when either controller or motor temperature gets within 3 degrees of the throttle start threshold (in Motor Config - General)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>APPCONF_FLOAT_HAPTIC_FEEDBACK_TEMP</cDefine>
+            <valInt>0</valInt>
+            <enumNames>None</enumNames>
+            <enumNames>Audible1</enumNames>
+            <enumNames>Audible2</enumNames>
+            <enumNames>Audible3</enumNames>
+            <enumNames>Vibrating1</enumNames>
+            <enumNames>Vibrating2</enumNames>
+            <enumNames>Vibrating3</enumNames>
+            <enumNames>Alternating</enumNames>
+        </haptic_feedback_temp>
     </Params>
     <SerOrder>
         <ser>kp</ser>
@@ -3559,6 +3681,12 @@ p, li { white-space: pre-wrap; }
         <ser>dark_pitch_offset</ser>
         <ser>is_beeper_enabled</ser>
         <ser>disabled</ser>
+        <ser>haptic_feedback_intensity</ser>
+        <ser>haptic_feedback_min</ser>
+        <ser>haptic_feedback_duty</ser>
+        <ser>haptic_feedback_hv</ser>
+        <ser>haptic_feedback_lv</ser>
+        <ser>haptic_feedback_temp</ser>
     </SerOrder>
     <Grouping>
         <group>
@@ -3681,10 +3809,13 @@ p, li { white-space: pre-wrap; }
                 <subgroupParams>
                     <param>::sep::General Config</param>
                     <param>tiltback_return_speed</param>
+                    <param>haptic_feedback_intensity</param>
+                    <param>haptic_feedback_min</param>
                     <param>::sep::Duty Cycle Alert Pushback</param>
                     <param>tiltback_duty</param>
                     <param>tiltback_duty_angle</param>
                     <param>tiltback_duty_speed</param>
+                    <param>haptic_feedback_duty</param>
                     <param>is_dutybeep_enabled</param>
                     <param>::sep::Duty Surge</param>
                     <param>surge_duty_start</param>
@@ -3693,9 +3824,13 @@ p, li { white-space: pre-wrap; }
                     <param>::sep::High Voltage Alert Pushback</param>
                     <param>tiltback_hv_angle</param>
                     <param>tiltback_hv_speed</param>
+                    <param>haptic_feedback_hv</param>
                     <param>::sep::Low Voltage Alert Pushback</param>
                     <param>tiltback_lv_angle</param>
                     <param>tiltback_lv_speed</param>
+                    <param>haptic_feedback_lv</param>
+                    <param>::sep::Other Alerts</param>
+                    <param>haptic_feedback_temp</param>
                 </subgroupParams>
             </subgroup>
             <subgroup>

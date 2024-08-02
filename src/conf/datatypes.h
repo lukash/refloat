@@ -28,6 +28,17 @@ typedef enum {
 } FLOAT_INPUTTILT_REMOTE_TYPE;
 
 typedef enum {
+    HAPTIC_FEEDBACK_NONE = 0,
+    HAPTIC_FEEDBACK_AUDIBLE1,
+    HAPTIC_FEEDBACK_AUDIBLE2,
+    HAPTIC_FEEDBACK_AUDIBLE3,
+    HAPTIC_FEEDBACK_VIBRATING1,
+    HAPTIC_FEEDBACK_VIBRATING2,
+    HAPTIC_FEEDBACK_VIBRATING3,
+    HAPTIC_FEEDBACK_ALTERNATING
+} HAPTIC_FEEDBACK_TYPE;
+
+typedef enum {
     LED_TYPE_NONE = 0,
     LED_TYPE_RGB,
     LED_TYPE_RGBW,
@@ -184,6 +195,12 @@ typedef struct {
     float tiltback_lv;
     float tiltback_return_speed;
     float tiltback_constant;
+    int haptic_feedback_intensity;
+    int haptic_feedback_min;
+    HAPTIC_FEEDBACK_TYPE haptic_feedback_duty;
+    HAPTIC_FEEDBACK_TYPE haptic_feedback_hv;
+    HAPTIC_FEEDBACK_TYPE haptic_feedback_lv;
+    HAPTIC_FEEDBACK_TYPE haptic_feedback_temp;
     uint16_t tiltback_constant_erpm;
     float tiltback_variable;
     float tiltback_variable_max;
