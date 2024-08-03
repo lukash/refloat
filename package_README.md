@@ -52,4 +52,4 @@ Author: Lukáš Hrázký
 Original Float package authors: Mitch Lustig, Dado Mista, Nico Aleman
 
 ### Download and Changelog
-https://github.com/lukash/refloat/releases
+[https://github.com/lukash/refloat/releases](https://github.com/lukash/refloat/releases)
