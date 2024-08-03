@@ -39,6 +39,18 @@ Item {
         return num.toFixed(1).replace("-0.0", "0.0");
     }
 
+    function clamp(val, min, max) {
+        if (val > max) {
+            return max;
+        }
+
+        if (val < min) {
+            return min;
+        }
+
+        return val;
+    }
+
     // 5s timeout for connection to package
     Timer {
         id: packageConnectionWatchdog
@@ -1998,7 +2010,7 @@ Item {
 
                 Rectangle {
                     id: batteryBarFill
-                    width: parent.width * parent.value / 100
+                    width: parent.width * clamp(parent.value / 100, 0, 1)
                     height: parent.height
                     z: 1
 
