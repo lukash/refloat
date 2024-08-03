@@ -694,22 +694,43 @@ static const LedBar *target_bar(const Leds *leds, bool flip) {
     }
 }
 
+static void led_strip_init(LedStrip *strip) {
+    strip->start = 0;
+    strip->length = 0;
+    strip->reverse = false;
+}
+
+static void led_strip_configure(LedStrip *strip, const CfgLedStrip *cfg, uint8_t offset) {
+    strip->start = offset;
+    strip->length = cfg->count;
+    strip->reverse = cfg->reverse;
+}
+
 bool leds_init(Leds *leds, CfgHwLeds *hw_cfg, const CfgLeds *cfg, FootpadSensorState fs_state) {
-    leds->status_strip.start = 0;
-    leds->status_strip.length = hw_cfg->status.count;
-    leds->status_strip.reverse = hw_cfg->status.reverse;
+    led_strip_init(&leds->status_strip);
+    led_strip_init(&leds->front_strip);
+    led_strip_init(&leds->rear_strip);
+
+    uint8_t current_offset = 0;
+    for (uint8_t i = 1; i <= 3; ++i) {
+        if (hw_cfg->status.order == i) {
+            led_strip_configure(&leds->status_strip, &hw_cfg->status, current_offset);
+            current_offset += leds->status_strip.length;
+        } else if (hw_cfg->front.order == i) {
+            led_strip_configure(&leds->front_strip, &hw_cfg->front, current_offset);
+            current_offset += leds->front_strip.length;
+        } else if (hw_cfg->rear.order == i) {
+            led_strip_configure(&leds->rear_strip, &hw_cfg->rear, current_offset);
+            current_offset += leds->rear_strip.length;
+        }
+    }
+
     if (cfg->headlights_on) {
         leds->status_strip.brightness = cfg->status.brightness_headlights_on;
     } else {
         leds->status_strip.brightness = cfg->status.brightness_headlights_off;
     }
-    leds->front_strip.start = hw_cfg->status.count;
-    leds->front_strip.length = hw_cfg->front.count;
-    leds->front_strip.reverse = hw_cfg->front.reverse;
     leds->front_strip.brightness = cfg->front.brightness;
-    leds->rear_strip.start = hw_cfg->status.count + hw_cfg->front.count;
-    leds->rear_strip.length = hw_cfg->rear.count;
-    leds->rear_strip.reverse = hw_cfg->rear.reverse;
     leds->rear_strip.brightness = cfg->rear.brightness;
 
     leds->cfg = cfg;
@@ -756,7 +777,8 @@ bool leds_init(Leds *leds, CfgHwLeds *hw_cfg, const CfgLeds *cfg, FootpadSensorS
     leds->rear_dir_target = &cfg->rear;
     leds->rear_time_target = &cfg->rear;
 
-    leds->led_count = leds->rear_strip.start + leds->rear_strip.length;
+    leds->led_count =
+        leds->status_strip.length + leds->front_strip.length + leds->rear_strip.length;
 
     bool driver_init = true;
     if (fs_state == FS_BOTH) {
@@ -764,7 +786,7 @@ bool leds_init(Leds *leds, CfgHwLeds *hw_cfg, const CfgLeds *cfg, FootpadSensorS
         driver_init = false;
     }
 
-    if (hw_cfg->front.count + hw_cfg->rear.count > LEDS_FRONT_AND_REAR_COUNT_MAX) {
+    if (leds->front_strip.length + leds->rear_strip.length > LEDS_FRONT_AND_REAR_COUNT_MAX) {
         log_error("Front and rear LED counts exceed maximum.");
         driver_init = false;
     }

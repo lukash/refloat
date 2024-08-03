@@ -52,6 +52,13 @@ typedef enum {
 } LedColorOrder;
 
 typedef enum {
+    LED_STRIP_ORDER_NONE = 0,
+    LED_STRIP_ORDER_1ST,
+    LED_STRIP_ORDER_2ND,
+    LED_STRIP_ORDER_3RD
+} LedStripOrder;
+
+typedef enum {
     COLOR_BLACK = 0,
     COLOR_WHITE_FULL,
     COLOR_WHITE_RGB,
@@ -138,6 +145,7 @@ typedef struct {
 } CfgLeds;
 
 typedef struct {
+    LedStripOrder order;
     uint8_t count;
     bool reverse;
 } CfgLedStrip;

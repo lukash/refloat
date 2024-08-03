@@ -3146,6 +3146,24 @@ p, li { white-space: pre-wrap; }
             <enumNames>RGB(W)</enumNames>
             <enumNames>(W)RGB</enumNames>
         </hardware.leds.color_order>
+        <hardware.leds.status.order>
+            <longName>Status LED Strip Order</longName>
+            <type>4</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Order of the status bar strip in the chain. Set to &amp;quot;Not Present&amp;quot; if you don't have a status bar.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Board restart required for changes to take effect.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_HARDWARE_LEDS_STATUS_ORDER</cDefine>
+            <valInt>1</valInt>
+            <enumNames>Not Present</enumNames>
+            <enumNames>1st</enumNames>
+            <enumNames>2nd</enumNames>
+            <enumNames>3rd</enumNames>
+        </hardware.leds.status.order>
         <hardware.leds.status.count>
             <longName>Status LED Strip Length</longName>
             <type>2</type>
@@ -3154,13 +3172,13 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Number of LEDs in your status bar strip. The status bar strip must be the first in the chain of LEDs. If you dont have a status bar, set this to 0.&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Number of LEDs in your status bar strip.&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Board restart required for changes to take effect.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_HARDWARE_LEDS_STATUS_COUNT</cDefine>
             <editorScale>1</editorScale>
             <editAsPercentage>0</editAsPercentage>
-            <maxInt>20</maxInt>
+            <maxInt>30</maxInt>
             <minInt>0</minInt>
             <showDisplay>0</showDisplay>
             <stepInt>1</stepInt>
@@ -3182,6 +3200,24 @@ p, li { white-space: pre-wrap; }
             <cDefine>CFG_DFLT_HARDWARE_LEDS_STATUS_REVERSE</cDefine>
             <valInt>0</valInt>
         </hardware.leds.status.reverse>
+        <hardware.leds.front.order>
+            <longName>Front LED Strip Order</longName>
+            <type>4</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Order of the front LED strip in the chain. Set to &amp;quot;Not Present&amp;quot; if you don't have a front LED strip.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Board restart required for changes to take effect.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_HARDWARE_LEDS_FRONT_ORDER</cDefine>
+            <valInt>2</valInt>
+            <enumNames>Not Present</enumNames>
+            <enumNames>1st</enumNames>
+            <enumNames>2nd</enumNames>
+            <enumNames>3rd</enumNames>
+        </hardware.leds.front.order>
         <hardware.leds.front.count>
             <longName>Front LED Strip Length</longName>
             <type>2</type>
@@ -3190,7 +3226,7 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The number of LEDs in your front LED strip. This strip must be the 2nd in your chain of LEDs, wired after the status LEDs and before the rear LEDs. Set to 0 if you don't have a front LED strip.&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Number of LEDs in your front LED strip.&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Board restart required for changes to take effect.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_HARDWARE_LEDS_FRONT_COUNT</cDefine>
@@ -3218,6 +3254,24 @@ p, li { white-space: pre-wrap; }
             <cDefine>CFG_DFLT_HARDWARE_LEDS_FRONT_REVERSE</cDefine>
             <valInt>0</valInt>
         </hardware.leds.front.reverse>
+        <hardware.leds.rear.order>
+            <longName>Rear LED Strip Order</longName>
+            <type>4</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Order of the rear LED strip in the chain. Set to &amp;quot;Not Present&amp;quot; if you don't have a rear LED strip.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Board restart required for changes to take effect.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_HARDWARE_LEDS_REAR_ORDER</cDefine>
+            <valInt>3</valInt>
+            <enumNames>Not Present</enumNames>
+            <enumNames>1st</enumNames>
+            <enumNames>2nd</enumNames>
+            <enumNames>3rd</enumNames>
+        </hardware.leds.rear.order>
         <hardware.leds.rear.count>
             <longName>Rear LED Strip Length</longName>
             <type>2</type>
@@ -3226,7 +3280,7 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The number of LEDs in your rear LED strip. This strip must be the 3rd in your chain of LEDs, wired after the status LEDs and front LEDs. Set to 0 if you don't have a rear LED strip.&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Number of LEDs in your rear LED strip.&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Board restart required for changes to take effect.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_HARDWARE_LEDS_REAR_COUNT</cDefine>
@@ -3412,10 +3466,13 @@ p, li { white-space: pre-wrap; }
         <ser>hardware.leds.type</ser>
         <ser>hardware.leds.pin</ser>
         <ser>hardware.leds.color_order</ser>
+        <ser>hardware.leds.status.order</ser>
         <ser>hardware.leds.status.count</ser>
         <ser>hardware.leds.status.reverse</ser>
+        <ser>hardware.leds.front.order</ser>
         <ser>hardware.leds.front.count</ser>
         <ser>hardware.leds.front.reverse</ser>
+        <ser>hardware.leds.rear.order</ser>
         <ser>hardware.leds.rear.count</ser>
         <ser>hardware.leds.rear.reverse</ser>
         <ser>is_beeper_enabled</ser>
@@ -3638,10 +3695,13 @@ p, li { white-space: pre-wrap; }
                     <param>hardware.leds.type</param>
                     <param>hardware.leds.pin</param>
                     <param>hardware.leds.color_order</param>
+                    <param>hardware.leds.status.order</param>
                     <param>hardware.leds.status.count</param>
                     <param>hardware.leds.status.reverse</param>
+                    <param>hardware.leds.front.order</param>
                     <param>hardware.leds.front.count</param>
                     <param>hardware.leds.front.reverse</param>
+                    <param>hardware.leds.rear.order</param>
                     <param>hardware.leds.rear.count</param>
                     <param>hardware.leds.rear.reverse</param>
                 </subgroupParams>
