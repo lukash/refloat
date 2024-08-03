@@ -23,7 +23,7 @@
 
 #define unused(x) (void) (x)
 
-#if defined(__GNUC_) && _GNUC__ < 9
+#if defined(__GNUC__) && __GNUC__ < 9
 
 #define log_msg(fmt, ...)                                                                          \
     do {                                                                                           \
