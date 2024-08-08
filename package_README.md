@@ -15,9 +15,9 @@ Refloat configuration and tunes are 100% compatible with Float 1.3 (and hence al
 #### Separate Axis KP
 The Mahony KP can now be configured separately for each IMU axis. This feature improves the way the board handles in turns and in a significant way improves the balance profile.
 
-Technical explanation: High Mahony KP works very well for balancing, but it is only desirable on the pitch axis. The mellow response of high KP has unwanted effects on the roll axis, because when the board rotates in yaw (when turning), roll becomes pitch. The board leads into a turn angled in roll (more pronounced on roundier tires), and this angle translates into pitch and lingers there for an amount of time determined by the KP, causing the nose to be down for a time, until it balances back up.
+Technical explanation: High Mahony KP works very well for balancing, but it is only desirable on the pitch axis. The mellow response of high KP has unwanted effects on the roll axis, because when the board rotates in yaw (when turning), roll becomes pitch. The board leads into a turn angled in roll (more pronounced on rounder tires), and this angle translates into pitch and lingers there for an amount of time determined by the KP, causing the nose to be down for a time, until it balances back up.
 
-Lower roll KP makes the nose hold up better in turns. It makes the board more stable and "stiffer", especially in short carves. This means **the Turn Tilt feature may be less needed** and it may respond more aggresively.
+Lower roll KP makes the nose hold up better in turns. It makes the board more stable and "stiffer", especially in short carves. This means **the Turn Tilt feature may be less needed** and it may respond more aggressively.
 
 Mahony configuration in Firmware App Config -> IMU is now a setting independent from Refloat. It is used for general purpose pitch, roll and yaw only (this pitch is called "true pitch" in Float). It is recommended to use Mahony KP 0.4 and Mahony KI 0 there, and these values will be set automatically by Refloat if Mahony KP > 1 is encountered in the App Config -> IMU configuration.
 
