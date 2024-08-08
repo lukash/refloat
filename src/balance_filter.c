@@ -22,7 +22,7 @@
 //
 // Date         Author          Notes
 // 29/09/2011   SOH Madgwick    Initial release
-// 02/10/2011   SOH Madgwick    Optimised for reduced CPU load
+// 02/10/2011   SOH Madgwick    Optimized for reduced CPU load
 // 26/01/2014   Benjamin V      Adaption to our platform
 // 20/02/2017   Benjamin V      Added Madgwick algorithm and refactoring
 // 17/09/2023   Lukas Hrazky    Adopted from vedderb/bldc, modified for self-balancing skateboard
@@ -50,7 +50,7 @@ static float calculate_acc_confidence(float new_acc_mag, BalanceFilterData *data
 }
 
 void balance_filter_init(BalanceFilterData *data) {
-    // Init with internal filter orientation, otherwise the AHRS would need a while to stabilise
+    // Init with internal filter orientation, otherwise the AHRS would need a while to stabilize
     float quat[4];
     VESC_IF->imu_get_quaternions(quat);
     data->q0 = quat[0];
@@ -89,7 +89,7 @@ void balance_filter_update(BalanceFilterData *data, float *gyro_xyz, float *acce
         float two_kp_roll = 2.0 * data->kp_roll * accel_confidence;
         float two_kp_yaw = 2.0 * data->kp_yaw * accel_confidence;
 
-        // Normalise accelerometer measurement
+        // Normalize accelerometer measurement
         float recip_norm = inv_sqrt(ax * ax + ay * ay + az * az);
         ax *= recip_norm;
         ay *= recip_norm;

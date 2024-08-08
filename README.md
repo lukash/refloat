@@ -12,7 +12,7 @@ Contributions are welcome and appreciated, please refer to [Contributing](CONTRI
 
 ## Building
 ### Requirements
-- `gcc-arm-embedded` vesrsion 13 or higher
+- `gcc-arm-embedded` version 13 or higher
 - `make`
 - `vesc_tool`
 
