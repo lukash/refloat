@@ -204,7 +204,8 @@ static void braketilt_update(
 ) {
     // braking also should cause setpoint change lift, causing a delayed lingering nose lift
     if (atr->braketilt_factor < 0 && motor->braking && motor->abs_erpm > 2000) {
-        // negative currents alone don't necessarily consitute active braking, look at proportional:
+        // negative currents alone don't necessarily constitute active braking, look at
+        // proportional:
         if (sign(proportional) != motor->erpm_sign) {
             float downhill_damper = 1;
             // if we're braking on a downhill we don't want braking to lift the setpoint quite as

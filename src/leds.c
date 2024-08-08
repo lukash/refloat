@@ -177,7 +177,7 @@ static void strip_set_color(
     }
 }
 
-// Returns a cosine wave oscilataing from 0 to 1, starting at 0, with a period of 2s.
+// Returns a cosine wave oscillating from 0 to 1, starting at 0, with a period of 2s.
 static float cosine_progress(float time) {
     uint32_t rounded = lroundf(time);
     float x = (time - rounded) * M_PI;
