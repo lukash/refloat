@@ -76,10 +76,6 @@ void lcm_poll_response(
     const MotorData *motor,
     const float pitch
 ) {
-    if (!lcm->enabled) {
-        return;
-    }
-
     static const int bufsize = 20 + MAX_LCM_PAYLOAD_LENGTH;
     uint8_t buffer[bufsize];
     int32_t ind = 0;
@@ -87,47 +83,45 @@ void lcm_poll_response(
     buffer[ind++] = 101;  // Package ID
     buffer[ind++] = COMMAND_LCM_POLL;
 
-    uint8_t send_state = state_compat(state) & 0xF;
-    send_state += fs_state << 4;
-    if (state->mode == MODE_HANDTEST) {
-        send_state |= 0x80;
+    if (lcm->enabled) {
+        uint8_t send_state = state_compat(state) & 0xF;
+        send_state += fs_state << 4;
+        if (state->mode == MODE_HANDTEST) {
+            send_state |= 0x80;
+        }
+
+        buffer[ind++] = send_state;
+        buffer[ind++] = VESC_IF->mc_get_fault();
+
+        if (state->state == STATE_RUNNING) {
+            buffer[ind++] = fminf(100, fabsf(motor->duty_cycle * 100));
+        } else {
+            // pitch is a value between -180 and +180, so abs(pitch) fits into uint8
+            buffer[ind++] = lcm->lights_off_when_lifted ? fabsf(pitch) : 0;
+        }
+
+        buffer_append_float16(buffer, motor->erpm, 1e0, &ind);
+        buffer_append_float16(buffer, VESC_IF->mc_get_tot_current_in(), 1e0, &ind);
+        buffer_append_float16(buffer, VESC_IF->mc_get_input_voltage_filtered(), 1e1, &ind);
+
+        // LCM control info
+        buffer[ind++] = lcm->brightness;
+        buffer[ind++] = lcm->brightness_idle;
+        buffer[ind++] = lcm->status_brightness;
+
+        // Relay any generic byte pairs set by cmd_light_ctrl
+        for (uint8_t i = 0; i < lcm->payload_size; ++i) {
+            buffer[ind++] = lcm->payload[i];
+        }
+        lcm->payload_size = 0;  // Message has been processed, clear it
     }
-
-    buffer[ind++] = send_state;
-    buffer[ind++] = VESC_IF->mc_get_fault();
-
-    if (state->state == STATE_RUNNING) {
-        buffer[ind++] = fminf(100, fabsf(motor->duty_cycle * 100));
-    } else {
-        // pitch is a value between -180 and +180, so abs(pitch) fits into uint8
-        buffer[ind++] = lcm->lights_off_when_lifted ? fabsf(pitch) : 0;
-    }
-
-    buffer_append_float16(buffer, motor->erpm, 1e0, &ind);
-    buffer_append_float16(buffer, VESC_IF->mc_get_tot_current_in(), 1e0, &ind);
-    buffer_append_float16(buffer, VESC_IF->mc_get_input_voltage_filtered(), 1e1, &ind);
-
-    // LCM control info
-    buffer[ind++] = lcm->brightness;
-    buffer[ind++] = lcm->brightness_idle;
-    buffer[ind++] = lcm->status_brightness;
-
-    // Relay any generic byte pairs set by cmd_light_ctrl
-    for (uint8_t i = 0; i < lcm->payload_size; ++i) {
-        buffer[ind++] = lcm->payload[i];
-    }
-    lcm->payload_size = 0;  // Message has been processed, clear it
 
     SEND_APP_DATA(buffer, bufsize, ind);
 }
 
 void lcm_light_info_response(const LcmData *lcm) {
-    if (!lcm->enabled) {
-        return;
-    }
-
     static const int bufsize = 15;
-    uint8_t buffer[15];
+    uint8_t buffer[bufsize];
     int32_t ind = 0;
 
     buffer[ind++] = 101;  // Package ID
@@ -137,26 +131,24 @@ void lcm_light_info_response(const LcmData *lcm) {
     // for LCM (3 is he identifier for external led module in Float), otherwise 0.
     buffer[ind++] = lcm->enabled ? 3 : 0;
 
-    buffer[ind++] = lcm->brightness;
-    buffer[ind++] = lcm->brightness_idle;
-    buffer[ind++] = lcm->status_brightness;
+    if (lcm->enabled) {
+        buffer[ind++] = lcm->brightness;
+        buffer[ind++] = lcm->brightness_idle;
+        buffer[ind++] = lcm->status_brightness;
 
-    // Don't send Float-specific configuration.
-    buffer[ind++] = 0;  // led_mode
-    buffer[ind++] = 0;  // mode_idle
-    buffer[ind++] = 0;  // status_mode
-    buffer[ind++] = 0;  // status_count
-    buffer[ind++] = 0;  // forward_count
-    buffer[ind++] = 0;  // rear_count
+        // Don't send Float-specific configuration.
+        buffer[ind++] = 0;  // led_mode
+        buffer[ind++] = 0;  // mode_idle
+        buffer[ind++] = 0;  // status_mode
+        buffer[ind++] = 0;  // status_count
+        buffer[ind++] = 0;  // forward_count
+        buffer[ind++] = 0;  // rear_count
+    }
 
     SEND_APP_DATA(buffer, bufsize, ind);
 }
 
 void lcm_device_info_response(const LcmData *lcm) {
-    if (!lcm->enabled) {
-        return;
-    }
-
     static const int bufsize = MAX_LCM_NAME_LENGTH + 2;
     uint8_t buffer[bufsize];
     int32_t ind = 0;
@@ -164,11 +156,13 @@ void lcm_device_info_response(const LcmData *lcm) {
     buffer[ind++] = 101;  // Package ID
     buffer[ind++] = COMMAND_LCM_DEVICE_INFO;
 
-    // Write LCM firmware name into the buffer
-    for (int i = 0; i < MAX_LCM_NAME_LENGTH; i++) {
-        buffer[ind++] = lcm->name[i];
-        if (lcm->name[i] == '\0') {
-            break;
+    if (lcm->enabled) {
+        // Write LCM firmware name into the buffer
+        for (int i = 0; i < MAX_LCM_NAME_LENGTH; i++) {
+            buffer[ind++] = lcm->name[i];
+            if (lcm->name[i] == '\0') {
+                break;
+            }
         }
     }
 
@@ -176,10 +170,6 @@ void lcm_device_info_response(const LcmData *lcm) {
 }
 
 void lcm_get_battery_response(const LcmData *lcm) {
-    if (!lcm->enabled) {
-        return;
-    }
-
     static const int bufsize = 10;
     uint8_t buffer[bufsize];
     int32_t ind = 0;
@@ -187,7 +177,9 @@ void lcm_get_battery_response(const LcmData *lcm) {
     buffer[ind++] = 101;  // Package ID
     buffer[ind++] = COMMAND_LCM_GET_BATTERY;
 
-    buffer_append_float32_auto(buffer, VESC_IF->mc_get_battery_level(NULL), &ind);
+    if (lcm->enabled) {
+        buffer_append_float32_auto(buffer, VESC_IF->mc_get_battery_level(NULL), &ind);
+    }
 
     SEND_APP_DATA(buffer, bufsize, ind);
 }
