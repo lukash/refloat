@@ -169,12 +169,25 @@ static void led_set_color(
     leds->led_data[led] = RGBW(r, g, b, w);
 }
 
+static void strip_set_color_range(
+    Leds *leds,
+    const LedStrip *strip,
+    uint32_t color,
+    float brightness,
+    float blend,
+    uint8_t idx_start,
+    uint8_t idx_end
+) {
+    uint8_t end = idx_end < strip->length ? idx_end : strip->length;
+    for (uint8_t i = idx_start; i < end; ++i) {
+        led_set_color(leds, strip, i, color, brightness, blend);
+    }
+}
+
 static void strip_set_color(
     Leds *leds, const LedStrip *strip, uint32_t color, float brightness, float blend
 ) {
-    for (uint8_t i = 0; i < strip->length; ++i) {
-        led_set_color(leds, strip, i, color, brightness, blend);
-    }
+    strip_set_color_range(leds, strip, color, brightness, blend, 0, strip->length);
 }
 
 // Returns a cosine wave oscillating from 0 to 1, starting at 0, with a period of 2s.
@@ -261,6 +274,40 @@ static void anim_knight_rider(Leds *leds, const LedStrip *strip, const LedBar *b
     }
 }
 
+static void anim_felony(Leds *leds, const LedStrip *strip, const LedBar *bar, float time) {
+    static const uint32_t color_off = 0x00000000;
+
+    static const float state_duration = 0.05f;
+    float state_mod = fmodf(time, 3.0f * state_duration);
+
+    // also account for led strips with odd numbers of leds (leaving the middle one black)
+    uint8_t stop_idx = strip->length / 2;
+    uint8_t start_idx = strip->length / 2 + strip->length % 2;
+    if (state_mod < state_duration) {
+        strip_set_color_range(
+            leds, strip, colors[bar->color1], strip->brightness, 1.0f, 0, stop_idx
+        );
+        strip_set_color_range(leds, strip, color_off, strip->brightness, 1.0f, stop_idx, start_idx);
+        strip_set_color_range(
+            leds, strip, color_off, strip->brightness, 1.0f, start_idx, strip->length
+        );
+    } else if (state_mod < 2.0f * state_duration) {
+        strip_set_color_range(leds, strip, color_off, strip->brightness, 1.0f, 0, stop_idx);
+        strip_set_color_range(leds, strip, color_off, strip->brightness, 1.0f, stop_idx, start_idx);
+        strip_set_color_range(
+            leds, strip, colors[bar->color2], strip->brightness, 1.0f, start_idx, strip->length
+        );
+    } else {
+        strip_set_color_range(
+            leds, strip, colors[bar->color2], strip->brightness, 1.0f, 0, stop_idx
+        );
+        strip_set_color_range(leds, strip, color_off, strip->brightness, 1.0f, stop_idx, start_idx);
+        strip_set_color_range(
+            leds, strip, colors[bar->color1], strip->brightness, 1.0f, start_idx, strip->length
+        );
+    }
+}
+
 static void led_strip_animate(Leds *leds, const LedStrip *strip, const LedBar *bar, float time) {
     time *= bar->speed;
 
@@ -279,6 +326,9 @@ static void led_strip_animate(Leds *leds, const LedStrip *strip, const LedBar *b
         break;
     case LED_MODE_KNIGHT_RIDER:
         anim_knight_rider(leds, strip, bar, time);
+        break;
+    case LED_MODE_FELONY:
+        anim_felony(leds, strip, bar, time);
         break;
     }
 }
