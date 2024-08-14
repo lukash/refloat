@@ -24,6 +24,7 @@
 #include "atr.h"
 #include "charging.h"
 #include "footpad_sensor.h"
+#include "gyro_calibration.h"
 #include "lcm.h"
 #include "leds.h"
 #include "motor_data.h"
@@ -79,6 +80,7 @@ typedef struct {
     MotorData motor;
     TorqueTilt torque_tilt;
     ATR atr;
+    GyroCalibration gyro_calib;
 
     // Beeper
     int beep_num_left;
@@ -1467,6 +1469,7 @@ static void refloat_thd(void *arg) {
             }
 
             check_odometer(d);
+            gyro_calibration_update(&d->gyro_calib, d->current_time);
 
             // Check for valid startup position and switch state
             if (fabsf(d->balance_pitch) < d->startup_pitch_tolerance &&
@@ -1600,6 +1603,7 @@ static void data_init(data *d) {
 
     lcm_init(&d->lcm, &d->float_conf.hardware.leds);
     charging_init(&d->charging);
+    gyro_calibration_init(&d->gyro_calib);
 }
 
 static float app_get_debug(int index) {
@@ -1653,6 +1657,7 @@ enum {
     // commands above 200 are unstable and can change protocol at any time
     COMMAND_GET_RTDATA_2 = 201,
     COMMAND_LIGHTS_CONTROL = 202,
+    COMMAND_GYRO_CALIBRATION = 203,
 } Commands;
 
 static void send_realtime_data(data *d) {
@@ -2441,6 +2446,30 @@ static void lights_control_response(const CfgLeds *leds) {
     SEND_APP_DATA(buffer, bufsize, ind);
 }
 
+static void cmd_send_gyro_calibration(data *d) {
+    static const int32_t bufsize = 50;
+    uint8_t buffer[bufsize];
+    int32_t ind = 0;
+
+    buffer[ind++] = 101;  // Package ID
+    buffer[ind++] = COMMAND_GYRO_CALIBRATION;
+
+    for (uint8_t i = 0; i < 3; ++i) {
+        buffer_append_float32_auto(buffer, d->gyro_calib.accel[i], &ind);
+    }
+    for (uint8_t i = 0; i < 3; ++i) {
+        buffer_append_float32_auto(buffer, d->gyro_calib.accel_d[i], &ind);
+    }
+
+    for (uint8_t i = 0; i < 3; ++i) {
+        buffer_append_float32_auto(buffer, d->gyro_calib.gyro[i], &ind);
+    }
+
+    buffer[ind++] = d->gyro_calib.state;
+
+    SEND_APP_DATA(buffer, bufsize, ind);
+}
+
 // Handler for incoming app commands
 static void on_command_received(unsigned char *buffer, unsigned int len) {
     data *d = (data *) ARG;
@@ -2582,6 +2611,7 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
     }
     case COMMAND_GET_RTDATA_2: {
         send_realtime_data2(d);
+        cmd_send_gyro_calibration(d);
         return;
     }
     case COMMAND_LIGHTS_CONTROL: {
@@ -2589,6 +2619,12 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
         lights_control_response(&d->float_conf.leds);
         return;
     }
+    // case COMMAND_GYRO_CALIBRATION:
+    //     if (len == 2) {
+    //     } else {
+    //         log_error("Command data length incorrect: %u", len);
+    //     }
+    //     return;
     default: {
         if (!VESC_IF->app_is_output_disabled()) {
             log_error("Unknown command received: %u", command);

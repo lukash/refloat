@@ -313,6 +313,7 @@ Item {
         readonly property int c_FLYWHEEL: 22
         readonly property int c_GET_RT_DATA_2: 201
         readonly property int c_LIGHTS_CONTROL: 202
+        readonly property int c_GYRO_CALIBRATION: 203
 
         property bool infoReceived: false
 
@@ -488,6 +489,27 @@ Item {
                     chargingInfo.current = dv.getFloat32(ind); ind += 4;
                     chargingInfo.voltage = dv.getFloat32(ind); ind += 4;
                 }
+            } else if (msgtype === c_GYRO_CALIBRATION) {
+                //dbgGyroAccel.rValue = dv.getFloat32(ind); ind += 4;
+                var accel = [0, 0, 0];
+                for (var i = 0; i < 3; i++) {
+                    accel[i] = dv.getFloat32(ind); ind += 4;
+                }
+                dbgAccel.value = "[%1, %2, %3]\n".arg(accel[0].toFixed(4)).arg(accel[1].toFixed(4)).arg(accel[2].toFixed(4));
+
+                var accel_d = [0, 0, 0];
+                for (var i = 0; i < 3; i++) {
+                    accel_d[i] = dv.getFloat32(ind); ind += 4;
+                }
+                dbgAccelD.value = "[%1, %2, %3]\n".arg(accel_d[0].toFixed(4)).arg(accel_d[1].toFixed(4)).arg(accel_d[2].toFixed(4));
+
+                var gyro = [0, 0, 0];
+                for (var i = 0; i < 3; i++) {
+                    gyro[i] = dv.getFloat32(ind); ind += 4;
+                }
+                dbgGyroGyro.value = "[%1, %2, %3]\n".arg(gyro[0].toFixed(2)).arg(gyro[1].toFixed(2)).arg(gyro[2].toFixed(2));
+
+                dbgGyroSteady.value = dv.getUint8(ind); ind += 1;
             }
 
             packageConnectionWatchdog.restart();
@@ -3340,12 +3362,12 @@ Item {
                     anchors.rightMargin: 0.15 * unit
                     spacing: 5
 
-                    property real itemWidth: width * 0.5
-                    property real labelWidth: itemWidth * 0.7
-
                     component Value : Item {
+                        property real itemWidth: debugColumn.width * 0.5
+                        property real labelWidth: itemWidth * 0.7
+
                         implicitHeight: label.implicitHeight
-                        implicitWidth: debugColumn.itemWidth
+                        implicitWidth: itemWidth
 
                         property string label
                         property string value
@@ -3353,7 +3375,7 @@ Item {
 
                         LText {
                             id: label
-                            width: debugColumn.labelWidth
+                            width: labelWidth
                             anchors.left: parent.left
                             anchors.top: parent.top
                             font.pixelSize: fontSizeNormal
@@ -3432,11 +3454,21 @@ Item {
                             spacing: 5
                             clip: true
 
-                            RealValue {id: debugAtrSetpoint; label: "ATR setpoint"; unit: "°";}
-                            RealValue {id: debugBrakeTiltSetpoint; label: "Brake Tilt setpoint"; unit: "°";}
-                            RealValue {id: debugTorqueTiltSetpoint; label: "Torque Tilt setpoint"; unit: "°";}
-                            RealValue {id: debugTurnTiltSetpoint; label: "Turn Tilt setpoint"; unit: "°";}
-                            RealValue {id: debugRemoteTiltSetpoint; label: "Remote Tilt setpoint"; unit: "°";}
+                            RealValue {id: debugAtrSetpoint; label: "ATR sp"; unit: "°";}
+                            RealValue {id: debugBrakeTiltSetpoint; label: "Brake Tilt sp"; unit: "°";}
+                            RealValue {id: debugTorqueTiltSetpoint; label: "Torque Tilt sp"; unit: "°";}
+                            RealValue {id: debugTurnTiltSetpoint; label: "Turn Tilt sp"; unit: "°";}
+                            RealValue {id: debugRemoteTiltSetpoint; label: "Remote Tilt sp"; unit: "°";}
+
+                            Item {
+                                width: parent.width
+                                height: 0.1 * unit
+                            }
+
+                            Value {id: dbgAccel; label: "A"; labelWidth: itemWidth * 0.1;}
+                            Value {id: dbgAccelD; label: "AD"; labelWidth: itemWidth * 0.1;}
+                            Value {id: dbgGyroSteady; label: "Gyro State";}
+                            Value {id: dbgGyroGyro; label: "Gyro Gyro"; labelWidth: itemWidth * 0.4;}
                         }
                     }
 
