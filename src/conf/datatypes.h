@@ -149,7 +149,6 @@ typedef struct {
 } CfgHardware;
 
 typedef struct {
-    float version;
     bool disabled;
     float kp;
     float ki;
@@ -159,7 +158,6 @@ typedef struct {
     float bf_accel_confidence_decay;
     float kp_brake;
     float kp2_brake;
-    uint16_t kp_brake_erpm;
     uint16_t hertz;
     float fault_pitch;
     float fault_roll;
