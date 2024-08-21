@@ -2016,7 +2016,6 @@ static void cmd_tune_defaults(data *d) {
     d->float_conf.ki = CFG_DFLT_KI;
     d->float_conf.mahony_kp = CFG_DFLT_MAHONY_KP;
     d->float_conf.mahony_kp_roll = CFG_DFLT_MAHONY_KP_ROLL;
-    d->float_conf.bf_accel_confidence_decay = CFG_DFLT_BF_ACCEL_CONFIDENCE_DECAY;
     d->float_conf.kp_brake = CFG_DFLT_KP_BRAKE;
     d->float_conf.kp2_brake = CFG_DFLT_KP2_BRAKE;
     d->float_conf.ki_limit = CFG_DFLT_KI_LIMIT;
