@@ -44,7 +44,8 @@ static float calculate_acc_confidence(float new_acc_mag, BalanceFilterData *data
     // aircraft is being accelerated over and above that due to gravity
     data->acc_mag = data->acc_mag * 0.9 + new_acc_mag * 0.1;
 
-    float confidence = 1.0 - (data->acc_confidence_decay * sqrtf(fabsf(data->acc_mag - 1.0f)));
+    // Hard-coded accelerometer confidence decay of 0.02
+    float confidence = 1.0 - (0.02 * sqrtf(fabsf(data->acc_mag - 1.0f)));
 
     return confidence > 0 ? confidence : 0;
 }
@@ -61,7 +62,6 @@ void balance_filter_init(BalanceFilterData *data) {
 }
 
 void balance_filter_configure(BalanceFilterData *data, const RefloatConfig *config) {
-    data->acc_confidence_decay = config->bf_accel_confidence_decay;
     data->kp_pitch = config->mahony_kp;
     data->kp_roll = config->mahony_kp_roll;
     // Use middle value between Pitch KP and Roll KP. Yaw KP seems to have
