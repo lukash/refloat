@@ -315,7 +315,7 @@ static void configure(data *d) {
     d->max_duty_with_margin = VESC_IF->get_cfg_float(CFG_PARAM_l_max_duty) - 0.1;
 
     // Feature: Reverse Stop
-    d->reverse_tolerance = 50000;
+    d->reverse_tolerance = 20000;
     d->reverse_stop_step_size = 100.0 / d->float_conf.hertz;
 
     // Feature: Turntilt
@@ -576,21 +576,21 @@ static bool check_faults(data *d) {
                 state_stop(&d->state, STOP_SWITCH_FULL);
                 return true;
             }
-            if (fabsf(d->pitch) > 15) {
+            if (fabsf(d->pitch) > 18) {
                 state_stop(&d->state, STOP_REVERSE_STOP);
                 return true;
             }
-            // Above 10 degrees for a half a second? Switch it off
-            if (fabsf(d->pitch) > 10 && d->current_time - d->reverse_timer > .5) {
+            // Above 10 degrees for a full second? Switch it off
+            if (fabsf(d->pitch) > 10 && d->current_time - d->reverse_timer > 1) {
                 state_stop(&d->state, STOP_REVERSE_STOP);
                 return true;
             }
-            // Above 5 degrees for a full second? Switch it off
-            if (fabsf(d->pitch) > 5 && d->current_time - d->reverse_timer > 1) {
+            // Above 5 degrees for 2 seconds? Switch it off
+            if (fabsf(d->pitch) > 5 && d->current_time - d->reverse_timer > 2) {
                 state_stop(&d->state, STOP_REVERSE_STOP);
                 return true;
             }
-            if (d->reverse_total_erpm > d->reverse_tolerance * 3) {
+            if (fabsf(d->reverse_total_erpm) > d->reverse_tolerance * 10) {
                 state_stop(&d->state, STOP_REVERSE_STOP);
                 return true;
             }
@@ -666,10 +666,11 @@ static void calculate_setpoint_target(data *d) {
         // accumalete erpms:
         d->reverse_total_erpm += d->motor.erpm;
         if (fabsf(d->reverse_total_erpm) > d->reverse_tolerance) {
-            // tilt down by 10 degrees after 50k aggregate erpm
-            d->setpoint_target = 10 * (fabsf(d->reverse_total_erpm) - d->reverse_tolerance) / 50000;
+            // tilt down by 10 degrees after exceeding aggregate erpm
+            d->setpoint_target =
+                10 * (fabsf(d->reverse_total_erpm) - d->reverse_tolerance) * 0.000008;
         } else {
-            if (fabsf(d->reverse_total_erpm) <= d->reverse_tolerance / 2) {
+            if (fabsf(d->reverse_total_erpm) <= d->reverse_tolerance * 0.5) {
                 if (d->motor.erpm >= 0) {
                     d->state.sat = SAT_NONE;
                     d->reverse_total_erpm = 0;
