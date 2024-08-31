@@ -24,6 +24,7 @@
 #include "atr.h"
 #include "charging.h"
 #include "footpad_sensor.h"
+#include "haptic_feedback.h"
 #include "lcm.h"
 #include "leds.h"
 #include "motor_data.h"
@@ -127,7 +128,7 @@ typedef struct {
     float last_yaw_angle, yaw_angle, abs_yaw_change, last_yaw_change, yaw_change, yaw_aggregate;
     float turntilt_boost_per_erpm, yaw_aggregate_target;
 
-    // Rumtime state values
+    // Runtime state values
     State state;
 
     float proportional;
@@ -183,6 +184,9 @@ typedef struct {
     int rc_counter;
     float rc_current_target;
     float rc_current;
+
+    // Feature: Haptic Feedback
+    HapticFeedback haptic_feedback;
 
     Konami flywheel_konami;
 } data;
@@ -256,6 +260,7 @@ static void reconfigure(data *d) {
     balance_filter_configure(&d->balance_filter, &d->float_conf);
     torque_tilt_configure(&d->torque_tilt, &d->float_conf);
     atr_configure(&d->atr, &d->float_conf);
+    haptic_feedback_configure(&d->haptic_feedback, &d->float_conf);
 }
 
 static void configure(data *d) {
@@ -362,6 +367,7 @@ static void reset_vars(data *d) {
     motor_data_reset(&d->motor);
     atr_reset(&d->atr);
     torque_tilt_reset(&d->torque_tilt);
+    haptic_feedback_reset(&d->haptic_feedback, d->current_time);
 
     // Set values for startup
     d->setpoint = d->balance_pitch;
@@ -1194,6 +1200,8 @@ static void refloat_thd(void *arg) {
 
         float new_pid_value = 0;
 
+        haptic_feedback_update(&d->haptic_feedback, d->current_time);
+
         // Control Loop State Logic
         switch (d->state.state) {
         case (STATE_STARTUP):
@@ -1238,6 +1246,9 @@ static void refloat_thd(void *arg) {
             calculate_setpoint_target(d);
             calculate_setpoint_interpolated(d);
             d->setpoint = d->setpoint_target_interpolated;
+            haptic_feedback_check_tiltback(
+                &d->haptic_feedback, &d->state, d->current_time, d->motor.duty_cycle
+            );
             add_surge(d);
             apply_inputtilt(d);  // Allow Input Tilt for Darkride
             if (!d->state.darkride) {
