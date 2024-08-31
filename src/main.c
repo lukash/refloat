@@ -552,10 +552,9 @@ static bool check_faults(data *d) {
                     return true;
                 }
                 // low speed (below 6 x half-fault threshold speed):
-                else if (
-                    (d->motor.abs_erpm < d->float_conf.fault_adc_half_erpm * 6) &&
-                    (1000.0 * (d->current_time - d->fault_switch_timer) >
-                     d->float_conf.fault_delay_switch_half)) {
+                else if ((d->motor.abs_erpm < d->float_conf.fault_adc_half_erpm * 6) &&
+                         (1000.0 * (d->current_time - d->fault_switch_timer) >
+                          d->float_conf.fault_delay_switch_half)) {
                     state_stop(&d->state, STOP_SWITCH_FULL);
                     return true;
                 }
@@ -679,12 +678,12 @@ static void calculate_setpoint_target(data *d) {
                 }
             }
         }
-    } else if (
-        d->state.mode != MODE_FLYWHEEL &&
-        fabsf(d->motor.acceleration) > 15 &&  // not normal, either wheelslip or wheel getting stuck
-        sign(d->motor.acceleration) == d->motor.erpm_sign && d->motor.duty_cycle > 0.3 &&
-        d->motor.abs_erpm > 2000)  // acceleration can jump a lot at very low speeds
-    {
+    } else if (d->state.mode != MODE_FLYWHEEL &&
+               // not normal, either wheelslip or wheel getting stuck
+               fabsf(d->motor.acceleration) > 15 &&
+               sign(d->motor.acceleration) == d->motor.erpm_sign && d->motor.duty_cycle > 0.3 &&
+               // acceleration can jump a lot at very low speeds
+               d->motor.abs_erpm > 2000) {
         d->state.wheelslip = true;
         d->state.sat = SAT_NONE;
         d->wheelslip_timer = d->current_time;
