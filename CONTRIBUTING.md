@@ -61,7 +61,7 @@ CI runs on every push to main and needs to pass on every PR. It:
 - Checks formatting of C sources using `clang-format`.
 
 ## Code Formatting
-C code is automatically formatted using `clang-format` version 17 (you need to provide this dependency yourself).
+C code is automatically formatted using `clang-format` version 18 (you need to provide this dependency yourself).
 
 The rest of the code (namely, the QML AppUI sources) is not auto-formatted. Please do your best to adhere to formatting you see surrounding the code you're editing.
 
