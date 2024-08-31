@@ -17,7 +17,7 @@ jobs:
       - uses: DeterminateSystems/flake-checker-action@main
       - uses: rrbutani/use-nix-shell-action@v1
         with:
-          flakes: nixpkgs#clang-tools_17, nixpkgs#lefthook
+          flakes: nixpkgs#clang-tools_18, nixpkgs#lefthook
 
       - name: Run clang-format
         id: clang-format
