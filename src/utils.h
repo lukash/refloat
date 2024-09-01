@@ -21,6 +21,8 @@
 
 #include <stdint.h>
 
+#define ERPM_MOVING_THRESHOLD 5.0f
+
 #define unused(x) (void) (x)
 
 #if defined(__GNUC__) && __GNUC__ < 9
