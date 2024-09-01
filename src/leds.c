@@ -425,7 +425,7 @@ static void anim_disabled(Leds *leds, const LedStrip *strip, float time) {
 static void status_animate(
     Leds *leds, const LedStrip *strip, float current_time, float blend, float idle_blend
 ) {
-    if (fabsf(VESC_IF->mc_get_rpm()) > 0.5f) {
+    if (fabsf(VESC_IF->mc_get_rpm()) > ERPM_MOVING_THRESHOLD) {
         leds->status_idle_time = current_time;
     }
 
