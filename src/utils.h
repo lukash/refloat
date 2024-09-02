@@ -21,7 +21,7 @@
 
 #include <stdint.h>
 
-#define ERPM_MOVING_THRESHOLD 5.0f
+#define ERPM_MOVING_THRESHOLD 10.0f
 
 #define unused(x) (void) (x)
 
