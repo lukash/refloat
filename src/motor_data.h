@@ -34,7 +34,6 @@ typedef struct {
     bool braking;
 
     float duty_cycle;
-    float duty_smooth;
 
     // an average calculated over last ACCEL_ARRAY_SIZE values
     float acceleration;
