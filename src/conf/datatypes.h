@@ -164,6 +164,18 @@ typedef struct {
 } CfgHardware;
 
 typedef struct {
+    uint16_t frequency;
+    float strength;
+} CfgHapticTone;
+
+typedef struct {
+    CfgHapticTone duty;
+    CfgHapticTone error;
+    CfgHapticTone vibrate;
+    float duty_solid_offset;
+} CfgHapticFeedback;
+
+typedef struct {
     bool disabled;
     float kp;
     float ki;
@@ -257,6 +269,8 @@ typedef struct {
     bool is_beeper_enabled;
     bool is_dutybeep_enabled;
     bool is_footbeep_enabled;
+
+    CfgHapticFeedback haptic;
 
     CfgLeds leds;
     CfgHardware hardware;

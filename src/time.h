@@ -50,6 +50,10 @@ inline bool timer_older_ms(const Time *t, time_t timer, float seconds) {
     return t->now - timer > (time_t) (seconds * SYSTEM_TICK_RATE_HZ / 1000);
 }
 
+inline float timer_age(const Time *t, time_t timer) {
+    return (t->now - timer) * (1.0f / SYSTEM_TICK_RATE_HZ);
+}
+
 #define time_elapsed(t, event, seconds)                                                            \
     ({                                                                                             \
         const Time *_t = (t);                                                                      \

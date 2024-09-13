@@ -27,6 +27,7 @@
 #include "charging.h"
 #include "data.h"
 #include "footpad_sensor.h"
+#include "haptic_feedback.h"
 #include "imu.h"
 #include "lcm.h"
 #include "leds.h"
@@ -159,6 +160,7 @@ static void reconfigure(Data *d) {
     brake_tilt_configure(&d->brake_tilt, &d->float_conf);
     turn_tilt_configure(&d->turn_tilt, &d->float_conf);
     remote_configure(&d->remote, &d->float_conf);
+    haptic_feedback_configure(&d->haptic_feedback, &d->float_conf);
 
     time_refresh_idle(&d->time);
 }
@@ -744,6 +746,8 @@ static void refloat_thd(void *arg) {
             beep_off(d, false);
         }
 
+        haptic_feedback_update(&d->haptic_feedback, &d->state, d->motor.duty_cycle, &d->time);
+
         // Control Loop State Logic
         switch (d->state.state) {
         case (STATE_STARTUP):
@@ -1063,6 +1067,7 @@ static void data_init(Data *d) {
     time_init(&d->time);
     pid_init(&d->pid);
     motor_control_init(&d->motor_control);
+    haptic_feedback_init(&d->haptic_feedback);
     lcm_init(&d->lcm, &d->float_conf.hardware.leds);
     charging_init(&d->charging);
     remote_init(&d->remote);
