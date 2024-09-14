@@ -8,7 +8,7 @@ runs:
     - uses: DeterminateSystems/flake-checker-action@main
     - uses: rrbutani/use-nix-shell-action@v1
       with:
-        flakes: nixpkgs#gcc-arm-embedded-7, nixpkgs#gnumake, github:lukash/vesc_tool-flake/release_6_02
+        flakes: nixpkgs#gcc-arm-embedded-7, nixpkgs#gnumake, github:lukash/vesc_tool-flake/release_6_05
 
     - name: Build
       shell: bash
