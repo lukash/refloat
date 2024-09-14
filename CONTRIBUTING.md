@@ -2,7 +2,7 @@
 Bugfix Pull Requests are always welcome. If you want to implement a feature, it is advised get in touch first, to make sure your feature is in line with the direction Refloat development is heading.
 
 ## Commit Messages
-Use descriptive (but succint) commit title. For non-trivial commits, add a short commit description with any due explanation.
+Use descriptive (but succinct) commit title. For non-trivial commits, add a short commit description with any due explanation.
 
 If the commit fixes a bug or adds a feature that should be mentioned in the changelog, add a `Fix:` or `Feature:` [git trailer](https://alchemists.io/articles/git_trailers) respectively.
 
@@ -60,8 +60,14 @@ CI runs on every push to main and needs to pass on every PR. It:
 - Runs a build of the package.
 - Checks formatting of C sources using `clang-format`.
 
+## Naming Conventions
+- Type names are in `PascalCase`.
+- Global constants and enum items are in `SCREAMING_CASE`.
+- Variables (local, global, struct members) and functions are in `snake_case`.
+- File names are in `snake_case.c`.
+
 ## Code Formatting
-C code is automatically formatted using `clang-format` version 18 (you need to provide this dependency yourself).
+C code is automatically formatted using `clang-format` version 18. You will need to provide this dependency yourself. See: [LLVM releases](https://releases.llvm.org/)
 
 The rest of the code (namely, the QML AppUI sources) is not auto-formatted. Please do your best to adhere to formatting you see surrounding the code you're editing.
 
@@ -73,7 +79,9 @@ clang-format -i src/*.{h,c}
 But, it's better to use git hooks.
 
 ## Git Hooks
-Refloat uses `lefthook` for managing git hooks. Again, you need to install this dependency in your development environment. Then run this to install the commit hook in the repo:
+Refloat uses `lefthook` for managing git hooks. Again, you will need to provide this dependency yourself. See: [`lefthook` on GitHub](https://github.com/evilmartians/lefthook)
+
+Once `lefthook` is installed, you can install the commit hook in the repo:
 ```sh
 lefthook install
 ```
@@ -84,9 +92,3 @@ To auto-fix all formatting of all files in your working tree, run:
 ```sh
 lefthook run clang-format-fix
 ```
-
-## Naming Conventions
-- Type names are in `PascalCase`.
-- Global constants and enum items are in `SCREAMING_CASE`.
-- Variables (local, global, struct members) and functions are in `snake_case`.
-- File names are in `snake_case.c`.
