@@ -3,7 +3,9 @@ name: Create Release
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-beta[0-9]+'
+      - '*-preview[0-9]+'
 
 jobs:
   create_release:
@@ -17,7 +19,23 @@ jobs:
           fetch-depth: 0
 
       - name: Extract Version
-        run: TAG="${{github.ref}}"; echo "VERSION=${TAG#refs/tags/v}" >> $GITHUB_ENV
+        run: |
+          TAG="${{github.ref_name}}"
+          if [[ $TAG =~ ^v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+            echo "VERSION=${TAG#v}" >> $GITHUB_ENV
+          else
+            echo "VERSION=${TAG}" >> $GITHUB_ENV
+          fi
+          if [[ $TAG =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "PRERELEASE=false" >> $GITHUB_ENV
+          else
+            echo "PRERELEASE=true" >> $GITHUB_ENV
+          fi
+          if [[ $TAG =~ -preview[0-9]+$ ]]; then
+            echo "PREVIEW=true" >> $GITHUB_ENV
+          else
+            echo "PREVIEW=false" >> $GITHUB_ENV
+          fi
 
       - name: Build Package
         uses: ./.github/actions/build
@@ -31,8 +49,13 @@ jobs:
       - name: Install Changelog Generation Dependencies
         run: sudo apt-get install python3-git
 
-      - name: Generate Changelog
-        run: python changelog.py > changelog.md
+      - name: Generate Release Notes
+        run: |
+          if [[ "${{env.PREVIEW}}" == "true" ]]; then
+            echo "**WARNING: This is an experimental version of the package. Bugs may and will be present. Be very careful!**" > release_notes.md
+            echo "" >> release_notes.md
+          fi
+          python changelog.py >> release_notes.md
 
       - name: Create Release
         uses: ncipollo/release-action@v1
@@ -41,6 +64,6 @@ jobs:
           name: Refloat ${{env.VERSION}}
           draft: true
           artifacts: "refloat-${{env.VERSION}}.vescpkg,config_signature.txt"
-          bodyFile: "changelog.md"
-          prerelease: ${{contains(github.ref, '-beta')}}
+          bodyFile: "release_notes.md"
+          prerelease: ${{env.PRERELEASE}}
           allowUpdates: true
