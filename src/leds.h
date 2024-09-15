@@ -80,6 +80,8 @@ typedef struct {
     float headlights_time;
     float animation_start;
 
+    float confirm_animation_start;
+
     TransitionState headlights_trans;
     TransitionState dir_trans;
 
@@ -101,5 +103,7 @@ bool leds_init(Leds *leds, CfgHwLeds *hw_cfg, const CfgLeds *cfg, FootpadSensorS
 void leds_configure(Leds *leds, const CfgLeds *cfg);
 
 void leds_update(Leds *leds, const State *state, FootpadSensorState fs_state);
+
+void leds_status_confirm(Leds *leds);
 
 void leds_destroy(Leds *leds);

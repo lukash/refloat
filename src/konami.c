@@ -29,7 +29,7 @@ static void konami_reset(Konami *konami) {
     konami->state = 0;
 }
 
-bool konami_check(Konami *konami, const FootpadSensor *fs, float current_time) {
+bool konami_check(Konami *konami, Leds *leds, const FootpadSensor *fs, float current_time) {
     if (konami->time > 0 && current_time - konami->time > 0.5) {
         konami_reset(konami);
         return false;
@@ -39,6 +39,7 @@ bool konami_check(Konami *konami, const FootpadSensor *fs, float current_time) {
         ++konami->state;
         if (konami->state == konami->sequence_size) {
             konami_reset(konami);
+            leds_status_confirm(leds);
             return true;
         }
 

@@ -18,6 +18,7 @@
 #pragma once
 
 #include "footpad_sensor.h"
+#include "leds.h"
 
 typedef struct {
     float time;
@@ -28,4 +29,4 @@ typedef struct {
 
 void konami_init(Konami *konami, const FootpadSensorState *sequence, uint8_t sequence_size);
 
-bool konami_check(Konami *konami, const FootpadSensor *fs, float current_time);
+bool konami_check(Konami *konami, Leds *leds, const FootpadSensor *fs, float current_time);

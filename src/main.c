@@ -1369,7 +1369,9 @@ static void refloat_thd(void *arg) {
             }
 
             if (d->state.mode != MODE_FLYWHEEL && d->pitch > 75 && d->pitch < 105) {
-                if (konami_check(&d->flywheel_konami, &d->footpad_sensor, d->current_time)) {
+                if (konami_check(
+                        &d->flywheel_konami, &d->leds, &d->footpad_sensor, d->current_time
+                    )) {
                     unsigned char enabled[6] = {0x82, 0, 0, 0, 0, 1};
                     cmd_flywheel_toggle(d, enabled, 6);
                 }
@@ -1484,6 +1486,7 @@ static void write_cfg_to_eeprom(data *d) {
     }
 
     beep_alert(d, 1, 0);
+    leds_status_confirm(&d->leds);
 }
 
 static void led_thd(void *arg) {
