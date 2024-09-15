@@ -35,6 +35,10 @@ void lcm_init(LcmData *lcm, CfgHwLeds *hw_cfg) {
 }
 
 void lcm_configure(LcmData *lcm, const CfgLeds *cfg) {
+    if (!lcm->enabled) {
+        return;
+    }
+
     if (!cfg->on) {
         lcm->brightness = 0.0f;
         lcm->brightness_idle = 0.0f;

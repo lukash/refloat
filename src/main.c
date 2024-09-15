@@ -62,6 +62,14 @@ static const FootpadSensorState flywheel_konami_sequence[] = {
     FS_LEFT, FS_NONE, FS_RIGHT, FS_NONE, FS_LEFT, FS_NONE, FS_RIGHT
 };
 
+static const FootpadSensorState headlights_on_konami_sequence[] = {
+    FS_LEFT, FS_NONE, FS_LEFT, FS_NONE, FS_RIGHT
+};
+
+static const FootpadSensorState headlights_off_konami_sequence[] = {
+    FS_RIGHT, FS_NONE, FS_RIGHT, FS_NONE, FS_LEFT
+};
+
 // This is all persistent state of the application, which will be allocated in init. It
 // is put here because variables can only be read-only when this program is loaded
 // in flash without virtual memory in RAM (as all RAM already is dedicated to the
@@ -182,6 +190,8 @@ typedef struct {
     float rc_current;
 
     Konami flywheel_konami;
+    Konami headlights_on_konami;
+    Konami headlights_off_konami;
 } data;
 
 static void brake(data *d);
@@ -339,6 +349,16 @@ static void configure(data *d) {
     d->beeper_enabled = d->float_conf.is_beeper_enabled;
 
     konami_init(&d->flywheel_konami, flywheel_konami_sequence, sizeof(flywheel_konami_sequence));
+    konami_init(
+        &d->headlights_on_konami,
+        headlights_on_konami_sequence,
+        sizeof(headlights_on_konami_sequence)
+    );
+    konami_init(
+        &d->headlights_off_konami,
+        headlights_off_konami_sequence,
+        sizeof(headlights_off_konami_sequence)
+    );
 
     reconfigure(d);
 
@@ -347,6 +367,11 @@ static void configure(data *d) {
     } else {
         beep_alert(d, 1, false);
     }
+}
+
+static void leds_headlights_switch(CfgLeds *cfg_leds, LcmData *lcm, bool headlights_on) {
+    cfg_leds->headlights_on = headlights_on;
+    lcm_configure(lcm, cfg_leds);
 }
 
 static void reset_vars(data *d) {
@@ -1377,6 +1402,22 @@ static void refloat_thd(void *arg) {
                 }
             }
 
+            if (d->float_conf.hardware.leds.type != LED_TYPE_NONE) {
+                if (!d->leds.cfg->headlights_on &&
+                    konami_check(
+                        &d->headlights_on_konami, &d->leds, &d->footpad_sensor, d->current_time
+                    )) {
+                    leds_headlights_switch(&d->float_conf.leds, &d->lcm, true);
+                }
+
+                if (d->leds.cfg->headlights_on &&
+                    konami_check(
+                        &d->headlights_off_konami, &d->leds, &d->footpad_sensor, d->current_time
+                    )) {
+                    leds_headlights_switch(&d->float_conf.leds, &d->lcm, false);
+                }
+            }
+
             if (d->current_time - d->disengage_timer > 10) {
                 // 10 seconds of grace period between flipping the board over and allowing darkride
                 // mode
@@ -2337,9 +2378,7 @@ static void lights_control_request(CfgLeds *leds, uint8_t *buffer, size_t len, L
             leds->headlights_on = value & 0x2;
         }
 
-        if (lcm->enabled) {
-            lcm_configure(lcm, leds);
-        }
+        lcm_configure(lcm, leds);
     }
 }
 
