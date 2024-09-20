@@ -185,6 +185,13 @@ typedef struct {
     float tiltback_lv;
     float tiltback_return_speed;
     float tiltback_constant;
+    float haptic_duty_solid;
+    float haptic_duty_volt;
+    int haptic_duty_freq;
+    float haptic_error_volt;
+    int haptic_error_freq;
+    float haptic_vibrate_volt;
+    int haptic_vibrate_freq;
     uint16_t tiltback_constant_erpm;
     float tiltback_variable;
     float tiltback_variable_max;
