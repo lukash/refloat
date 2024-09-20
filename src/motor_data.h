@@ -43,10 +43,12 @@ typedef struct {
     bool atr_filter_enabled;
     Biquad atr_current_biquad;
     float atr_filtered_current;
+
+    float duty_filter_alpha;
 } MotorData;
 
 void motor_data_reset(MotorData *m);
 
-void motor_data_configure(MotorData *m, float frequency);
+void motor_data_configure(MotorData *m, float frequency, float duty_filter_alpha);
 
 void motor_data_update(MotorData *m);

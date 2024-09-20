@@ -33,13 +33,15 @@ void motor_data_reset(MotorData *m) {
     biquad_reset(&m->atr_current_biquad);
 }
 
-void motor_data_configure(MotorData *m, float frequency) {
+void motor_data_configure(MotorData *m, float frequency, float duty_filter_alpha) {
     if (frequency > 0) {
         biquad_configure(&m->atr_current_biquad, BQ_LOWPASS, frequency);
         m->atr_filter_enabled = true;
     } else {
         m->atr_filter_enabled = false;
     }
+
+    m->duty_filter_alpha = duty_filter_alpha;
 }
 
 void motor_data_update(MotorData *m) {
@@ -50,7 +52,8 @@ void motor_data_update(MotorData *m) {
     m->current = VESC_IF->mc_get_tot_current_directional_filtered();
     m->braking = m->abs_erpm > 250 && sign(m->current) != m->erpm_sign;
 
-    m->duty_cycle = m->duty_cycle * 0.9f + fabsf(VESC_IF->mc_get_duty_cycle_now()) * 0.1f;
+    m->duty_cycle = (1.0f - m->duty_filter_alpha) * m->duty_cycle +
+        m->duty_filter_alpha * fabsf(VESC_IF->mc_get_duty_cycle_now());
 
     float current_acceleration = m->erpm - m->last_erpm;
     m->last_erpm = m->erpm;

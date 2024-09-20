@@ -597,6 +597,32 @@ p, li { white-space: pre-wrap; }
             <suffix></suffix>
             <vTx>7</vTx>
         </tiltback_duty>
+        <duty_filter_alpha>
+            <longName>Duty Filter Alpha</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The alpha of the exponential moving average low-pass filter for filtering the Duty Cycle. Low numbers mean heavier filtering and slower response. Setting the filter to 1 equals no filtering.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Recommended values are between 0.1 (very mild filtering) to 0.01.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The filtered Duty Cycle is used for determining pushback and wheelslip detection, it has no impact on any other riding aspect.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_DUTY_FILTER_ALPHA</cDefine>
+            <editorDecimalsDouble>4</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>1</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.02</stepDouble>
+            <valDouble>0.1</valDouble>
+            <vTxDoubleScale>1</vTxDoubleScale>
+            <suffix></suffix>
+            <vTx>9</vTx>
+        </duty_filter_alpha>
         <is_dutybeep_enabled>
             <longName>Beep on Duty Pushback</longName>
             <type>5</type>
@@ -3446,6 +3472,7 @@ p, li { white-space: pre-wrap; }
         <ser>tiltback_duty_angle</ser>
         <ser>tiltback_duty_speed</ser>
         <ser>tiltback_duty</ser>
+        <ser>duty_filter_alpha</ser>
         <ser>is_dutybeep_enabled</ser>
         <ser>surge_angle</ser>
         <ser>surge_duty_start</ser>
@@ -3690,6 +3717,7 @@ p, li { white-space: pre-wrap; }
                     <param>tiltback_duty</param>
                     <param>tiltback_duty_angle</param>
                     <param>tiltback_duty_speed</param>
+                    <param>duty_filter_alpha</param>
                     <param>is_dutybeep_enabled</param>
                     <param>::sep::Duty Surge</param>
                     <param>surge_duty_start</param>

@@ -252,7 +252,9 @@ void beep_on(data *d, bool force) {
 }
 
 static void reconfigure(data *d) {
-    motor_data_configure(&d->motor, d->float_conf.atr_filter / d->float_conf.hertz);
+    motor_data_configure(
+        &d->motor, d->float_conf.atr_filter / d->float_conf.hertz, d->float_conf.duty_filter_alpha
+    );
     balance_filter_configure(&d->balance_filter, &d->float_conf);
     torque_tilt_configure(&d->torque_tilt, &d->float_conf);
     atr_configure(&d->atr, &d->float_conf);

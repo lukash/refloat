@@ -174,6 +174,7 @@ typedef struct {
     bool fault_moving_fault_disabled;
     bool fault_darkride_enabled;
     bool fault_reversestop_enabled;
+    float duty_filter_alpha;
     float tiltback_duty_angle;
     float tiltback_duty_speed;
     float tiltback_duty;
