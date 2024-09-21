@@ -850,13 +850,13 @@ static void add_surge(data *d) {
     if (d->surge_enable) {
         float surge_now = 0;
 
-        if (d->motor.duty_smooth > d->float_conf.surge_duty_start + 0.04) {
+        if (d->motor.duty_cycle > d->float_conf.surge_duty_start + 0.04) {
             surge_now = d->surge_angle3;
             beep_alert(d, 3, 1);
-        } else if (d->motor.duty_smooth > d->float_conf.surge_duty_start + 0.02) {
+        } else if (d->motor.duty_cycle > d->float_conf.surge_duty_start + 0.02) {
             surge_now = d->surge_angle2;
             beep_alert(d, 2, 1);
-        } else if (d->motor.duty_smooth > d->float_conf.surge_duty_start) {
+        } else if (d->motor.duty_cycle > d->float_conf.surge_duty_start) {
             surge_now = d->surge_angle;
             beep_alert(d, 1, 1);
         }
