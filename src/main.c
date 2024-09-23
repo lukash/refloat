@@ -147,6 +147,7 @@ typedef struct {
     float noseangling_interpolated, inputtilt_interpolated;
     float turntilt_target, turntilt_interpolated;
     float current_time;
+    float dt;
     float disengage_timer, nag_timer;
     float idle_voltage;
     float fault_angle_pitch_timer, fault_angle_roll_timer, fault_switch_timer,
@@ -270,6 +271,7 @@ static void configure(data *d) {
 
     // This timer is used to determine how long the board has been disengaged / idle
     d->disengage_timer = d->current_time;
+    d->dt = 1.0f / d->float_conf.hertz;
 
     // Loop time in microseconds
     d->loop_time_us = 1e6 / d->float_conf.hertz;
@@ -1180,8 +1182,10 @@ static void refloat_thd(void *arg) {
                     apply_turntilt(d);
                     d->setpoint += d->turntilt_interpolated;
 
-                    torque_tilt_update(&d->torque_tilt, &d->motor, &d->float_conf);
-                    atr_and_braketilt_update(&d->atr, &d->motor, &d->float_conf, d->proportional);
+                    torque_tilt_update(&d->torque_tilt, &d->motor, &d->float_conf, d->dt);
+                    atr_and_braketilt_update(
+                        &d->atr, &d->motor, &d->float_conf, d->proportional, d->dt
+                    );
                 }
 
                 // aggregated torque tilts:

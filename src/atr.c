@@ -29,6 +29,9 @@ void atr_reset(ATR *atr) {
     atr->offset = 0;
     atr->braketilt_target_offset = 0;
     atr->braketilt_offset = 0;
+
+    smooth_target_reset(&atr->smooth_target, 0.0f);
+    ema_filter_reset(&atr->ema_target, 0.0f, 0.0f);
 }
 
 void atr_configure(ATR *atr, const RefloatConfig *config) {
@@ -48,9 +51,20 @@ void atr_configure(ATR *atr, const RefloatConfig *config) {
         // incorporate negative sign into braketilt factor instead of adding it each balance loop
         atr->braketilt_factor = -(0.5f + (20 - config->braketilt_strength) / 5.0f);
     }
+
+    smooth_target_configure(
+        &atr->smooth_target,
+        &config->target_filter,
+        config->atr_on_speed,
+        config->atr_off_speed,
+        config->hertz
+    );
+    ema_filter_configure(
+        &atr->ema_target, &config->target_filter, config->atr_on_speed, config->atr_off_speed
+    );
 }
 
-static void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config) {
+static void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config, float dt) {
     float abs_torque = fabsf(motor->atr_filtered_current);
     float torque_offset = 8;  // hard-code to 8A for now (shouldn't really be changed much anyways)
     float atr_threshold = motor->braking ? config->atr_threshold_down : config->atr_threshold_up;
@@ -196,7 +210,15 @@ static void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *co
         atr_step_size /= 2;
     }
 
-    rate_limitf(&atr->offset, atr->target_offset, atr_step_size);
+    if (config->target_filter.type == SFT_NONE) {
+        rate_limitf(&atr->offset, atr->target_offset, atr_step_size);
+    } else if (config->target_filter.type == SFT_EMA3) {
+        ema_filter_update(&atr->ema_target, atr->target_offset, dt);
+        atr->offset = atr->ema_target.value;
+    } else {
+        smooth_target_update(&atr->smooth_target, atr->target_offset);
+        atr->offset = atr->smooth_target.value;
+    }
 }
 
 static void braketilt_update(
@@ -239,9 +261,9 @@ static void braketilt_update(
 }
 
 void atr_and_braketilt_update(
-    ATR *atr, const MotorData *motor, const RefloatConfig *config, float proportional
+    ATR *atr, const MotorData *motor, const RefloatConfig *config, float proportional, float dt
 ) {
-    atr_update(atr, motor, config);
+    atr_update(atr, motor, config, dt);
     braketilt_update(atr, motor, config, proportional);
 }
 
