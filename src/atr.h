@@ -19,7 +19,9 @@
 #pragma once
 
 #include "conf/datatypes.h"
+#include "ema_filter.h"
 #include "motor_data.h"
+#include "smooth_target.h"
 
 typedef struct {
     float on_step_size;
@@ -33,12 +35,15 @@ typedef struct {
     float setpoint;
 
     float speed_boost_mult;
+
+    SmoothTarget smooth_target;
+    EMAFilter ema_target;
 } ATR;
 
 void atr_reset(ATR *atr);
 
 void atr_configure(ATR *atr, const RefloatConfig *config);
 
-void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config);
+void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config, float dt);
 
 void atr_winddown(ATR *atr);
