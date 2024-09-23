@@ -147,6 +147,7 @@ typedef struct {
     float noseangling_interpolated, inputtilt_interpolated;
     float turntilt_target, turntilt_interpolated;
     float current_time;
+    float dt;
     float disengage_timer, nag_timer;
     float idle_voltage;
     float fault_angle_pitch_timer, fault_angle_roll_timer, fault_switch_timer,
@@ -154,6 +155,9 @@ typedef struct {
     float wheelslip_timer, tb_highvoltage_timer;
     float switch_warn_beep_erpm;
     bool traction_control;
+
+    SmoothTarget inputtilt_smooth_target;
+    EMAFilter inputtilt_ema_target;
 
     // PID Brake Scaling
     float kp_brake_scale;  // Used for brakes when riding forwards, and accel when riding backwards
@@ -273,6 +277,19 @@ static void reconfigure(data *d) {
     torque_tilt_configure(&d->torque_tilt, &d->float_conf);
     atr_configure(&d->atr, &d->float_conf);
     haptic_feedback_configure(&d->haptic_feedback, &d->float_conf.haptic);
+    smooth_target_configure(
+        &d->inputtilt_smooth_target,
+        &d->float_conf.target_filter,
+        d->float_conf.inputtilt_speed,
+        d->float_conf.inputtilt_speed,
+        d->float_conf.hertz
+    );
+    ema_filter_configure(
+        &d->inputtilt_ema_target,
+        &d->float_conf.target_filter,
+        d->float_conf.inputtilt_speed,
+        d->float_conf.inputtilt_speed
+    );
 }
 
 static void configure(data *d) {
@@ -282,6 +299,7 @@ static void configure(data *d) {
 
     // This timer is used to determine how long the board has been disengaged / idle
     d->disengage_timer = d->current_time;
+    d->dt = 1.0f / d->float_conf.hertz;
 
     // Loop time in microseconds
     d->loop_time_us = 1e6 / d->float_conf.hertz;
@@ -395,6 +413,9 @@ static void reset_runtime_vars(data *d) {
     // RC Move:
     d->rc_steps = 0;
     d->rc_current = 0;
+
+    smooth_target_reset(&d->inputtilt_smooth_target, 0.0f);
+    ema_filter_reset(&d->inputtilt_ema_target, 0.0f, 0.0f);
 }
 
 static void engage(data *d) {
@@ -863,36 +884,44 @@ static void apply_inputtilt(data *d) {
     // Invert for Darkride
     input_tiltback_target *= (d->state.darkride ? -1.0 : 1.0);
 
-    float input_tiltback_target_diff = input_tiltback_target - d->inputtilt_interpolated;
-
-    // Smoothen changes in tilt angle by ramping the step size
-    const float smoothing_factor = 0.02;
-
-    // Within X degrees of Target Angle, start ramping down step size
-    if (fabsf(input_tiltback_target_diff) < 2.0f) {
-        // Target step size is reduced the closer to center you are (needed for smoothly
-        // transitioning away from center)
-        d->inputtilt_ramped_step_size =
-            (smoothing_factor * d->inputtilt_step_size * (input_tiltback_target_diff / 2)) +
-            ((1 - smoothing_factor) * d->inputtilt_ramped_step_size);
-        // Linearly ramped down step size is provided as minimum to prevent overshoot
-        float centering_step_size =
-            fminf(
-                fabsf(d->inputtilt_ramped_step_size),
-                fabsf(input_tiltback_target_diff / 2) * d->inputtilt_step_size
-            ) *
-            sign(input_tiltback_target_diff);
-        if (fabsf(input_tiltback_target_diff) < fabsf(centering_step_size)) {
-            d->inputtilt_interpolated = input_tiltback_target;
-        } else {
-            d->inputtilt_interpolated += centering_step_size;
-        }
+    if (d->float_conf.target_filter.it_type == SFT_EMA3) {
+        ema_filter_update(&d->inputtilt_ema_target, input_tiltback_target, d->dt);
+        d->inputtilt_interpolated = d->inputtilt_ema_target.value;
+    } else if (d->float_conf.target_filter.it_type == SFT_THREE_STAGE) {
+        smooth_target_update(&d->inputtilt_smooth_target, input_tiltback_target);
+        d->inputtilt_interpolated = d->inputtilt_smooth_target.value;
     } else {
-        // Ramp up step size until the configured tilt speed is reached
-        d->inputtilt_ramped_step_size =
-            (smoothing_factor * d->inputtilt_step_size * sign(input_tiltback_target_diff)) +
-            ((1 - smoothing_factor) * d->inputtilt_ramped_step_size);
-        d->inputtilt_interpolated += d->inputtilt_ramped_step_size;
+        float input_tiltback_target_diff = input_tiltback_target - d->inputtilt_interpolated;
+
+        // Smoothen changes in tilt angle by ramping the step size
+        const float smoothing_factor = 0.02;
+
+        // Within X degrees of Target Angle, start ramping down step size
+        if (fabsf(input_tiltback_target_diff) < 2.0f) {
+            // Target step size is reduced the closer to center you are (needed for smoothly
+            // transitioning away from center)
+            d->inputtilt_ramped_step_size =
+                (smoothing_factor * d->inputtilt_step_size * (input_tiltback_target_diff / 2)) +
+                ((1 - smoothing_factor) * d->inputtilt_ramped_step_size);
+            // Linearly ramped down step size is provided as minimum to prevent overshoot
+            float centering_step_size =
+                fminf(
+                    fabsf(d->inputtilt_ramped_step_size),
+                    fabsf(input_tiltback_target_diff / 2) * d->inputtilt_step_size
+                ) *
+                sign(input_tiltback_target_diff);
+            if (fabsf(input_tiltback_target_diff) < fabsf(centering_step_size)) {
+                d->inputtilt_interpolated = input_tiltback_target;
+            } else {
+                d->inputtilt_interpolated += centering_step_size;
+            }
+        } else {
+            // Ramp up step size until the configured tilt speed is reached
+            d->inputtilt_ramped_step_size =
+                (smoothing_factor * d->inputtilt_step_size * sign(input_tiltback_target_diff)) +
+                ((1 - smoothing_factor) * d->inputtilt_ramped_step_size);
+            d->inputtilt_interpolated += d->inputtilt_ramped_step_size;
+        }
     }
 }
 
@@ -1174,8 +1203,10 @@ static void refloat_thd(void *arg) {
                     apply_turntilt(d);
                     d->setpoint += d->turntilt_interpolated;
 
-                    torque_tilt_update(&d->torque_tilt, &d->motor, &d->float_conf);
-                    atr_and_braketilt_update(&d->atr, &d->motor, &d->float_conf, d->proportional);
+                    torque_tilt_update(&d->torque_tilt, &d->motor, &d->float_conf, d->dt);
+                    atr_and_braketilt_update(
+                        &d->atr, &d->motor, &d->float_conf, d->proportional, d->dt
+                    );
                 }
 
                 // aggregated torque tilts:

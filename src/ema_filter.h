@@ -1,4 +1,3 @@
-// Copyright 2022 Dado Mista
 // Copyright 2024 Lukas Hrazky
 //
 // This file is part of the Refloat VESC package.
@@ -19,26 +18,23 @@
 #pragma once
 
 #include "conf/datatypes.h"
-#include "ema_filter.h"
-#include "motor_data.h"
-#include "smooth_target.h"
 
 typedef struct {
-    float on_step_size;
-    float off_step_size;
+    CfgTargetFilter cfg;
+    float on_speed;
+    float off_speed;
 
-    float offset;  // rate-limited setpoint offset
+    float value;
+    float speed;
+    float accel;
+    float k;
+    float dt;
+} EMAFilter;
 
-    SmoothTarget smooth_target;
-    EMAFilter ema_target;
-} TorqueTilt;
-
-void torque_tilt_reset(TorqueTilt *tt);
-
-void torque_tilt_configure(TorqueTilt *tt, const RefloatConfig *config);
-
-void torque_tilt_update(
-    TorqueTilt *tt, const MotorData *motor, const RefloatConfig *config, float dt
+void ema_filter_configure(
+    EMAFilter *filter, const CfgTargetFilter *cfg, float on_speed, float off_speed
 );
 
-void torque_tilt_winddown(TorqueTilt *tt);
+void ema_filter_reset(EMAFilter *filter, float value, float speed);
+
+void ema_filter_update(EMAFilter *filter, float target, float dt);
