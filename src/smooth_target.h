@@ -1,4 +1,3 @@
-// Copyright 2022 Dado Mista
 // Copyright 2024 Lukas Hrazky
 //
 // This file is part of the Refloat VESC package.
@@ -19,31 +18,21 @@
 #pragma once
 
 #include "conf/datatypes.h"
-#include "ema_filter.h"
-#include "motor_data.h"
-#include "smooth_target.h"
 
 typedef struct {
-    float on_step_size;
-    float off_step_size;
-    float ramped_step_size;
+    CfgTargetFilter cfg;
+    float on_speed;
+    float off_speed;
 
-    float accel_diff;
-    float speed_boost;
+    float v1;
+    float step;
+    float value;
+} SmoothTarget;
 
-    float target;
-    float setpoint;
+void smooth_target_configure(
+    SmoothTarget *st, const CfgTargetFilter *cfg, float on_speed, float off_speed, float hertz
+);
 
-    float speed_boost_mult;
+void smooth_target_reset(SmoothTarget *st, float value);
 
-    SmoothTarget smooth_target;
-    EMAFilter ema_target;
-} ATR;
-
-void atr_reset(ATR *atr);
-
-void atr_configure(ATR *atr, const RefloatConfig *config);
-
-void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config, float dt);
-
-void atr_winddown(ATR *atr);
+void smooth_target_update(SmoothTarget *st, float target);
