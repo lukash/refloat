@@ -1,4 +1,4 @@
-// Copyright 2025 Lukas Hrazky
+// Copyright 2024 Lukas Hrazky
 //
 // This file is part of the Refloat VESC package.
 //
@@ -18,27 +18,23 @@
 #pragma once
 
 #include "conf/datatypes.h"
-#include "ema_filter.h"
-#include "smooth_target.h"
-#include "state.h"
 
 typedef struct {
-    float step_size;
+    CfgTargetFilter cfg;
+    float on_speed;
+    float off_speed;
 
-    float input;
-    float ramped_step_size;
-    SmoothTarget smooth_target;
-    EMAFilter ema_target;
+    float value;
+    float speed;
+    float accel;
+    float k;
+    float dt;
+} EMAFilter;
 
-    float setpoint;
-} Remote;
+void ema_filter_configure(
+    EMAFilter *filter, const CfgTargetFilter *cfg, float on_speed, float off_speed
+);
 
-void remote_init(Remote *remote);
+void ema_filter_reset(EMAFilter *filter, float value, float speed);
 
-void remote_reset(Remote *remote);
-
-void remote_configure(Remote *remote, const RefloatConfig *config);
-
-void remote_input(Remote *remote, const RefloatConfig *config);
-
-void remote_update(Remote *remote, const State *state, const RefloatConfig *config, float dt);
+void ema_filter_update(EMAFilter *filter, float target, float dt);

@@ -172,6 +172,8 @@ static void configure(Data *d) {
 
     lcm_configure(&d->lcm, &d->float_conf.leds);
 
+    d->dt = 1.0f / d->float_conf.hertz;
+
     // Loop time in microseconds
     d->loop_time_us = 1e6 / d->float_conf.hertz;
 
@@ -796,7 +798,7 @@ static void refloat_thd(void *arg) {
             );
             d->setpoint = d->setpoint_target_interpolated;
 
-            remote_update(&d->remote, &d->state, &d->float_conf);
+            remote_update(&d->remote, &d->state, &d->float_conf, d->dt);
             d->setpoint += d->remote.setpoint;
 
             if (!d->state.darkride) {
@@ -820,8 +822,8 @@ static void refloat_thd(void *arg) {
                     );
                     d->setpoint += d->turn_tilt.setpoint;
 
-                    torque_tilt_update(&d->torque_tilt, &d->motor, &d->float_conf);
-                    atr_update(&d->atr, &d->motor, &d->float_conf);
+                    torque_tilt_update(&d->torque_tilt, &d->motor, &d->float_conf, d->dt);
+                    atr_update(&d->atr, &d->motor, &d->float_conf, d->dt);
                     brake_tilt_update(
                         &d->brake_tilt,
                         &d->motor,
