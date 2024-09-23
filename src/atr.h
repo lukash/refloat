@@ -19,7 +19,9 @@
 #pragma once
 
 #include "conf/datatypes.h"
+#include "ema_filter.h"
 #include "motor_data.h"
+#include "smooth_target.h"
 
 // includes braketilt as well, at least for now
 typedef struct {
@@ -37,6 +39,9 @@ typedef struct {
     float braketilt_factor;
     float braketilt_target_offset;  // braketilt setpoint target offset
     float braketilt_offset;  // rate-limited braketilt setpoint offset
+
+    SmoothTarget smooth_target;
+    EMAFilter ema_target;
 } ATR;
 
 void atr_reset(ATR *atr);
@@ -44,7 +49,7 @@ void atr_reset(ATR *atr);
 void atr_configure(ATR *atr, const RefloatConfig *config);
 
 void atr_and_braketilt_update(
-    ATR *atr, const MotorData *motor, const RefloatConfig *config, float proportional
+    ATR *atr, const MotorData *motor, const RefloatConfig *config, float proportional, float dt
 );
 
 void atr_and_braketilt_winddown(ATR *atr);

@@ -24,14 +24,33 @@
 
 void torque_tilt_reset(TorqueTilt *tt) {
     tt->offset = 0;
+
+    smooth_target_reset(&tt->smooth_target, 0.0f);
+    ema_filter_reset(&tt->ema_target, 0.0f, 0.0f);
 }
 
 void torque_tilt_configure(TorqueTilt *tt, const RefloatConfig *config) {
     tt->on_step_size = config->torquetilt_on_speed / config->hertz;
     tt->off_step_size = config->torquetilt_off_speed / config->hertz;
+
+    smooth_target_configure(
+        &tt->smooth_target,
+        &config->target_filter,
+        config->torquetilt_on_speed,
+        config->torquetilt_off_speed,
+        config->hertz
+    );
+    ema_filter_configure(
+        &tt->ema_target,
+        &config->target_filter,
+        config->torquetilt_on_speed,
+        config->torquetilt_off_speed
+    );
 }
 
-void torque_tilt_update(TorqueTilt *tt, const MotorData *motor, const RefloatConfig *config) {
+void torque_tilt_update(
+    TorqueTilt *tt, const MotorData *motor, const RefloatConfig *config, float dt
+) {
     float strength =
         motor->braking ? config->torquetilt_strength_regen : config->torquetilt_strength;
 
@@ -60,7 +79,15 @@ void torque_tilt_update(TorqueTilt *tt, const MotorData *motor, const RefloatCon
         step_size /= 2;
     }
 
-    rate_limitf(&tt->offset, target_offset, step_size);
+    if (config->target_filter.tt_type == SFT_NONE) {
+        rate_limitf(&tt->offset, target_offset, step_size);
+    } else if (config->target_filter.tt_type == SFT_EMA3) {
+        ema_filter_update(&tt->ema_target, target_offset, dt);
+        tt->offset = tt->ema_target.value;
+    } else {
+        smooth_target_update(&tt->smooth_target, target_offset);
+        tt->offset = tt->smooth_target.value;
+    }
 }
 
 void torque_tilt_winddown(TorqueTilt *tt) {
