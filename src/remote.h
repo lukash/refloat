@@ -18,6 +18,8 @@
 #pragma once
 
 #include "conf/datatypes.h"
+#include "ema_filter.h"
+#include "smooth_target.h"
 #include "state.h"
 
 typedef struct {
@@ -25,6 +27,8 @@ typedef struct {
 
     float input;
     float ramped_step_size;
+    SmoothTarget smooth_target;
+    EMAFilter ema_target;
 
     float setpoint;
 } Remote;
@@ -35,4 +39,4 @@ void remote_configure(Remote *remote, const RefloatConfig *config);
 
 void remote_input(Remote *remote, const RefloatConfig *config);
 
-void remote_update(Remote *remote, const State *state, const RefloatConfig *config);
+void remote_update(Remote *remote, const State *state, const RefloatConfig *config, float dt);
