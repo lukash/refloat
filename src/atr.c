@@ -27,6 +27,9 @@ void atr_reset(ATR *atr) {
     atr->speed_boost = 0;
     atr->target = 0;
     atr->setpoint = 0;
+
+    smooth_target_reset(&atr->smooth_target, 0.0f);
+    ema_filter_reset(&atr->ema_target, 0.0f, 0.0f);
 }
 
 void atr_configure(ATR *atr, const RefloatConfig *config) {
@@ -39,9 +42,20 @@ void atr_configure(ATR *atr, const RefloatConfig *config) {
         // most +6000 for 100% speed boost
         atr->speed_boost_mult = 1.0f / ((fabsf(config->atr_speed_boost) - 0.4f) * 5000 + 3000.0f);
     }
+
+    smooth_target_configure(
+        &atr->smooth_target,
+        &config->target_filter,
+        config->atr_on_speed,
+        config->atr_off_speed,
+        config->hertz
+    );
+    ema_filter_configure(
+        &atr->ema_target, &config->target_filter, config->atr_on_speed, config->atr_off_speed
+    );
 }
 
-void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config) {
+void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config, float dt) {
     float abs_torque = fabsf(motor->filt_current);
     float torque_offset = 8;  // hard-code to 8A for now (shouldn't really be changed much anyways)
     float atr_threshold = motor->braking ? config->atr_threshold_down : config->atr_threshold_up;
@@ -184,7 +198,15 @@ void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config) {
         atr_step_size /= 2;
     }
 
-    rate_limitf(&atr->setpoint, atr->target, atr_step_size);
+    if (config->target_filter.type == SFT_NONE) {
+        rate_limitf(&atr->setpoint, atr->target, atr_step_size);
+    } else if (config->target_filter.type == SFT_EMA3) {
+        ema_filter_update(&atr->ema_target, atr->target, dt);
+        atr->setpoint = atr->ema_target.value;
+    } else {
+        smooth_target_update(&atr->smooth_target, atr->target);
+        atr->setpoint = atr->smooth_target.value;
+    }
 }
 
 void atr_winddown(ATR *atr) {

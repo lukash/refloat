@@ -179,6 +179,23 @@ typedef struct {
     float current_threshold;
 } CfgHapticFeedback;
 
+typedef enum {
+    SFT_NONE = 0,
+    SFT_THREE_STAGE,
+    SFT_EMA3
+} TargetFilterType;
+
+typedef struct {
+    TargetFilterType type;
+    TargetFilterType tt_type;
+    TargetFilterType it_type;
+    float alpha;
+    float in_alpha_away;
+    float in_alpha_back;
+    float ema_half_time;
+    float ema_return_multiplier;
+} CfgTargetFilter;
+
 typedef struct {
     bool disabled;
     float kp;
@@ -188,6 +205,7 @@ typedef struct {
     float mahony_kp_roll;
     float kp_brake;
     float kp2_brake;
+    CfgTargetFilter target_filter;
     uint16_t hertz;
     float fault_pitch;
     float fault_roll;

@@ -19,19 +19,26 @@
 #pragma once
 
 #include "conf/datatypes.h"
+#include "ema_filter.h"
 #include "motor_data.h"
+#include "smooth_target.h"
 
 typedef struct {
     float on_step_size;
     float off_step_size;
 
     float setpoint;
+
+    SmoothTarget smooth_target;
+    EMAFilter ema_target;
 } TorqueTilt;
 
 void torque_tilt_reset(TorqueTilt *tt);
 
 void torque_tilt_configure(TorqueTilt *tt, const RefloatConfig *config);
 
-void torque_tilt_update(TorqueTilt *tt, const MotorData *motor, const RefloatConfig *config);
+void torque_tilt_update(
+    TorqueTilt *tt, const MotorData *motor, const RefloatConfig *config, float dt
+);
 
 void torque_tilt_winddown(TorqueTilt *tt);

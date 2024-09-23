@@ -217,6 +217,190 @@ p, li { white-space: pre-wrap; }
             <suffix>x</suffix>
             <vTx>7</vTx>
         </kp2_brake>
+        <target_filter.type>
+            <longName>Filter Type</longName>
+            <type>4</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The Target Filter to use for ATR.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Torque Tilt and Input Tilt have their own options for the type of filter, but the particular filter configuration is always taken from the options below this one, because we are limited in memory available to store all the options. Since each filter has its own separate configuration, you can set a different type to each kind of Tilt to be able to have them configured differently.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;None&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;No target filtering (old, baseline behavior).&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;3-Stage&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;A custom filter designed to allow fine control of the different transitions.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The 3-Stage Alpha option controls the overall smoothness and primarily the shape out of transitions to a new target. The 3-Stage In Alpha Away From Zero controls the shape into a transition towards an away-from-zero setpoint and 3-Stage Alpha Back To Zero controls the shape into a transition when returning back to zero.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The idea here is you want to transition into extreme setpoints slower, but return from them faster to avoid unwanted lingering tiltback.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The 3-Stage filter has a property that during vibrations, it (counterintuitively) goes to zero slower than it goes up. In practice this means when going over chunk, the setpoint will raise up slightly, which can be very beneficial.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Known drawbacks: During curb nudges, the filter tends to shoot up the nose as you nudge up the curb.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;3rd Order EMA&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;A 3rd order EMA (Exponential Moving Average) which approximates the Gaussian filter. This is a standard filter with predictable results which shouldn't have any side-effects.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;It's defined by the EMA Half Time config option. You can use the EMA Return Multiplier to speed up transitions returning to zero (e.g. a value of 2 means the returning to zero transitions will be two times faster).&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Note: The 3-Stage and 3rd Order EMA ignore Tiltback Response Boost and Tiltback Transition Boost for ATR.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_TARGET_FILTER_TYPE</cDefine>
+            <valInt>1</valInt>
+            <enumNames>None</enumNames>
+            <enumNames>3-Stage</enumNames>
+            <enumNames>3rd Order EMA</enumNames>
+        </target_filter.type>
+        <target_filter.tt_type>
+            <longName>Filter Type (config on ATR tab)</longName>
+            <type>4</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The Target Filter to use for Torque Tilt.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The particular filter's configuration is taken from the ATR tab. See description of ATR -&amp;gt; Filter Type for more info on the available filters.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_TARGET_FILTER_TT_TYPE</cDefine>
+            <valInt>1</valInt>
+            <enumNames>None</enumNames>
+            <enumNames>3-Stage</enumNames>
+            <enumNames>3rd Order EMA</enumNames>
+        </target_filter.tt_type>
+        <target_filter.it_type>
+            <longName>Filter Type (config on ATR tab)</longName>
+            <type>4</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The Target Filter to use for Input Tilt.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The particular filter's configuration is taken from the ATR tab. See description of ATR -&amp;gt; Filter Type for more info on the available filters.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_TARGET_FILTER_IT_TYPE</cDefine>
+            <valInt>0</valInt>
+            <enumNames>Nico's</enumNames>
+            <enumNames>3-Stage</enumNames>
+            <enumNames>3rd Order EMA</enumNames>
+        </target_filter.it_type>
+        <target_filter.alpha>
+            <longName>3-Stage Alpha</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The base alpha for the 3-Stage filter, defines the overall curve shape. Higher numbers mean less filtering, recommended between 0.01 (quite strong filtering) and 0.02 (low amount of filtering). You can use the 3-Stage In Alpha Away From Zero and 3-Stage In Alpha Back To Zero options to futher slow down the &amp;quot;ease into&amp;quot; away from and back to zero transitions.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_target_filter_ALPHA</cDefine>
+            <editorDecimalsDouble>3</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>1</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.002</stepDouble>
+            <valDouble>0.01</valDouble>
+            <vTxDoubleScale>10000</vTxDoubleScale>
+            <suffix></suffix>
+            <vTx>7</vTx>
+        </target_filter.alpha>
+        <target_filter.in_alpha_away>
+            <longName>3-Stage In Alpha Away From Zero</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Ease in alpha for the 3-Stage filter when going away from zero into a tiltback. Higher numbers mean less filtering, recommended between 0.2 (minimal filtering) and 0.002 (heavy filtering). Set it to 1 to eliminate any slowdown of the transition.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_TARGET_FILTER_IN_ALPHA_AWAY</cDefine>
+            <editorDecimalsDouble>3</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>1</maxDouble>
+            <minDouble>0.001</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.001</stepDouble>
+            <valDouble>0.004</valDouble>
+            <vTxDoubleScale>10000</vTxDoubleScale>
+            <suffix></suffix>
+            <vTx>7</vTx>
+        </target_filter.in_alpha_away>
+        <target_filter.in_alpha_back>
+            <longName>3-Stage In Alpha Back To Zero</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Ease in alpha for the 3-Stage filter when going towards zero from a tiltback. Higher numbers mean less filtering, recommended between 0.2 (minimal filtering) and 0.01 (heavy filtering). Set it to 1 to eliminate any slowdown of the transition.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_TARGET_FILTER_IN_ALPHA_BACK</cDefine>
+            <editorDecimalsDouble>3</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>1</maxDouble>
+            <minDouble>0.001</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.01</stepDouble>
+            <valDouble>0.05</valDouble>
+            <vTxDoubleScale>10000</vTxDoubleScale>
+            <suffix></suffix>
+            <vTx>7</vTx>
+        </target_filter.in_alpha_back>
+        <target_filter.ema_half_time>
+            <longName>EMA Half Time</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The Half Time (time it takes to reach half the target value) of the 3rd order EMA filter, which approximates a Gaussian filter. Higher values mean more filtering.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;(equivalent of alpha of the 3-Stage and other filters, it's intended to present a number that's easier to understand)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_EMA_FILTER_HALF_TIME</cDefine>
+            <editorDecimalsDouble>0</editorDecimalsDouble>
+            <editorScale>1000</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>2</maxDouble>
+            <minDouble>0.02</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>20</stepDouble>
+            <valDouble>0.36</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix> ms</suffix>
+            <vTx>7</vTx>
+        </target_filter.ema_half_time>
+        <target_filter.ema_return_multiplier>
+            <longName>EMA Return Multiplier</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Multiplier for the return to zero filter speed of the 3rd order EMA filter. E.g. setting this to 2 will mean the change back to zero will be twice as fast than going away from zero.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_EMA_FILTER_RETURN_MULTIPLIER</cDefine>
+            <editorDecimalsDouble>2</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>10</maxDouble>
+            <minDouble>0.1</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.2</stepDouble>
+            <valDouble>2</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix></suffix>
+            <vTx>7</vTx>
+        </target_filter.ema_return_multiplier>
         <hertz>
             <longName>Loop Hertz</longName>
             <type>2</type>
@@ -1697,8 +1881,8 @@ p, li { white-space: pre-wrap; }
             <maxDouble>100</maxDouble>
             <minDouble>0</minDouble>
             <showDisplay>0</showDisplay>
-            <stepDouble>0.5</stepDouble>
-            <valDouble>5</valDouble>
+            <stepDouble>2</stepDouble>
+            <valDouble>20</valDouble>
             <vTxDoubleScale>100</vTxDoubleScale>
             <suffix> °/s</suffix>
             <vTx>7</vTx>
@@ -1719,8 +1903,8 @@ p, li { white-space: pre-wrap; }
             <maxDouble>100</maxDouble>
             <minDouble>0</minDouble>
             <showDisplay>0</showDisplay>
-            <stepDouble>0.5</stepDouble>
-            <valDouble>3</valDouble>
+            <stepDouble>2</stepDouble>
+            <valDouble>20</valDouble>
             <vTxDoubleScale>100</vTxDoubleScale>
             <suffix> °/s</suffix>
             <vTx>7</vTx>
@@ -1938,8 +2122,8 @@ p, li { white-space: pre-wrap; }
             <maxDouble>100</maxDouble>
             <minDouble>0</minDouble>
             <showDisplay>0</showDisplay>
-            <stepDouble>0.5</stepDouble>
-            <valDouble>4</valDouble>
+            <stepDouble>2</stepDouble>
+            <valDouble>20</valDouble>
             <vTxDoubleScale>100</vTxDoubleScale>
             <suffix> °/s</suffix>
             <vTx>7</vTx>
@@ -1960,8 +2144,8 @@ p, li { white-space: pre-wrap; }
             <maxDouble>100</maxDouble>
             <minDouble>0</minDouble>
             <showDisplay>0</showDisplay>
-            <stepDouble>0.5</stepDouble>
-            <valDouble>3</valDouble>
+            <stepDouble>2</stepDouble>
+            <valDouble>20</valDouble>
             <vTxDoubleScale>100</vTxDoubleScale>
             <suffix> °/s</suffix>
             <vTx>7</vTx>
@@ -3649,6 +3833,14 @@ p, li { white-space: pre-wrap; }
         <ser>mahony_kp_roll</ser>
         <ser>kp_brake</ser>
         <ser>kp2_brake</ser>
+        <ser>target_filter.type</ser>
+        <ser>target_filter.tt_type</ser>
+        <ser>target_filter.it_type</ser>
+        <ser>target_filter.alpha</ser>
+        <ser>target_filter.in_alpha_away</ser>
+        <ser>target_filter.in_alpha_back</ser>
+        <ser>target_filter.ema_half_time</ser>
+        <ser>target_filter.ema_return_multiplier</ser>
         <ser>hertz</ser>
         <ser>fault_pitch</ser>
         <ser>fault_roll</ser>
@@ -3840,6 +4032,7 @@ p, li { white-space: pre-wrap; }
                     <param>torquetilt_strength_regen</param>
                     <param>torquetilt_start_current</param>
                     <param>torquetilt_angle_limit</param>
+                    <param>target_filter.tt_type</param>
                     <param>torquetilt_on_speed</param>
                     <param>torquetilt_off_speed</param>
                     <param>::sep::Turn Tiltback</param>
@@ -3862,6 +4055,13 @@ p, li { white-space: pre-wrap; }
                     <param>atr_threshold_up</param>
                     <param>atr_threshold_down</param>
                     <param>atr_speed_boost</param>
+                    <param>::sep::Filtering (also for Torque Tilt and Input Tilt)</param>
+                    <param>target_filter.type</param>
+                    <param>target_filter.alpha</param>
+                    <param>target_filter.in_alpha_away</param>
+                    <param>target_filter.in_alpha_back</param>
+                    <param>target_filter.ema_half_time</param>
+                    <param>target_filter.ema_return_multiplier</param>
                     <param>::sep::Nose Angling</param>
                     <param>atr_angle_limit</param>
                     <param>atr_on_speed</param>
@@ -3958,6 +4158,7 @@ p, li { white-space: pre-wrap; }
                     <param>inputtilt_remote_type</param>
                     <param>inputtilt_angle_limit</param>
                     <param>inputtilt_speed</param>
+                    <param>target_filter.it_type</param>
                     <param>inputtilt_invert_throttle</param>
                     <param>inputtilt_deadband</param>
                     <param>::sep::Remote Throttle</param>
