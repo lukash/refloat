@@ -853,16 +853,6 @@ static void calculate_setpoint_target(data *d) {
     }
 }
 
-static void calculate_setpoint_interpolated(data *d) {
-    if (d->setpoint_target_interpolated != d->setpoint_target) {
-        rate_limitf(
-            &d->setpoint_target_interpolated,
-            d->setpoint_target,
-            get_setpoint_adjustment_step_size(d)
-        );
-    }
-}
-
 static void apply_noseangling(data *d) {
     // Nose angle adjustment, add variable then constant tiltback
     float noseangling_target = 0;
@@ -1223,7 +1213,12 @@ static void refloat_thd(void *arg) {
 
             // Calculate setpoint and interpolation
             calculate_setpoint_target(d);
-            calculate_setpoint_interpolated(d);
+            rate_limitf(
+                &d->setpoint_target_interpolated,
+                d->setpoint_target,
+                get_setpoint_adjustment_step_size(d)
+            );
+
             d->setpoint = d->setpoint_target_interpolated;
             apply_inputtilt(d);  // Allow Input Tilt for Darkride
             if (!d->state.darkride) {
