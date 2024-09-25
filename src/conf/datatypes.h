@@ -86,6 +86,8 @@ typedef enum {
     LED_MODE_STROBE,
     LED_MODE_KNIGHT_RIDER,
     LED_MODE_FELONY,
+    LED_MODE_RAINBOW_CYCLE,
+    LED_MODE_RAINBOW_FADE,
 } LedMode;
 
 typedef enum {
