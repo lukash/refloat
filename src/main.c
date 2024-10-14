@@ -1012,10 +1012,8 @@ static void apply_turntilt(data *d) {
 }
 
 static void brake(data *d) {
-    // Brake timeout logic
-    float brake_timeout_length = 1;  // Brake Timeout hard-coded to 1s
-    if (d->motor.abs_erpm_smooth > ERPM_MOVING_THRESHOLD || d->brake_timeout == 0) {
-        d->brake_timeout = d->current_time + brake_timeout_length;
+    if (d->motor.abs_erpm_smooth > ERPM_MOVING_THRESHOLD) {
+        d->brake_timeout = d->current_time + 1.0f;
     }
 
     // Reset VESC Firmware safety timeout
