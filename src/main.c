@@ -95,6 +95,8 @@ typedef struct {
     int beep_reason;
     bool beeper_enabled;
 
+    bool parking_brake_active;
+
     Leds leds;
 
     // Lights Control Module - external lights control
@@ -1012,16 +1014,27 @@ static void apply_turntilt(data *d) {
 static void brake(data *d) {
     // Brake timeout logic
     float brake_timeout_length = 1;  // Brake Timeout hard-coded to 1s
-    if (d->motor.abs_erpm > ERPM_MOVING_THRESHOLD || d->brake_timeout == 0) {
+    if (d->motor.abs_erpm_smooth > ERPM_MOVING_THRESHOLD || d->brake_timeout == 0) {
         d->brake_timeout = d->current_time + brake_timeout_length;
     }
 
-    if (d->brake_timeout != 0 && d->current_time > d->brake_timeout) {
+    // Reset VESC Firmware safety timeout
+    VESC_IF->timeout_reset();
+
+    // BEWARE: Some sort of motor control must always be set before returning from this function
+    if (d->current_time > d->brake_timeout) {
+        // Release the motor by setting zero current
+        VESC_IF->mc_set_current(0.0f);
         return;
     }
 
-    VESC_IF->timeout_reset();
-    VESC_IF->mc_set_brake_current(d->float_conf.brake_current);
+    if (d->parking_brake_active && d->motor.abs_erpm < 2000) {
+        // Duty Cycle mode has better holding power (phase-shorting on 6.05)
+        VESC_IF->mc_set_duty(0);
+    } else {
+        // Use brake current over certain ERPM to avoid MOSFET overcurrent
+        VESC_IF->mc_set_brake_current(d->float_conf.brake_current);
+    }
 }
 
 static void set_current(data *d, float current) {
@@ -1083,6 +1096,15 @@ static void refloat_thd(void *arg) {
         VESC_IF->imu_get_gyro(d->gyro);
 
         motor_data_update(&d->motor);
+
+        if (d->float_conf.parking_brake_mode == PARKING_BRAKE_ALWAYS ||
+            (d->float_conf.parking_brake_mode == PARKING_BRAKE_IDLE &&
+             d->state.state != STATE_RUNNING && d->motor.abs_erpm_smooth < 50)) {
+            d->parking_brake_active = true;
+        } else if (d->float_conf.parking_brake_mode == PARKING_BRAKE_NEVER ||
+                   d->state.state == STATE_RUNNING) {
+            d->parking_brake_active = false;
+        }
 
         bool remote_connected = false;
         float servo_val = 0;
