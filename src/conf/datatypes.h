@@ -28,6 +28,12 @@ typedef enum {
 } FLOAT_INPUTTILT_REMOTE_TYPE;
 
 typedef enum {
+    PARKING_BRAKE_ALWAYS = 0,
+    PARKING_BRAKE_IDLE,
+    PARKING_BRAKE_NEVER
+} ParkingBrakeMode;
+
+typedef enum {
     LED_TYPE_NONE = 0,
     LED_TYPE_RGB,
     LED_TYPE_RGBW,
@@ -201,6 +207,7 @@ typedef struct {
     bool startup_simplestart_enabled;
     bool startup_pushstart_enabled;
     bool startup_dirtylandings_enabled;
+    ParkingBrakeMode parking_brake_mode;
     float brake_current;
     float ki_limit;
     float booster_angle;
