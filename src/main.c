@@ -1443,6 +1443,10 @@ static void refloat_thd(void *arg) {
                 }
                 d->enable_upside_down = false;
                 d->state.darkride = false;
+                if (d->state.mode == MODE_FLYWHEEL) {
+                    // Same strategy for flywheel: exit mode after 10 seconds of idle
+                    flywheel_stop(d);
+                }
             }
             if (d->current_time - d->disengage_timer > 1800) {  // alert user after 30 minutes
                 if (d->current_time - d->nag_timer > 60) {  // beep every 60 seconds
