@@ -870,48 +870,33 @@ static void apply_inputtilt(data *d) {
     float input_tiltback_target_diff = input_tiltback_target - d->inputtilt_interpolated;
 
     // Smoothen changes in tilt angle by ramping the step size
-    if (d->float_conf.inputtilt_smoothing_factor > 0) {
-        float smoothing_factor = 0.02;
-        for (int i = 1; i < d->float_conf.inputtilt_smoothing_factor; i++) {
-            smoothing_factor /= 2;
-        }
+    const float smoothing_factor = 0.02;
 
-        // Sets the angle away from Target that step size begins ramping down
-        float smooth_center_window = 1.5 + (0.5 * d->float_conf.inputtilt_smoothing_factor);
-
-        // Within X degrees of Target Angle, start ramping down step size
-        if (fabsf(input_tiltback_target_diff) < smooth_center_window) {
-            // Target step size is reduced the closer to center you are (needed for smoothly
-            // transitioning away from center)
-            d->inputtilt_ramped_step_size =
-                (smoothing_factor * d->inputtilt_step_size * (input_tiltback_target_diff / 2)) +
-                ((1 - smoothing_factor) * d->inputtilt_ramped_step_size);
-            // Linearly ramped down step size is provided as minimum to prevent overshoot
-            float centering_step_size =
-                fminf(
-                    fabsf(d->inputtilt_ramped_step_size),
-                    fabsf(input_tiltback_target_diff / 2) * d->inputtilt_step_size
-                ) *
-                sign(input_tiltback_target_diff);
-            if (fabsf(input_tiltback_target_diff) < fabsf(centering_step_size)) {
-                d->inputtilt_interpolated = input_tiltback_target;
-            } else {
-                d->inputtilt_interpolated += centering_step_size;
-            }
-        } else {
-            // Ramp up step size until the configured tilt speed is reached
-            d->inputtilt_ramped_step_size =
-                (smoothing_factor * d->inputtilt_step_size * sign(input_tiltback_target_diff)) +
-                ((1 - smoothing_factor) * d->inputtilt_ramped_step_size);
-            d->inputtilt_interpolated += d->inputtilt_ramped_step_size;
-        }
-    } else {
-        // Constant step size; no smoothing
-        if (fabsf(input_tiltback_target_diff) < d->inputtilt_step_size) {
+    // Within X degrees of Target Angle, start ramping down step size
+    if (fabsf(input_tiltback_target_diff) < 2.0f) {
+        // Target step size is reduced the closer to center you are (needed for smoothly
+        // transitioning away from center)
+        d->inputtilt_ramped_step_size =
+            (smoothing_factor * d->inputtilt_step_size * (input_tiltback_target_diff / 2)) +
+            ((1 - smoothing_factor) * d->inputtilt_ramped_step_size);
+        // Linearly ramped down step size is provided as minimum to prevent overshoot
+        float centering_step_size =
+            fminf(
+                fabsf(d->inputtilt_ramped_step_size),
+                fabsf(input_tiltback_target_diff / 2) * d->inputtilt_step_size
+            ) *
+            sign(input_tiltback_target_diff);
+        if (fabsf(input_tiltback_target_diff) < fabsf(centering_step_size)) {
             d->inputtilt_interpolated = input_tiltback_target;
         } else {
-            d->inputtilt_interpolated += d->inputtilt_step_size * sign(input_tiltback_target_diff);
+            d->inputtilt_interpolated += centering_step_size;
         }
+    } else {
+        // Ramp up step size until the configured tilt speed is reached
+        d->inputtilt_ramped_step_size =
+            (smoothing_factor * d->inputtilt_step_size * sign(input_tiltback_target_diff)) +
+            ((1 - smoothing_factor) * d->inputtilt_ramped_step_size);
+        d->inputtilt_interpolated += d->inputtilt_ramped_step_size;
     }
 
     d->setpoint += d->inputtilt_interpolated;
