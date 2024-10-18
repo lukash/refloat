@@ -106,8 +106,6 @@ typedef struct {
         inputtilt_ramped_step_size, inputtilt_step_size;
     float mc_max_temp_fet, mc_max_temp_mot;
     float mc_current_max, mc_current_min;
-    float surge_angle, surge_angle2, surge_angle3, surge_adder;
-    bool surge_enable;
     bool duty_beeping;
 
     // IMU data for the balancing filter
@@ -160,7 +158,6 @@ typedef struct {
     bool is_upside_down_started;  // dark ride has been engaged
     bool enable_upside_down;  // dark ride mode is enabled (10 seconds after fault)
     float delay_upside_down_fault;
-    float darkride_setpoint_correction;
 
     // Feature: Flywheel
     bool flywheel_abort;
@@ -281,11 +278,6 @@ static void configure(data *d) {
     d->noseangling_step_size = d->float_conf.noseangling_speed / d->float_conf.hertz;
     d->inputtilt_step_size = d->float_conf.inputtilt_speed / d->float_conf.hertz;
 
-    d->surge_angle = d->float_conf.surge_angle;
-    d->surge_angle2 = d->float_conf.surge_angle * 2;
-    d->surge_angle3 = d->float_conf.surge_angle * 3;
-    d->surge_enable = d->surge_angle > 0;
-
     // Feature: Stealthy start vs normal start (noticeable click when engaging) - 0-20A
     d->start_counter_clicks_max = 3;
     // Feature: Soft Start
@@ -325,7 +317,6 @@ static void configure(data *d) {
 
     // Feature: Darkride
     d->enable_upside_down = false;
-    d->darkride_setpoint_correction = d->float_conf.dark_pitch_offset;
 
     // Feature: Flywheel
     d->flywheel_abort = false;
@@ -379,7 +370,6 @@ static void reset_vars(data *d) {
     d->integral = 0;
     d->softstart_pid_limit = 0;
     d->startup_pitch_tolerance = d->float_conf.startup_pitch_tolerance;
-    d->surge_adder = 0;
 
     // PID Brake Scaling
     d->kp_brake_scale = 1.0;
@@ -846,37 +836,6 @@ static void calculate_setpoint_interpolated(data *d) {
     }
 }
 
-static void add_surge(data *d) {
-    if (d->surge_enable) {
-        float surge_now = 0;
-
-        if (d->motor.duty_smooth > d->float_conf.surge_duty_start + 0.04) {
-            surge_now = d->surge_angle3;
-            beep_alert(d, 3, 1);
-        } else if (d->motor.duty_smooth > d->float_conf.surge_duty_start + 0.02) {
-            surge_now = d->surge_angle2;
-            beep_alert(d, 2, 1);
-        } else if (d->motor.duty_smooth > d->float_conf.surge_duty_start) {
-            surge_now = d->surge_angle;
-            beep_alert(d, 1, 1);
-        }
-        if (surge_now >= d->surge_adder) {
-            // kick in instantly
-            d->surge_adder = surge_now;
-        } else {
-            // release less harshly
-            d->surge_adder = d->surge_adder * 0.98 + surge_now * 0.02;
-        }
-
-        // Add surge angle to setpoint
-        if (d->motor.erpm > 0) {
-            d->setpoint += d->surge_adder;
-        } else {
-            d->setpoint -= d->surge_adder;
-        }
-    }
-}
-
 static void apply_noseangling(data *d) {
     // Nose angle adjustment, add variable then constant tiltback
     float noseangling_target = 0;
@@ -911,48 +870,33 @@ static void apply_inputtilt(data *d) {
     float input_tiltback_target_diff = input_tiltback_target - d->inputtilt_interpolated;
 
     // Smoothen changes in tilt angle by ramping the step size
-    if (d->float_conf.inputtilt_smoothing_factor > 0) {
-        float smoothing_factor = 0.02;
-        for (int i = 1; i < d->float_conf.inputtilt_smoothing_factor; i++) {
-            smoothing_factor /= 2;
-        }
+    const float smoothing_factor = 0.02;
 
-        // Sets the angle away from Target that step size begins ramping down
-        float smooth_center_window = 1.5 + (0.5 * d->float_conf.inputtilt_smoothing_factor);
-
-        // Within X degrees of Target Angle, start ramping down step size
-        if (fabsf(input_tiltback_target_diff) < smooth_center_window) {
-            // Target step size is reduced the closer to center you are (needed for smoothly
-            // transitioning away from center)
-            d->inputtilt_ramped_step_size =
-                (smoothing_factor * d->inputtilt_step_size * (input_tiltback_target_diff / 2)) +
-                ((1 - smoothing_factor) * d->inputtilt_ramped_step_size);
-            // Linearly ramped down step size is provided as minimum to prevent overshoot
-            float centering_step_size =
-                fminf(
-                    fabsf(d->inputtilt_ramped_step_size),
-                    fabsf(input_tiltback_target_diff / 2) * d->inputtilt_step_size
-                ) *
-                sign(input_tiltback_target_diff);
-            if (fabsf(input_tiltback_target_diff) < fabsf(centering_step_size)) {
-                d->inputtilt_interpolated = input_tiltback_target;
-            } else {
-                d->inputtilt_interpolated += centering_step_size;
-            }
-        } else {
-            // Ramp up step size until the configured tilt speed is reached
-            d->inputtilt_ramped_step_size =
-                (smoothing_factor * d->inputtilt_step_size * sign(input_tiltback_target_diff)) +
-                ((1 - smoothing_factor) * d->inputtilt_ramped_step_size);
-            d->inputtilt_interpolated += d->inputtilt_ramped_step_size;
-        }
-    } else {
-        // Constant step size; no smoothing
-        if (fabsf(input_tiltback_target_diff) < d->inputtilt_step_size) {
+    // Within X degrees of Target Angle, start ramping down step size
+    if (fabsf(input_tiltback_target_diff) < 2.0f) {
+        // Target step size is reduced the closer to center you are (needed for smoothly
+        // transitioning away from center)
+        d->inputtilt_ramped_step_size =
+            (smoothing_factor * d->inputtilt_step_size * (input_tiltback_target_diff / 2)) +
+            ((1 - smoothing_factor) * d->inputtilt_ramped_step_size);
+        // Linearly ramped down step size is provided as minimum to prevent overshoot
+        float centering_step_size =
+            fminf(
+                fabsf(d->inputtilt_ramped_step_size),
+                fabsf(input_tiltback_target_diff / 2) * d->inputtilt_step_size
+            ) *
+            sign(input_tiltback_target_diff);
+        if (fabsf(input_tiltback_target_diff) < fabsf(centering_step_size)) {
             d->inputtilt_interpolated = input_tiltback_target;
         } else {
-            d->inputtilt_interpolated += d->inputtilt_step_size * sign(input_tiltback_target_diff);
+            d->inputtilt_interpolated += centering_step_size;
         }
+    } else {
+        // Ramp up step size until the configured tilt speed is reached
+        d->inputtilt_ramped_step_size =
+            (smoothing_factor * d->inputtilt_step_size * sign(input_tiltback_target_diff)) +
+            ((1 - smoothing_factor) * d->inputtilt_ramped_step_size);
+        d->inputtilt_interpolated += d->inputtilt_ramped_step_size;
     }
 
     d->setpoint += d->inputtilt_interpolated;
@@ -1109,9 +1053,6 @@ static void refloat_thd(void *arg) {
             } else if (d->roll > 200) {
                 d->roll -= 360;
             }
-        } else if (d->state.darkride) {
-            d->balance_pitch = -d->balance_pitch - d->darkride_setpoint_correction;
-            d->pitch = -d->pitch - d->darkride_setpoint_correction;
         }
 
         VESC_IF->imu_get_gyro(d->gyro);
@@ -1239,7 +1180,6 @@ static void refloat_thd(void *arg) {
             calculate_setpoint_target(d);
             calculate_setpoint_interpolated(d);
             d->setpoint = d->setpoint_target_interpolated;
-            add_surge(d);
             apply_inputtilt(d);  // Allow Input Tilt for Darkride
             if (!d->state.darkride) {
                 // in case of wheelslip, don't change torque tilts, instead slightly decrease each
@@ -1844,23 +1784,8 @@ static void cmd_handtest(data *d, unsigned char *cfg) {
 }
 
 static void cmd_experiment(data *d, unsigned char *cfg) {
-    d->surge_angle = cfg[0];
-    d->surge_angle /= 10;
-    d->float_conf.surge_duty_start = cfg[1];
-    d->float_conf.surge_duty_start /= 100;
-    if ((d->surge_angle > 1) || (d->float_conf.surge_duty_start < 0.85)) {
-        d->float_conf.surge_duty_start = 0.85;
-        d->surge_angle = 0.6;
-    } else {
-        d->surge_enable = true;
-        beep_alert(d, 2, 0);
-    }
-    d->surge_angle2 = d->surge_angle * 2;
-    d->surge_angle3 = d->surge_angle * 3;
-
-    if (d->surge_angle == 0) {
-        d->surge_enable = false;
-    }
+    unused(d);
+    unused(cfg);
 }
 
 static void cmd_booster(data *d, unsigned char *cfg) {
@@ -2016,7 +1941,6 @@ static void cmd_tune_defaults(data *d) {
     d->float_conf.ki = CFG_DFLT_KI;
     d->float_conf.mahony_kp = CFG_DFLT_MAHONY_KP;
     d->float_conf.mahony_kp_roll = CFG_DFLT_MAHONY_KP_ROLL;
-    d->float_conf.bf_accel_confidence_decay = CFG_DFLT_BF_ACCEL_CONFIDENCE_DECAY;
     d->float_conf.kp_brake = CFG_DFLT_KP_BRAKE;
     d->float_conf.kp2_brake = CFG_DFLT_KP2_BRAKE;
     d->float_conf.ki_limit = CFG_DFLT_KI_LIMIT;
@@ -2086,6 +2010,7 @@ static void cmd_tune_defaults(data *d) {
  * cmd_runtime_tune_tilt: Extract settings from 20byte message but don't write to EEPROM!
  */
 static void cmd_runtime_tune_tilt(data *d, unsigned char *cfg, int len) {
+    unused(len);
     unsigned int flags = cfg[0];
     bool duty_beep = flags & 0x1;
     d->float_conf.is_dutybeep_enabled = duty_beep;
@@ -2098,20 +2023,7 @@ static void cmd_runtime_tune_tilt(data *d, unsigned char *cfg, int len) {
     d->float_conf.tiltback_duty_angle = (float) cfg[3] / 10.0;
     d->float_conf.tiltback_duty_speed = (float) cfg[4] / 10.0;
 
-    if (len >= 6) {
-        float surge_duty_start = cfg[5];
-        if (surge_duty_start > 0) {
-            d->float_conf.surge_duty_start = surge_duty_start / 100.0;
-            d->float_conf.surge_angle = (float) cfg[6] / 20.0;
-            d->surge_angle = d->float_conf.surge_angle;
-            d->surge_angle2 = d->float_conf.surge_angle * 2;
-            d->surge_angle3 = d->float_conf.surge_angle * 3;
-            d->surge_enable = d->surge_angle > 0;
-        }
-        beep_alert(d, 1, 1);
-    } else {
-        beep_alert(d, 3, 0);
-    }
+    beep_alert(d, 3, 0);
 }
 
 /**
@@ -2270,7 +2182,6 @@ static void cmd_flywheel_toggle(data *d, unsigned char *cfg, int len) {
         }
         d->float_conf.fault_delay_pitch = 50;  // 50ms delay should help filter out IMU noise
         d->float_conf.fault_delay_roll = 50;  // 50ms delay should help filter out IMU noise
-        d->surge_enable = false;
 
         // Aggressive P with some D (aka Rate-P) for Mahony kp=0.3
         d->float_conf.kp = 8.0;
@@ -2488,7 +2399,7 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
         return;
     }
     case COMMAND_TUNE_TILT: {
-        if (len >= 10) {
+        if (len >= 7) {
             cmd_runtime_tune_tilt(d, &buffer[2], len - 2);
         } else {
             log_error("Command data length incorrect: %u", len);

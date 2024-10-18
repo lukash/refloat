@@ -149,17 +149,14 @@ typedef struct {
 } CfgHardware;
 
 typedef struct {
-    float version;
     bool disabled;
     float kp;
     float ki;
     float kp2;
     float mahony_kp;
     float mahony_kp_roll;
-    float bf_accel_confidence_decay;
     float kp_brake;
     float kp2_brake;
-    uint16_t kp_brake_erpm;
     uint16_t hertz;
     float fault_pitch;
     float fault_roll;
@@ -192,7 +189,6 @@ typedef struct {
     FLOAT_INPUTTILT_REMOTE_TYPE inputtilt_remote_type;
     float inputtilt_speed;
     float inputtilt_angle_limit;
-    uint16_t inputtilt_smoothing_factor;
     bool inputtilt_invert_throttle;
     float inputtilt_deadband;
     float remote_throttle_current_max;
@@ -242,13 +238,9 @@ typedef struct {
     uint16_t turntilt_erpm_boost;
     uint16_t turntilt_erpm_boost_end;
     int turntilt_yaw_aggregate;
-    float dark_pitch_offset;
     bool is_beeper_enabled;
     bool is_dutybeep_enabled;
     bool is_footbeep_enabled;
-    bool is_surgebeep_enabled;
-    float surge_duty_start;
-    float surge_angle;
 
     CfgLeds leds;
     CfgHardware hardware;

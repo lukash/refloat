@@ -28,7 +28,6 @@ typedef struct {
     float acc_mag;
 
     // parameters
-    float acc_confidence_decay;
     float kp_pitch;
     float kp_roll;
     float kp_yaw;
