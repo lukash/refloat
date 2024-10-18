@@ -160,7 +160,6 @@ typedef struct {
     bool is_upside_down_started;  // dark ride has been engaged
     bool enable_upside_down;  // dark ride mode is enabled (10 seconds after fault)
     float delay_upside_down_fault;
-    float darkride_setpoint_correction;
 
     // Feature: Flywheel
     bool flywheel_abort;
@@ -325,7 +324,6 @@ static void configure(data *d) {
 
     // Feature: Darkride
     d->enable_upside_down = false;
-    d->darkride_setpoint_correction = d->float_conf.dark_pitch_offset;
 
     // Feature: Flywheel
     d->flywheel_abort = false;
@@ -1109,9 +1107,6 @@ static void refloat_thd(void *arg) {
             } else if (d->roll > 200) {
                 d->roll -= 360;
             }
-        } else if (d->state.darkride) {
-            d->balance_pitch = -d->balance_pitch - d->darkride_setpoint_correction;
-            d->pitch = -d->pitch - d->darkride_setpoint_correction;
         }
 
         VESC_IF->imu_get_gyro(d->gyro);
