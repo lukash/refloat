@@ -242,9 +242,6 @@ typedef struct {
     bool is_beeper_enabled;
     bool is_dutybeep_enabled;
     bool is_footbeep_enabled;
-    bool is_surgebeep_enabled;
-    float surge_duty_start;
-    float surge_angle;
 
     CfgLeds leds;
     CfgHardware hardware;

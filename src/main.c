@@ -106,8 +106,6 @@ typedef struct {
         inputtilt_ramped_step_size, inputtilt_step_size;
     float mc_max_temp_fet, mc_max_temp_mot;
     float mc_current_max, mc_current_min;
-    float surge_angle, surge_angle2, surge_angle3, surge_adder;
-    bool surge_enable;
     bool duty_beeping;
 
     // IMU data for the balancing filter
@@ -280,11 +278,6 @@ static void configure(data *d) {
     d->noseangling_step_size = d->float_conf.noseangling_speed / d->float_conf.hertz;
     d->inputtilt_step_size = d->float_conf.inputtilt_speed / d->float_conf.hertz;
 
-    d->surge_angle = d->float_conf.surge_angle;
-    d->surge_angle2 = d->float_conf.surge_angle * 2;
-    d->surge_angle3 = d->float_conf.surge_angle * 3;
-    d->surge_enable = d->surge_angle > 0;
-
     // Feature: Stealthy start vs normal start (noticeable click when engaging) - 0-20A
     d->start_counter_clicks_max = 3;
     // Feature: Soft Start
@@ -377,7 +370,6 @@ static void reset_vars(data *d) {
     d->integral = 0;
     d->softstart_pid_limit = 0;
     d->startup_pitch_tolerance = d->float_conf.startup_pitch_tolerance;
-    d->surge_adder = 0;
 
     // PID Brake Scaling
     d->kp_brake_scale = 1.0;
@@ -844,37 +836,6 @@ static void calculate_setpoint_interpolated(data *d) {
     }
 }
 
-static void add_surge(data *d) {
-    if (d->surge_enable) {
-        float surge_now = 0;
-
-        if (d->motor.duty_smooth > d->float_conf.surge_duty_start + 0.04) {
-            surge_now = d->surge_angle3;
-            beep_alert(d, 3, 1);
-        } else if (d->motor.duty_smooth > d->float_conf.surge_duty_start + 0.02) {
-            surge_now = d->surge_angle2;
-            beep_alert(d, 2, 1);
-        } else if (d->motor.duty_smooth > d->float_conf.surge_duty_start) {
-            surge_now = d->surge_angle;
-            beep_alert(d, 1, 1);
-        }
-        if (surge_now >= d->surge_adder) {
-            // kick in instantly
-            d->surge_adder = surge_now;
-        } else {
-            // release less harshly
-            d->surge_adder = d->surge_adder * 0.98 + surge_now * 0.02;
-        }
-
-        // Add surge angle to setpoint
-        if (d->motor.erpm > 0) {
-            d->setpoint += d->surge_adder;
-        } else {
-            d->setpoint -= d->surge_adder;
-        }
-    }
-}
-
 static void apply_noseangling(data *d) {
     // Nose angle adjustment, add variable then constant tiltback
     float noseangling_target = 0;
@@ -1234,7 +1195,6 @@ static void refloat_thd(void *arg) {
             calculate_setpoint_target(d);
             calculate_setpoint_interpolated(d);
             d->setpoint = d->setpoint_target_interpolated;
-            add_surge(d);
             apply_inputtilt(d);  // Allow Input Tilt for Darkride
             if (!d->state.darkride) {
                 // in case of wheelslip, don't change torque tilts, instead slightly decrease each
@@ -1839,23 +1799,8 @@ static void cmd_handtest(data *d, unsigned char *cfg) {
 }
 
 static void cmd_experiment(data *d, unsigned char *cfg) {
-    d->surge_angle = cfg[0];
-    d->surge_angle /= 10;
-    d->float_conf.surge_duty_start = cfg[1];
-    d->float_conf.surge_duty_start /= 100;
-    if ((d->surge_angle > 1) || (d->float_conf.surge_duty_start < 0.85)) {
-        d->float_conf.surge_duty_start = 0.85;
-        d->surge_angle = 0.6;
-    } else {
-        d->surge_enable = true;
-        beep_alert(d, 2, 0);
-    }
-    d->surge_angle2 = d->surge_angle * 2;
-    d->surge_angle3 = d->surge_angle * 3;
-
-    if (d->surge_angle == 0) {
-        d->surge_enable = false;
-    }
+    unused(d);
+    unused(cfg);
 }
 
 static void cmd_booster(data *d, unsigned char *cfg) {
@@ -2080,6 +2025,7 @@ static void cmd_tune_defaults(data *d) {
  * cmd_runtime_tune_tilt: Extract settings from 20byte message but don't write to EEPROM!
  */
 static void cmd_runtime_tune_tilt(data *d, unsigned char *cfg, int len) {
+    unused(len);
     unsigned int flags = cfg[0];
     bool duty_beep = flags & 0x1;
     d->float_conf.is_dutybeep_enabled = duty_beep;
@@ -2092,20 +2038,7 @@ static void cmd_runtime_tune_tilt(data *d, unsigned char *cfg, int len) {
     d->float_conf.tiltback_duty_angle = (float) cfg[3] / 10.0;
     d->float_conf.tiltback_duty_speed = (float) cfg[4] / 10.0;
 
-    if (len >= 6) {
-        float surge_duty_start = cfg[5];
-        if (surge_duty_start > 0) {
-            d->float_conf.surge_duty_start = surge_duty_start / 100.0;
-            d->float_conf.surge_angle = (float) cfg[6] / 20.0;
-            d->surge_angle = d->float_conf.surge_angle;
-            d->surge_angle2 = d->float_conf.surge_angle * 2;
-            d->surge_angle3 = d->float_conf.surge_angle * 3;
-            d->surge_enable = d->surge_angle > 0;
-        }
-        beep_alert(d, 1, 1);
-    } else {
-        beep_alert(d, 3, 0);
-    }
+    beep_alert(d, 3, 0);
 }
 
 /**
@@ -2264,7 +2197,6 @@ static void cmd_flywheel_toggle(data *d, unsigned char *cfg, int len) {
         }
         d->float_conf.fault_delay_pitch = 50;  // 50ms delay should help filter out IMU noise
         d->float_conf.fault_delay_roll = 50;  // 50ms delay should help filter out IMU noise
-        d->surge_enable = false;
 
         // Aggressive P with some D (aka Rate-P) for Mahony kp=0.3
         d->float_conf.kp = 8.0;
@@ -2482,7 +2414,7 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
         return;
     }
     case COMMAND_TUNE_TILT: {
-        if (len >= 10) {
+        if (len >= 7) {
             cmd_runtime_tune_tilt(d, &buffer[2], len - 2);
         } else {
             log_error("Command data length incorrect: %u", len);
