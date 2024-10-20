@@ -115,7 +115,6 @@ typedef struct {
     float tiltback_variable, tiltback_variable_max_erpm, noseangling_step_size,
         inputtilt_ramped_step_size, inputtilt_step_size;
     float mc_max_temp_fet, mc_max_temp_mot;
-    float mc_current_max, mc_current_min;
     bool duty_beeping;
 
     // IMU data for the balancing filter
@@ -301,10 +300,6 @@ static void configure(data *d) {
 
     d->mc_max_temp_fet = VESC_IF->get_cfg_float(CFG_PARAM_l_temp_fet_start) - 3;
     d->mc_max_temp_mot = VESC_IF->get_cfg_float(CFG_PARAM_l_temp_motor_start) - 3;
-
-    d->mc_current_max = VESC_IF->get_cfg_float(CFG_PARAM_l_current_max);
-    // min current is a positive value here!
-    d->mc_current_min = fabsf(VESC_IF->get_cfg_float(CFG_PARAM_l_current_min));
 
     d->max_duty_with_margin = VESC_IF->get_cfg_float(CFG_PARAM_l_max_duty) - 0.1;
 
@@ -1117,9 +1112,7 @@ static void refloat_thd(void *arg) {
             beep_off(d, false);
         }
 
-        haptic_feedback_update(
-            &d->haptic_feedback, &d->state, d->motor.duty_cycle, d->current_time
-        );
+        haptic_feedback_update(&d->haptic_feedback, &d->state, &d->motor, d->current_time);
 
         // Control Loop State Logic
         switch (d->state.state) {
@@ -1307,7 +1300,7 @@ static void refloat_thd(void *arg) {
             }
 
             // Current Limiting!
-            float current_limit = d->motor.braking ? d->mc_current_min : d->mc_current_max;
+            float current_limit = d->motor.braking ? d->motor.current_min : d->motor.current_max;
             if (fabsf(new_pid_value) > current_limit) {
                 new_pid_value = sign(new_pid_value) * current_limit;
             }
@@ -1744,7 +1737,7 @@ static void cmd_handtest(data *d, unsigned char *cfg) {
     d->state.mode = cfg[0] ? MODE_HANDTEST : MODE_NORMAL;
     if (d->state.mode == MODE_HANDTEST) {
         // temporarily reduce max currents to make hand test safer / gentler
-        d->mc_current_max = d->mc_current_min = 7;
+        d->motor.current_max = d->motor.current_min = 7;
         // Disable I-term and all tune modifiers and tilts
         d->float_conf.ki = 0;
         d->float_conf.kp_brake = 1;
@@ -1873,13 +1866,13 @@ static void cmd_runtime_tune(data *d, unsigned char *cfg, int len) {
         d->float_conf.braketilt_lingering = h2;
 
         split(cfg[11], &h1, &h2);
-        d->mc_current_max = h1 * 5 + 55;
-        d->mc_current_min = h2 * 5 + 55;
+        d->motor.current_max = h1 * 5 + 55;
+        d->motor.current_min = h2 * 5 + 55;
         if (h1 == 0) {
-            d->mc_current_max = VESC_IF->get_cfg_float(CFG_PARAM_l_current_max);
+            d->motor.current_max = VESC_IF->get_cfg_float(CFG_PARAM_l_current_max);
         }
         if (h2 == 0) {
-            d->mc_current_min = fabsf(VESC_IF->get_cfg_float(CFG_PARAM_l_current_min));
+            d->motor.current_min = fabsf(VESC_IF->get_cfg_float(CFG_PARAM_l_current_min));
         }
 
         d->turntilt_step_size = d->float_conf.turntilt_speed / d->float_conf.hertz;
@@ -2198,7 +2191,7 @@ static void cmd_flywheel_toggle(data *d, unsigned char *cfg, int len) {
         // Limit speed of wheel and limit amps
         VESC_IF->set_cfg_float(CFG_PARAM_l_min_erpm + 100, -6000);
         VESC_IF->set_cfg_float(CFG_PARAM_l_max_erpm + 100, 6000);
-        d->mc_current_max = d->mc_current_min = 40;
+        d->motor.current_max = d->motor.current_min = 40;
 
         // d->flywheel_allow_abort = cfg[5];
 

@@ -42,6 +42,12 @@ void motor_data_configure(MotorData *m, float frequency) {
     } else {
         m->atr_filter_enabled = false;
     }
+
+    // min motor current is a positive value here!
+    m->current_min = fabsf(VESC_IF->get_cfg_float(CFG_PARAM_l_current_min));
+    m->current_max = VESC_IF->get_cfg_float(CFG_PARAM_l_current_max);
+    m->battery_current_min = VESC_IF->get_cfg_float(CFG_PARAM_l_in_current_min);
+    m->battery_current_max = VESC_IF->get_cfg_float(CFG_PARAM_l_in_current_max);
 }
 
 void motor_data_update(MotorData *m) {
@@ -67,4 +73,15 @@ void motor_data_update(MotorData *m) {
     } else {
         m->atr_filtered_current = m->current;
     }
+
+    m->battery_current += 0.01f * (VESC_IF->mc_get_tot_current_in_filtered() - m->battery_current);
+}
+
+float motor_data_get_current_saturation(const MotorData *m) {
+    float motor_saturation =
+        fabsf(m->atr_filtered_current) / (m->braking ? m->current_min : m->current_max);
+    float battery_saturation = m->battery_current /
+        (m->battery_current < 0 ? m->battery_current_min : m->battery_current_max);
+
+    return max(motor_saturation, battery_saturation);
 }
