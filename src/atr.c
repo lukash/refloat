@@ -48,6 +48,9 @@ void atr_configure(ATR *atr, const RefloatConfig *config) {
         // incorporate negative sign into braketilt factor instead of adding it each balance loop
         atr->braketilt_factor = -(0.5f + (20 - config->braketilt_strength) / 5.0f);
     }
+
+    // Allows smoothing of Tilt
+    atr->ramped_step_size = 0;
 }
 
 static void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config) {
@@ -133,34 +136,34 @@ static void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *co
     // Key to keeping the board level and consistent is to determine the appropriate step size!
     // We want to react quickly to changes, but we don't want to overreact to glitches in
     // acceleration data or trigger oscillations...
-    float atr_step_size = 0;
+    float step_size = 0;
     const float TT_BOOST_MARGIN = 2;
     if (forward) {
         if (atr->offset < 0) {
             // downhill
             if (atr->offset < atr->target_offset) {
                 // to avoid oscillations we go down slower than we go up
-                atr_step_size = atr->off_step_size;
+                step_size = atr->off_step_size;
                 if ((atr->target_offset > 0) &&
                     ((atr->target_offset - atr->offset) > TT_BOOST_MARGIN) &&
                     motor->abs_erpm > 2000) {
                     // boost the speed if tilt target has reversed (and if there's a significant
                     // margin)
-                    atr_step_size = atr->off_step_size * config->atr_transition_boost;
+                    step_size = atr->off_step_size * config->atr_transition_boost;
                 }
             } else {
                 // ATR is increasing
-                atr_step_size = atr->on_step_size * response_boost;
+                step_size = atr->on_step_size * response_boost;
             }
         } else {
             // uphill or other heavy resistance (grass, mud, etc)
             if ((atr->target_offset > -3) && (atr->offset > atr->target_offset)) {
                 // ATR winding down (current ATR is bigger than the target)
                 // normal wind down case: to avoid oscillations we go down slower than we go up
-                atr_step_size = atr->off_step_size;
+                step_size = atr->off_step_size;
             } else {
                 // standard case of increasing ATR
-                atr_step_size = atr->on_step_size * response_boost;
+                step_size = atr->on_step_size * response_boost;
             }
         }
     } else {
@@ -168,35 +171,36 @@ static void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *co
             // downhill
             if (atr->offset > atr->target_offset) {
                 // to avoid oscillations we go down slower than we go up
-                atr_step_size = atr->off_step_size;
+                step_size = atr->off_step_size;
                 if ((atr->target_offset < 0) &&
                     ((atr->offset - atr->target_offset) > TT_BOOST_MARGIN) &&
                     motor->abs_erpm > 2000) {
                     // boost the speed if tilt target has reversed (and if there's a significant
                     // margin)
-                    atr_step_size = atr->off_step_size * config->atr_transition_boost;
+                    step_size = atr->off_step_size * config->atr_transition_boost;
                 }
             } else {
                 // ATR is increasing
-                atr_step_size = atr->on_step_size * response_boost;
+                step_size = atr->on_step_size * response_boost;
             }
         } else {
             // uphill or other heavy resistance (grass, mud, etc)
             if ((atr->target_offset < 3) && (atr->offset < atr->target_offset)) {
                 // normal wind down case: to avoid oscillations we go down slower than we go up
-                atr_step_size = atr->off_step_size;
+                step_size = atr->off_step_size;
             } else {
                 // standard case of increasing torquetilt
-                atr_step_size = atr->on_step_size * response_boost;
+                step_size = atr->on_step_size * response_boost;
             }
         }
     }
 
     if (motor->abs_erpm < 500) {
-        atr_step_size /= 2;
+        step_size /= 2;
     }
 
-    rate_limitf(&atr->offset, atr->target_offset, atr_step_size);
+    // Smoothen changes in tilt angle by ramping the step size
+    smooth_rampf(&atr->offset, &atr->ramped_step_size, atr->target_offset, step_size, 0.05, 1.5);
 }
 
 static void braketilt_update(
@@ -226,9 +230,9 @@ static void braketilt_update(
 
     float braketilt_step_size = atr->off_step_size / config->braketilt_lingering;
     if (fabsf(atr->braketilt_target_offset) > fabsf(atr->braketilt_offset)) {
-        braketilt_step_size = atr->on_step_size * 1.5;
-    } else if (motor->abs_erpm < 800) {
         braketilt_step_size = atr->on_step_size;
+    } else if (motor->abs_erpm < 800) {
+        braketilt_step_size = atr->on_step_size * 0.5;
     }
 
     if (motor->abs_erpm < 500) {
