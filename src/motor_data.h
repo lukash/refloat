@@ -27,6 +27,7 @@
 typedef struct {
     float erpm;
     float abs_erpm;
+    float abs_erpm_smooth;
     float last_erpm;
     int8_t erpm_sign;
 
