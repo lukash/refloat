@@ -18,6 +18,7 @@
 #include "haptic_feedback.h"
 
 #include "conf/datatypes.h"
+#include "utils.h"
 #include "vesc_c_if.h"
 
 #include <math.h>
@@ -33,6 +34,12 @@ void haptic_feedback_init(HapticFeedback *hf) {
 void haptic_feedback_configure(HapticFeedback *hf, const RefloatConfig *cfg) {
     hf->cfg = &cfg->haptic;
     hf->duty_solid_threshold = cfg->tiltback_duty + hf->cfg->duty_solid_offset;
+
+    // pre-calculate the coefficients of the polynomial given the configured max strength speed
+    float m = hf->cfg->max_strength_speed > 0 ? hf->cfg->max_strength_speed : 1;
+    float a = hf->cfg->min_strength;
+    hf->str_poly_b = (1 - hf->cfg->strength_curvature) * (1 - a) / m;
+    hf->str_poly_c = (1 - a - hf->str_poly_b * m) / (m * m);
 }
 
 static HapticFeedbackType state_to_haptic_type(const State *state) {
@@ -88,6 +95,10 @@ static const CfgHapticTone *get_haptic_tone(const HapticFeedback *hf) {
     return 0;
 }
 
+static inline float strength_scale(const HapticFeedback *hf, float speed) {
+    return min(hf->cfg->min_strength + hf->str_poly_b * speed + hf->str_poly_c * speed * speed, 1);
+}
+
 static inline void foc_play_tone(int channel, float freq, float voltage) {
     if (!VESC_IF->foc_play_tone) {
         return;
@@ -135,8 +146,18 @@ void haptic_feedback_update(
         hf->is_playing = false;
     } else if (should_be_playing) {
         const CfgHapticTone *tone = get_haptic_tone(hf);
-        foc_play_tone(0, tone->frequency, tone->strength);
-        foc_play_tone(1, hf->cfg->vibrate.frequency, hf->cfg->vibrate.strength);
+        if (tone->strength > 0.0f) {
+            foc_play_tone(0, tone->frequency, tone->strength * strength_scale(hf, md->speed));
+        }
+
+        if (hf->cfg->vibrate.strength > 0.0f) {
+            foc_play_tone(
+                1,
+                hf->cfg->vibrate.frequency,
+                hf->cfg->vibrate.strength * strength_scale(hf, md->speed)
+            );
+        }
+
         hf->is_playing = true;
     }
 }
