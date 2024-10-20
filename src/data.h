@@ -81,7 +81,6 @@ typedef struct {
         tiltback_return_step_size;
     float tiltback_variable, tiltback_variable_max_erpm, noseangling_step_size;
     float mc_max_temp_fet, mc_max_temp_mot;
-    float mc_current_max, mc_current_min;
     bool duty_beeping;
 
     // IMU data for the balancing filter

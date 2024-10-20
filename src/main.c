@@ -196,10 +196,6 @@ static void configure(Data *d) {
     d->mc_max_temp_fet = VESC_IF->get_cfg_float(CFG_PARAM_l_temp_fet_start) - 3;
     d->mc_max_temp_mot = VESC_IF->get_cfg_float(CFG_PARAM_l_temp_motor_start) - 3;
 
-    d->mc_current_max = VESC_IF->get_cfg_float(CFG_PARAM_l_current_max);
-    // min current is a positive value here!
-    d->mc_current_min = fabsf(VESC_IF->get_cfg_float(CFG_PARAM_l_current_min));
-
     d->max_duty_with_margin = VESC_IF->get_cfg_float(CFG_PARAM_l_max_duty) - 0.05;
 
     // Feature: Reverse Stop
@@ -746,7 +742,7 @@ static void refloat_thd(void *arg) {
             beep_off(d, false);
         }
 
-        haptic_feedback_update(&d->haptic_feedback, &d->state, d->motor.duty_cycle, &d->time);
+        haptic_feedback_update(&d->haptic_feedback, &d->state, &d->motor, &d->time);
 
         // Control Loop State Logic
         switch (d->state.state) {
@@ -847,13 +843,13 @@ static void refloat_thd(void *arg) {
             // Rate P and Booster are pitch-based (as opposed to balance pitch based)
             // They require to be filtered in, otherwise they'd cause a jerk
             float pitch_based = d->pid.rate_p + d->booster.current;
-            if (d->softstart_pid_limit < d->mc_current_max) {
+            if (d->softstart_pid_limit < d->motor.current_max) {
                 pitch_based = fminf(fabs(pitch_based), d->softstart_pid_limit) * sign(pitch_based);
                 d->softstart_pid_limit += d->softstart_ramp_step_size;
             }
 
             float new_current = d->pid.p + d->pid.i + pitch_based;
-            float current_limit = d->motor.braking ? d->mc_current_min : d->mc_current_max;
+            float current_limit = d->motor.braking ? d->motor.current_min : d->motor.current_max;
             if (fabsf(new_current) > current_limit) {
                 new_current = sign(new_current) * current_limit;
             }
@@ -1305,7 +1301,7 @@ static void cmd_handtest(Data *d, unsigned char *cfg) {
     d->state.mode = cfg[0] ? MODE_HANDTEST : MODE_NORMAL;
     if (d->state.mode == MODE_HANDTEST) {
         // temporarily reduce max currents to make hand test safer / gentler
-        d->mc_current_max = d->mc_current_min = 7;
+        d->motor.current_max = d->motor.current_min = 7;
         // Disable I-term and all tune modifiers and tilts
         d->float_conf.ki = 0;
         d->float_conf.kp_brake = 1;
@@ -1434,13 +1430,13 @@ static void cmd_runtime_tune(Data *d, unsigned char *cfg, int len) {
         d->float_conf.braketilt_lingering = h2;
 
         split(cfg[11], &h1, &h2);
-        d->mc_current_max = h1 * 5 + 55;
-        d->mc_current_min = h2 * 5 + 55;
+        d->motor.current_max = h1 * 5 + 55;
+        d->motor.current_min = h2 * 5 + 55;
         if (h1 == 0) {
-            d->mc_current_max = VESC_IF->get_cfg_float(CFG_PARAM_l_current_max);
+            d->motor.current_max = VESC_IF->get_cfg_float(CFG_PARAM_l_current_max);
         }
         if (h2 == 0) {
-            d->mc_current_min = fabsf(VESC_IF->get_cfg_float(CFG_PARAM_l_current_min));
+            d->motor.current_min = fabsf(VESC_IF->get_cfg_float(CFG_PARAM_l_current_min));
         }
     }
     if (len >= 16) {
@@ -1730,7 +1726,7 @@ static void cmd_flywheel_toggle(Data *d, unsigned char *cfg, int len) {
         // Limit speed of wheel and limit amps
         VESC_IF->set_cfg_float(CFG_PARAM_l_min_erpm + 100, -6000);
         VESC_IF->set_cfg_float(CFG_PARAM_l_max_erpm + 100, 6000);
-        d->mc_current_max = d->mc_current_min = 40;
+        d->motor.current_max = d->motor.current_min = 40;
 
         // d->flywheel_allow_abort = cfg[5];
 

@@ -50,6 +50,11 @@ typedef struct {
     float mosfet_temp;
     float motor_temp;
 
+    float current_min;
+    float current_max;
+    float battery_current_min;
+    float battery_current_max;
+
     float accel_history[ACCEL_ARRAY_SIZE];
     uint8_t accel_idx;
 
@@ -62,3 +67,5 @@ void motor_data_reset(MotorData *m);
 void motor_data_configure(MotorData *m, float frequency);
 
 void motor_data_update(MotorData *m);
+
+float motor_data_get_current_saturation(const MotorData *m);
