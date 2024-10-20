@@ -88,14 +88,19 @@ static const CfgHapticTone *get_haptic_tone(const HapticFeedback *hf) {
 }
 
 void haptic_feedback_update(
-    HapticFeedback *hf, const State *state, float duty_cycle, float current_time
+    HapticFeedback *hf, const State *state, const MotorData *md, float current_time
 ) {
     if (!VESC_IF->foc_play_tone) {
         return;
     }
 
     HapticFeedbackType type_to_play = state_to_haptic_type(state);
-    if (type_to_play == HAPTIC_FEEDBACK_DUTY && duty_cycle > hf->cfg->duty_solid_threshold) {
+    if (type_to_play == HAPTIC_FEEDBACK_DUTY && md->duty_cycle > hf->cfg->duty_solid_threshold) {
+        type_to_play = HAPTIC_FEEDBACK_DUTY_CONTINUOUS;
+    }
+
+    if (type_to_play == HAPTIC_FEEDBACK_NONE && hf->cfg->current_threshold > 0.0f &&
+        motor_data_get_current_saturation(md) > hf->cfg->current_threshold) {
         type_to_play = HAPTIC_FEEDBACK_DUTY_CONTINUOUS;
     }
 

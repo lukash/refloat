@@ -165,6 +165,7 @@ typedef struct {
     CfgHapticTone error;
     CfgHapticTone vibrate;
     float duty_solid_threshold;
+    float current_threshold;
 } CfgHapticFeedback;
 
 typedef struct {
