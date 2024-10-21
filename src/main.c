@@ -1760,7 +1760,7 @@ static void cmd_send_all_data(data *d, unsigned char mode) {
             buffer_append_float16(buffer, VESC_IF->mc_get_amp_hours_charged(false), 10, &ind);
             buffer_append_float16(buffer, VESC_IF->mc_get_watt_hours(false), 1, &ind);
             buffer_append_float16(buffer, VESC_IF->mc_get_watt_hours_charged(false), 1, &ind);
-            buffer[ind++] = fmaxf(0, fminf(125, VESC_IF->mc_get_battery_level(NULL))) * 2;
+            buffer[ind++] = fmaxf(0, fminf(125, VESC_IF->mc_get_battery_level(NULL) * 100)) * 2;
             // ind = 55
         }
         if (mode >= 4) {
