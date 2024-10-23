@@ -24,6 +24,7 @@
 #include "atr.h"
 #include "charging.h"
 #include "footpad_sensor.h"
+#include "haptic_feedback.h"
 #include "lcm.h"
 #include "leds.h"
 #include "motor_data.h"
@@ -189,6 +190,8 @@ typedef struct {
     float rc_current_target;
     float rc_current;
 
+    HapticFeedback haptic_feedback;
+
     Konami flywheel_konami;
     Konami headlights_on_konami;
     Konami headlights_off_konami;
@@ -263,6 +266,7 @@ static void reconfigure(data *d) {
     balance_filter_configure(&d->balance_filter, &d->float_conf);
     torque_tilt_configure(&d->torque_tilt, &d->float_conf);
     atr_configure(&d->atr, &d->float_conf);
+    haptic_feedback_configure(&d->haptic_feedback, &d->float_conf.haptic);
 }
 
 static void configure(data *d) {
@@ -1161,6 +1165,10 @@ static void refloat_thd(void *arg) {
 
         float new_pid_value = 0;
 
+        haptic_feedback_update(
+            &d->haptic_feedback, &d->state, d->motor.duty_cycle, d->current_time
+        );
+
         // Control Loop State Logic
         switch (d->state.state) {
         case (STATE_STARTUP):
@@ -1582,6 +1590,7 @@ static void data_init(data *d) {
 
     d->odometer = VESC_IF->mc_get_odometer();
 
+    haptic_feedback_init(&d->haptic_feedback);
     lcm_init(&d->lcm, &d->float_conf.hardware.leds);
     charging_init(&d->charging);
 }
