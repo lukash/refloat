@@ -1164,6 +1164,26 @@ p, li { white-space: pre-wrap; }
             <cDefine>CFG_DFLT_DIRTYLANDINGS_ENABLED</cDefine>
             <valInt>0</valInt>
         </startup_dirtylandings_enabled>
+        <parking_brake_mode>
+            <longName>Parking Brake</longName>
+            <type>4</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Parking Brake is a strong brake keeping the motor from turning at standstill. It is applied via shorting the motor phases on Firmware 6.05+.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Possible values:&lt;/p&gt;
+&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Always: Parking Brake is applied whenever the board is not engaged and motor is turning slower than 2000 ERPM. If the motor is turning faster, Brake Current is applied.&lt;/li&gt;
+&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Idle: Parking Brake is activated once the motor stops turning after disengaging. When disengaging while the motor is running, only Brake Current is applied (allowing for tricks like ghost ride, etc.).&lt;/li&gt;
+&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Never: Only Brake Current is applied when disengaged.&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_PARKING_BRAKE_MODE</cDefine>
+            <valInt>1</valInt>
+            <enumNames>Always</enumNames>
+            <enumNames>Idle</enumNames>
+            <enumNames>Never</enumNames>
+        </parking_brake_mode>
         <brake_current>
             <longName>Brake Current</longName>
             <type>1</type>
@@ -3329,6 +3349,7 @@ p, li { white-space: pre-wrap; }
         <ser>startup_simplestart_enabled</ser>
         <ser>startup_pushstart_enabled</ser>
         <ser>startup_dirtylandings_enabled</ser>
+        <ser>parking_brake_mode</ser>
         <ser>brake_current</ser>
         <ser>ki_limit</ser>
         <ser>booster_angle</ser>
@@ -3508,6 +3529,7 @@ p, li { white-space: pre-wrap; }
                     <param>startup_pushstart_enabled</param>
                     <param>startup_dirtylandings_enabled</param>
                     <param>::sep::Holding</param>
+                    <param>parking_brake_mode</param>
                     <param>brake_current</param>
                 </subgroupParams>
             </subgroup>
