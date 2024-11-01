@@ -367,7 +367,7 @@ static void leds_headlights_switch(CfgLeds *cfg_leds, LcmData *lcm, bool headlig
     lcm_configure(lcm, cfg_leds);
 }
 
-static void reset_vars(data *d) {
+static void reset_runtime_vars(data *d) {
     motor_data_reset(&d->motor);
     atr_reset(&d->atr);
     torque_tilt_reset(&d->torque_tilt);
@@ -405,6 +405,10 @@ static void reset_vars(data *d) {
     // RC Move:
     d->rc_steps = 0;
     d->rc_current = 0;
+}
+
+static void engage(data *d) {
+    reset_runtime_vars(d);
 
     state_engage(&d->state);
 }
@@ -1160,7 +1164,7 @@ static void refloat_thd(void *arg) {
             // Disable output
             brake(d);
             if (VESC_IF->imu_startup_done()) {
-                reset_vars(d);
+                reset_runtime_vars(d);
                 // set state to READY so we need to meet start conditions to start
                 d->state.state = STATE_READY;
 
@@ -1440,7 +1444,7 @@ static void refloat_thd(void *arg) {
             // Check for valid startup position and switch state
             if (fabsf(d->balance_pitch) < d->startup_pitch_tolerance &&
                 fabsf(d->roll) < d->float_conf.startup_roll_tolerance && can_engage(d)) {
-                reset_vars(d);
+                engage(d);
                 break;
             }
             // Ignore roll for the first second while it's upside down
@@ -1448,14 +1452,14 @@ static void refloat_thd(void *arg) {
                 if ((d->current_time - d->disengage_timer) > 1) {
                     // after 1 second:
                     if (fabsf(fabsf(d->roll) - 180) < d->float_conf.startup_roll_tolerance) {
-                        reset_vars(d);
+                        engage(d);
                         break;
                     }
                 } else {
                     // 1 second or less, ignore roll-faults to allow for kick flips etc.
                     if (d->state.stop_condition != STOP_REVERSE_STOP) {
                         // don't instantly re-engage after a reverse fault!
-                        reset_vars(d);
+                        engage(d);
                         break;
                     }
                 }
@@ -1466,7 +1470,7 @@ static void refloat_thd(void *arg) {
                 if ((fabsf(d->balance_pitch) < 45) && (fabsf(d->roll) < 45)) {
                     // 45 to prevent board engaging when upright or laying sideways
                     // 45 degree tolerance is more than plenty for tricks / extreme mounts
-                    reset_vars(d);
+                    engage(d);
                     break;
                 }
             }
