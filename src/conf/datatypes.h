@@ -46,8 +46,9 @@ typedef enum {
 } LedPin;
 
 typedef enum {
-    LED_COLOR_GRB = 0,
-    LED_COLOR_RGB
+    LED_COLOR_GRBW = 0,
+    LED_COLOR_RGBW,
+    LED_COLOR_WRGB
 } LedColorOrder;
 
 typedef enum {
