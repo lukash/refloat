@@ -106,7 +106,7 @@ typedef struct {
 
     // Config values
     uint32_t loop_time_us;
-    unsigned int start_counter_clicks, start_counter_clicks_max;
+    unsigned int start_counter_clicks;
     float startup_pitch_trickmargin, startup_pitch_tolerance;
     float startup_step_size;
     float tiltback_duty_step_size, tiltback_hv_step_size, tiltback_lv_step_size,
@@ -283,8 +283,6 @@ static void configure(data *d) {
     d->noseangling_step_size = d->float_conf.noseangling_speed / d->float_conf.hertz;
     d->inputtilt_step_size = d->float_conf.inputtilt_speed / d->float_conf.hertz;
 
-    // Feature: Stealthy start vs normal start (noticeable click when engaging) - 0-20A
-    d->start_counter_clicks_max = 3;
     // Feature: Dirty Landings
     d->startup_pitch_trickmargin = d->float_conf.startup_dirtylandings_enabled ? 10 : 0;
 
@@ -398,9 +396,6 @@ static void reset_runtime_vars(data *d) {
     d->last_yaw_angle = 0;
     d->yaw_aggregate = 0;
 
-    // Feature: click on start
-    d->start_counter_clicks = d->start_counter_clicks_max;
-
     // RC Move:
     d->rc_steps = 0;
     d->rc_current = 0;
@@ -408,6 +403,7 @@ static void reset_runtime_vars(data *d) {
 
 static void engage(data *d) {
     reset_runtime_vars(d);
+    d->start_counter_clicks = 3;
 
     state_engage(&d->state);
 }
@@ -436,18 +432,18 @@ static void check_odometer(data *d) {
 /**
  *  do_rc_move: perform motor movement while board is idle
  */
-static void do_rc_move(data *d) {
+static bool do_rc_move(data *d) {
     if (d->rc_steps > 0) {
         d->rc_current = d->rc_current * 0.95 + d->rc_current_target * 0.05;
         if (d->motor.abs_erpm > 800) {
             d->rc_current = 0;
         }
-        set_current(d->rc_current);
         d->rc_steps--;
         d->rc_counter++;
         if ((d->rc_counter == 500) && (d->rc_current_target > 2)) {
             d->rc_current_target /= 2;
         }
+        return true;
     } else {
         d->rc_counter = 0;
 
@@ -459,11 +455,10 @@ static void do_rc_move(data *d) {
             servo_val *= (d->float_conf.inputtilt_invert_throttle ? -1.0 : 1.0);
             d->rc_current = d->rc_current * 0.95 +
                 (d->float_conf.remote_throttle_current_max * servo_val) * 0.05;
-            set_current(d->rc_current);
+            return true;
         } else {
             d->rc_current = 0;
-            // Disable output
-            brake(d);
+            return false;
         }
     }
 }
@@ -1163,11 +1158,12 @@ static void refloat_thd(void *arg) {
             beep_off(d, false);
         }
 
+        float current = 0.0f;
+        bool apply_current = false;
+
         // Control Loop State Logic
         switch (d->state.state) {
         case (STATE_STARTUP):
-            // Disable output
-            brake(d);
             if (VESC_IF->imu_startup_done()) {
                 reset_runtime_vars(d);
                 // set state to READY so we need to meet start conditions to start
@@ -1363,21 +1359,9 @@ static void refloat_thd(void *arg) {
                 d->pid_value = d->pid_value * 0.8 + new_pid_value * 0.2;
             }
 
-            // Output to motor
-            if (d->start_counter_clicks) {
-                // Generate alternate pulses to produce distinct "click"
-                d->start_counter_clicks--;
-                if ((d->start_counter_clicks & 0x1) == 0) {
-                    set_current(d->pid_value - d->float_conf.startup_click_current);
-                } else {
-                    set_current(d->pid_value + d->float_conf.startup_click_current);
-                }
-            } else {
-                set_current(d->pid_value);
-            }
-
+            apply_current = true;
+            current = d->pid_value;
             break;
-
         case (STATE_READY):
             if (d->state.mode == MODE_FLYWHEEL) {
                 if (d->flywheel_abort || d->footpad_sensor.state == FS_BOTH) {
@@ -1478,12 +1462,29 @@ static void refloat_thd(void *arg) {
                 }
             }
 
-            // Set RC current or maintain brake current (and keep WDT happy!)
-            do_rc_move(d);
+            apply_current = do_rc_move(d);
+            current = d->rc_current;
             break;
         case (STATE_DISABLED):
-            // no set_current, no brake_current
             break;
+        }
+
+        if (d->start_counter_clicks) {
+            apply_current = true;
+
+            // Generate alternate pulses to produce distinct "click"
+            d->start_counter_clicks--;
+            if ((d->start_counter_clicks & 0x1) == 0) {
+                current -= d->float_conf.startup_click_current;
+            } else {
+                current += d->float_conf.startup_click_current;
+            }
+        }
+
+        if (apply_current) {
+            set_current(current);
+        } else {
+            brake(d);
         }
 
         VESC_IF->sleep_us(d->loop_time_us);
