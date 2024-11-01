@@ -172,15 +172,20 @@ void led_driver_paint(LedDriver *driver, uint32_t *data, uint32_t length) {
         uint8_t g = cgamma((color >> 8) & 0xFF);
         uint8_t b = cgamma(color & 0xFF);
 
-        if (driver->color_order == LED_COLOR_GRB) {
+        if (driver->color_order == LED_COLOR_GRBW) {
             color = (g << 16) | (r << 8) | b;
         } else {
             color = (r << 16) | (g << 8) | b;
         }
 
         if (driver->bit_nr == 32) {
-            color <<= 8;
-            color |= w;
+            // White LED byte placement
+            if (driver->color_order == LED_COLOR_WRGB) {
+                color |= (w << 24);
+            } else {
+                color <<= 8;
+                color |= w;
+            }
         }
 
         for (int8_t bit = driver->bit_nr - 1; bit >= 0; --bit) {
