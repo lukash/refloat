@@ -2248,12 +2248,10 @@ static void cmd_flywheel_toggle(data *d, unsigned char *cfg, int len) {
         d->float_conf.kp2 = 0.3;
 
         if (cfg[1] > 0) {
-            d->float_conf.kp = cfg[1];
-            d->float_conf.kp /= 10;
+            d->float_conf.kp = cfg[1] * 0.1f;
         }
         if (cfg[2] > 0) {
-            d->float_conf.kp2 = cfg[2];
-            d->float_conf.kp2 /= 100;
+            d->float_conf.kp2 = cfg[2] * 0.01f;
         }
 
         d->float_conf.tiltback_duty_angle = 2;
@@ -2262,16 +2260,14 @@ static void cmd_flywheel_toggle(data *d, unsigned char *cfg, int len) {
         d->float_conf.tiltback_return_speed = 5;
 
         if (cfg[3] > 0) {
-            d->float_conf.tiltback_duty_angle = cfg[3];
-            d->float_conf.tiltback_duty_angle /= 10;
+            d->float_conf.tiltback_duty_angle = cfg[3] * 0.1f;
         }
         if (cfg[4] > 0) {
-            d->float_conf.tiltback_duty = cfg[4];
-            d->float_conf.tiltback_duty /= 100;
+            d->float_conf.tiltback_duty = cfg[4] * 0.01f;
         }
         if ((len > 6) && (cfg[6] > 1) && (cfg[6] < 100)) {
-            d->float_conf.tiltback_duty_speed = cfg[6] / 2;
-            d->float_conf.tiltback_return_speed = cfg[6] / 2;
+            d->float_conf.tiltback_duty_speed = cfg[6] * 0.5f;
+            d->float_conf.tiltback_return_speed = cfg[6] * 0.5f;
         }
         d->tiltback_duty_step_size = d->float_conf.tiltback_duty_speed / d->float_conf.hertz;
         d->tiltback_return_step_size = d->float_conf.tiltback_return_speed / d->float_conf.hertz;
