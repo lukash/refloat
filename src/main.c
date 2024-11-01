@@ -1158,8 +1158,6 @@ static void refloat_thd(void *arg) {
             beep_off(d, false);
         }
 
-        float new_pid_value = 0;
-
         // Control Loop State Logic
         switch (d->state.state) {
         case (STATE_STARTUP):
@@ -1291,22 +1289,13 @@ static void refloat_thd(void *arg) {
                 scaled_kp = d->float_conf.kp * d->kp_accel_scale;
             }
 
-            new_pid_value = scaled_kp * d->proportional + d->integral;
+            float new_pid_value = scaled_kp * d->proportional + d->integral;
 
             // Only apply Rate P and Booster after the board is centered
             if (d->state.sat != SAT_CENTERING) {
-                // Rate P (Angle + Rate, rather than Angle-Rate Cascading)
-                float rate_prop = -d->gyro[1];
-
-                float scaled_rate_p;
-                // Choose appropriate scale based on board angle (this accomodates backwards riding)
-                if (rate_prop < 0) {
-                    scaled_rate_p = d->float_conf.kp2 * d->kp2_brake_scale;
-                } else {
-                    scaled_rate_p = d->float_conf.kp2 * d->kp2_accel_scale;
-                }
-
-                d->rate_p = scaled_rate_p * rate_prop;
+                float rate = -d->gyro[1] * d->float_conf.kp2;
+                d->rate_p = (rate > 0 ? d->kp2_accel_scale : d->kp2_brake_scale) * rate;
+                new_pid_value += d->rate_p;
 
                 // Apply Booster (Now based on True Pitch)
                 // Braketilt excluded to allow for soft brakes that strengthen when near tail-drag
@@ -1353,11 +1342,7 @@ static void refloat_thd(void *arg) {
                 // No harsh changes in booster current (effective delay <= 100ms)
                 d->applied_booster_current =
                     0.01 * booster_current + 0.99 * d->applied_booster_current;
-                d->rate_p += d->applied_booster_current;
-
-                new_pid_value += d->rate_p;
-            } else {
-                d->rate_p = 0;
+                new_pid_value += d->applied_booster_current;
             }
 
             // Current Limiting!
