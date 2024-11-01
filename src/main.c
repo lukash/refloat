@@ -485,6 +485,10 @@ static float get_setpoint_adjustment_step_size(data *d) {
 }
 
 bool can_engage(const data *d) {
+    if (d->state.charging) {
+        return false;
+    }
+
     if (d->footpad_sensor.state == FS_BOTH) {
         return true;
     }
