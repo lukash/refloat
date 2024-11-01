@@ -152,7 +152,6 @@ typedef struct {
     float idle_voltage;
     float fault_angle_pitch_timer, fault_angle_roll_timer, fault_switch_timer,
         fault_switch_half_timer;
-    float motor_timeout_s;
     float brake_timeout;
     float wheelslip_timer, tb_highvoltage_timer;
     float switch_warn_beep_erpm;
@@ -197,7 +196,7 @@ typedef struct {
 } data;
 
 static void brake(data *d);
-static void set_current(data *d, float current);
+static void set_current(float current);
 static void flywheel_stop(data *d);
 static void cmd_flywheel_toggle(data *d, unsigned char *cfg, int len);
 
@@ -286,9 +285,6 @@ static void configure(data *d) {
 
     // Loop time in microseconds
     d->loop_time_us = 1e6 / d->float_conf.hertz;
-
-    // Loop time in seconds times 20 for a nice long grace period
-    d->motor_timeout_s = 20.0f / d->float_conf.hertz;
 
     d->tiltback_duty_step_size = d->float_conf.tiltback_duty_speed / d->float_conf.hertz;
     d->tiltback_hv_step_size = d->float_conf.tiltback_hv_speed / d->float_conf.hertz;
@@ -443,7 +439,7 @@ static void do_rc_move(data *d) {
         if (d->motor.abs_erpm > 800) {
             d->rc_current = 0;
         }
-        set_current(d, d->rc_current);
+        set_current(d->rc_current);
         d->rc_steps--;
         d->rc_counter++;
         if ((d->rc_counter == 500) && (d->rc_current_target > 2)) {
@@ -460,7 +456,7 @@ static void do_rc_move(data *d) {
             servo_val *= (d->float_conf.inputtilt_invert_throttle ? -1.0 : 1.0);
             d->rc_current = d->rc_current * 0.95 +
                 (d->float_conf.remote_throttle_current_max * servo_val) * 0.05;
-            set_current(d, d->rc_current);
+            set_current(d->rc_current);
         } else {
             d->rc_current = 0;
             // Disable output
@@ -1009,9 +1005,10 @@ static void brake(data *d) {
     }
 }
 
-static void set_current(data *d, float current) {
+static void set_current(float current) {
     VESC_IF->timeout_reset();
-    VESC_IF->mc_set_current_off_delay(d->motor_timeout_s);
+    // Keep modulation on for 50ms in case we request close-to-0 current
+    VESC_IF->mc_set_current_off_delay(0.05f);
     VESC_IF->mc_set_current(current);
 }
 
@@ -1360,12 +1357,12 @@ static void refloat_thd(void *arg) {
                 // Generate alternate pulses to produce distinct "click"
                 d->start_counter_clicks--;
                 if ((d->start_counter_clicks & 0x1) == 0) {
-                    set_current(d, d->pid_value - d->float_conf.startup_click_current);
+                    set_current(d->pid_value - d->float_conf.startup_click_current);
                 } else {
-                    set_current(d, d->pid_value + d->float_conf.startup_click_current);
+                    set_current(d->pid_value + d->float_conf.startup_click_current);
                 }
             } else {
-                set_current(d, d->pid_value);
+                set_current(d->pid_value);
             }
 
             break;
