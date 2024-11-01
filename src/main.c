@@ -484,7 +484,7 @@ static float get_setpoint_adjustment_step_size(data *d) {
     }
 }
 
-bool is_engaged(const data *d) {
+bool can_engage(const data *d) {
     if (d->footpad_sensor.state == FS_BOTH) {
         return true;
     }
@@ -537,7 +537,7 @@ static bool check_faults(data *d) {
                 d->fault_angle_roll_timer = d->current_time;
             }
         }
-        if (is_engaged(d)) {
+        if (can_engage(d)) {
             // allow turning it off by engaging foot sensors
             state_stop(&d->state, STOP_SWITCH_HALF);
             return true;
@@ -608,7 +608,7 @@ static bool check_faults(data *d) {
 
         // Switch partially open and stopped
         if (!d->float_conf.fault_is_dual_switch) {
-            if (!is_engaged(d) && d->motor.abs_erpm < d->float_conf.fault_adc_half_erpm) {
+            if (!can_engage(d) && d->motor.abs_erpm < d->float_conf.fault_adc_half_erpm) {
                 if ((1000.0 * (d->current_time - d->fault_switch_half_timer)) >
                     d->float_conf.fault_delay_switch_half) {
                     state_stop(&d->state, STOP_SWITCH_HALF);
@@ -1438,7 +1438,7 @@ static void refloat_thd(void *arg) {
 
             // Check for valid startup position and switch state
             if (fabsf(d->balance_pitch) < d->startup_pitch_tolerance &&
-                fabsf(d->roll) < d->float_conf.startup_roll_tolerance && is_engaged(d)) {
+                fabsf(d->roll) < d->float_conf.startup_roll_tolerance && can_engage(d)) {
                 reset_vars(d);
                 break;
             }
@@ -1461,7 +1461,7 @@ static void refloat_thd(void *arg) {
             }
             // Push-start aka dirty landing Part II
             if (d->float_conf.startup_pushstart_enabled && d->motor.abs_erpm > 1000 &&
-                is_engaged(d)) {
+                can_engage(d)) {
                 if ((fabsf(d->balance_pitch) < 45) && (fabsf(d->roll) < 45)) {
                     // 45 to prevent board engaging when upright or laying sideways
                     // 45 degree tolerance is more than plenty for tricks / extreme mounts
