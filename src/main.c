@@ -177,9 +177,6 @@ typedef struct {
     float reverse_stop_step_size, reverse_tolerance, reverse_total_erpm;
     float reverse_timer;
 
-    // Feature: Soft Start
-    float softstart_pid_limit, softstart_ramp_step_size;
-
     // Odometer
     float odo_timer;
     int odometer_dirty;
@@ -292,8 +289,6 @@ static void configure(data *d) {
 
     // Feature: Stealthy start vs normal start (noticeable click when engaging) - 0-20A
     d->start_counter_clicks_max = 3;
-    // Feature: Soft Start
-    d->softstart_ramp_step_size = (float) 100 / d->float_conf.hertz;
     // Feature: Dirty Landings
     d->startup_pitch_trickmargin = d->float_conf.startup_dirtylandings_enabled ? 10 : 0;
 
@@ -395,7 +390,6 @@ static void reset_vars(data *d) {
     d->pid_value = 0;
     d->rate_p = 0;
     d->integral = 0;
-    d->softstart_pid_limit = 0;
     d->startup_pitch_tolerance = d->float_conf.startup_pitch_tolerance;
 
     // PID Brake Scaling
@@ -1299,10 +1293,8 @@ static void refloat_thd(void *arg) {
 
             new_pid_value = scaled_kp * d->proportional + d->integral;
 
-            // Start Rate PID and Booster portion a few cycles later, after the start clicks have
-            // been emitted this keeps the start smooth and predictable
-            if (d->start_counter_clicks == 0) {
-
+            // Only apply Rate P and Booster after the board is centered
+            if (d->state.sat != SAT_CENTERING) {
                 // Rate P (Angle + Rate, rather than Angle-Rate Cascading)
                 float rate_prop = -d->gyro[1];
 
@@ -1362,11 +1354,6 @@ static void refloat_thd(void *arg) {
                 d->applied_booster_current =
                     0.01 * booster_current + 0.99 * d->applied_booster_current;
                 d->rate_p += d->applied_booster_current;
-
-                if (d->softstart_pid_limit < d->mc_current_max) {
-                    d->rate_p = fminf(fabs(d->rate_p), d->softstart_pid_limit) * sign(d->rate_p);
-                    d->softstart_pid_limit += d->softstart_ramp_step_size;
-                }
 
                 new_pid_value += d->rate_p;
             } else {
