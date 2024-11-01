@@ -1153,8 +1153,6 @@ static void refloat_thd(void *arg) {
             beep_off(d, false);
         }
 
-        float new_pid_value = 0;
-
         // Control Loop State Logic
         switch (d->state.state) {
         case (STATE_STARTUP):
@@ -1286,20 +1284,8 @@ static void refloat_thd(void *arg) {
                 scaled_kp = d->float_conf.kp * d->kp_accel_scale;
             }
 
-            new_pid_value = scaled_kp * d->proportional + d->integral;
-
-            // Rate P (Angle + Rate, rather than Angle-Rate Cascading)
-            float rate_prop = -d->gyro[1];
-
-            float scaled_rate_p;
-            // Choose appropriate scale based on board angle (this accomodates backwards riding)
-            if (rate_prop < 0) {
-                scaled_rate_p = d->float_conf.kp2 * d->kp2_brake_scale;
-            } else {
-                scaled_rate_p = d->float_conf.kp2 * d->kp2_accel_scale;
-            }
-
-            d->rate_p = scaled_rate_p * rate_prop;
+            d->rate_p = -d->gyro[1] * d->float_conf.kp2;
+            d->rate_p *= d->rate_p > 0 ? d->kp2_accel_scale : d->kp2_brake_scale;
 
             // Apply Booster (Now based on True Pitch)
             // Braketilt excluded to allow for soft brakes that strengthen when near tail-drag
@@ -1345,14 +1331,16 @@ static void refloat_thd(void *arg) {
 
             // No harsh changes in booster current (effective delay <= 100ms)
             d->applied_booster_current = 0.01 * booster_current + 0.99 * d->applied_booster_current;
-            d->rate_p += d->applied_booster_current;
 
+            // Rate P and Booster are pitch-based (as opposed to balance pitch based)
+            // They require to be filtered in, otherwise they'd cause a jerk
+            float pitch_based = d->rate_p + d->applied_booster_current;
             if (d->softstart_pid_limit < d->mc_current_max) {
-                d->rate_p = fminf(fabs(d->rate_p), d->softstart_pid_limit) * sign(d->rate_p);
+                pitch_based = fminf(fabs(pitch_based), d->softstart_pid_limit) * sign(pitch_based);
                 d->softstart_pid_limit += d->softstart_ramp_step_size;
             }
 
-            new_pid_value += d->rate_p;
+            float new_pid_value = scaled_kp * d->proportional + d->integral + pitch_based;
 
             // Current Limiting!
             float current_limit = d->motor.braking ? d->mc_current_min : d->mc_current_max;
