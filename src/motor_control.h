@@ -31,9 +31,15 @@ typedef struct {
     float brake_timeout;
     bool parking_brake_active;
 
+    uint8_t tone_ticks;
+    uint8_t tone_counter;
+    bool tone_high;
+    float tone_intensity;
+
     float brake_current;
     float click_current;
     ParkingBrakeMode parking_brake_mode;
+    uint16_t main_freq;
 } MotorControl;
 
 void motor_control_init(MotorControl *mc);
@@ -43,3 +49,9 @@ void motor_control_configure(MotorControl *mc, const RefloatConfig *config);
 void motor_control_request_current(MotorControl *mc, float current);
 
 void motor_control_apply(MotorControl *mc, float abs_erpm, RunState state, float time);
+
+void motor_control_play_tone(MotorControl *mc, uint16_t frequency, float intensity);
+
+void motor_control_stop_tone(MotorControl *mc);
+
+void motor_control_play_click(MotorControl *mc);
