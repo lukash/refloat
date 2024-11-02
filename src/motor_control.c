@@ -27,17 +27,28 @@ void motor_control_init(MotorControl *mc) {
     mc->click_counter = 0;
     mc->brake_timeout = 0.0f;
     mc->parking_brake_active = false;
+    mc->tone_ticks = 0;
+    mc->tone_counter = 0;
+    mc->tone_high = false;
+    mc->tone_intensity = 0.0f;
 }
 
 void motor_control_configure(MotorControl *mc, const RefloatConfig *config) {
     mc->brake_current = config->brake_current;
     mc->click_current = config->startup_click_current;
     mc->parking_brake_mode = config->parking_brake_mode;
+    mc->main_freq = config->hertz / 2;
 }
 
 void motor_control_request_current(MotorControl *mc, float current) {
     mc->current_requested = true;
     mc->requested_current = current;
+}
+
+static inline void reset_tone(MotorControl *mc) {
+    mc->tone_ticks = 0;
+    mc->tone_counter = 0;
+    mc->tone_high = 0;
 }
 
 void motor_control_apply(MotorControl *mc, float abs_erpm, RunState state, float time) {
@@ -48,16 +59,22 @@ void motor_control_apply(MotorControl *mc, float abs_erpm, RunState state, float
         mc->parking_brake_active = false;
     }
 
-    if (mc->click_counter) {
+    if (mc->tone_ticks > 0) {
         mc->current_requested = true;
 
-        // Generate alternate pulses to produce distinct "click"
-        mc->click_counter--;
-        if ((mc->click_counter & 0x1) == 0) {
-            mc->requested_current -= mc->click_current;
-        } else {
-            mc->requested_current += mc->click_current;
+        if (--mc->tone_counter == 0) {
+            mc->tone_counter = mc->tone_ticks;
+            mc->tone_high = !mc->tone_high;
+
+            if (mc->click_counter > 0) {
+                --mc->click_counter;
+                if (mc->click_counter == 0) {
+                    reset_tone(mc);
+                }
+            }
         }
+
+        mc->requested_current += mc->tone_high ? mc->tone_intensity : -mc->tone_intensity;
     }
 
     // Reset VESC Firmware safety timeout
@@ -91,4 +108,22 @@ void motor_control_apply(MotorControl *mc, float abs_erpm, RunState state, float
 
     mc->current_requested = false;
     mc->requested_current = 0.0f;
+}
+
+void motor_control_play_tone(MotorControl *mc, uint16_t frequency, float intensity) {
+    mc->tone_ticks = max(1, mc->main_freq / frequency);
+    mc->tone_counter = mc->tone_ticks;
+    mc->tone_intensity = intensity;
+}
+
+void motor_control_stop_tone(MotorControl *mc) {
+    reset_tone(mc);
+}
+
+void motor_control_play_click(MotorControl *mc) {
+    if (mc->click_current > 0.0f) {
+        // 350 = one tick up to loop frequency 1400Hz, two ticks if higher
+        motor_control_play_tone(mc, 350, mc->click_current);
+        mc->click_counter = 3;
+    }
 }
