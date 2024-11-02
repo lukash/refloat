@@ -26,6 +26,7 @@
 #include "footpad_sensor.h"
 #include "lcm.h"
 #include "leds.h"
+#include "motor_control.h"
 #include "motor_data.h"
 #include "state.h"
 #include "torque_tilt.h"
@@ -85,6 +86,7 @@ typedef struct {
     int fw_version_major, fw_version_minor, fw_version_beta;
 
     MotorData motor;
+    MotorControl motor_control;
     TorqueTilt torque_tilt;
     ATR atr;
 
@@ -95,8 +97,6 @@ typedef struct {
     int beep_reason;
     bool beeper_enabled;
 
-    bool parking_brake_active;
-
     Leds leds;
 
     // Lights Control Module - external lights control
@@ -106,7 +106,6 @@ typedef struct {
 
     // Config values
     uint32_t loop_time_us;
-    unsigned int start_counter_clicks;
     float startup_pitch_trickmargin, startup_pitch_tolerance;
     float startup_step_size;
     float tiltback_duty_step_size, tiltback_hv_step_size, tiltback_lv_step_size,
@@ -152,7 +151,6 @@ typedef struct {
     float idle_voltage;
     float fault_angle_pitch_timer, fault_angle_roll_timer, fault_switch_timer,
         fault_switch_half_timer;
-    float brake_timeout;
     float wheelslip_timer, tb_highvoltage_timer;
     float switch_warn_beep_erpm;
     bool traction_control;
@@ -195,8 +193,6 @@ typedef struct {
     Konami headlights_off_konami;
 } data;
 
-static void brake(data *d);
-static void set_current(float current);
 static void flywheel_stop(data *d);
 static void cmd_flywheel_toggle(data *d, unsigned char *cfg, int len);
 
@@ -270,6 +266,7 @@ static void reconfigure(data *d) {
         fabsf(d->float_conf.tiltback_variable_max / d->tiltback_variable);
 
     motor_data_configure(&d->motor, d->float_conf.atr_filter / d->float_conf.hertz);
+    motor_control_configure(&d->motor_control, &d->float_conf);
     balance_filter_configure(&d->balance_filter, &d->float_conf);
     torque_tilt_configure(&d->torque_tilt, &d->float_conf);
     atr_configure(&d->atr, &d->float_conf);
@@ -379,7 +376,6 @@ static void reset_runtime_vars(data *d) {
     d->inputtilt_interpolated = 0;
     d->turntilt_target = 0;
     d->turntilt_interpolated = 0;
-    d->brake_timeout = 0;
     d->traction_control = false;
     d->pid_value = 0;
     d->rate_p = 0;
@@ -404,7 +400,7 @@ static void reset_runtime_vars(data *d) {
 
 static void engage(data *d) {
     reset_runtime_vars(d);
-    d->start_counter_clicks = 3;
+    d->motor_control.click_counter = 3;
 
     state_engage(&d->state);
 }
@@ -433,7 +429,7 @@ static void check_odometer(data *d) {
 /**
  *  do_rc_move: perform motor movement while board is idle
  */
-static bool do_rc_move(data *d) {
+static void do_rc_move(data *d) {
     if (d->rc_steps > 0) {
         d->rc_current = d->rc_current * 0.95 + d->rc_current_target * 0.05;
         if (d->motor.abs_erpm > 800) {
@@ -444,7 +440,7 @@ static bool do_rc_move(data *d) {
         if ((d->rc_counter == 500) && (d->rc_current_target > 2)) {
             d->rc_current_target /= 2;
         }
-        return true;
+        motor_control_request_current(&d->motor_control, d->rc_current);
     } else {
         d->rc_counter = 0;
 
@@ -456,10 +452,9 @@ static bool do_rc_move(data *d) {
             servo_val *= (d->float_conf.inputtilt_invert_throttle ? -1.0 : 1.0);
             d->rc_current = d->rc_current * 0.95 +
                 (d->float_conf.remote_throttle_current_max * servo_val) * 0.05;
-            return true;
+            motor_control_request_current(&d->motor_control, d->rc_current);
         } else {
             d->rc_current = 0;
-            return false;
         }
     }
 }
@@ -984,37 +979,6 @@ static void apply_turntilt(data *d) {
     rate_limitf(&d->turntilt_interpolated, d->turntilt_target, d->turntilt_step_size);
 }
 
-static void brake(data *d) {
-    if (d->motor.abs_erpm_smooth > ERPM_MOVING_THRESHOLD) {
-        d->brake_timeout = d->current_time + 1.0f;
-    }
-
-    // Reset VESC Firmware safety timeout
-    VESC_IF->timeout_reset();
-
-    // BEWARE: Some sort of motor control must always be set before returning from this function
-    if (d->current_time > d->brake_timeout) {
-        // Release the motor by setting zero current
-        VESC_IF->mc_set_current(0.0f);
-        return;
-    }
-
-    if (d->parking_brake_active && d->motor.abs_erpm < 2000) {
-        // Duty Cycle mode has better holding power (phase-shorting on 6.05)
-        VESC_IF->mc_set_duty(0);
-    } else {
-        // Use brake current over certain ERPM to avoid MOSFET overcurrent
-        VESC_IF->mc_set_brake_current(d->float_conf.brake_current);
-    }
-}
-
-static void set_current(float current) {
-    VESC_IF->timeout_reset();
-    // Keep modulation on for 50ms in case we request close-to-0 current
-    VESC_IF->mc_set_current_off_delay(0.05f);
-    VESC_IF->mc_set_current(current);
-}
-
 static void imu_ref_callback(float *acc, float *gyro, float *mag, float dt) {
     unused(mag);
 
@@ -1068,15 +1032,6 @@ static void refloat_thd(void *arg) {
         VESC_IF->imu_get_gyro(d->gyro);
 
         motor_data_update(&d->motor);
-
-        if (d->float_conf.parking_brake_mode == PARKING_BRAKE_ALWAYS ||
-            (d->float_conf.parking_brake_mode == PARKING_BRAKE_IDLE &&
-             d->state.state != STATE_RUNNING && d->motor.abs_erpm_smooth < 50)) {
-            d->parking_brake_active = true;
-        } else if (d->float_conf.parking_brake_mode == PARKING_BRAKE_NEVER ||
-                   d->state.state == STATE_RUNNING) {
-            d->parking_brake_active = false;
-        }
 
         bool remote_connected = false;
         float servo_val = 0;
@@ -1152,9 +1107,6 @@ static void refloat_thd(void *arg) {
             // if the switch comes back on we stop beeping
             beep_off(d, false);
         }
-
-        float current = 0.0f;
-        bool apply_current = false;
 
         // Control Loop State Logic
         switch (d->state.state) {
@@ -1356,8 +1308,7 @@ static void refloat_thd(void *arg) {
                 d->pid_value = d->pid_value * 0.8 + new_pid_value * 0.2;
             }
 
-            apply_current = true;
-            current = d->pid_value;
+            motor_control_request_current(&d->motor_control, d->pid_value);
             break;
         case (STATE_READY):
             if (d->state.mode == MODE_FLYWHEEL) {
@@ -1459,31 +1410,15 @@ static void refloat_thd(void *arg) {
                 }
             }
 
-            apply_current = do_rc_move(d);
-            current = d->rc_current;
+            do_rc_move(d);
             break;
         case (STATE_DISABLED):
             break;
         }
 
-        if (d->start_counter_clicks) {
-            apply_current = true;
-
-            // Generate alternate pulses to produce distinct "click"
-            d->start_counter_clicks--;
-            if ((d->start_counter_clicks & 0x1) == 0) {
-                current -= d->float_conf.startup_click_current;
-            } else {
-                current += d->float_conf.startup_click_current;
-            }
-        }
-
-        if (apply_current) {
-            set_current(current);
-        } else {
-            brake(d);
-        }
-
+        motor_control_apply(
+            &d->motor_control, d->motor.abs_erpm_smooth, d->state.state, d->current_time
+        );
         VESC_IF->sleep_us(d->loop_time_us);
     }
 }
@@ -1573,6 +1508,7 @@ static void data_init(data *d) {
 
     d->odometer = VESC_IF->mc_get_odometer();
 
+    motor_control_init(&d->motor_control);
     lcm_init(&d->lcm, &d->float_conf.hardware.leds);
     charging_init(&d->charging);
 }
