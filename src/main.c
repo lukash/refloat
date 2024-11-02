@@ -776,6 +776,7 @@ static void refloat_thd(void *arg) {
                         d->float_conf.startup_pitch_tolerance + d->startup_pitch_trickmargin;
                     timer_refresh(&d->time, &d->fault_angle_pitch_timer);
                 }
+                motor_control_play_click(&d->motor_control);
                 break;
             }
 
