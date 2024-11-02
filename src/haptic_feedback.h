@@ -18,6 +18,7 @@
 #pragma once
 
 #include "conf/datatypes.h"
+#include "motor_control.h"
 #include "motor_data.h"
 #include "state.h"
 #include "time.h"
@@ -46,5 +47,5 @@ void haptic_feedback_init(HapticFeedback *hf);
 void haptic_feedback_configure(HapticFeedback *hf, const RefloatConfig *cfg);
 
 void haptic_feedback_update(
-    HapticFeedback *hf, const State *state, const MotorData *md, const Time *time
+    HapticFeedback *hf, MotorControl *mc, const State *state, const MotorData *md, const Time *time
 );

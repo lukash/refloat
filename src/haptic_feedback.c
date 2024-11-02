@@ -108,7 +108,7 @@ static inline void foc_play_tone(int channel, float freq, float voltage) {
 }
 
 void haptic_feedback_update(
-    HapticFeedback *hf, const State *state, const MotorData *md, const Time *time
+    HapticFeedback *hf, MotorControl *mc, const State *state, const MotorData *md, const Time *time
 ) {
     HapticFeedbackType type_to_play = state_to_haptic_type(state);
     if (type_to_play == HAPTIC_FEEDBACK_DUTY && md->duty_cycle > hf->duty_solid_threshold) {
@@ -142,7 +142,7 @@ void haptic_feedback_update(
 
     if (hf->is_playing && !should_be_playing) {
         foc_play_tone(0, 1, 0.0f);
-        foc_play_tone(1, 1, 0.0f);
+        motor_control_stop_tone(mc);
         hf->is_playing = false;
     } else if (should_be_playing) {
         const CfgHapticTone *tone = get_haptic_tone(hf);
@@ -151,8 +151,8 @@ void haptic_feedback_update(
         }
 
         if (hf->cfg->vibrate.strength > 0.0f) {
-            foc_play_tone(
-                1,
+            motor_control_play_tone(
+                mc,
                 hf->cfg->vibrate.frequency,
                 hf->cfg->vibrate.strength * strength_scale(hf, md->speed)
             );

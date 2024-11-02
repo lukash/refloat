@@ -249,7 +249,7 @@ static void reset_runtime_vars(Data *d) {
 
 static void engage(Data *d) {
     reset_runtime_vars(d);
-    d->motor_control.click_counter = 3;
+    motor_control_play_click(&d->motor_control);
 
     state_engage(&d->state);
     timer_refresh(&d->time, &d->time.engage_timer);
@@ -742,7 +742,9 @@ static void refloat_thd(void *arg) {
             beep_off(d, false);
         }
 
-        haptic_feedback_update(&d->haptic_feedback, &d->state, &d->motor, &d->time);
+        haptic_feedback_update(
+            &d->haptic_feedback, &d->motor_control, &d->state, &d->motor, &d->time
+        );
 
         // Control Loop State Logic
         switch (d->state.state) {
