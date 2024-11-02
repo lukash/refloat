@@ -1147,6 +1147,7 @@ static void refloat_thd(void *arg) {
                         d->float_conf.startup_pitch_tolerance + d->startup_pitch_trickmargin;
                     d->fault_angle_pitch_timer = d->current_time;
                 }
+                motor_control_play_click(&d->motor_control);
                 break;
             }
             d->odometer_dirty = 1;
