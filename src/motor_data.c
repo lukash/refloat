@@ -53,7 +53,7 @@ void motor_data_update(MotorData *m) {
     m->current = VESC_IF->mc_get_tot_current_directional_filtered();
     m->braking = m->abs_erpm > 250 && sign(m->current) != m->erpm_sign;
 
-    m->duty_cycle = m->duty_cycle * 0.9f + fabsf(VESC_IF->mc_get_duty_cycle_now()) * 0.1f;
+    m->duty_cycle += 0.01f * (fabsf(VESC_IF->mc_get_duty_cycle_now()) - m->duty_cycle);
 
     float current_acceleration = m->erpm - m->last_erpm;
     m->last_erpm = m->erpm;
