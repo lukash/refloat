@@ -2153,6 +2153,8 @@ p, li { white-space: pre-wrap; }
             <enumNames>Strobe</enumNames>
             <enumNames>Knight Rider</enumNames>
             <enumNames>Felony</enumNames>
+            <enumNames>Rainbow Cycle</enumNames>
+            <enumNames>Rainbow Fade</enumNames>
         </leds.front.mode>
         <leds.front.brightness>
             <longName>Front Brightness</longName>
@@ -2315,6 +2317,8 @@ p, li { white-space: pre-wrap; }
             <enumNames>Strobe</enumNames>
             <enumNames>Knight Rider</enumNames>
             <enumNames>Felony</enumNames>
+            <enumNames>Rainbow Cycle</enumNames>
+            <enumNames>Rainbow Fade</enumNames>
         </leds.rear.mode>
         <leds.rear.brightness>
             <longName>Rear Brightness</longName>
@@ -2477,6 +2481,8 @@ p, li { white-space: pre-wrap; }
             <enumNames>Strobe</enumNames>
             <enumNames>Knight Rider</enumNames>
             <enumNames>Felony</enumNames>
+            <enumNames>Rainbow Cycle</enumNames>
+            <enumNames>Rainbow Fade</enumNames>
         </leds.headlights.mode>
         <leds.headlights.brightness>
             <longName>Headlights Brightness</longName>
@@ -2641,6 +2647,8 @@ p, li { white-space: pre-wrap; }
             <enumNames>Strobe</enumNames>
             <enumNames>Knight Rider</enumNames>
             <enumNames>Felony</enumNames>
+            <enumNames>Rainbow Cycle</enumNames>
+            <enumNames>Rainbow Fade</enumNames>
         </leds.taillights.mode>
         <leds.taillights.brightness>
             <longName>Taillights Brightness</longName>
@@ -2933,6 +2941,8 @@ p, li { white-space: pre-wrap; }
             <enumNames>Strobe</enumNames>
             <enumNames>Knight Rider</enumNames>
             <enumNames>Felony</enumNames>
+            <enumNames>Rainbow Cycle</enumNames>
+            <enumNames>Rainbow Fade</enumNames>
         </leds.status_idle.mode>
         <leds.status_idle.brightness>
             <longName>Status Idle Brightness</longName>
