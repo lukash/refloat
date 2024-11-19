@@ -29,6 +29,7 @@ void torque_tilt_reset(TorqueTilt *tt) {
 void torque_tilt_configure(TorqueTilt *tt, const RefloatConfig *config) {
     tt->on_step_size = config->torquetilt_on_speed / config->hertz;
     tt->off_step_size = config->torquetilt_off_speed / config->hertz;
+    tt->ramped_step_size = 0;
 }
 
 void torque_tilt_update(TorqueTilt *tt, const MotorData *motor, const RefloatConfig *config) {
@@ -60,7 +61,8 @@ void torque_tilt_update(TorqueTilt *tt, const MotorData *motor, const RefloatCon
         step_size /= 2;
     }
 
-    rate_limitf(&tt->offset, target_offset, step_size);
+    // Smoothen changes in tilt angle by ramping the step size
+    smooth_rampf(&tt->offset, &tt->ramped_step_size, target_offset, step_size, 0.04, 1.5);
 }
 
 void torque_tilt_winddown(TorqueTilt *tt) {
