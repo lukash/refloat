@@ -55,7 +55,14 @@ typedef enum {
     BEEP_SENSORS = 7,
     BEEP_LOWBATT = 8,
     BEEP_IDLE = 9,
-    BEEP_ERROR = 10
+    BEEP_ERROR = 10,
+    BEEP_TEMP_CELL_UNDER = 11,
+    BEEP_TEMP_CELL_OVER = 12,
+    BEEP_CELL_LV = 13,
+    BEEP_CELL_HV = 14,
+    BEEP_CELL_BALANCE = 15,
+    BEEP_BMS_CONNECTION = 16,
+    BEEP_BMS_TEMP = 17
 } BeepReason;
 
 static const FootpadSensorState flywheel_konami_sequence[] = {
@@ -194,6 +201,8 @@ typedef struct {
     Konami flywheel_konami;
     Konami headlights_on_konami;
     Konami headlights_off_konami;
+
+    uint32_t bms_fault;
 } data;
 
 static void brake(data *d);
@@ -361,6 +370,8 @@ static void configure(data *d) {
         headlights_off_konami_sequence,
         sizeof(headlights_off_konami_sequence)
     );
+
+    d->bms_fault = 0;
 
     reconfigure(d);
 
@@ -745,11 +756,20 @@ static void calculate_setpoint_target(data *d) {
         if (d->state.mode != MODE_FLYWHEEL) {
             d->state.sat = SAT_PB_DUTY;
         }
-    } else if (d->motor.duty_cycle > 0.05 && input_voltage > d->float_conf.tiltback_hv) {
-        d->beep_reason = BEEP_HV;
+    } else if (d->motor.duty_cycle > 0.05 &&
+               (input_voltage > d->float_conf.tiltback_hv ||
+                bms_is_fault_set(d->bms_fault, CELL_SOFT_OVER_VOLTAGE) ||
+                bms_is_fault_set(d->bms_fault, CELL_HARD_OVER_VOLTAGE))) {
+        if (bms_is_fault_set(d->bms_fault, CELL_SOFT_OVER_VOLTAGE) ||
+            bms_is_fault_set(d->bms_fault, CELL_HARD_OVER_VOLTAGE)) {
+            d->beep_reason = BEEP_CELL_HV;
+        } else {
+            d->beep_reason = BEEP_HV;
+        }
         beep_alert(d, 3, false);
         if (((d->current_time - d->tb_highvoltage_timer) > .5) ||
-            (input_voltage > d->float_conf.tiltback_hv + 1)) {
+            (input_voltage > d->float_conf.tiltback_hv + 1) ||
+            bms_is_fault_set(d->bms_fault, CELL_HARD_OVER_VOLTAGE)) {
             // 500ms have passed or voltage is another volt higher, time for some tiltback
             if (d->motor.erpm > 0) {
                 d->setpoint_target = d->float_conf.tiltback_hv_angle;
@@ -792,9 +812,40 @@ static void calculate_setpoint_target(data *d) {
             // The rider has 1 degree Celsius left before we start tilting back
             d->state.sat = SAT_NONE;
         }
-    } else if (d->motor.duty_cycle > 0.05 && input_voltage < d->float_conf.tiltback_lv) {
+    } else if (bms_is_fault_set(d->bms_fault, CELL_SOFT_OVER_TEMP) ||
+               bms_is_fault_set(d->bms_fault, CELL_HARD_OVER_TEMP) ||
+               bms_is_fault_set(d->bms_fault, CELL_SOFT_UNDER_TEMP) ||
+               bms_is_fault_set(d->bms_fault, CELL_HARD_UNDER_TEMP) ||
+               bms_is_fault_set(d->bms_fault, BMS_SOFT_OVER_TEMP) ||
+               bms_is_fault_set(d->bms_fault, BMS_HARD_OVER_TEMP)) {
+        // Use the angle from Low-Voltage tiltback, but slower speed from High-Voltage tiltback
+        beep_alert(d, 3, true);
+        if (bms_is_fault_set(d->bms_fault, CELL_SOFT_OVER_TEMP) ||
+            bms_is_fault_set(d->bms_fault, CELL_HARD_OVER_TEMP)) {
+            d->beep_reason = BEEP_TEMP_CELL_OVER;
+        } else if (bms_is_fault_set(d->bms_fault, CELL_SOFT_UNDER_TEMP) ||
+                   bms_is_fault_set(d->bms_fault, CELL_HARD_UNDER_TEMP)) {
+            d->beep_reason = BEEP_TEMP_CELL_UNDER;
+        } else {
+            d->beep_reason = BEEP_BMS_TEMP;
+        }
+        if (d->motor.erpm > 0) {
+            d->setpoint_target = d->float_conf.tiltback_lv_angle;
+        } else {
+            d->setpoint_target = -d->float_conf.tiltback_lv_angle;
+        }
+        d->state.sat = SAT_PB_TEMPERATURE;
+    } else if (d->motor.duty_cycle > 0.05 &&
+               (input_voltage < d->float_conf.tiltback_lv ||
+                bms_is_fault_set(d->bms_fault, CELL_SOFT_UNDER_VOLTAGE) ||
+                bms_is_fault_set(d->bms_fault, CELL_HARD_UNDER_VOLTAGE))) {
         beep_alert(d, 3, false);
-        d->beep_reason = BEEP_LV;
+        if (bms_is_fault_set(d->bms_fault, CELL_SOFT_UNDER_VOLTAGE) ||
+            bms_is_fault_set(d->bms_fault, CELL_HARD_UNDER_VOLTAGE)) {
+            d->beep_reason = BEEP_CELL_LV;
+        } else {
+            d->beep_reason = BEEP_LV;
+        }
         float abs_motor_current = fabsf(d->motor.current);
         float vdelta = d->float_conf.tiltback_lv - input_voltage;
         float ratio = vdelta * 20 / abs_motor_current;
@@ -802,7 +853,9 @@ static void calculate_setpoint_target(data *d) {
         // a) we're 2V below lv threshold
         // b) motor current is small (we cannot assume vsag)
         // c) we have more than 20A per Volt of difference (we tolerate some amount of vsag)
-        if ((vdelta > 2) || (abs_motor_current < 5) || (ratio > 1)) {
+        if ((vdelta > 2) || (abs_motor_current < 5) || (ratio > 1) ||
+            bms_is_fault_set(d->bms_fault, CELL_SOFT_UNDER_VOLTAGE) ||
+            bms_is_fault_set(d->bms_fault, CELL_HARD_UNDER_VOLTAGE)) {
             if (d->motor.erpm > 0) {
                 d->setpoint_target = d->float_conf.tiltback_lv_angle;
             } else {
@@ -2582,6 +2635,14 @@ static lbm_value ext_set_fw_version(lbm_value *args, lbm_uint argn) {
     return VESC_IF->lbm_enc_sym_true;
 }
 
+// Called from Lisp to pass in the fault code of the bms.
+static lbm_value ext_bms_set_fault(lbm_value *args, lbm_uint argn) {
+    unused(argn);
+    data *d = (data *) ARG;
+    d->bms_fault = VESC_IF->lbm_dec_as_u32(args[0]);
+    return VESC_IF->lbm_enc_sym_true;
+}
+
 // Used to send the current or default configuration to VESC Tool.
 static int get_cfg(uint8_t *buffer, bool is_default) {
     data *d = (data *) ARG;
@@ -2701,6 +2762,7 @@ INIT_FUN(lib_info *info) {
     VESC_IF->set_app_data_handler(on_command_received);
     VESC_IF->lbm_add_extension("ext-dbg", ext_dbg);
     VESC_IF->lbm_add_extension("ext-set-fw-version", ext_set_fw_version);
+    VESC_IF->lbm_add_extension("ext-bms-set-fault", ext_bms_set_fault);
 
     return true;
 }
