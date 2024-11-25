@@ -8,6 +8,12 @@
 ; Set firmware version:
 (apply ext-set-fw-version (sysinfo 'fw-ver))
 
+(if (>= (+ (first (sysinfo 'fw-ver)) (* (second (sysinfo 'fw-ver)) 0.01)) 6.05) {
+    (import "src/bms-state.lisp" 'bms-state)
+    (read-eval-program bms-state)
+    (spawn bms-state-loop)
+})
+
 ; Set to 1 to monitor debug variables
 (define debug 1)
 
