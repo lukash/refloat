@@ -21,6 +21,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Dialogs 1.3 as Dl
+import QtQuick.Window 2.2
 import QtGraphicalEffects 1.15
 
 import Vedder.vesc.vescinterface 1.0
@@ -68,6 +69,41 @@ Item {
         return val;
     }
 
+    function arraysEqual(a, b) {
+        if (a === b) return true;
+        if (a == null || b == null) return false;
+        if (a.length !== b.length) return false;
+
+        for (var i = 0; i < a.length; ++i) {
+            if (a[i] !== b[i]) return false;
+        }
+        return true;
+    }
+
+    function dist(a, b) {
+        return Math.abs(a - b);
+    }
+
+    function getDarkThemeColor(name) {
+        switch (name) {
+        case "normalBackground":
+            return "#303030";
+            break;
+        case "darkBackground":
+            return "#272727";
+            break;
+        case "normalText":
+            return "#b4b4b4";
+            break;
+        case "lightText":
+            return "#dcdcdc";
+            break;
+        case "disabledText":
+            return "#7f7f7f";
+            break;
+        }
+    }
+
     // 5s timeout for connection to package
     Timer {
         id: packageConnectionWatchdog
@@ -87,7 +123,7 @@ Item {
         onTriggered: {
             vescCommands.getValuesSetup();
 
-            if (!commands.infoReceived) {
+            if (!state.infoReceived) {
                 commands.sendGetInfo();
             } else {
                 commands.sendGetRtData();
@@ -330,8 +366,9 @@ Item {
         readonly property int c_FLYWHEEL: 22
         readonly property int c_REALTIME_DATA: 31
         readonly property int c_LIGHTS_CONTROL: 202
-
-        property bool infoReceived: false
+        readonly property int c_DATA_RECORD_REQUEST: 41
+        readonly property int c_DATA_RECORD_HEADER: 42
+        readonly property int c_DATA_RECORD_DATA: 43
 
         // IEEE-754 16-bit floating-point format (without infinity and NaNs)
         // Dynamic range: +-131008.0
@@ -450,6 +487,36 @@ Item {
             vescCommands.sendCustomAppData(data.buffer);
         }
 
+        readonly property int dr_RECORD: 1
+        readonly property int dr_AUTOSTART: 2
+        readonly property int dr_AUTOSTOP: 3
+
+        // @param key One of the above dr_ properties
+        // @param value Value to set, true or false
+        function sendDataRecordControl(key, value) {
+            var data = createData(5, c_DATA_RECORD_REQUEST);
+            data.setUint8(2, 1); // control
+            data.setUint8(3, key);
+            data.setUint8(4, value);
+
+            vescCommands.sendCustomAppData(data.buffer);
+        }
+
+        function sendDataRecordRequest(header, offset) {
+            if (header) {
+                var data = createData(4, c_DATA_RECORD_REQUEST);
+                data.setUint8(2, 2); // send
+                data.setUint8(3, 1); // header
+            } else {
+                var data = createData(8, c_DATA_RECORD_REQUEST);
+                data.setUint8(2, 2); // send
+                data.setUint8(3, 2); // data
+                data.setUint32(4, offset);
+            }
+
+            vescCommands.sendCustomAppData(data.buffer);
+        }
+
         function onValuesSetupReceived(values, mask) {
             var fault = values.fault_str;
             fault = fault.replace("FAULT_CODE_", "");
@@ -479,8 +546,8 @@ Item {
                 ind += 1;  // skip version, should always be the current one
                 var flags = dv.getUint8(ind++);
                 ind += 19;  // 3 version numbers + 16 bytes of suffix
-                ind += 4;  // tick rate
-                ind += 4;  // capabilities
+                state.ticksPerSecond = dv.getUint32(ind); ind += 4;
+                state.capabilities = dv.getUint32(ind); ind += 4;
 
                 var led_type = dv.getUint8(ind++);
                 if (led_type > 0) {
@@ -498,28 +565,44 @@ Item {
                     state.rtDataAllItems = state.rtDataIdleItems.concat(state.rtDataRuntimeItems);
                 }
 
-                commands.infoReceived = true;
+                state.infoReceived = true;
             } else if (msgtype == c_LIGHTS_CONTROL) {
                 var values = dv.getUint8(ind++);
                 lights.on = values & 0b01;
                 lights.headlightsOn = values & 0b10;
             } else if (msgtype === c_REALTIME_DATA) {
+                if (!state.infoReceived) {
+                    // rt data came because another client app requested them,
+                    // ignore until info is received
+                    return;
+                }
                 var mask = dv.getUint8(ind++);
                 var hasRuntime = !!(mask & 0x1);
                 var hasCharging = !!(mask & 0x2);
 
+                var extraFlags = dv.getUint8(ind++);
+                state.extraRecording = extraFlags & 0x1;
+                state.extraRecAutostart = extraFlags & 0x2;
+                state.extraRecAutostop = extraFlags & 0x4;
+
+                var time = dv.getUint32(ind); ind += 4;
+
                 var modeAndState = dv.getUint8(ind++);
                 state.pkgMode = modeAndState >> 4;
-                state.pkgState = modeAndState & 0xF;
+                var pkgState = modeAndState & 0xF;
+                state.pkgState = pkgState;
 
                 var sensorAndFlags = dv.getUint8(ind++);
-                state.fsState = sensorAndFlags >> 6;
-                state.wheelslip = sensorAndFlags & 0b00000001;
+                var fpState = sensorAndFlags >> 6;
+                state.fpState = fpState;
+                var wheelslip = sensorAndFlags & 0b00000001;
+                state.wheelslip = wheelslip;
                 state.darkride = sensorAndFlags & 0b00000010;
                 state.charging = sensorAndFlags & 0b00100000;
 
                 var setpointAndStop = dv.getUint8(ind++);
-                state.setpointAdjustmentType = setpointAndStop >> 4;
+                var sat = setpointAndStop >> 4;
+                state.setpointAdjustmentType = sat;
                 state.stopCondition = setpointAndStop & 0xF;
 
                 state.beepReason = dv.getUint8(ind++);
@@ -548,6 +631,14 @@ Item {
                     chargingInfo.current = dv.getFloat32(ind); ind += 4;
                     chargingInfo.voltage = dv.getFloat32(ind); ind += 4;
                 }
+
+                var running = +(state.pkgState === state.s_Running);
+                rtPlotData.addSample([time, running, wheelslip, sat, fpState].concat(newRt));
+                rtPlotData.makeReady();
+            } else if (msgtype === c_DATA_RECORD_HEADER) {
+                recordedPlotData.receiveHeader(dv, ind);
+            } else if (msgtype === c_DATA_RECORD_DATA) {
+                recordedPlotData.receiveData(dv, ind);
             }
 
             packageConnectionWatchdog.restart();
@@ -782,8 +873,25 @@ Item {
         }
     }
 
-    QtObject {
+    property var state: QtObject {
         id: state
+
+        property bool infoReceived: false
+
+        property bool extraRecording: false
+        property bool extraRecAutostart: false
+        property bool extraRecAutostop: false
+
+        property int ticksPerSecond
+
+        // package capabilities
+        readonly property int cap_DataRecord: 2**31
+
+        property int capabilities: 0
+
+        function hasCapability(cap) {
+            return (capabilities & cap) !== 0;
+        }
 
         // package state
         readonly property int s_Disabled: 0
@@ -834,17 +942,17 @@ Item {
         readonly property int fs_Right: 2
         readonly property int fs_Both: 3
 
-        property int fsState: fs_None
+        property int fpState: fs_None
 
-        onFsStateChanged: {
+        onFpStateChanged: {
             leftSensor.on = false;
             rightSensor.on = false;
 
-            if (fsState & fs_Left) {
+            if (fpState & fs_Left) {
                 leftSensor.on = true;
             }
 
-            if (fsState & fs_Right) {
+            if (fpState & fs_Right) {
                 rightSensor.on = true;
             }
 
@@ -1009,6 +1117,116 @@ Item {
     property real fontSizeNormal: 0.35 * unit
     property real fontSizeSmall: 0.3 * unit
     property real fontSizeSuperSmall: 0.25 * unit
+
+    // "#e57e20",
+    // "#7640d6",
+    // "#63c339",
+    // "#cf44cd",
+    // "#51c66c",
+    // "#7134a3",
+    // "#b1ba38",
+    // "#6e6ee0",
+    // "#e3ac34",
+    // "#5e88d8",
+    // "#e95314",
+    // "#4bc6af",
+    // "#e33421",
+    // "#53b3bf",
+    // "#dd4044",
+    // "#69c180",
+    // "#df4a98",
+    // "#469138",
+    // "#ce77d2",
+    // "#859b3b",
+    // "#584f99",
+    // "#b58527",
+    // "#893075",
+    // "#3f9469",
+    // "#cd3763",
+    // "#3f6620",
+    // "#b29ad7",
+    // "#ce542e",
+    // "#69aad7",
+    // "#a15622",
+    // "#36738b",
+    // "#e7865d",
+    // "#4f5984",
+    // "#ddae68",
+    // "#254f3a",
+    // "#e095af",
+    // "#34633c",
+    // "#cc686b",
+    // "#88bb93",
+    // "#8f2f26",
+    // "#4a8772",
+    // "#803a4d",
+    // "#b1b277",
+    // "#a2678e",
+    // "#827029",
+    // "#c68f7e",
+    // "#525023",
+    // "#c08959",
+    // "#788554",
+    // "#734828"
+    property var plotSeriesMetaData: [
+        ["motor.erpm", {"name": "ERPM", "color": "#469138", "visible": true}],
+        ["motor.duty_cycle", {"name": "Duty Cycle", "color": "#e3ac34", "visible": true}],
+        ["motor.current", {"name": "Motor Current", "color": "#e33421", "visible": true}],
+        ["motor.dir_current", {"name": "Directional Current", "color": "#cc686b", "visible": false}],
+        ["motor.filt_current", {"name": "Filtered Current", "color": "#734828", "visible": false}],
+
+        ["imu.pitch", {"name": "Pitch", "color": "#b1b277", "visible": true}],
+        ["imu.balance_pitch", {"name": "Balance Pitch", "color": "#53b3bf", "visible": true}],
+
+        ["torque_tilt.setpoint", {"name": "Torque Tilt Setpoint", "color": "#df4a98", "visible": true}],
+        ["atr.setpoint", {"name": "ATR Setpoint", "color": "#7640d6", "visible": true}],
+        ["brake_tilt.setpoint", {"name": "Brake Tilt Setpoint", "color": "#b29ad7", "visible": false}],
+        ["turn_tilt.setpoint", {"name": "Turn Tilt Setpoint", "color": "#e095af", "visible": false}],
+        ["remote.setpoint", {"name": "Remote Setpoint", "color": "#803a4d", "visible": false}],
+        ["setpoint", {"name": "Setpoint", "color": "#e57e20", "visible": true}],
+
+        ["motor.speed", {"name": "Speed", "color": "#3f9469", "visible": false}],
+        ["motor.batt_voltage", {"name": "Battery Voltage", "color": "#6e6ee0", "visible": false}],
+        ["motor.batt_current", {"name": "Battery Current", "color": "#cf44cd", "visible": false}],
+        ["motor.mosfet_temp", {"name": "Controller Temp", "color": "#ddae68", "visible": false}],
+        ["motor.motor_temp", {"name": "Motor Temp", "color": "#88bb93", "visible": false}],
+        ["imu.roll", {"name": "Roll", "color": "#c68f7e", "visible": false}],
+        ["footpad.adc1", {"name": "ADC1 Voltage", "color": "#69aad7", "visible": false}],
+        ["footpad.adc2", {"name": "ADC2 Voltage", "color": "#4a8772", "visible": false}],
+        ["balance_current", {"name": "Balance Current", "color": "#36738b", "visible": false}],
+        ["booster.current", {"name": "Booster Current", "color": "#8f2f26", "visible": false}],
+        ["atr.accel_diff", {"name": "ATR Accel Diff", "color": "#4f5984", "visible": false}],
+        ["atr.speed_boost", {"name": "ATR Speed Boost", "color": "#34633c", "visible": false}],
+        ["remote.input", {"name": "Remote Throttle", "color": "#525023", "visible": false}],
+
+        ["state.running", {"name": "Running", "color": "#3f6620", "visible": false}],
+        ["state.wheelslip", {"name": "Wheelslip", "color": "#893075", "visible": false}],
+        ["footpad.state", {"name": "Footpad State", "color": "#584f99", "visible": false}],
+        ["state.sat", {"name": "Setpoint Adjustment Type", "color": "#c08959", "visible": false}],
+    ]
+
+    property var plotSeriesExtraColors: [
+        "#5e88d8",
+        "#b1ba38",
+        "#e7865d",
+        "#7134a3",
+        "#51c66c",
+        "#a2678e",
+        "#4bc6af",
+        "#a15622",
+        "#254f3a",
+        "#827029",
+        "#e95314",
+        "#69c180",
+        "#ce77d2",
+        "#859b3b",
+        "#dd4044",
+        "#b58527",
+        "#ce542e",
+        "#788554",
+        "#cd3763",
+        "#63c339",
+    ]
 
     anchors.fill: parent
 
@@ -1310,6 +1528,1545 @@ Item {
 
         Overlay.modal: Rectangle {
             color: "#AA000000"
+        }
+    }
+
+    component PlotData : QtObject {
+        property int sampleSize: 0
+        property var seriesIds
+        property var series: []
+        property var seriesSorted: []
+        property var data: []
+        property int ticksPerSecond
+        // an offset added to timestamps if timestamps older than the last one
+        // arrive, to ensure time is always increasing
+        property real timeOffset: 0
+
+        property var mins: []
+        property var maxs: []
+        property var scales: []
+
+        property real timeStart
+        property real timeEnd
+        property real timeRange
+        property real positiveRatio
+
+        property int sampleNr: 0
+
+        property bool initialized: true
+        property bool dataReady: false
+
+        signal dataUpdate
+        signal scalesUpdate
+
+        property var seriesMetaData
+        property var seriesExtraColors
+        // Static flags always added to data series, not part of the dynamic data series
+        property var extraFlags: [
+            "state.running",
+            "state.wheelslip",
+            "state.sat",
+            "footpad.state",
+        ]
+
+        function reset() {
+            sampleNr = 0;
+            data = [];
+            initialized = false;
+            dataReady = false;
+        }
+
+        function init(seriesIds, ticksPerSec) {
+            ticksPerSecond = ticksPerSec;
+            initSeries(seriesIds, false);
+        }
+
+        function initSeries(ids, allVisible) {
+            var smplSize = ids.length + extraFlags.length;
+            sampleSize = smplSize;
+            mins = Array(smplSize).fill(0);
+            maxs = Array(smplSize).fill(0);
+            scales = Array(smplSize).fill(1);
+
+            if (arraysEqual(ids, seriesIds)) {
+                initialized = true;
+                return;
+            }
+
+            seriesIds = ids;
+            var seriesMeta = seriesMetaData;
+
+            var tmpMd = {};
+            for (var i =0; i < seriesMeta.length; i++) {
+                var sm = seriesMeta[i];
+                var smDataCopy = Object.assign({}, sm[1]);
+                tmpMd[sm[0]] = smDataCopy;
+                smDataCopy.sortOrder = i + 100;
+            }
+
+            var srs = [];
+            var srsSorted = [];
+            var extrasOrder = 0;
+
+            var push_series = function(id, i, visible) {
+                var seriesMd = tmpMd[id] ?? {
+                    "name": id,
+                    "color": seriesExtraColors[extrasOrder],
+                    "sortOrder": extrasOrder++,
+                    "visible": true,
+                };
+                if (visible) {
+                    seriesMd.visible = visible;
+                }
+                seriesMd.dataOrder = i;
+                srs.push(seriesMd);
+                srsSorted.push(seriesMd);
+            }
+
+            for (var i = 0; i < extraFlags.length; i++) {
+                push_series(extraFlags[i], i, false);
+            }
+
+            for (var i = 0; i < ids.length; i++) {
+                push_series(ids[i], i + extraFlags.length, !!allVisible);
+            }
+
+            srsSorted.sort((a, b) => a.sortOrder - b.sortOrder);
+            series = srs;
+            seriesSorted = srsSorted;
+            initialized = true;
+        }
+
+        function addSample(sample, offset) {
+            var sampleTime = sample[0] + timeOffset;
+            var lastTime = data.length > 0 ? data[data.length - 1][0] : undefined;
+
+            // only push sample if it's the next in row, assuming messages
+            // can't change order, this should guarantee consistency
+            //
+            // also don't push if the timestamp is the same as that of the last
+            // record, this can happen if two clients are connected to the same
+            // VESC (they both poll for data and the messages get sent twice)
+            if ((offset !== undefined && offset !== data.length) || lastTime === sampleTime) {
+                return;
+            }
+
+            if (sampleTime < lastTime) {
+                if (lastTime - sampleTime > 2 ** 31) {
+                    // assume ticks have overflown
+                    timeOffset = timeOffset + 2 ** 32;
+                } else {
+                    // a temporary disconnect (as of writing this code, doesn't
+                    // normally occur without the AppUI being brought down)
+                    timeOffset += lastTime + 10 * ticksPerSecond;
+                }
+            }
+
+            if (timeOffset > 0) {
+                sample[0] += timeOffset;
+            }
+
+            data.push(sample);
+
+            for (var i = 0; i < sampleSize; i++) {
+                if (sample[i + 1] > maxs[i]) {
+                    maxs[i] = sample[i + 1];
+                }
+                if (sample[i + 1] < mins[i]) {
+                    mins[i] = sample[i + 1];
+                }
+            }
+
+            sampleNr = data.length;
+        }
+
+        function makeReady() {
+            calculateRanges();
+            dataReady = true;
+            dataUpdate();
+        }
+
+        function calculateRanges() {
+            if (data.length == 0) {
+                return;
+            }
+
+            var lowestRatio = 1;
+            var highestRatio = 0;
+            var lMins = mins;
+            var lMaxs = maxs;
+            var srs = series;
+            for (var i = 0; i < sampleSize; i++) {
+                if (!srs[i].visible) {
+                    continue;
+                }
+
+                if (lMaxs[i] > 1 || lMins[i] < -1) {
+                    var ratio = clamp(lMaxs[i] / (lMaxs[i] - lMins[i]), 0, 1);
+                    lowestRatio = Math.min(lowestRatio, ratio);
+                    highestRatio = Math.max(highestRatio, ratio);
+                }
+            }
+
+            var newRatio;
+            if (lowestRatio < 0.5) {
+                if (highestRatio > 0.5) {
+                    newRatio = 0.5;
+                } else {
+                    newRatio = highestRatio;
+                }
+            } else {
+                newRatio = lowestRatio;
+            }
+
+            positiveRatio = clamp(newRatio, 0.15, 0.85);
+
+            var setScale = function(i, s) {
+                if (s != scales[i]) {
+                    scalesUpdate();
+                }
+                scales[i] = s;
+            }
+
+            var newScale;
+            for (var i = 0; i < sampleSize; i++) {
+                var minRatio = (1 - positiveRatio) / lMins[i];
+                var maxRatio = positiveRatio / lMaxs[i];
+                if (lMaxs[i] > 0) {
+                    if (lMins[i] < 0) {
+                        newScale = Math.min(maxRatio, -minRatio);
+                    } else {
+                        newScale = isFinite(maxRatio) ? maxRatio : 1;
+                    }
+                } else {
+                    newScale = isFinite(minRatio) ? -minRatio : 1;
+                }
+                var rns = Math.min(newScale, srs[i].maxScale ?? 1);
+                setScale(i, rns);
+            }
+
+            timeStart = data[0][0];
+            timeEnd = data[data.length - 1][0];
+            timeRange = timeEnd - timeStart;
+        }
+    }
+
+    component RecordedPlotData : PlotData {
+        id: recPlotData
+
+        property bool noData: false
+        property bool timeout: false
+
+        property int sampleCount: 0
+        property int requestTries: 0
+
+        property Timer receiveTimeout: Timer {
+            interval: 1000
+
+            onTriggered: {
+                recPlotData.requestPlot(true);
+            }
+        }
+
+        function fetch(ticksPerSec) {
+            reset();
+            ticksPerSecond = ticksPerSec;
+            noData = false;
+            timeout = false;
+            requestPlot();
+        }
+
+        function requestPlot(isARetry) {
+            var reqTries = requestTries;
+
+            if (!isARetry) {
+                reqTries = 1;
+            } else if (reqTries > 5) {
+                timeout = true;
+                return;
+            }
+
+            if (!initialized) {
+                commands.sendDataRecordRequest(true);
+            } else {
+                commands.sendDataRecordRequest(false, sampleNr);
+            }
+
+            reqTries++;
+            requestTries = reqTries;
+
+            receiveTimeout.start();
+        }
+
+        function receiveHeader(dv, ind) {
+            if (initialized) {
+                // prevent processing messages in more than one AppUI instance
+                return;
+            }
+
+            receiveTimeout.stop();
+
+            sampleCount = dv.getUint32(ind); ind += 4;
+
+            var sampleSize = dv.getUint8(ind++);
+            var ids = [];
+            for (var i = 0; i < sampleSize; i++) {
+                var id = "";
+                var size = dv.getUint8(ind++);
+                for (var j = 0; j < size; j++) {
+                    id += String.fromCharCode(dv.getUint8(ind++));
+                }
+                ids.push(id);
+            }
+            initSeries(ids, true);
+
+            if (sampleCount === 0) {
+                noData = true;
+            } else {
+                requestPlot();
+            }
+        }
+
+        function receiveData(dv, ind) {
+            receiveTimeout.stop();
+
+            var offset = dv.getUint32(ind); ind += 4;
+
+            var getFloat16 = commands.getFloat16;
+            while (ind < dv.byteLength) {
+                var time = dv.getUint32(ind); ind += 4;
+                var flags = dv.getUint8(ind++);
+                var sat = flags >> 4;
+                var fp_state = (flags & 0b1100) >> 2;
+                var wheelslip = (flags & 0b10) >> 1;
+                var running = flags & 0b1;
+                var data = [time, running, wheelslip, sat, fp_state];
+
+                var remainingSampleSize = sampleSize - extraFlags.length;
+                for (var i = 0; i < remainingSampleSize; i++) {
+                    data.push(getFloat16(dv, ind)); ind += 2;
+                }
+                addSample(data, offset++);
+            }
+
+            if (sampleNr < sampleCount) {
+                requestPlot();
+            } else {
+                makeReady();
+            }
+        }
+    }
+
+    component Plot : Rectangle {
+        id: plot
+        color: "#0b0b0b"
+
+        property var plotData
+        property int ticksPerSecond
+        property bool followEnd: false
+        property real startWindow: 10
+
+        property real toolbarOffset: 0
+
+        property bool showRecordDownload: false
+
+        function init(ticksPerSec) {
+            ticksPerSecond = ticksPerSec;
+            reset();
+            // solves updating the plot (series) menu when the series in plotData have changed
+            plotData = plotData;
+        }
+
+        function reset() {
+            plotCanvas.reset();
+        }
+
+        onVisibleChanged: {
+            if (!visible) {
+                menu.visible = false;
+            }
+        }
+
+        Row {
+            anchors.left: parent.left
+            anchors.top: parent.top
+            anchors.leftMargin: toolbarOffset * unit + 0.1 * unit
+            anchors.topMargin: 0.1 * unit
+            spacing: 0.1 * unit
+            z: parent.z + 5
+
+            FloatingToolButton {
+                width: 0.8 * unit
+                height: 0.8 * unit
+                visible: plotData.initialized
+
+                iconPath: Path {
+                    PathSvg {path: "M 10 15 L 40 15 M 10 25 L 40 25 M 10 35 L 40 35"}
+                }
+
+                onClicked: {
+                    menu.visible = !menu.visible;
+                }
+            }
+
+            FloatingToolButton {
+                width: 0.8 * unit
+                height: 0.8 * unit
+                visible: plot.showRecordDownload
+
+                iconPath: Path {
+                    PathSvg {path: "M 8 38 L 42 38 M 25 10 L 25 38 M 14 23 L 25 38 M 36 23 L 25 38"}
+                }
+
+                onClicked: {
+                    recordedPlot.show();
+                }
+            }
+
+            ToggleFloatingToolButton {
+                width: 0.8 * unit
+                height: 0.8 * unit
+                visible: plot.showRecordDownload
+
+                value: mainItem.state.extraRecording
+
+                customBgColor: value ? Utility.getAppHexColor("red") : Utility.getAppHexColor("normalBackground")
+                fillColor: value ? Utility.getAppHexColor("normalText") : Utility.getAppHexColor("red")
+
+                trueFillIconPath: Path {
+                    PathSvg {path: "M 13 13 L 13 37 L 37 37 L 37 13 L 13 13"}
+                }
+
+                falseFillIconPath: Path {
+                    PathAngleArc {centerX: 25; centerY: 25; radiusX: 12; radiusY: 12; sweepAngle: 360;}
+                }
+
+                onClicked: {
+                    commands.sendDataRecordControl(commands.dr_RECORD, !value);
+                }
+
+                onPressAndHold: {
+                    recMenu.visible = true;
+                }
+
+                Menu {
+                    id: recMenu
+
+                    CheckBox {
+                        text: "Autostart"
+                        checkable: true
+                        checked: mainItem.state.extraRecAutostart
+                        onClicked: {
+                            commands.sendDataRecordControl(commands.dr_AUTOSTART, checked);
+                        }
+                    }
+
+                    CheckBox {
+                        text: "Autostop"
+                        checkable: true
+                        checked: mainItem.state.extraRecAutostop
+                        onClicked: {
+                            commands.sendDataRecordControl(commands.dr_AUTOSTOP, checked);
+                        }
+                    }
+                }
+            }
+        }
+
+        Rectangle {
+            id: menu
+            z: parent.z + 10
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.topMargin: topMargin
+            anchors.leftMargin: sideMargin
+            height: menuScrollView.height
+            width: menuScrollView.width
+            visible: false
+
+            property real topMargin: unit
+            property real sideMargin: 0.2 * unit
+            property real hPadding: 8
+            property real vPadding: 4
+
+            color: getDarkThemeColor("darkBackground");
+
+            ScrollView {
+                id: menuScrollView
+                anchors.top: parent.top
+                anchors.left: parent.left
+                height: Math.min(contentHeight, plot.height - parent.topMargin - parent.sideMargin)
+                width: menuColumn.width + 2 * menu.hPadding + 4
+                contentWidth: availableWidth
+                contentHeight: menuColumn.height + menu.vPadding
+                clip: true
+
+                Column {
+                    id: menuColumn
+                    anchors.top: parent.top
+                    anchors.left: parent.left
+                    anchors.topMargin: menu.vPadding * 0.5
+                    spacing: 0
+
+                    Repeater {
+                        model: plotData.seriesSorted
+
+                        Item {
+                            width: menuRow.width
+                            height: label.height + 2 * menu.vPadding
+
+                            MouseArea {
+                                anchors.top: parent.top
+                                anchors.left: parent.left
+                                width: menuColumn.width
+                                height: parent.height
+                                onClicked: itemCheckBox.toggle()
+                            }
+
+                            Row {
+                                id: menuRow
+                                anchors.left: parent.left
+                                anchors.verticalCenter: parent.verticalCenter
+                                anchors.leftMargin: menu.hPadding
+                                spacing: 4
+
+                                CheckBox {
+                                    id: itemCheckBox
+                                    height: label.height
+                                    width: height
+
+                                    checked: modelData.visible
+
+                                    onCheckedChanged: {
+                                        plot.plotData.seriesSorted[index].visible = checked;
+                                        plot.plotData.calculateRanges();
+                                        plotCanvas.requestPaint();
+                                    }
+
+                                    indicator: Rectangle {
+                                        implicitHeight: parent.height * 0.9
+                                        implicitWidth: implicitHeight
+                                        y: parent.height / 2 - height / 2
+                                        radius: 2
+                                        color: "transparent"
+                                        border.color: parent.checked ? getDarkThemeColor("lightText") : getDarkThemeColor("normalText")
+
+                                        Rectangle {
+                                            height: parent.height * 0.5
+                                            width: height
+                                            x: parent.width / 2 - width / 2
+                                            y: parent.height / 2 - height / 2
+                                            radius: 1
+                                            color: parent.border.color
+                                            visible: parent.parent.checked
+                                        }
+                                    }
+                                }
+
+                                Text {
+                                    id: label
+                                    text: modelData.name
+                                    font.pointSize: 16
+                                    color: modelData.color
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        PinchArea {
+            anchors.fill: parent
+
+            property real initialPlotWindow
+            property real initialX
+            property real lastScale
+
+            onPinchStarted: {
+                initialPlotWindow = plotCanvas.window;
+                initialX = plotMouse.x(pinch.center);
+                plotMover.grab();
+            }
+
+            onPinchUpdated: {
+                plotMover.move(initialX - plotMouse.x(pinch.center), pinch.scale != lastScale);
+                plotMover.zoom(initialPlotWindow / pinch.scale, plotMouse.x(pinch.center));
+                lastScale = pinch.scale;
+            }
+
+            onPinchFinished: {
+                plotMouse.release();
+            }
+
+            MouseArea {
+                id: plotMouse
+                anchors.fill: parent
+                propagateComposedEvents: true
+                preventStealing: true
+
+                property real initialX
+                property real initialY
+
+                property bool moving: false
+                property bool holdCursor: false
+                property bool moveCursor: false
+                property bool cancelAction: false
+
+                property real snap: 20
+
+                function x(obj) {
+                    return obj.x - plotCanvas.padding;
+                }
+
+                function dist2d(event) {
+                    var dx = initialX - x(event);
+                    var dy = initialY - event.y;
+                    return Math.sqrt(dx * dx + dy * dy);
+                }
+
+                function release() {
+                    moving = false;
+                    holdCursor = false;
+                    moveCursor = false;
+                    cancelAction = false;
+                    plotCanvas.fadeCursor(1);
+                    plotMover.flick();
+                }
+
+                onWheel: {
+                    if (!plotMover.grabbed) {
+                        plotMover.grab();
+                    }
+
+                    plotMover.zoomAnimated(Math.max(0.75, 1 + wheel.angleDelta.y / 120 * 0.25), x(wheel));
+                }
+
+                onPressed: {
+                    menu.visible = false;
+
+                    initialX = x(mouse);
+                    initialY = mouse.y;
+
+                    var cursorPos = plotCanvas.getCursorPosIfCan();
+                    if (plotMover.rolling) {
+                        moving = true;
+                    } else if (cursorPos !== null && dist(initialX, cursorPos) < snap) {
+                        holdCursor = true;
+                        return;
+                    }
+
+                    plotMover.grab();
+                }
+
+                onPositionChanged: {
+                    if (cancelAction) {
+                        return;
+                    }
+
+                    var d = initialX - x(mouse);
+                    if (holdCursor) {
+                        if (moveCursor) {
+                            plotCanvas.spawnCursor(x(mouse));
+                        } else {
+                            var yd = initialY - mouse.y;
+                            var dist = Math.sqrt(yd * yd + d * d);
+                            var angle = Math.acos(yd / dist);
+
+                            // a cone of 30 degrees (15 to each side) or further than 10 pixels
+                            if (angle > 0.2618 && dist > snap) {
+                                if (yd > 30) {
+                                    cancelAction = true;
+                                } else {
+                                    moveCursor = true;
+                                }
+                                plotCanvas.fadeCursor(1);
+                                return;
+                            }
+
+                            plotCanvas.fadeCursor(clamp(1 - (yd - snap) / 100, 0, 1));
+                        }
+                    } else {
+                        if (Math.abs(d) > snap) {
+                            moving = true;
+                        }
+                        plotMover.move(d);
+                    }
+                }
+
+                onReleased: {
+                    release();
+                }
+
+                onPressAndHold: {
+                    if (cancelAction) {
+                        return;
+                    }
+
+                    if (!moving && (dist2d(mouse) < snap || !holdCursor)) {
+                        holdCursor = true;
+                        moveCursor = true;
+                        plotCanvas.spawnCursor(x(mouse));
+                    }
+                }
+            }
+
+            Canvas {
+                id: plotCanvas
+                anchors.centerIn: parent
+                width: parent.width
+                height: parent.height
+                visible: plotData.dataReady
+                contextType: "2d"
+
+                property real position: NaN
+                property real window
+
+                property int padding: 8
+                property int toolbarHeight: unit
+                property int bottomHeight: 20
+
+                property real length: width
+                property real xLength: width - 2 * padding
+                property real yLength: height - toolbarHeight - bottomHeight
+
+                property var cursor: null
+                property real cursorOpacity: 1
+
+                // for hysteresis (to prevent blinking)
+                property bool paintDotsHyst: false
+                property real hystWindow
+
+                Connections {
+                    target: plotData
+
+                    function onDataUpdate() {
+                        if (isNaN(plotCanvas.position)) {
+                            if (plot.followEnd) {
+                                plotCanvas.position = plotData.timeEnd - plotCanvas.window;
+                                plotMover.followPosition();
+                            } else {
+                                plotCanvas.position = plotData.timeStart;
+                                plotCanvas.window = plotData.timeRange;
+                            }
+                        }
+
+                        if (plot.followEnd && plotMover.following) {
+                            plotMover.positionFollower = plotData.timeEnd - plotCanvas.window;
+                        }
+                    }
+
+                    function onScalesUpdate() {
+                        plotCanvas.requestPaint();
+                    }
+                }
+
+                onVisibleChanged: requestPaint();
+                onPositionChanged: requestPaint();
+                onWindowChanged: requestPaint();
+                onCursorChanged: requestPaint();
+                onCursorOpacityChanged: requestPaint();
+
+                QtObject {
+                    id: plotMover
+
+                    property real bounceOffset: 0.05
+                    property real minWindow: 0.001
+
+                    property real moveReferencePos
+                    property real moveUnbluntedPos
+                    property real animWin
+
+                    property real zoomCenter
+
+                    property real lastDist
+                    property real lastTime
+                    property real speed
+                    property real zoomDampen
+                    property real positionFollower
+                    property real lastZoomCenter
+
+                    property bool grabbed
+                    property bool moving
+                    property bool rolling
+                    property bool following
+
+                    onAnimWinChanged: {
+                        zoom(animWin, zoomCenter);
+                    }
+
+                    onPositionFollowerChanged: {
+                        if (following) {
+                            plotCanvas.position = positionFollower;
+                        }
+                    }
+
+                    Behavior on positionFollower {
+                        id: positionFollowerBehavior
+                        NumberAnimation {
+                            easing.type: Easing.OutExpo
+                            duration: 800
+                        }
+                    }
+
+                    function followPosition() {
+                        positionFollowerBehavior.enabled = false;
+                        positionFollower = plotCanvas.position;
+                        positionFollowerBehavior.enabled = true;
+                        following = true;
+                    }
+
+                    function grab() {
+                        moveReferencePos = plotCanvas.position;
+                        animWin = plotCanvas.window;
+
+                        lastDist = 0;
+                        lastTime = 0;
+                        speed = 0;
+
+                        grabbed = true;
+                        moving = false;
+                        rolling = false;
+                        following = false;
+
+                        zoomAnim.stop();
+                        bounceBack.stop();
+                        bounceBackZoom.stop();
+                    }
+
+                    function release() {
+                        if (grabbed) {
+                            snapToBounds();
+                        }
+                        grabbed = false;
+                    }
+
+                    function blunt(x, a) {
+                        return a * Math.exp(x / a) - a;
+                    }
+
+                    function maxWindow() {
+                        return Math.max(plot.followEnd ? plot.startWindow * plot.ticksPerSecond : 0, plotData.timeRange);
+                    }
+
+                    function moveRelative(pos, x) {
+                        moveUnbluntedPos = plotCanvas.toPlotPos(pos, x);
+                        var newPos = moveUnbluntedPos;
+
+                        var endPos = plotData.timeEnd - plotCanvas.window;
+                        var startPos = plot.followEnd && plotCanvas.window > plotData.timeRange ? endPos : plotData.timeStart;
+
+                        var startDist = newPos - startPos;
+                        if (startDist < 0) {
+                            newPos += -startDist + blunt(startDist / plotCanvas.window, bounceOffset) * plotCanvas.window;
+                        }
+
+                        var endDist = endPos - newPos;
+                        if (endDist < 0) {
+                            newPos += endDist - blunt(endDist / plotCanvas.window, bounceOffset) * plotCanvas.window;
+                        }
+
+                        var ret = plotCanvas.toCanvasPos(newPos);
+                        plotCanvas.position = newPos;
+
+                        return ret;
+                    }
+
+                    function move(dist, isZooming) {
+                        moveRelative(moveReferencePos, dist);
+
+                        var now = Date.now();
+                        var dt = now - lastTime;
+                        if (dt === 0) {
+                            // seems to happen on desktop with mouse only
+                            return;
+                        }
+
+                        var alpha = 0.9;
+                        if (isZooming) {
+                            zoomDampen = alpha;
+                        } else {
+                            alpha -= zoomDampen;
+                        }
+                        var s = (dist - lastDist) / dt * 1000;
+                        speed += alpha * (s - speed);
+                        zoomDampen = Math.max(zoomDampen * 0.98 - 0.002, 0);
+
+                        moving = true;
+                        lastDist = dist;
+                        lastTime = now;
+                    }
+
+                    function zoomPosOffset(oldWindow, newWindow, center) {
+                        var perc = oldWindow / newWindow - 1;
+                        return (plotCanvas.toPlotPos(plotCanvas.position, center, newWindow) - plotCanvas.position) * perc;
+                    }
+
+                    function zoom(newWindow, center) {
+                        bounceBackZoom.stop();
+                        lastZoomCenter = center;
+
+                        var maxWin = maxWindow();
+                        var maxDist = maxWin - newWindow;
+                        if (maxDist < 0) {
+                            newWindow = (1 - blunt(maxDist / maxWin, bounceOffset * 2)) * maxWin;
+                        }
+
+                        var minDist = newWindow - minWindow;
+                        if (minDist < 0) {
+                            newWindow = (1 + blunt(minDist / minWindow, bounceOffset * 2)) * minWindow;
+                        }
+
+                        var posOffset = zoomPosOffset(plotCanvas.window, newWindow, center);
+                        moveReferencePos += posOffset;
+                        plotCanvas.position = plotCanvas.position + posOffset;
+                        plotCanvas.window = newWindow;
+                    }
+
+                    function flick() {
+                        grabbed = false;
+                        rolling = true;
+                    }
+
+                    function snapToBounds() {
+                        var windowTo = clamp(plotCanvas.window, minWindow, maxWindow());
+
+                        bounceBackZoom.stop();
+                        bounceBackZoom.to = windowTo;
+                        bounceBackZoom.start();
+
+                        if (plot.followEnd && (plotCanvas.window > plotData.timeRange || plotCanvas.position > plotData.timeEnd - plotCanvas.window * 1.05)) {
+                            plotMover.followPosition();
+                        } else {
+                            bounceBack.stop();
+                            var newPos = plotCanvas.position + zoomPosOffset(plotCanvas.window, windowTo, lastZoomCenter);
+                            bounceBack.to = clamp(newPos, plotData.timeStart, plotData.timeEnd - windowTo);
+                            bounceBack.start();
+                        }
+                    }
+
+                    function zoomAnimated(by, center) {
+                        zoomCenter = center;
+
+                        if (!zoomAnim.running) {
+                            zoomAnim.to = animWin / by;
+                        } else {
+                            zoomAnim.stop();
+                            zoomAnim.to /= by;
+                        }
+
+                        zoomAnim.start();
+                    }
+                }
+
+                Timer {
+                    id: plotFlickTimer
+                    repeat: true
+                    interval: dt * 1000
+                    running: plotCanvas.visible
+
+                    property real dt: 1 / 30
+
+                    onTriggered: {
+                        var sign = plotMover.speed < 0 ? -1 : 1;
+                        if (plotMover.speed * sign > 0) {
+                            var d = plotMover.speed * dt;
+
+                            if (plotMover.rolling) {
+                                var realD = plotMover.moveRelative(plotMover.moveUnbluntedPos, d);
+
+                                if (sign * realD < sign * d - 0.000001) {
+                                    // we hit the edge, real speed is now much slower
+                                    plotMover.speed = realD / dt;
+                                    plotMover.speed -= sign * 0.1;
+                                } else {
+                                    // very gradual deceleration during normal rolling
+                                    plotMover.speed *= 0.98;
+                                    plotMover.speed -= sign * 2;
+                                }
+                            } else if (!plotMover.moving) {
+                                // fast decay when plot is being held in place without moving (i.e. no mouse events incoming)
+                                plotMover.speed *= 0.7;
+                                plotMover.speed -= sign * 20;
+                            }
+
+                            plotMover.moving = false;
+                        }
+
+                        if (plotMover.speed * sign <= 0) {
+                            plotMover.speed = 0;
+                            if (plotMover.rolling) {
+                                plotMover.snapToBounds();
+                            }
+                            plotMover.rolling = false;
+                        }
+                    }
+                }
+
+                NumberAnimation {
+                    id: zoomAnim
+                    target: plotMover
+                    property: "animWin"
+                    easing.type: Easing.OutQuad
+                    duration: 200
+
+                    onFinished: {
+                        plotMover.release();
+                    }
+                }
+
+                NumberAnimation {
+                    id: bounceBack
+                    target: plotCanvas
+                    property: "position"
+                    easing {
+                        type: Easing.OutBack
+                        amplitude: 2.0
+                        period: 0.5
+                    }
+                    duration: 300
+                }
+
+                NumberAnimation {
+                    id: bounceBackZoom
+                    target: plotCanvas
+                    property: "window"
+                    easing {
+                        type: Easing.OutBack
+                        amplitude: 2.0
+                        period: 0.5
+                    }
+                    duration: 300
+                }
+
+                function toPlotPos(oldPos, x, win) {
+                    if (win === undefined) {
+                        win = window;
+                    }
+                    return oldPos + x / xLength * win;
+                }
+
+                function toCanvasPos(pos) {
+                    return (pos - position) / window * xLength;
+                }
+
+                function isCursorPosValid(pos) {
+                    if (pos < plotData.timeStart || pos < position || pos > position + window || pos > plotData.timeEnd) {
+                        return false;
+                    }
+
+                    return true;
+                }
+
+                function spawnCursor(x) {
+                    var cursorPos = toPlotPos(position, x);
+
+                    if (!isCursorPosValid(cursorPos)) {
+                        return;
+                    }
+
+                    for (var i = 0; i < plotData.data.length; i++) {
+                        var time1 = plotData.data[i][0];
+                        if (cursorPos < time1) {
+                            if (i === 0) {
+                                cursor = plotData.data[i];
+                            } else {
+                                var time2 = plotData.data[i - 1][0];
+                                if (dist(cursorPos, time1) < dist(cursorPos, time2)) {
+                                    cursor = plotData.data[i];
+                                } else {
+                                    cursor = plotData.data[i - 1];
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+
+                function getCursorPosIfCan() {
+                    if (!cursor) {
+                        return null;
+                    }
+
+                    var pos = cursor[0];
+                    if (!isCursorPosValid(pos)) {
+                        return null;
+                    }
+
+                    return toCanvasPos(pos);
+                }
+
+                function fadeCursor(a) {
+                    a = a * a * a;
+                    if (a <= 0.05) {
+                        cursor = null;
+                    } else {
+                        cursorOpacity = a;
+                    }
+                }
+
+                function reset() {
+                    position = NaN;
+                    window = plot.startWindow * plot.ticksPerSecond;
+                    cursor = null;
+                }
+
+                function pointYCoord(point, n) {
+                    return point[n + 1] * yLength * plotData.scales[n];
+                }
+
+                function timeFormat(s, decimals) {
+                    var res = "";
+                    if (s > 60) {
+                        var m = Math.floor(s / 60);
+                        s -= m * 60;
+                        if (m > 60) {
+                            var h = Math.floor(m / 60);
+                            m = String(m - h * 60).padStart(2, "0");
+                            res += h + ":";
+                        }
+                        res += m + ":";
+                    }
+
+                    if (s < 10) {
+                        res += "0";
+                    }
+
+                    if (decimals !== undefined) {
+                        res += s.toFixed(decimals);
+                    } else {
+                        res += s.toFixed(6) / 1;
+                    }
+
+                    return res;
+                }
+
+                function paintXAxis(ctx, yMax, yMin) {
+                    ctx.beginPath();
+                    ctx.lineWidth = 1;
+                    ctx.strokeStyle = getDarkThemeColor("disabledText");
+
+                    ctx.moveTo(-padding, 0);
+                    ctx.lineTo(xLength + padding, 0);
+                    ctx.stroke();
+
+                    if (window == 0 || xLength == 0) {
+                        // prevent an infinite loop
+                        return;
+                    }
+
+                    var basePixelsPerTick = 60;
+
+                    var calcTick = function(extraWidth) {
+                        var mult = 1;
+                        var tick = window / xLength * (basePixelsPerTick + extraWidth);
+
+                        while (tick < 1) {
+                            mult *= 0.1;
+                            tick *= 10;
+                        }
+
+                        while (tick > 10) {
+                            mult *= 10;
+                            tick *= 0.1;
+                        }
+
+                        if (tick > 5) {
+                            tick = 5;
+                        } else if (tick > 2) {
+                            tick = 2;
+                        } else {
+                            tick = 1;
+                        }
+
+                        return tick * mult;
+                    }
+
+                    // estimate label width
+                    var digitSize = ctx.measureText("8").width;
+                    var sepSize = ctx.measureText(":").width;
+                    var sampleTime = plotData.timeEnd;
+                    var decs = Math.max(-Math.log10(window / xLength * basePixelsPerTick), 0);
+                    var estimatedExtraWidth = decs * digitSize + sepSize;
+                    if (sampleTime >= 60) {
+                        estimatedExtraWidth += digitSize + sepSize;
+                    }
+                    if (sampleTime >= 600) {
+                        estimatedExtraWidth += digitSize;
+                    }
+                    if (sampleTime >= 3600) {
+                        estimatedExtraWidth += digitSize + sepSize;
+                    }
+
+                    var tick = calcTick(Math.max(0, estimatedExtraWidth - 10) * 3.6);
+
+                    ctx.beginPath();
+                    ctx.textAlign = "center";
+                    ctx.fillStyle = getDarkThemeColor("disabledText");
+                    ctx.strokeStyle = getDarkThemeColor("darkBackground");
+                    var notch = Math.floor(position / tick) * tick;
+                    var maxNotch = Math.ceil((position + window) / tick) * tick;
+                    var ticksPerSec = plot.ticksPerSecond;
+                    while (notch <= maxNotch) {
+                        var coord = toCanvasPos(notch);
+                        ctx.moveTo(coord, -yMax);
+                        ctx.lineTo(coord, -yMin);
+
+                        var decimals = Math.max(Math.ceil(-Math.log10(tick / ticksPerSec)), 0);
+                        ctx.fillText(timeFormat(notch / ticksPerSec, decimals), coord, -yMin + 15);
+                        ctx.stroke();
+
+                        notch += tick;
+                    }
+
+                    ctx.stroke();
+                }
+
+                function paintCursor(ctx, yMax, yMin) {
+                    var time = cursor[0];
+                    if (time < position || time > position + window) {
+                        return;
+                    }
+
+                    var originalAlpha = ctx.globalAlpha;
+                    ctx.globalAlpha = cursorOpacity;
+
+                    ctx.beginPath();
+                    ctx.lineWidth = 1;
+                    ctx.strokeStyle = getDarkThemeColor("normalText");
+
+                    var cursorCoord = toCanvasPos(cursor[0]);
+                    ctx.moveTo(cursorCoord, -yMax - 3);
+                    ctx.lineTo(cursorCoord, -yMin + 3);
+                    ctx.stroke();
+
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "top";
+                    ctx.fillStyle = getDarkThemeColor("normalText");
+                    var text = timeFormat(time / plot.ticksPerSecond);
+                    var rectWidth = ctx.measureText(text).width + 20;
+                    var rectHalfWidth = rectWidth / 2;
+                    var removePadding = padding + 5;
+                    var xTextCoord = clamp(cursorCoord, rectHalfWidth - removePadding, xLength - rectHalfWidth + removePadding - 1);
+                    var yTextCoord = -yMin + 5;
+                    ctx.rect(xTextCoord - rectHalfWidth, yTextCoord, rectWidth, 14);
+
+                    var pc = plot.color;
+                    ctx.fillStyle = Qt.rgba(pc.r, pc.g, pc.b, 0.7);
+                    ctx.fill();
+                    ctx.fillStyle = getDarkThemeColor("normalText");
+                    ctx.fillText(text, xTextCoord, yTextCoord);
+                    ctx.textBaseline = "alphabetic";
+
+                    var textHeight = 10;
+                    var yOffset = 4;
+                    var labelHeight = textHeight + yOffset;
+                    var topLimit = yMax - textHeight - 1;
+                    var bottomLimit = yMin + 1;
+                    var pd = plotData;
+                    var series = pd.series;
+
+                    var textX = cursorCoord;
+                    if (cursorCoord > xLength - 80) {
+                        textX -= 4;
+                        ctx.textAlign = "right";
+                    } else {
+                        textX += 4;
+                        ctx.textAlign = "left";
+                    }
+
+                    var vals = [];
+                    for (var n = 0; n < pd.sampleSize; n++) {
+                        if (!series[n].visible) {
+                            continue;
+                        }
+                        var y = pointYCoord(cursor, n);
+                        if (!Number.isNaN(y)) {
+                            vals.push([y, series[n].sortOrder, n]);
+                        }
+                    }
+
+                    vals.sort((a, b) => b[0] !== a[0] ? b[0] - a[0] : a[1] - b[1]);
+
+                    ctx.strokeStyle = "#000000";
+                    ctx.lineWidth = 3;
+                    for (var i = 0; i < vals.length; i++) {
+                        var p = vals[i];
+                        var n = p[2];
+                        ctx.fillStyle = series[n].color;
+                        var str = Number(cursor[n + 1].toPrecision(4));
+                        var textY = Math.min(p[0] + yOffset, topLimit);
+                        textY = Math.max(bottomLimit + (vals.length - i - 1) * labelHeight, textY);
+                        topLimit = textY - labelHeight;
+
+                        ctx.strokeText(str, textX, -textY);
+                        ctx.fillText(str, textX, -textY);
+                    }
+
+                    ctx.globalAlpha = originalAlpha;
+                }
+
+                function paintSeries(ctx, yMax, yMin) {
+                    var lineWidth = 1;
+                    ctx.lineWidth = lineWidth;
+
+                    // optimization: local variables are much faster than property resolution
+                    var pd = plotData;
+                    var data = pd.data;
+                    var scales = pd.scales;
+                    var sampleSize = pd.sampleSize;
+                    var yLen = yLength;
+                    var pos = position;
+                    var win = window;
+                    var xLen = xLength;
+
+                    // calculate start and end indices according to window
+                    var start = 0;
+                    var end = data.length;
+
+                    var winNotChangedFactor = Math.abs(win - hystWindow) < 0.0001 ? 2 : 1;
+                    hystWindow = win;
+
+                    var pixelsPerTimeUnit = xLen / win;
+                    var prevTime = null;
+                    var paintDots = true;
+                    var dotsThreshold = 20 / (paintDotsHyst ? 1 : (0.8 / winNotChangedFactor));
+                    var distanceSum = 0;
+                    var minDistance = 1e10;
+                    var windowSize = 4;
+                    var lastFour = [];
+                    for (var i = start; i < end; i++) {
+                        var t = data[i][0];
+                        if (t < pos) {
+                            start = i;
+                        } else {
+                            if (t > pos + win) {
+                                end = Math.min(i + 1, data.length);
+                                break;
+                            }
+
+                            // measure point distance until we measure enough to disable painting plot dots
+                            // (or never reach enough distance and paint the dots)
+                            if (prevTime !== null) {
+                                var distance = (t - prevTime) * pixelsPerTimeUnit;
+                                distanceSum += distance;
+                                lastFour.push(distance);
+
+                                if (lastFour.length > 4) {
+                                    distanceSum -= lastFour.shift();
+                                }
+
+                                if (lastFour.length === 4) {
+                                    if (distanceSum / 4 < dotsThreshold) {
+                                        paintDots = false;
+                                    }
+
+                                    minDistance = Math.min(minDistance, distanceSum);
+                                }
+                            }
+                            prevTime = t;
+                        }
+                    }
+
+                    if (lastFour.length < 4 && distanceSum / lastFour.length < dotsThreshold) {
+                        paintDots = false;
+                    }
+                    minDistance = Math.min(minDistance, distanceSum);
+
+                    var dotDistThreshold = Math.max(minDistance / lastFour.length * 3, 10);
+
+                    paintDotsHyst = paintDots;
+
+                    var step = 0.5 / Screen.devicePixelRatio;
+                    var justOutOfMinMax = false;
+                    var halfASecondPixels = 0.5 * plot.ticksPerSecond * xLen / win;
+
+                    var srsSorted = pd.seriesSorted;
+                    for (var k = srsSorted.length - 1; k >= 0; k--) {
+                        var series = srsSorted[k];
+                        if (!series.visible) {
+                            continue;
+                        }
+
+                        ctx.beginPath();
+                        var color = series.color;
+                        ctx.strokeStyle = color;
+                        ctx.fillStyle = color;
+
+                        var n = series.dataOrder;
+                        var nScale = scales[n];
+                        var min = -1e30;
+                        var max = 1e30;
+                        var lastX = -0.001;
+                        var lastSampleX = -0.001;
+                        var lastY = 0;
+                        var lastDrawnX = 0;
+                        var minMaxMode = false;
+                        var drawnLastDot = false;
+                        for (var i = start; i < end; i++) {
+                            var point = data[i];
+                            var nPoint = point[n + 1];
+
+                            // optimization: instead of toCanvasPos(point[0])
+                            var x = (point[0] - pos) / win * xLen;
+
+                            // optimization: NaN check by comparison instead of Number.isNaN()
+                            if (nPoint !== nPoint) {
+                                lastSampleX = x;
+                                continue;
+                            }
+
+                            var y = -nPoint * yLen * nScale;
+                            var origX = x;
+
+                            // handle trimming lines at plot edges
+                            if (i === start && x < 0) {
+                                var nextPoint = data[i + 1];
+                                var nextX = (nextPoint[0] - pos) / win * xLen;
+                                var nextY = -nextPoint[n + 1] * yLen * nScale;
+                                y += (nextY - y) * x / (x - nextX);
+                                x = 0;
+                            } else if (i === end - 1 && x > xLen) {
+                                y -= (y - lastY) * (x - xLen) / (x - lastX);
+                                x = xLen;
+                            }
+
+                            if (i > start && x - lastX < step) {
+                                minMaxMode = true;
+                            }
+
+                            if (minMaxMode) {
+                                // min-max algorithm for dynamically "downsampling" the series
+                                if (x - lastDrawnX > step) {
+                                    var miny = min;
+                                    var maxy = max;
+                                    var dist = miny - maxy;
+                                    if (dist < lineWidth) {
+                                        var offset = (lineWidth - dist) / 2;
+                                        miny += offset;
+                                        maxy -= offset;
+                                    }
+
+                                    ctx.moveTo(lastX, miny);
+                                    ctx.lineTo(lastX, maxy);
+
+                                    var tmp = min;
+                                    min = max;
+                                    max = tmp;
+
+                                    lastDrawnX = x;
+
+                                    if (x - lastX > step) {
+                                        minMaxMode = false;
+                                        justOutOfMinMax = true;
+                                        ctx.moveTo(lastX, lastY);
+                                    }
+                                }
+
+                                min = y > min ? y : min;
+                                max = y < max ? y : max;
+                            }
+
+                            if (!minMaxMode) {
+                                if (origX - lastX > halfASecondPixels) {
+                                    ctx.moveTo(x, y);
+                                } else {
+                                    ctx.lineTo(x, y);
+                                }
+
+                                min = y;
+                                max = y;
+                                lastDrawnX = x;
+                                justOutOfMinMax = false;
+                            }
+
+                            if (i > start && origX >= 0 && (paintDots || x - lastSampleX > dotDistThreshold || origX - lastSampleX > halfASecondPixels)) {
+                                ctx.stroke();
+                                ctx.beginPath();
+                                if (!drawnLastDot && lastX >= 0) {
+                                    ctx.arc(lastX, lastY, 2.5, 0, 2 * Math.PI, false);
+                                }
+                                if (origX <= xLen + 0.001) {
+                                    ctx.arc(x, y, 2.5, 0, 2 * Math.PI, false);
+                                }
+                                ctx.fill();
+                                ctx.beginPath();
+                                if (justOutOfMinMax) {
+                                    ctx.moveTo(lastX, lastY);
+                                } else {
+                                    ctx.moveTo(x, y);
+                                }
+                                drawnLastDot = true;
+                            } else {
+                                // move to the same point to draw a series of disconnected lines,
+                                // which is much faster
+                                ctx.moveTo(x, y);
+                                drawnLastDot = false;
+                            }
+
+                            lastX = origX;
+                            lastSampleX = origX;
+                            lastY = y;
+                        }
+                        ctx.stroke();
+                    }
+                }
+
+                onPaint: {
+                    if (!visible) {
+                        return;
+                    }
+
+                    var ctx = getContext("2d");
+                    ctx.reset();
+
+                    if (!plotData.dataReady) {
+                        return;
+                    }
+
+                    var yMax = yLength * plotData.positiveRatio;
+                    var yMin = yLength * (plotData.positiveRatio - 1);
+
+                    ctx.translate(padding, yMax + toolbarHeight);
+
+                    paintXAxis(ctx, yMax, yMin);
+
+                    paintSeries(ctx, yMax, yMin);
+
+                    if (cursor !== null) {
+                        paintCursor(ctx, yMax, yMin);
+                    }
+                }
+            }
+        }
+    }
+
+    component OverlayPlot : Plot {
+        anchors.centerIn: parent
+        height: vertical ? parent.width : parent.height
+        width: vertical ? parent.height : parent.width
+        rotation: vertical ? 90 : 0
+        z: 100
+        visible: false
+
+        property bool vertical: parent.height > parent.width
+
+        showRecordDownload: parent.state.hasCapability(parent.state.cap_DataRecord)
+        toolbarOffset: 0.9
+
+        FloatingToolButton {
+            anchors.top: parent.top
+            anchors.left: parent.left
+            width: 0.8 * unit
+            height: 0.8 * unit
+
+            iconPath: Path {
+                PathSvg {path: "M 15 15 L 35 35 M 15 35 L 35 15"}
+            }
+
+            onClicked: {
+                parent.visible = false;
+            }
         }
     }
 
@@ -2087,6 +3844,38 @@ Item {
                     }
                 }
             }
+        }
+    }
+
+    OverlayPlot {
+        id: recordedPlot
+
+        plotData: RecordedPlotData {
+            id: recordedPlotData
+            seriesMetaData: plotSeriesMetaData
+            seriesExtraColors: plotSeriesExtraColors
+        }
+
+        function show() {
+            init(state.ticksPerSecond);
+            plotData.fetch(state.ticksPerSecond);
+            visible = true;
+        }
+
+        function hide() {
+            visible = false;
+        }
+
+        Text {
+            anchors.centerIn: parent
+            visible: !recordedPlotData.dataReady
+
+            property bool timeout: recordedPlotData.timeout
+
+            color: timeout ? Utility.getAppHexColor("red") : getDarkThemeColor("lightText")
+            font.pixelSize: fontSizeNormal
+            horizontalAlignment: Text.AlignHCenter
+            text: timeout ? "timeout" : recordedPlotData.noData ? "no plot data" : recordedPlotData.initialized ? "loading: %1".arg(recordedPlotData.sampleNr) : "loading..."
         }
     }
 
@@ -3450,34 +5239,25 @@ Item {
                 }
             }
 
-            ScrollView {
+            Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                contentWidth: availableWidth
-                clip: true
 
                 Column {
-                    id: debugColumn
                     anchors.fill: parent
-                    anchors.leftMargin: 0.15 * unit
-                    anchors.rightMargin: 0.15 * unit
-                    spacing: 5
-
-                    property real itemWidth: width * 0.5
-                    property real labelWidth: itemWidth * 0.7
+                    anchors.margins: 5
 
                     component Value : Item {
                         implicitHeight: label.implicitHeight
-                        implicitWidth: debugColumn.itemWidth
+                        implicitWidth: parent.width
 
                         property string label
                         property string value
                         property string unit: ""
 
-                        LText {
+                        NText {
                             id: label
-                            width: debugColumn.labelWidth
-                            anchors.left: parent.left
+                            anchors.right: parent.horizontalCenter
                             anchors.top: parent.top
                             font.pixelSize: fontSizeNormal
                             text: "%1:".arg(parent.label)
@@ -3486,75 +5266,68 @@ Item {
                         LText {
                             anchors.left: label.right
                             anchors.top: parent.top
+                            anchors.leftMargin: 3
                             font.pixelSize: fontSizeNormal
                             text: parent.value + parent.unit
                         }
                     }
 
-                    Item {
+                    Column {
+                        id: dataTopColumn
                         width: parent.width
-                        height: 0.1 * unit
-                    }
+                        spacing: 5
 
-                    LText {
-                        width: parent.width
+                        LText {
+                            width: parent.width
 
-                        font.pixelSize: fontSizeBig
-                        horizontalAlignment: Text.AlignHCenter
-                        visible: state.isError
-                        text: "Error"
-                    }
-
-                    LText {
-                        width: parent.width
-
-                        font.pixelSize: fontSizeNormal
-                        horizontalAlignment: Text.AlignHCenter
-                        visible: state.isError
-                        wrapMode: Text.WordWrap
-                        text: state.errorDescription
-                    }
-
-                    Value {id: debugStopReason; label: "Stop Condition"; value: state.stopConditionString}
-                    Value {id: debugLastBeepReason; label: "Last Beep Reason"; value: state.beepReasonString}
-
-                    Item {
-                        width: parent.width
-                        height: 0.1 * unit
-                    }
-
-                    Row {
-                        width: parent.width
-
-                        Column {
-                            width: parent.width / 2
-                            spacing: 5
-                            clip: true
-
-                            Value {label: "Requested current"; unit: "A"; value: toFixed2Zero(state.rtData["balance_current"]);}
-                            Value {label: "Filtered current"; unit: "A"; value: toFixed2Zero(state.rtData["motor.filt_current"]);}
-                            Value {label: "ATR Accel. diff."; value: toFixed2Zero(state.rtData["atr.accel_diff"]);}
-                            Value {label: "ATR Speed Boost"; unit: "%"; value: Math.round(state.rtData["atr.speed_boost"] * 100);}
-                            Value {label: "Booster current"; unit: "A"; value: toFixed2Zero(state.rtData["booster.current"]);}
-                            Value {label: "Remote input"; unit: "%"; value: Math.round(state.rtData["remote.input"] * 100);}
+                            font.pixelSize: fontSizeBig
+                            horizontalAlignment: Text.AlignHCenter
+                            visible: state.isError
+                            text: "Error"
                         }
 
-                        Column {
-                            width: parent.width / 2
-                            spacing: 5
-                            clip: true
+                        LText {
+                            width: parent.width
 
-                            Value {label: "ATR setpoint"; unit: "°"; value: toFixed2Zero(state.rtData["atr.setpoint"]);}
-                            Value {label: "Brake Tilt setpoint"; unit: "°"; value: toFixed2Zero(state.rtData["brake_tilt.setpoint"]);}
-                            Value {label: "Torque Tilt setpoint"; unit: "°"; value: toFixed2Zero(state.rtData["torque_tilt.setpoint"]);}
-                            Value {label: "Turn Tilt setpoint"; unit: "°"; value: toFixed2Zero(state.rtData["turn_tilt.setpoint"]);}
-                            Value {label: "Remote Tilt setpoint"; unit: "°"; value: toFixed2Zero(state.rtData["remote.setpoint"]);}
+                            font.pixelSize: fontSizeNormal
+                            horizontalAlignment: Text.AlignHCenter
+                            visible: state.isError
+                            wrapMode: Text.WordWrap
+                            text: state.errorDescription
+                        }
+
+                        Value {id: debugLastBeepReason; label: "Last Alert"; value: state.beepReasonString; visible: value;}
+                        Value {id: debugStopReason; label: "Disengage Reason"; value: state.stopConditionString; visible: value;}
+
+                        Item {
+                            height: 0.1
+                            width: parent.width
                         }
                     }
 
-                    Item {
+                    Plot {
+                        id: rtPlot
                         width: parent.width
-                        height: 0.1 * unit
+                        height: parent.height - dataTopColumn.height
+
+                        followEnd: true
+
+                        showRecordDownload: state.hasCapability(state.cap_DataRecord)
+
+                        plotData: PlotData {
+                            id: rtPlotData
+                            seriesMetaData: plotSeriesMetaData
+                            seriesExtraColors: plotSeriesExtraColors
+                        }
+
+                        Connections {
+                            target: state
+
+                            function onInfoReceivedChanged() {
+                                rtPlotData.init(state.rtDataAllItems, state.ticksPerSecond);
+                                rtPlot.init(state.ticksPerSecond);
+                            }
+                        }
                     }
                 }
             }

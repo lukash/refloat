@@ -21,6 +21,7 @@
 #include "booster.h"
 #include "brake_tilt.h"
 #include "charging.h"
+#include "data_record.h"
 #include "footpad_sensor.h"
 #include "haptic_feedback.h"
 #include "imu.h"
@@ -129,6 +130,7 @@ typedef struct {
     float rc_current;
 
     HapticFeedback haptic_feedback;
+    DataRecord data_record;
 
     Konami flywheel_konami;
     Konami headlights_on_konami;

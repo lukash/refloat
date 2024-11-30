@@ -17,11 +17,16 @@
 
 #pragma once
 
-// List of items to send via the REALTIME_DATA command.
+// List of items to send via the REALTIME_DATA command and record in the data
+// recorder.
 //
-// The listed items directly reference members of the Data struct.
+// S: Send in realtime data
+// R: Record the data in data recorder in addition to sending in realtime data
 //
 // RT_DATA_ITEMS are always sent, RT_DATA_RUNTIME_ITEMS are sent only when Running.
+// Items from both lists are recorded all the time (when recording is on).
+//
+// The listed items directly reference members of the Data struct.
 //
 // Caution when changing or removing existing items! Their IDs are part of the
 // Command interface (an inherent drawback of the design, a price for having a
@@ -30,40 +35,48 @@
 // handles this gracefully, but the value may still be missing if it's used in
 // the UI).
 
-#define RT_DATA_ITEMS(I)                                                                           \
-    I(motor.speed)                                                                                 \
-    I(motor.erpm)                                                                                  \
-    I(motor.current)                                                                               \
-    I(motor.dir_current)                                                                           \
-    I(motor.filt_current)                                                                          \
-    I(motor.duty_cycle)                                                                            \
-    I(motor.batt_voltage)                                                                          \
-    I(motor.batt_current)                                                                          \
-    I(motor.mosfet_temp)                                                                           \
-    I(motor.motor_temp)                                                                            \
-    I(imu.pitch)                                                                                   \
-    I(imu.balance_pitch)                                                                           \
-    I(imu.roll)                                                                                    \
-    I(footpad.adc1)                                                                                \
-    I(footpad.adc2)                                                                                \
-    I(remote.input)
+#define RT_DATA_ITEMS(S, R)                                                                        \
+    S(motor.speed)                                                                                 \
+    R(motor.erpm)                                                                                  \
+    S(motor.current)                                                                               \
+    R(motor.dir_current)                                                                           \
+    R(motor.filt_current)                                                                          \
+    S(motor.duty_cycle)                                                                            \
+    S(motor.batt_voltage)                                                                          \
+    S(motor.batt_current)                                                                          \
+    S(motor.mosfet_temp)                                                                           \
+    S(motor.motor_temp)                                                                            \
+    R(imu.pitch)                                                                                   \
+    R(imu.balance_pitch)                                                                           \
+    S(imu.roll)                                                                                    \
+    S(footpad.adc1)                                                                                \
+    S(footpad.adc2)                                                                                \
+    S(remote.input)
 
-#define RT_DATA_RUNTIME_ITEMS(I)                                                                   \
-    I(setpoint)                                                                                    \
-    I(atr.setpoint)                                                                                \
-    I(brake_tilt.setpoint)                                                                         \
-    I(torque_tilt.setpoint)                                                                        \
-    I(turn_tilt.setpoint)                                                                          \
-    I(remote.setpoint)                                                                             \
-    I(balance_current)                                                                             \
-    I(atr.accel_diff)                                                                              \
-    I(atr.speed_boost)                                                                             \
-    I(booster.current)
+#define RT_DATA_RUNTIME_ITEMS(S, R)                                                                \
+    R(setpoint)                                                                                    \
+    R(atr.setpoint)                                                                                \
+    S(brake_tilt.setpoint)                                                                         \
+    R(torque_tilt.setpoint)                                                                        \
+    S(turn_tilt.setpoint)                                                                          \
+    S(remote.setpoint)                                                                             \
+    R(balance_current)                                                                             \
+    S(atr.accel_diff)                                                                              \
+    S(atr.speed_boost)                                                                             \
+    S(booster.current)
 
-#define VISIT(LIST, ACTION) LIST(ACTION)
+#define RT_DATA_ALL_ITEMS(S, R) RT_DATA_ITEMS(S, R) RT_DATA_RUNTIME_ITEMS(S, R)
+
+#define __NOOP(id)
+
+#define VISIT(LIST, ACTION) LIST(ACTION, ACTION)
+#define VISIT_REC(LIST, ACTION) LIST(__NOOP, ACTION)
 
 #define __COUNT_ITEMS(id) +1
-#define ITEMS_COUNT(LIST) (VISIT(LIST, __COUNT_ITEMS))
-
 #define __COUNT_IDS_SIZE(id) +sizeof(#id)
+
+#define ITEMS_COUNT(LIST) (VISIT(LIST, __COUNT_ITEMS))
 #define ITEMS_IDS_SIZE(LIST) (VISIT(LIST, __COUNT_IDS_SIZE))
+
+#define ITEMS_COUNT_REC(LIST) (VISIT_REC(LIST, __COUNT_ITEMS))
+#define ITEMS_IDS_SIZE_REC(LIST) (VISIT_REC(LIST, __COUNT_IDS_SIZE))

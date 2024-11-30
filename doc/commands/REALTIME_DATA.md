@@ -19,11 +19,13 @@ The actual list of values sent is in [rt_data.h](/src/rt_data.h). See also [Real
 | Offset | Size | Name                  | Description   |
 |--------|------|-----------------------|---------------|
 | 0      | 1    | `mask`                | Mask which specifies which data are included in the response:<br> `0x1`: Runtime data<br> `0x2`: Charging data |
-| 1      | 1    | `state_and_mode`      | The state and mode of the package. |
-| 2      | 1    | `flags_and_footpad`   | The state flags and footpad state. |
-| 3      | 1    | `stop_cond_and_sat`   | The stop condition and SAT (Setpoint Adjustment Type). |
-| 4      | 1    | `alert_reason`        | The last alert reason. |
-| 5      | N    | `realtime_data`       | The realtime data as a sequence of [float16](float16.md)-encoded numbers. |
+| 1      | 1    | `extra_flags`         | Extra flags for various internal package state values. |
+| 2      | 4    | `time`                | Timestamp of the data in ticks, as `uint32`. To convert to seconds, use `tick_rate` from the [INFO](INFO.md) command. |
+| 6      | 1    | `state_and_mode`      | The state and mode of the package. |
+| 7      | 1    | `flags_and_footpad`   | The state flags and footpad state. |
+| 8      | 1    | `stop_cond_and_sat`   | The stop condition and SAT (Setpoint Adjustment Type). |
+| 9      | 1    | `alert_reason`        | The last alert reason. |
+| 10     | N    | `realtime_data`       | The realtime data as a sequence of [float16](float16.md)-encoded numbers. |
 
 #### Mask
 
@@ -40,6 +42,13 @@ In case the following bits are set in the `mask`, the listed data follow in the 
 | 0      | 2    | `charging_current` | The charging current encoded as [float16](float16.md). |
 | 2      | 2    | `charging_voltage` | The charging voltage encoded as [float16](float16.md). |
 
+#### extra_flags
+
+| 7-5 |                      2 |                       1 |                       0 |
+|-----|------------------------|-------------------------|-------------------------|
+|   0 | `data_record_autostop` | `data_record_autostart` | `data_record_recording` |
+
+The `data_record_*` flags represent data recording internal state, see [DATA_RECORD](DATA_RECORD.md).
 
 #### state_and_mode
 
