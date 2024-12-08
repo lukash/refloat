@@ -311,7 +311,7 @@ static void configure(data *d) {
     // min current is a positive value here!
     d->mc_current_min = fabsf(VESC_IF->get_cfg_float(CFG_PARAM_l_current_min));
 
-    d->max_duty_with_margin = VESC_IF->get_cfg_float(CFG_PARAM_l_max_duty) - 0.1;
+    d->max_duty_with_margin = VESC_IF->get_cfg_float(CFG_PARAM_l_max_duty) - 0.05;
 
     // Feature: Reverse Stop
     d->reverse_tolerance = 20000;
@@ -702,18 +702,17 @@ static void calculate_setpoint_target(data *d) {
             // acceleration is slowing down, traction control seems to have worked
             d->traction_control = false;
         }
-        // Remain in wheelslip state for at least 500ms to avoid any overreactions
+        // Remain in wheelslip state for a bit to avoid any overreactions
         if (d->motor.duty_cycle > d->max_duty_with_margin) {
             d->wheelslip_timer = d->current_time;
         } else if (d->current_time - d->wheelslip_timer > 0.2) {
-            if (d->motor.duty_cycle < 0.7) {
-                // Leave wheelslip state only if duty < 70%
+            if (d->motor.duty_raw < 0.85) {
                 d->traction_control = false;
                 d->state.wheelslip = false;
             }
         }
         if (d->float_conf.fault_reversestop_enabled && (d->motor.erpm < 0)) {
-            // the 500ms wheelslip time can cause us to blow past the reverse stop condition!
+            // the lingering wheelslip timer can cause us to blow past the reverse stop condition!
             d->state.sat = SAT_REVERSESTOP;
             d->reverse_timer = d->current_time;
             d->reverse_total_erpm = 0;
