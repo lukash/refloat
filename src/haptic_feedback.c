@@ -46,8 +46,9 @@ static HapticFeedbackType state_to_haptic_type(const State *state) {
     case SAT_PB_TEMPERATURE:
         return HAPTIC_FEEDBACK_ERROR_TEMPERATURE;
     case SAT_PB_LOW_VOLTAGE:
+        return HAPTIC_FEEDBACK_ERROR_LO_VOLTAGE;
     case SAT_PB_HIGH_VOLTAGE:
-        return HAPTIC_FEEDBACK_ERROR_VOLTAGE;
+        return HAPTIC_FEEDBACK_ERROR_HI_VOLTAGE;
     default:
         return HAPTIC_FEEDBACK_NONE;
     }
@@ -64,7 +65,8 @@ static uint8_t get_beats(HapticFeedbackType type) {
         return 0;
     case HAPTIC_FEEDBACK_ERROR_TEMPERATURE:
         return 6;
-    case HAPTIC_FEEDBACK_ERROR_VOLTAGE:
+    case HAPTIC_FEEDBACK_ERROR_LO_VOLTAGE:
+    case HAPTIC_FEEDBACK_ERROR_HI_VOLTAGE:
         return 8;
     case HAPTIC_FEEDBACK_NONE:
         break;
@@ -79,7 +81,8 @@ static const CfgHapticTone *get_haptic_tone(const HapticFeedback *hf) {
     case HAPTIC_FEEDBACK_DUTY_CONTINUOUS:
         return &hf->cfg->duty;
     case HAPTIC_FEEDBACK_ERROR_TEMPERATURE:
-    case HAPTIC_FEEDBACK_ERROR_VOLTAGE:
+    case HAPTIC_FEEDBACK_ERROR_LO_VOLTAGE:
+    case HAPTIC_FEEDBACK_ERROR_HI_VOLTAGE:
         return &hf->cfg->error;
     case HAPTIC_FEEDBACK_NONE:
         break;
@@ -145,9 +148,16 @@ void haptic_feedback_update(
         float speed = VESC_IF->mc_get_speed();
         const CfgHapticTone *tone = get_haptic_tone(hf);
         if (tone->strength > 0.0f) {
-            VESC_IF->foc_play_tone(
-                0, tone->frequency, scale_strength(tone->strength, hf->cfg, speed)
-            );
+            float strength = scale_strength(tone->strength, hf->cfg, speed);
+            if (type_to_play == HAPTIC_FEEDBACK_ERROR_HI_VOLTAGE) {
+                float duration = current_time - hf->start_time;
+                if (duration > 3) {
+                    // more than 3 seconds in HV? Start scaling up for next 2 seconds
+                    // up to 50% louder
+                    strength = strength * fminf(1.5, duration * 0.25 + 0.25);
+                }
+            }
+            VESC_IF->foc_play_tone(0, tone->frequency, strength);
         }
 
         if (hf->cfg->vibrate.strength > 0.0f) {
