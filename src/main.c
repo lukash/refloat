@@ -23,6 +23,7 @@
 
 #include "atr.h"
 #include "booster.h"
+#include "brake_tilt.h"
 #include "charging.h"
 #include "footpad_sensor.h"
 #include "imu.h"
@@ -98,6 +99,7 @@ typedef struct {
     MotorControl motor_control;
     TorqueTilt torque_tilt;
     ATR atr;
+    BrakeTilt brake_tilt;
     TurnTilt turn_tilt;
     Booster booster;
     Remote remote;
@@ -255,6 +257,7 @@ static void reconfigure(data *d) {
     balance_filter_configure(&d->balance_filter, &d->float_conf);
     torque_tilt_configure(&d->torque_tilt, &d->float_conf);
     atr_configure(&d->atr, &d->float_conf);
+    brake_tilt_configure(&d->brake_tilt, &d->float_conf);
     turn_tilt_configure(&d->turn_tilt, &d->float_conf);
     remote_configure(&d->remote, &d->float_conf);
 
@@ -342,6 +345,7 @@ static void leds_headlights_switch(CfgLeds *cfg_leds, LcmData *lcm, bool headlig
 static void reset_runtime_vars(data *d) {
     motor_data_reset(&d->motor);
     atr_reset(&d->atr);
+    brake_tilt_reset(&d->brake_tilt);
     torque_tilt_reset(&d->torque_tilt);
     turn_tilt_reset(&d->turn_tilt);
     booster_reset(&d->booster);
@@ -921,7 +925,8 @@ static void refloat_thd(void *arg) {
                 // cycle
                 if (d->state.wheelslip) {
                     torque_tilt_winddown(&d->torque_tilt);
-                    atr_and_braketilt_winddown(&d->atr);
+                    atr_winddown(&d->atr);
+                    brake_tilt_winddown(&d->brake_tilt);
                 } else {
                     apply_noseangling(d);
                     d->setpoint += d->noseangling_interpolated;
@@ -937,15 +942,20 @@ static void refloat_thd(void *arg) {
                     d->setpoint += d->turn_tilt.setpoint;
 
                     torque_tilt_update(&d->torque_tilt, &d->motor, &d->float_conf);
-                    atr_and_braketilt_update(
-                        &d->atr, &d->motor, &d->float_conf, d->setpoint - d->imu.balance_pitch
+                    atr_update(&d->atr, &d->motor, &d->float_conf);
+                    brake_tilt_update(
+                        &d->brake_tilt,
+                        &d->motor,
+                        &d->atr,
+                        &d->float_conf,
+                        d->setpoint - d->imu.balance_pitch
                     );
                 }
 
                 // aggregated torque tilts:
                 // if signs match between torque tilt and ATR + brake tilt, use the more significant
                 // one if signs do not match, they are simply added together
-                float ab_offset = d->atr.offset + d->atr.braketilt_offset;
+                float ab_offset = d->atr.offset + d->brake_tilt.offset;
                 if (sign(ab_offset) == sign(d->torque_tilt.offset)) {
                     d->setpoint +=
                         sign(ab_offset) * fmaxf(fabsf(ab_offset), fabsf(d->torque_tilt.offset));
@@ -956,7 +966,7 @@ static void refloat_thd(void *arg) {
 
             pid_update(&d->pid, d->setpoint, &d->motor, &d->imu, &d->state, &d->float_conf);
 
-            float booster_proportional = d->setpoint - d->atr.braketilt_offset - d->imu.pitch;
+            float booster_proportional = d->setpoint - d->brake_tilt.offset - d->imu.pitch;
             booster_update(&d->booster, &d->motor, &d->float_conf, booster_proportional);
 
             // Rate P and Booster are pitch-based (as opposed to balance pitch based)
@@ -1262,7 +1272,7 @@ static void send_realtime_data(data *d) {
     // Setpoints
     buffer_append_float32_auto(buffer, d->setpoint, &ind);
     buffer_append_float32_auto(buffer, d->atr.offset, &ind);
-    buffer_append_float32_auto(buffer, d->atr.braketilt_offset, &ind);
+    buffer_append_float32_auto(buffer, d->brake_tilt.offset, &ind);
     buffer_append_float32_auto(buffer, d->torque_tilt.offset, &ind);
     buffer_append_float32_auto(buffer, d->turn_tilt.setpoint, &ind);
     buffer_append_float32_auto(buffer, d->inputtilt_interpolated, &ind);
@@ -1320,7 +1330,7 @@ static void cmd_send_all_data(data *d, unsigned char mode) {
         // Setpoints (can be positive or negative)
         buffer[ind++] = d->setpoint * 5 + 128;
         buffer[ind++] = d->atr.offset * 5 + 128;
-        buffer[ind++] = d->atr.braketilt_offset * 5 + 128;
+        buffer[ind++] = d->brake_tilt.offset * 5 + 128;
         buffer[ind++] = d->torque_tilt.offset * 5 + 128;
         buffer[ind++] = d->turn_tilt.setpoint * 5 + 128;
         buffer[ind++] = d->inputtilt_interpolated * 5 + 128;
@@ -1905,7 +1915,7 @@ static void send_realtime_data2(data *d) {
         // Setpoints
         buffer_append_float32_auto(buffer, d->setpoint, &ind);
         buffer_append_float32_auto(buffer, d->atr.offset, &ind);
-        buffer_append_float32_auto(buffer, d->atr.braketilt_offset, &ind);
+        buffer_append_float32_auto(buffer, d->brake_tilt.offset, &ind);
         buffer_append_float32_auto(buffer, d->torque_tilt.offset, &ind);
         buffer_append_float32_auto(buffer, d->turn_tilt.setpoint, &ind);
         buffer_append_float32_auto(buffer, d->inputtilt_interpolated, &ind);

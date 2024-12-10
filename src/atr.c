@@ -27,8 +27,6 @@ void atr_reset(ATR *atr) {
     atr->speed_boost = 0;
     atr->target_offset = 0;
     atr->offset = 0;
-    atr->braketilt_target_offset = 0;
-    atr->braketilt_offset = 0;
 }
 
 void atr_configure(ATR *atr, const RefloatConfig *config) {
@@ -41,16 +39,9 @@ void atr_configure(ATR *atr, const RefloatConfig *config) {
         // most +6000 for 100% speed boost
         atr->speed_boost_mult = 1.0f / ((fabsf(config->atr_speed_boost) - 0.4f) * 5000 + 3000.0f);
     }
-
-    if (config->braketilt_strength == 0) {
-        atr->braketilt_factor = 0;
-    } else {
-        // incorporate negative sign into braketilt factor instead of adding it each balance loop
-        atr->braketilt_factor = -(0.5f + (20 - config->braketilt_strength) / 5.0f);
-    }
 }
 
-static void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config) {
+void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config) {
     float abs_torque = fabsf(motor->filt_current);
     float torque_offset = 8;  // hard-code to 8A for now (shouldn't really be changed much anyways)
     float atr_threshold = motor->braking ? config->atr_threshold_down : config->atr_threshold_up;
@@ -198,55 +189,7 @@ static void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *co
     rate_limitf(&atr->offset, atr->target_offset, atr_step_size);
 }
 
-static void braketilt_update(
-    ATR *atr, const MotorData *motor, const RefloatConfig *config, float proportional
-) {
-    // braking also should cause setpoint change lift, causing a delayed lingering nose lift
-    if (atr->braketilt_factor < 0 && motor->braking && motor->abs_erpm > 2000) {
-        // negative currents alone don't necessarily constitute active braking, look at
-        // proportional:
-        if (sign(proportional) != motor->erpm_sign) {
-            float downhill_damper = 1;
-            // if we're braking on a downhill we don't want braking to lift the setpoint quite as
-            // much
-            if ((motor->erpm > 1000 && atr->accel_diff < -1) ||
-                (motor->erpm < -1000 && atr->accel_diff > 1)) {
-                downhill_damper += fabsf(atr->accel_diff) / 2;
-            }
-            atr->braketilt_target_offset = proportional / atr->braketilt_factor / downhill_damper;
-            if (downhill_damper > 2) {
-                // steep downhills, we don't enable this feature at all!
-                atr->braketilt_target_offset = 0;
-            }
-        }
-    } else {
-        atr->braketilt_target_offset = 0;
-    }
-
-    float braketilt_step_size = atr->off_step_size / config->braketilt_lingering;
-    if (fabsf(atr->braketilt_target_offset) > fabsf(atr->braketilt_offset)) {
-        braketilt_step_size = atr->on_step_size * 1.5;
-    } else if (motor->abs_erpm < 800) {
-        braketilt_step_size = atr->on_step_size;
-    }
-
-    if (motor->abs_erpm < 500) {
-        braketilt_step_size /= 2;
-    }
-
-    rate_limitf(&atr->braketilt_offset, atr->braketilt_target_offset, braketilt_step_size);
-}
-
-void atr_and_braketilt_update(
-    ATR *atr, const MotorData *motor, const RefloatConfig *config, float proportional
-) {
-    atr_update(atr, motor, config);
-    braketilt_update(atr, motor, config, proportional);
-}
-
-void atr_and_braketilt_winddown(ATR *atr) {
+void atr_winddown(ATR *atr) {
     atr->offset *= 0.995;
     atr->target_offset *= 0.99;
-    atr->braketilt_offset *= 0.995;
-    atr->braketilt_target_offset *= 0.99;
 }

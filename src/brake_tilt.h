@@ -18,26 +18,26 @@
 
 #pragma once
 
+#include "atr.h"
 #include "conf/datatypes.h"
 #include "motor_data.h"
 
 typedef struct {
-    float on_step_size;
-    float off_step_size;
+    float factor;
+    float target_offset;  // braketilt setpoint target offset
+    float offset;  // rate-limited braketilt setpoint offset
+} BrakeTilt;
 
-    float accel_diff;
-    float speed_boost;
+void brake_tilt_reset(BrakeTilt *bt);
 
-    float target_offset;  // setpoint target offset
-    float offset;  // rate-limited setpoint offset
+void brake_tilt_configure(BrakeTilt *bt, const RefloatConfig *config);
 
-    float speed_boost_mult;
-} ATR;
+void brake_tilt_update(
+    BrakeTilt *bt,
+    const MotorData *motor,
+    const ATR *atr,
+    const RefloatConfig *config,
+    float balance_offset
+);
 
-void atr_reset(ATR *atr);
-
-void atr_configure(ATR *atr, const RefloatConfig *config);
-
-void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config);
-
-void atr_winddown(ATR *atr);
+void brake_tilt_winddown(BrakeTilt *bt);
