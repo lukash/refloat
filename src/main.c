@@ -1209,9 +1209,8 @@ static void refloat_thd(void *arg) {
                     d->setpoint += d->turntilt_interpolated;
 
                     torque_tilt_update(&d->torque_tilt, &d->motor, &d->float_conf, d->dt);
-                    atr_and_braketilt_update(
-                        &d->atr, &d->motor, &d->float_conf, d->proportional, d->dt
-                    );
+                    atr_update(&d->atr, &d->motor, &d->float_conf, d->dt);
+                    braketilt_update(&d->atr, &d->motor, &d->float_conf, d->proportional);
                 }
 
                 // aggregated torque tilts:

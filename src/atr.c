@@ -65,7 +65,7 @@ void atr_configure(ATR *atr, const RefloatConfig *config) {
     );
 }
 
-static void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config, float dt) {
+void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config, float dt) {
     float abs_torque = fabsf(motor->atr_filtered_current);
     float torque_offset = 8;  // hard-code to 8A for now (shouldn't really be changed much anyways)
     float atr_threshold = motor->braking ? config->atr_threshold_down : config->atr_threshold_up;
@@ -227,7 +227,7 @@ static void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *co
     }
 }
 
-static void braketilt_update(
+void braketilt_update(
     ATR *atr, const MotorData *motor, const RefloatConfig *config, float proportional
 ) {
     // braking also should cause setpoint change lift, causing a delayed lingering nose lift
@@ -264,13 +264,6 @@ static void braketilt_update(
     }
 
     rate_limitf(&atr->braketilt_offset, atr->braketilt_target_offset, braketilt_step_size);
-}
-
-void atr_and_braketilt_update(
-    ATR *atr, const MotorData *motor, const RefloatConfig *config, float proportional, float dt
-) {
-    atr_update(atr, motor, config, dt);
-    braketilt_update(atr, motor, config, proportional);
 }
 
 void atr_and_braketilt_winddown(ATR *atr) {
