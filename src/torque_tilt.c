@@ -29,6 +29,7 @@ void torque_tilt_init(TorqueTilt *tt) {
 }
 
 void torque_tilt_reset(TorqueTilt *tt) {
+    tt->target = 0.0f;
     smooth_setpoint_reset(&tt->setpoint);
 }
 
@@ -38,6 +39,7 @@ void torque_tilt_configure(TorqueTilt *tt, const RefloatConfig *config, float fr
         config->torque_tilt.filter.time_constant,
         config->torque_tilt.filter.on_speed_time_constant,
         config->torque_tilt.filter.off_speed_time_constant,
+        0.2f,
         config->torquetilt_on_speed,
         config->torquetilt_off_speed,
         config->torquetilt_on_speed_downhill,
@@ -46,8 +48,8 @@ void torque_tilt_configure(TorqueTilt *tt, const RefloatConfig *config, float fr
     );
 }
 
-void torque_tilt_update(
-    TorqueTilt *tt, const MotorData *motor, const RefloatConfig *config, float dt
+static void calculate_torque_tilt_target(
+    TorqueTilt *tt, const MotorData *motor, const RefloatConfig *config
 ) {
     float strength =
         motor->braking ? config->torquetilt_strength_regen : config->torquetilt_strength;
@@ -57,17 +59,22 @@ void torque_tilt_update(
     // multiply it by "power" to get our desired angle, and min with the limit
     // to respect boundaries. Finally multiply it by motor current sign to get
     // directionality back.
-    float target =
+    tt->target =
         fminf(
             fmaxf((fabsf(motor->filt_current.value) - config->torquetilt_start_current), 0) *
                 strength,
             config->torquetilt_angle_limit
         ) *
         sign(motor->filt_current.value);
-
-    smooth_setpoint_update(&tt->setpoint, target, dt, motor->forward);
 }
 
-void torque_tilt_winddown(TorqueTilt *tt) {
-    // tt->setpoint *= 0.995;
+void torque_tilt_update(
+    TorqueTilt *tt, const MotorData *motor, const RefloatConfig *config, bool wheelslip, float dt
+) {
+    if (!wheelslip) {
+        calculate_torque_tilt_target(tt, motor, config);
+        smooth_setpoint_update(&tt->setpoint, tt->target, dt, motor->forward);
+    } else {
+        smooth_setpoint_winddown(&tt->setpoint);
+    }
 }

@@ -49,6 +49,7 @@ void turn_tilt_configure(TurnTilt *tt, const RefloatConfig *config, float freque
         config->turn_tilt.filter.time_constant,
         config->turn_tilt.filter.on_speed_time_constant,
         config->turn_tilt.filter.off_speed_time_constant,
+        0.2f,
         config->turntilt_speed,
         config->turntilt_speed,
         config->turntilt_speed,
@@ -81,7 +82,9 @@ void turn_tilt_aggregate(TurnTilt *tt, const IMU *imu, float dt) {
     }
 }
 
-void turn_tilt_update(TurnTilt *tt, const MotorData *md, const RefloatConfig *config, float dt) {
+static void calculate_turn_tilt_target(
+    TurnTilt *tt, const MotorData *md, const RefloatConfig *config
+) {
     if (config->turntilt_strength == 0) {
         return;
     }
@@ -126,10 +129,15 @@ void turn_tilt_update(TurnTilt *tt, const MotorData *md, const RefloatConfig *co
             tt->target *= md->erpm_sign;
         }
     }
-
-    smooth_setpoint_update(&tt->setpoint, tt->target, dt, true);
 }
 
-void turn_tilt_winddown(TurnTilt *tt) {
-    // tt->setpoint *= 0.995;
+void turn_tilt_update(
+    TurnTilt *tt, const MotorData *motor, const RefloatConfig *config, bool wheelslip, float dt
+) {
+    if (!wheelslip) {
+        calculate_turn_tilt_target(tt, motor, config);
+        smooth_setpoint_update(&tt->setpoint, tt->target, dt, motor->forward);
+    } else {
+        smooth_setpoint_winddown(&tt->setpoint);
+    }
 }

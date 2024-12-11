@@ -28,6 +28,9 @@ typedef struct {
     float alpha;
     float on_speed_alpha;
     float off_speed_alpha;
+    float winddown_alpha;
+
+    bool is_winddown;
 
     float v1;
     float step;
@@ -41,6 +44,7 @@ void smooth_setpoint_configure(
     float time_constant,
     float on_speed_time_constant,
     float off_speed_time_constant,
+    float winddown_time_constant,
     float on_speed_up,
     float off_speed_up,
     float on_speed_down,
@@ -51,3 +55,5 @@ void smooth_setpoint_configure(
 void smooth_setpoint_reset(SmoothSetpoint *st);
 
 void smooth_setpoint_update(SmoothSetpoint *st, float target, float dt, bool forward);
+
+void smooth_setpoint_winddown(SmoothSetpoint *st);
