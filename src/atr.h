@@ -44,6 +44,6 @@ void atr_reset(ATR *atr);
 
 void atr_configure(ATR *atr, const RefloatConfig *config);
 
-void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config, float dt);
-
-void atr_winddown(ATR *atr);
+void atr_update(
+    ATR *atr, const MotorData *motor, const RefloatConfig *config, bool wheelslip, float dt
+);
