@@ -23,6 +23,7 @@
 #include <math.h>
 
 void torque_tilt_reset(TorqueTilt *tt) {
+    tt->target = 0;
     tt->setpoint = 0;
     tt->ramped_step_size = 0;
 
@@ -49,8 +50,8 @@ void torque_tilt_configure(TorqueTilt *tt, const RefloatConfig *config) {
     );
 }
 
-void torque_tilt_update(
-    TorqueTilt *tt, const MotorData *motor, const RefloatConfig *config, float dt
+static float calculate_torque_tilt_target(
+    TorqueTilt *tt, const MotorData *motor, const RefloatConfig *config
 ) {
     float strength =
         motor->braking ? config->torquetilt_strength_regen : config->torquetilt_strength;
@@ -60,7 +61,7 @@ void torque_tilt_update(
     // multiply it by "power" to get our desired angle, and min with the limit
     // to respect boundaries. Finally multiply it by motor current sign to get
     // directionality back.
-    float target =
+    tt->target =
         fminf(
             fmaxf((fabsf(motor->filt_current) - config->torquetilt_start_current), 0) * strength,
             config->torquetilt_angle_limit
@@ -68,7 +69,8 @@ void torque_tilt_update(
         sign(motor->filt_current);
 
     float step_size = 0;
-    if ((tt->setpoint - target > 0 && target > 0) || (tt->setpoint - target < 0 && target < 0)) {
+    if ((tt->setpoint - tt->target > 0 && tt->target > 0) ||
+        (tt->setpoint - tt->target < 0 && tt->target < 0)) {
         step_size = tt->off_step_size;
     } else {
         step_size = tt->on_step_size;
@@ -78,20 +80,30 @@ void torque_tilt_update(
         step_size /= 2;
     }
 
+    return step_size;
+}
+
+void torque_tilt_update(
+    TorqueTilt *tt, const MotorData *motor, const RefloatConfig *config, bool wheelslip, float dt
+) {
+    float step_size = tt->off_step_size;
+
+    if (!wheelslip) {
+        step_size = calculate_torque_tilt_target(tt, motor, config);
+    } else {
+        tt->target *= 0.99;
+    }
+
     if (config->target_filter.tt_type == SFT_NONE) {
-        rate_limitf(&tt->setpoint, target, step_size);
+        rate_limitf(&tt->setpoint, tt->target, step_size);
     } else if (config->target_filter.tt_type == SFT_EMA3) {
-        ema_filter_update(&tt->ema_target, target, dt);
+        ema_filter_update(&tt->ema_target, tt->target, dt);
         tt->setpoint = tt->ema_target.value;
     } else if (config->target_filter.tt_type == SFT_THREE_STAGE) {
-        smooth_target_update(&tt->smooth_target, target);
+        smooth_target_update(&tt->smooth_target, tt->target);
         tt->setpoint = tt->smooth_target.value;
     } else {
         // Smoothen changes in tilt angle by ramping the step size
-        smooth_rampf(&tt->setpoint, &tt->ramped_step_size, target, step_size, 0.04, 1.5);
+        smooth_rampf(&tt->setpoint, &tt->ramped_step_size, tt->target, step_size, 0.04, 1.5);
     }
-}
-
-void torque_tilt_winddown(TorqueTilt *tt) {
-    tt->setpoint *= 0.995;
 }
