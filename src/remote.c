@@ -36,6 +36,7 @@ void remote_configure(Remote *remote, const RefloatConfig *config, float frequen
         config->remote.filter.time_constant,
         config->remote.filter.on_speed_time_constant,
         config->remote.filter.off_speed_time_constant,
+        0.2f,
         config->inputtilt_speed,
         config->inputtilt_speed,
         config->inputtilt_speed,
