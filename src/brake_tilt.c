@@ -41,8 +41,15 @@ void brake_tilt_update(
     const MotorData *motor,
     const ATR *atr,
     const RefloatConfig *config,
+    bool wheelslip,
     float balance_offset
 ) {
+    if (wheelslip) {
+        bt->target *= 0.99;
+        bt->setpoint = bt->target;
+        return;
+    }
+
     // braking also should cause setpoint change lift, causing a delayed lingering nose lift
     if (bt->factor < 0 && motor->braking && motor->abs_erpm > 2000) {
         // negative currents alone don't necessarily constitute active braking, look at
@@ -77,9 +84,4 @@ void brake_tilt_update(
     }
 
     rate_limitf(&bt->setpoint, bt->target, braketilt_step_size);
-}
-
-void brake_tilt_winddown(BrakeTilt *bt) {
-    bt->setpoint *= 0.995;
-    bt->target *= 0.99;
 }
