@@ -23,6 +23,7 @@
 #include "motor_data.h"
 
 typedef struct {
+    float target;
     SmoothSetpoint setpoint;
 } TorqueTilt;
 
@@ -33,7 +34,5 @@ void torque_tilt_reset(TorqueTilt *tt);
 void torque_tilt_configure(TorqueTilt *tt, const RefloatConfig *config, float frequency);
 
 void torque_tilt_update(
-    TorqueTilt *tt, const MotorData *motor, const RefloatConfig *config, float dt
+    TorqueTilt *tt, const MotorData *motor, const RefloatConfig *config, bool wheelslip, float dt
 );
-
-void torque_tilt_winddown(TorqueTilt *tt);
