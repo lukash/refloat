@@ -66,7 +66,7 @@ void atr_configure(ATR *atr, const RefloatConfig *config, float frequency) {
     );
 }
 
-void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config, float dt) {
+static void calculate_atr_target(ATR *atr, const MotorData *motor, const RefloatConfig *config) {
     float abs_torque = fabsf(motor->filt_current.value);
     float torque_offset = 8;  // hard-code to 8A for now (shouldn't really be changed much anyways)
     float atr_threshold = motor->braking ? config->atr_threshold_down : config->atr_threshold_up;
@@ -133,11 +133,16 @@ void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config, f
     atr->target = atr->target * 0.95 + 0.05 * new_atr_target;
     atr->target = fminf(atr->target, config->atr_angle_limit);
     atr->target = fmaxf(atr->target, -config->atr_angle_limit);
-
-    smooth_setpoint_update(&atr->setpoint, atr->target, dt, motor->forward);
 }
 
-void atr_winddown(ATR *atr) {
-    // atr->setpoint *= 0.995;
-    atr->target *= 0.99;
+void atr_update(
+    ATR *atr, const MotorData *motor, const RefloatConfig *config, bool wheelslip, float dt
+) {
+    if (!wheelslip) {
+        calculate_atr_target(atr, motor, config);
+    } else {
+        atr->target *= 0.99;
+    }
+
+    smooth_setpoint_update(&atr->setpoint, atr->target, dt, motor->forward);
 }

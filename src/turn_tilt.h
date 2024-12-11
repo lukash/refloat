@@ -41,6 +41,6 @@ void turn_tilt_configure(TurnTilt *tt, const RefloatConfig *config, float freque
 
 void turn_tilt_aggregate(TurnTilt *tt, const IMU *imu, float dt);
 
-void turn_tilt_update(TurnTilt *tt, const MotorData *md, const RefloatConfig *config, float dt);
-
-void turn_tilt_winddown(TurnTilt *tt);
+void turn_tilt_update(
+    TurnTilt *tt, const MotorData *md, const RefloatConfig *config, bool wheelslip, float dt
+);

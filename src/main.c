@@ -951,23 +951,23 @@ static void refloat_thd(void *arg) {
             d->setpoint += d->remote.setpoint.value;
 
             if (!d->state.darkride) {
-                // in case of wheelslip, don't change torque tilts, instead slightly decrease each
-                // cycle
-                if (d->state.wheelslip) {
-                    turn_tilt_winddown(&d->turn_tilt);
-                    torque_tilt_winddown(&d->torque_tilt);
-                    atr_winddown(&d->atr);
-                    brake_tilt_winddown(&d->brake_tilt);
-                } else {
+                if (!d->state.wheelslip) {
                     apply_noseangling(d, dt);
-                    turn_tilt_update(&d->turn_tilt, &d->motor, &d->float_conf, dt);
-
-                    torque_tilt_update(&d->torque_tilt, &d->motor, &d->float_conf, dt);
-                    atr_update(&d->atr, &d->motor, &d->float_conf, dt);
-                    brake_tilt_update(
-                        &d->brake_tilt, &d->motor, &d->atr, d->setpoint - d->imu.balance_pitch, dt
-                    );
                 }
+
+                torque_tilt_update(
+                    &d->torque_tilt, &d->motor, &d->float_conf, d->state.wheelslip, dt
+                );
+                atr_update(&d->atr, &d->motor, &d->float_conf, d->state.wheelslip, dt);
+                brake_tilt_update(
+                    &d->brake_tilt,
+                    &d->motor,
+                    &d->atr,
+                    d->state.wheelslip,
+                    d->setpoint - d->imu.balance_pitch,
+                    dt
+                );
+                turn_tilt_update(&d->turn_tilt, &d->motor, &d->float_conf, d->state.wheelslip, dt);
 
                 d->setpoint += d->noseangling_interpolated;
                 d->setpoint += d->turn_tilt.setpoint.value;
