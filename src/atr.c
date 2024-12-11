@@ -56,7 +56,7 @@ void atr_configure(ATR *atr, const RefloatConfig *config) {
     );
 }
 
-void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config, float dt) {
+static float calculate_atr_target(ATR *atr, const MotorData *motor, const RefloatConfig *config) {
     float abs_torque = fabsf(motor->filt_current);
     float torque_offset = 8;  // hard-code to 8A for now (shouldn't really be changed much anyways)
     float atr_threshold = motor->braking ? config->atr_threshold_down : config->atr_threshold_up;
@@ -199,6 +199,21 @@ void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config, f
         atr_step_size /= 2;
     }
 
+    return atr_step_size;
+}
+
+void atr_update(
+    ATR *atr, const MotorData *motor, const RefloatConfig *config, bool wheelslip, float dt
+) {
+    float atr_step_size = 0;
+
+    if (!wheelslip) {
+        atr_step_size = calculate_atr_target(atr, motor, config);
+    } else {
+        atr->target *= 0.99;
+        atr_step_size = atr->off_step_size;
+    }
+
     if (config->target_filter.type == SFT_NONE) {
         rate_limitf(&atr->setpoint, atr->target, atr_step_size);
     } else if (config->target_filter.type == SFT_EMA3) {
@@ -209,13 +224,6 @@ void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config, f
         atr->setpoint = atr->smooth_target.value;
     } else {
         // Smoothen changes in tilt angle by ramping the step size
-        smooth_rampf(
-            &atr->setpoint, &atr->ramped_step_size, atr->target, atr_step_size, 0.05, 1.5
-        );
+        smooth_rampf(&atr->setpoint, &atr->ramped_step_size, atr->target, atr_step_size, 0.05, 1.5);
     }
-}
-
-void atr_winddown(ATR *atr) {
-    atr->setpoint *= 0.995;
-    atr->target *= 0.99;
 }
