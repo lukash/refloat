@@ -49,10 +49,14 @@ void atr_reset(ATR *atr);
 
 void atr_configure(ATR *atr, const RefloatConfig *config);
 
-void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config, float dt);
-
-void braketilt_update(
-    ATR *atr, const MotorData *motor, const RefloatConfig *config, float proportional
+void atr_update(
+    ATR *atr, const MotorData *motor, const RefloatConfig *config, bool wheelslip, float dt
 );
 
-void atr_and_braketilt_winddown(ATR *atr);
+void braketilt_update(
+    ATR *atr,
+    const MotorData *motor,
+    const RefloatConfig *config,
+    bool wheelslip,
+    float proportional
+);

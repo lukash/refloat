@@ -28,6 +28,7 @@ typedef struct {
     float off_step_size;
     float ramped_step_size;
 
+    float target_offset;  // setpoint target offset
     float offset;  // rate-limited setpoint offset
 
     SmoothTarget smooth_target;
@@ -39,7 +40,5 @@ void torque_tilt_reset(TorqueTilt *tt);
 void torque_tilt_configure(TorqueTilt *tt, const RefloatConfig *config);
 
 void torque_tilt_update(
-    TorqueTilt *tt, const MotorData *motor, const RefloatConfig *config, float dt
+    TorqueTilt *tt, const MotorData *motor, const RefloatConfig *config, bool wheelslip, float dt
 );
-
-void torque_tilt_winddown(TorqueTilt *tt);
