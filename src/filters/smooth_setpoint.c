@@ -31,6 +31,7 @@ void smooth_setpoint_init(SmoothSetpoint *st) {
     st->alpha = 0.0f;
     st->on_speed_alpha = 0.0f;
     st->off_speed_alpha = 0.0f;
+    st->winddown_alpha = 0.0f;
 
     smooth_setpoint_reset(st);
 }
@@ -40,6 +41,7 @@ void smooth_setpoint_configure(
     float time_constant,
     float on_speed_time_constant,
     float off_speed_time_constant,
+    float winddown_time_constant,
     float on_speed_up,
     float off_speed_up,
     float on_speed_down,
@@ -56,15 +58,23 @@ void smooth_setpoint_configure(
     st->alpha = 2.146f * ema_calculate_alpha_time_constant(time_constant, frequency);
     st->on_speed_alpha = ema_calculate_alpha_time_constant(on_speed_time_constant, frequency);
     st->off_speed_alpha = ema_calculate_alpha_time_constant(off_speed_time_constant, frequency);
+    st->winddown_alpha = ema_calculate_alpha_time_constant(winddown_time_constant, frequency);
 }
 
 void smooth_setpoint_reset(SmoothSetpoint *st) {
+    st->is_winddown = false;
     st->v1 = 0.0f;
     st->step = 0.0f;
     st->value = 0.0f;
 }
 
 void smooth_setpoint_update(SmoothSetpoint *st, float target, bool forward, float dt) {
+    if (st->is_winddown) {
+        st->is_winddown = false;
+        st->v1 = st->value;
+        st->step = 0;
+    }
+
     bool is_up = (st->value >= 0.0f) == forward;
 
     st->v1 += st->alpha * (target - st->v1);
@@ -92,4 +102,9 @@ void smooth_setpoint_update(SmoothSetpoint *st, float target, bool forward, floa
     }
 
     st->value += sign(st->step) * min(fabsf(st->step), speed_limit * dt);
+}
+
+void smooth_setpoint_winddown(SmoothSetpoint *st) {
+    st->is_winddown = true;
+    st->value *= 1.0f - st->winddown_alpha;
 }

@@ -35,7 +35,10 @@ void brake_tilt_reset(BrakeTilt *bt);
 void brake_tilt_configure(BrakeTilt *bt, const RefloatConfig *config, float frequency);
 
 void brake_tilt_update(
-    BrakeTilt *bt, const MotorData *motor, const ATR *atr, float balance_offset, float dt
+    BrakeTilt *bt,
+    const MotorData *motor,
+    const ATR *atr,
+    bool wheelslip,
+    float balance_offset,
+    float dt
 );
-
-void brake_tilt_winddown(BrakeTilt *bt);
