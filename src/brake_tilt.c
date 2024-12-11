@@ -49,6 +49,7 @@ void brake_tilt_configure(BrakeTilt *bt, const RefloatConfig *config, float freq
         config->atr.filter.time_constant,
         config->atr.filter.on_speed_time_constant,
         config->atr.filter.off_speed_time_constant,
+        0.2f,
         config->atr.filter.on_speed_limit,
         off_speed,
         config->atr.filter.on_speed_limit,
@@ -58,16 +59,26 @@ void brake_tilt_configure(BrakeTilt *bt, const RefloatConfig *config, float freq
 }
 
 void brake_tilt_update(
-    BrakeTilt *bt, const MotorData *motor, const ATR *atr, float balance_offset, float dt
+    BrakeTilt *bt,
+    const MotorData *motor,
+    const ATR *atr,
+    bool wheelslip,
+    float balance_offset,
+    float dt
 ) {
+    if (wheelslip) {
+        smooth_setpoint_winddown(&bt->setpoint);
+        return;
+    }
+
     // braking also should cause setpoint change lift, causing a delayed lingering nose lift
     if (bt->factor < 0 && motor->braking && motor->abs_erpm > 2000) {
         // negative currents alone don't necessarily constitute active braking, look at
         // proportional:
         if (sign(balance_offset) != motor->erpm_sign) {
             float downhill_damper = 1;
-            // if we're braking on a downhill we don't want braking to lift the setpoint quite as
-            // much
+            // if we're braking on a downhill we don't want braking to lift
+            // the setpoint quite as much
             if ((motor->erpm > 1000 && atr->accel_diff < -1) ||
                 (motor->erpm < -1000 && atr->accel_diff > 1)) {
                 downhill_damper += fabsf(atr->accel_diff) / 2;
@@ -83,9 +94,4 @@ void brake_tilt_update(
     }
 
     smooth_setpoint_update(&bt->setpoint, bt->target, motor->forward, dt);
-}
-
-void brake_tilt_winddown(BrakeTilt *bt) {
-    // bt->setpoint *= 0.995;
-    bt->target *= 0.99;
 }

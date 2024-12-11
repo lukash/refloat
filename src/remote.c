@@ -37,6 +37,7 @@ void remote_configure(Remote *remote, const RefloatConfig *config, float frequen
         config->remote.filter.time_constant,
         speed_time_constant,
         speed_time_constant,
+        0.2f,
         100.0f,
         100.0f,
         100.0f,
