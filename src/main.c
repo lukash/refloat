@@ -763,12 +763,12 @@ static void calculate_setpoint_target(data *d) {
             } else {
                 d->setpoint_target = -d->float_conf.tiltback_hv_angle;
             }
-
-            d->state.sat = SAT_PB_HIGH_VOLTAGE;
         } else {
             // The rider has 500ms to react to the triple-beep, or maybe it was just a short spike
-            d->state.sat = SAT_NONE;
+            d->setpoint_target = 0;
         }
+        // setting the state regardless to ensure haptic buzz starts right away
+        d->state.sat = SAT_PB_HIGH_VOLTAGE;
     } else if (VESC_IF->mc_temp_fet_filtered() > d->mc_max_temp_fet) {
         // Use the angle from Low-Voltage tiltback, but slower speed from High-Voltage tiltback
         beep_alert(d, 3, true);
