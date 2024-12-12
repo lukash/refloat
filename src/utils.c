@@ -37,3 +37,10 @@ float clampf(float value, float min, float max) {
     const float m = value < min ? min : value;
     return m > max ? max : m;
 }
+
+bool bms_is_fault_set(uint32_t fault_mask, BMS_FAULT_CODES fault_code) {
+    if (fault_code < 1 || fault_code > 32) {
+        return false;
+    }
+    return (fault_mask & (1U << (fault_code - 1))) != 0;
+}

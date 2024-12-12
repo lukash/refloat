@@ -22,6 +22,17 @@
 #include <stdint.h>
 
 typedef enum {
+    NONE = 0,
+    BMS_COMM_TIMEOUT = 1,
+    BMS_OVER_TEMP = 2,
+    CELL_OVER_VOLTAGE = 3,
+    CELL_UNDER_VOLTAGE = 4,
+    CELL_OVER_TEMP = 5,
+    CELL_UNDER_TEMP = 6,
+    CELL_BALANCE = 7
+} BMS_FAULT_CODES;
+
+typedef enum {
     INPUTTILT_NONE = 0,
     INPUTTILT_UART,
     INPUTTILT_PPM

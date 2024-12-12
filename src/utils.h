@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "conf/datatypes.h"
 #include "vesc_c_if.h"
 
 #include <stdint.h>
@@ -118,3 +119,5 @@ float clampf(float value, float min, float max);
  * @param step A maximum unit of change of @p value.
  */
 void rate_limitf(float *value, float target, float step);
+
+bool bms_is_fault_set(uint32_t fault_mask, BMS_FAULT_CODES fault_code);
