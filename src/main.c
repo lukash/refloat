@@ -348,9 +348,11 @@ bool can_engage(const Data *d) {
     }
 
     if (d->footpad.state == FS_LEFT || d->footpad.state == FS_RIGHT) {
-        // 5 seconds after stopping we allow starting with a single sensor (e.g. for jump starts)
-        bool is_simple_start =
-            d->float_conf.startup_simplestart_enabled && time_elapsed(&d->time, disengage, 5);
+        // When simple start is enabled:
+        // 2 seconds after stopping we allow starting with a single sensor (e.g. for jump starts)
+        // Then up to 1 second after engaging only a single sensor is required even at low speed
+        bool is_simple_start = d->float_conf.startup_simplestart_enabled &&
+            (time_elapsed(&d->time, disengage, 2) || !time_elapsed(&d->time, engage, 1));
 
         if (d->float_conf.fault_is_dual_switch || is_simple_start) {
             return true;
