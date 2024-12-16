@@ -148,7 +148,7 @@ typedef struct {
     float turntilt_target, turntilt_interpolated;
     float current_time;
     float dt;
-    float disengage_timer, nag_timer;
+    float engage_timer, disengage_timer, nag_timer;
     float idle_voltage;
     float fault_angle_pitch_timer, fault_angle_roll_timer, fault_switch_timer,
         fault_switch_half_timer;
@@ -410,6 +410,9 @@ static void reset_runtime_vars(data *d) {
     d->last_yaw_angle = 0;
     d->yaw_aggregate = 0;
 
+    // Reset engage_timer (keeps track of how long the board has been engaged/riding)
+    d->engage_timer = d->current_time;
+
     // RC Move:
     d->rc_steps = 0;
     d->rc_current = 0;
@@ -509,9 +512,11 @@ bool can_engage(const data *d) {
     }
 
     if (d->footpad_sensor.state == FS_LEFT || d->footpad_sensor.state == FS_RIGHT) {
-        // 5 seconds after stopping we allow starting with a single sensor (e.g. for jump starts)
-        bool is_simple_start =
-            d->float_conf.startup_simplestart_enabled && (d->current_time - d->disengage_timer > 5);
+        // When simple start is enabled:
+        // 2 seconds after stopping we allow starting with a single sensor (e.g. for jump starts)
+        // Then up to 1 second after engaging only a single sensor is required even at low speed
+        bool is_simple_start = d->float_conf.startup_simplestart_enabled &&
+            ((d->current_time - d->disengage_timer > 2) || (d->current_time - d->engage_timer < 1));
 
         if (d->float_conf.fault_is_dual_switch || is_simple_start) {
             return true;
