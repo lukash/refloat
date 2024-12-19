@@ -867,6 +867,13 @@ Item {
             [8, "Low Battery"],
             [9, "Board Idle"],
             [10, "Other"],
+            [11, "Cell Under Temp"],
+            [12, "Cell Over Temp"],
+            [13, "Cell Low Voltage"],
+            [14, "Cell High Voltage"],
+            [15, "Cell Balance"],
+            [16, "BMS Connection"],
+            [17, "BMS Over Temp"],
         ])
 
         property int beepReason: 0
