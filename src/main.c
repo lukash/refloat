@@ -760,20 +760,20 @@ static void calculate_setpoint_target(data *d) {
     } else if (d->motor.duty_cycle > 0.05 && input_voltage > d->float_conf.tiltback_hv) {
         d->beep_reason = BEEP_HV;
         beep_alert(d, 3, false);
-        if (((d->current_time - d->tb_highvoltage_timer) > .5) ||
-            (input_voltage > d->float_conf.tiltback_hv + 1)) {
-            // 500ms have passed or voltage is another volt higher, time for some tiltback
+        if ((d->current_time - d->tb_highvoltage_timer) > 5) {
+            // It is assumed that haptic feedback is enabled!
+            // 5s have passed or voltage is another volt higher, time for some tiltback
             if (d->motor.erpm > 0) {
                 d->setpoint_target = d->float_conf.tiltback_hv_angle;
             } else {
                 d->setpoint_target = -d->float_conf.tiltback_hv_angle;
             }
-
-            d->state.sat = SAT_PB_HIGH_VOLTAGE;
         } else {
             // The rider has 500ms to react to the triple-beep, or maybe it was just a short spike
-            d->state.sat = SAT_NONE;
+            d->setpoint_target = 0;
         }
+        // setting the state regardless to ensure haptic buzz starts right away
+        d->state.sat = SAT_PB_HIGH_VOLTAGE;
     } else if (VESC_IF->mc_temp_fet_filtered() > d->mc_max_temp_fet) {
         // Use the angle from Low-Voltage tiltback, but slower speed from High-Voltage tiltback
         beep_alert(d, 3, true);
