@@ -2849,7 +2849,7 @@ p, li { white-space: pre-wrap; }
             <minDouble>0</minDouble>
             <showDisplay>0</showDisplay>
             <stepDouble>5</stepDouble>
-            <valDouble>0.2</valDouble>
+            <valDouble>0.5</valDouble>
             <vTxDoubleScale>10000</vTxDoubleScale>
             <suffix>%</suffix>
             <vTx>7</vTx>
