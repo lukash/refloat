@@ -1288,79 +1288,71 @@ static void refloat_thd(void *arg) {
 
             new_pid_value = scaled_kp * d->proportional + d->integral;
 
-            // Start Rate PID and Booster portion a few cycles later, after the start clicks have
-            // been emitted this keeps the start smooth and predictable
-            if (d->start_counter_clicks == 0) {
+            // Rate P (Angle + Rate, rather than Angle-Rate Cascading)
+            float rate_prop = -d->gyro[1];
 
-                // Rate P (Angle + Rate, rather than Angle-Rate Cascading)
-                float rate_prop = -d->gyro[1];
-
-                float scaled_rate_p;
-                // Choose appropriate scale based on board angle (this accomodates backwards riding)
-                if (rate_prop < 0) {
-                    scaled_rate_p = d->float_conf.kp2 * d->kp2_brake_scale;
-                } else {
-                    scaled_rate_p = d->float_conf.kp2 * d->kp2_accel_scale;
-                }
-
-                d->rate_p = scaled_rate_p * rate_prop;
-
-                // Apply Booster (Now based on True Pitch)
-                // Braketilt excluded to allow for soft brakes that strengthen when near tail-drag
-                float true_proportional = d->setpoint - d->atr.braketilt_offset - d->pitch;
-                float abs_proportional = fabsf(true_proportional);
-
-                float booster_current, booster_angle, booster_ramp;
-                if (tail_down) {
-                    booster_current = d->float_conf.brkbooster_current;
-                    booster_angle = d->float_conf.brkbooster_angle;
-                    booster_ramp = d->float_conf.brkbooster_ramp;
-                } else {
-                    booster_current = d->float_conf.booster_current;
-                    booster_angle = d->float_conf.booster_angle;
-                    booster_ramp = d->float_conf.booster_ramp;
-                }
-
-                // Make booster a bit stronger at higher speed (up to 2x stronger when braking)
-                const int boost_min_erpm = 3000;
-                if (d->motor.abs_erpm > boost_min_erpm) {
-                    float speedstiffness = fminf(1, (d->motor.abs_erpm - boost_min_erpm) / 10000);
-                    if (tail_down) {
-                        // use higher current at speed when braking
-                        booster_current += booster_current * speedstiffness;
-                    } else {
-                        // when accelerating, we reduce the booster start angle as we get faster
-                        // strength remains unchanged
-                        float angledivider = 1 + speedstiffness;
-                        booster_angle /= angledivider;
-                    }
-                }
-
-                if (abs_proportional > booster_angle) {
-                    if (abs_proportional - booster_angle < booster_ramp) {
-                        booster_current *= sign(true_proportional) *
-                            ((abs_proportional - booster_angle) / booster_ramp);
-                    } else {
-                        booster_current *= sign(true_proportional);
-                    }
-                } else {
-                    booster_current = 0;
-                }
-
-                // No harsh changes in booster current (effective delay <= 100ms)
-                d->applied_booster_current =
-                    0.01 * booster_current + 0.99 * d->applied_booster_current;
-                d->rate_p += d->applied_booster_current;
-
-                if (d->softstart_pid_limit < d->mc_current_max) {
-                    d->rate_p = fminf(fabs(d->rate_p), d->softstart_pid_limit) * sign(d->rate_p);
-                    d->softstart_pid_limit += d->softstart_ramp_step_size;
-                }
-
-                new_pid_value += d->rate_p;
+            float scaled_rate_p;
+            // Choose appropriate scale based on board angle (this accomodates backwards riding)
+            if (rate_prop < 0) {
+                scaled_rate_p = d->float_conf.kp2 * d->kp2_brake_scale;
             } else {
-                d->rate_p = 0;
+                scaled_rate_p = d->float_conf.kp2 * d->kp2_accel_scale;
             }
+
+            d->rate_p = scaled_rate_p * rate_prop;
+
+            // Apply Booster (Now based on True Pitch)
+            // Braketilt excluded to allow for soft brakes that strengthen when near tail-drag
+            float true_proportional = d->setpoint - d->atr.braketilt_offset - d->pitch;
+            float abs_proportional = fabsf(true_proportional);
+
+            float booster_current, booster_angle, booster_ramp;
+            if (tail_down) {
+                booster_current = d->float_conf.brkbooster_current;
+                booster_angle = d->float_conf.brkbooster_angle;
+                booster_ramp = d->float_conf.brkbooster_ramp;
+            } else {
+                booster_current = d->float_conf.booster_current;
+                booster_angle = d->float_conf.booster_angle;
+                booster_ramp = d->float_conf.booster_ramp;
+            }
+
+            // Make booster a bit stronger at higher speed (up to 2x stronger when braking)
+            const int boost_min_erpm = 3000;
+            if (d->motor.abs_erpm > boost_min_erpm) {
+                float speedstiffness = fminf(1, (d->motor.abs_erpm - boost_min_erpm) / 10000);
+                if (tail_down) {
+                    // use higher current at speed when braking
+                    booster_current += booster_current * speedstiffness;
+                } else {
+                    // when accelerating, we reduce the booster start angle as we get faster
+                    // strength remains unchanged
+                    float angledivider = 1 + speedstiffness;
+                    booster_angle /= angledivider;
+                }
+            }
+
+            if (abs_proportional > booster_angle) {
+                if (abs_proportional - booster_angle < booster_ramp) {
+                    booster_current *= sign(true_proportional) *
+                        ((abs_proportional - booster_angle) / booster_ramp);
+                } else {
+                    booster_current *= sign(true_proportional);
+                }
+            } else {
+                booster_current = 0;
+            }
+
+            // No harsh changes in booster current (effective delay <= 100ms)
+            d->applied_booster_current = 0.01 * booster_current + 0.99 * d->applied_booster_current;
+            d->rate_p += d->applied_booster_current;
+
+            if (d->softstart_pid_limit < d->mc_current_max) {
+                d->rate_p = fminf(fabs(d->rate_p), d->softstart_pid_limit) * sign(d->rate_p);
+                d->softstart_pid_limit += d->softstart_ramp_step_size;
+            }
+
+            new_pid_value += d->rate_p;
 
             // Current Limiting!
             float current_limit = d->motor.braking ? d->mc_current_min : d->mc_current_max;
