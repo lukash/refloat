@@ -261,6 +261,19 @@ void beep_on(data *d, bool force) {
 }
 
 static void reconfigure(data *d) {
+    d->turntilt_step_size = d->float_conf.turntilt_speed / d->float_conf.hertz;
+    d->startup_step_size = d->float_conf.startup_speed / d->float_conf.hertz;
+    d->noseangling_step_size = d->float_conf.noseangling_speed / d->float_conf.hertz;
+    d->startup_pitch_trickmargin = d->float_conf.startup_dirtylandings_enabled ? 10 : 0;
+
+    d->tiltback_variable = d->float_conf.tiltback_variable / 1000;
+    if (d->tiltback_variable > 0) {
+        d->tiltback_variable_max_erpm =
+            fabsf(d->float_conf.tiltback_variable_max / d->tiltback_variable);
+    } else {
+        d->tiltback_variable_max_erpm = 100000;
+    }
+
     motor_data_configure(&d->motor, d->float_conf.atr_filter / d->float_conf.hertz);
     balance_filter_configure(&d->balance_filter, &d->float_conf);
     torque_tilt_configure(&d->torque_tilt, &d->float_conf);
@@ -281,21 +294,16 @@ static void configure(data *d) {
     // Loop time in seconds times 20 for a nice long grace period
     d->motor_timeout_s = 20.0f / d->float_conf.hertz;
 
-    d->startup_step_size = d->float_conf.startup_speed / d->float_conf.hertz;
     d->tiltback_duty_step_size = d->float_conf.tiltback_duty_speed / d->float_conf.hertz;
     d->tiltback_hv_step_size = d->float_conf.tiltback_hv_speed / d->float_conf.hertz;
     d->tiltback_lv_step_size = d->float_conf.tiltback_lv_speed / d->float_conf.hertz;
     d->tiltback_return_step_size = d->float_conf.tiltback_return_speed / d->float_conf.hertz;
-    d->turntilt_step_size = d->float_conf.turntilt_speed / d->float_conf.hertz;
-    d->noseangling_step_size = d->float_conf.noseangling_speed / d->float_conf.hertz;
     d->inputtilt_step_size = d->float_conf.inputtilt_speed / d->float_conf.hertz;
 
     // Feature: Stealthy start vs normal start (noticeable click when engaging) - 0-20A
     d->start_counter_clicks_max = 3;
     // Feature: Soft Start
     d->softstart_ramp_step_size = (float) 100 / d->float_conf.hertz;
-    // Feature: Dirty Landings
-    d->startup_pitch_trickmargin = d->float_conf.startup_dirtylandings_enabled ? 10 : 0;
 
     // Backwards compatibility hack:
     // If mahony kp from the firmware internal filter is higher than 1, it's
@@ -338,15 +346,6 @@ static void configure(data *d) {
 
     // Speed above which to warn users about an impending full switch fault
     d->switch_warn_beep_erpm = d->float_conf.is_footbeep_enabled ? 2000 : 100000;
-
-    // Variable nose angle adjustment / tiltback (setting is per 1000erpm, convert to per erpm)
-    d->tiltback_variable = d->float_conf.tiltback_variable / 1000;
-    if (d->tiltback_variable > 0) {
-        d->tiltback_variable_max_erpm =
-            fabsf(d->float_conf.tiltback_variable_max / d->tiltback_variable);
-    } else {
-        d->tiltback_variable_max_erpm = 100000;
-    }
 
     d->beeper_enabled = d->float_conf.is_beeper_enabled;
 
@@ -1958,8 +1957,6 @@ static void cmd_runtime_tune(data *d, unsigned char *cfg, int len) {
         if (h2 == 0) {
             d->mc_current_min = fabsf(VESC_IF->get_cfg_float(CFG_PARAM_l_current_min));
         }
-
-        d->turntilt_step_size = d->float_conf.turntilt_speed / d->float_conf.hertz;
     }
     if (len >= 16) {
         split(cfg[12], &h1, &h2);
@@ -2049,20 +2046,6 @@ static void cmd_tune_defaults(data *d) {
     d->float_conf.startup_simplestart_enabled = CFG_DFLT_SIMPLESTART_ENABLED;
     d->float_conf.startup_dirtylandings_enabled = CFG_DFLT_DIRTYLANDINGS_ENABLED;
 
-    // Update values normally done in configure()
-    d->turntilt_step_size = d->float_conf.turntilt_speed / d->float_conf.hertz;
-
-    d->startup_step_size = d->float_conf.startup_speed / d->float_conf.hertz;
-    d->noseangling_step_size = d->float_conf.noseangling_speed / d->float_conf.hertz;
-    d->startup_pitch_trickmargin = d->float_conf.startup_dirtylandings_enabled ? 10 : 0;
-    d->tiltback_variable = d->float_conf.tiltback_variable / 1000;
-    if (d->tiltback_variable > 0) {
-        d->tiltback_variable_max_erpm =
-            fabsf(d->float_conf.tiltback_variable_max / d->tiltback_variable);
-    } else {
-        d->tiltback_variable_max_erpm = 100000;
-    }
-
     reconfigure(d);
 }
 
@@ -2101,7 +2084,6 @@ static void cmd_runtime_tune_other(data *d, unsigned char *cfg, int len) {
     d->float_conf.startup_pushstart_enabled = ((flags & 0x80) == 0x80);
 
     d->float_conf.is_beeper_enabled = d->beeper_enabled;
-    d->startup_pitch_trickmargin = dirty_landings ? 10 : 0;
     d->float_conf.startup_dirtylandings_enabled = dirty_landings;
 
     // startup
@@ -2111,7 +2093,6 @@ static void cmd_runtime_tune_other(data *d, unsigned char *cfg, int len) {
     float brakecurrent = cfg[4];
     float clickcurrent = cfg[5];
 
-    d->startup_step_size = ctrspeed / d->float_conf.hertz;
     d->float_conf.startup_speed = ctrspeed;
     d->float_conf.startup_pitch_tolerance = pitchtolerance / 10;
     d->float_conf.startup_roll_tolerance = rolltolerance;
@@ -2129,21 +2110,10 @@ static void cmd_runtime_tune_other(data *d, unsigned char *cfg, int len) {
         d->float_conf.tiltback_constant = tiltconst / 2;
         d->float_conf.tiltback_constant_erpm = tilterpm;
         if (tiltspeed > 0) {
-            d->noseangling_step_size = tiltspeed / 10 / d->float_conf.hertz;
             d->float_conf.noseangling_speed = tiltspeed / 10;
         }
         d->float_conf.tiltback_variable = tiltvarrate / 100;
         d->float_conf.tiltback_variable_max = tiltvarmax / 10;
-
-        d->startup_step_size = d->float_conf.startup_speed / d->float_conf.hertz;
-        d->noseangling_step_size = d->float_conf.noseangling_speed / d->float_conf.hertz;
-        d->tiltback_variable = d->float_conf.tiltback_variable / 1000;
-        if (d->tiltback_variable > 0) {
-            d->tiltback_variable_max_erpm =
-                fabsf(d->float_conf.tiltback_variable_max / d->tiltback_variable);
-        } else {
-            d->tiltback_variable_max_erpm = 100000;
-        }
         d->float_conf.tiltback_variable_erpm = cfg[11] * 100;
     }
 
@@ -2158,6 +2128,8 @@ static void cmd_runtime_tune_other(data *d, unsigned char *cfg, int len) {
             }
         }
     }
+
+    reconfigure(d);
 }
 
 void cmd_rc_move(data *d, unsigned char *cfg) {
