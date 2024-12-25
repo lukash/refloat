@@ -265,14 +265,10 @@ static void reconfigure(data *d) {
     d->startup_step_size = d->float_conf.startup_speed / d->float_conf.hertz;
     d->noseangling_step_size = d->float_conf.noseangling_speed / d->float_conf.hertz;
     d->startup_pitch_trickmargin = d->float_conf.startup_dirtylandings_enabled ? 10 : 0;
-
-    d->tiltback_variable = d->float_conf.tiltback_variable / 1000;
-    if (d->tiltback_variable > 0) {
-        d->tiltback_variable_max_erpm =
-            fabsf(d->float_conf.tiltback_variable_max / d->tiltback_variable);
-    } else {
-        d->tiltback_variable_max_erpm = 100000;
-    }
+    d->tiltback_variable =
+        d->float_conf.tiltback_variable / 1000 * sign(d->float_conf.tiltback_variable_max);
+    d->tiltback_variable_max_erpm =
+        fabsf(d->float_conf.tiltback_variable_max / d->tiltback_variable);
 
     motor_data_configure(&d->motor, d->float_conf.atr_filter / d->float_conf.hertz);
     balance_filter_configure(&d->balance_filter, &d->float_conf);
@@ -853,17 +849,11 @@ static void calculate_setpoint_target(data *d) {
 }
 
 static void apply_noseangling(data *d) {
-    // Nose angle adjustment, add variable then constant tiltback
-    float noseangling_target = 0;
-
-    // Variable Tiltback looks at ERPM from the reference point of the set minimum ERPM
-    float variable_erpm = fmaxf(0, d->motor.abs_erpm - d->float_conf.tiltback_variable_erpm);
-    if (variable_erpm > d->tiltback_variable_max_erpm) {
-        noseangling_target = d->float_conf.tiltback_variable_max * d->motor.erpm_sign;
-    } else {
-        noseangling_target = d->tiltback_variable * variable_erpm * d->motor.erpm_sign *
-            sign(d->float_conf.tiltback_variable_max);
-    }
+    // Variable Tiltback: looks at ERPM from the reference point of the set minimum ERPM
+    float variable_erpm = clampf(
+        d->motor.abs_erpm - d->float_conf.tiltback_variable_erpm, 0, d->tiltback_variable_max_erpm
+    );
+    float noseangling_target = d->tiltback_variable * variable_erpm * d->motor.erpm_sign;
 
     if (d->motor.abs_erpm > d->float_conf.tiltback_constant_erpm) {
         noseangling_target += d->float_conf.tiltback_constant * d->motor.erpm_sign;
