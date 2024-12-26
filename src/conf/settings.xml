@@ -766,10 +766,10 @@ p, li { white-space: pre-wrap; }
             <editorDecimalsDouble>1</editorDecimalsDouble>
             <editorScale>1</editorScale>
             <editAsPercentage>0</editAsPercentage>
-            <maxDouble>30</maxDouble>
-            <minDouble>-80</minDouble>
+            <maxDouble>10</maxDouble>
+            <minDouble>-10</minDouble>
             <showDisplay>0</showDisplay>
-            <stepDouble>0.5</stepDouble>
+            <stepDouble>0.2</stepDouble>
             <valDouble>0</valDouble>
             <vTxDoubleScale>1000</vTxDoubleScale>
             <suffix> °</suffix>
@@ -812,7 +812,7 @@ p, li { white-space: pre-wrap; }
             <minDouble>0</minDouble>
             <showDisplay>0</showDisplay>
             <stepDouble>0.05</stepDouble>
-            <valDouble>0.1</valDouble>
+            <valDouble>0.3</valDouble>
             <vTxDoubleScale>1000</vTxDoubleScale>
             <suffix> °/1000 ERPM</suffix>
             <vTx>7</vTx>
@@ -830,10 +830,10 @@ p, li { white-space: pre-wrap; }
             <editorDecimalsDouble>2</editorDecimalsDouble>
             <editorScale>1</editorScale>
             <editAsPercentage>0</editAsPercentage>
-            <maxDouble>20</maxDouble>
-            <minDouble>-20</minDouble>
+            <maxDouble>10</maxDouble>
+            <minDouble>-10</minDouble>
             <showDisplay>0</showDisplay>
-            <stepDouble>0.5</stepDouble>
+            <stepDouble>0.2</stepDouble>
             <valDouble>0</valDouble>
             <vTxDoubleScale>100</vTxDoubleScale>
             <suffix> °</suffix>
