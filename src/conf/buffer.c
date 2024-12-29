@@ -19,6 +19,30 @@
 #include <math.h>
 #include <stdbool.h>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
+// clang-format off
+
+// IEEE-754 16-bit floating-point format (without infinity and NaNs)
+// Dynamic range: +-131008.0
+// Normal numbers closest to zero: +-6.1035156E-5
+// Subnormal numbers closes to zero: +-5.9604645E-8
+// Precision: 3.311 decimal digits
+//
+// https://stackoverflow.com/a/60047308
+uint16_t to_float16(float x) {
+    // round-to-nearest-even: add last bit after truncated mantissa
+    const uint32_t b = *(uint32_t*)&x +0x00001000;
+    const uint32_t e = (b&0x7F800000)>>23; // exponent
+    const uint32_t m = b&0x007FFFFF; // mantissa
+    // 0x007FF000 = 0x00800000-0x00001000 = decimal indicator flag - initial rounding
+    // sign | normalized | denormalized | saturate
+    return (b&0x80000000)>>16 | (e>112)*((((e-112)<<10)&0x7C00)|m>>13) | ((e<113)&(e>101))*((((0x007FF000+m)>>(125-e))+1)>>1) | (e>143)*0x7FFF;
+}
+
+// clang-format on
+#pragma GCC diagnostic pop
+
 void buffer_append_int16(uint8_t *buffer, int16_t number, int32_t *index) {
     buffer[(*index)++] = number >> 8;
     buffer[(*index)++] = number;
@@ -114,6 +138,10 @@ void buffer_append_float32_auto(uint8_t *buffer, float number, int32_t *index) {
     }
 
     buffer_append_uint32(buffer, res, index);
+}
+
+void buffer_append_float16_auto(uint8_t *buffer, float number, int32_t *index) {
+    buffer_append_uint16(buffer, to_float16(number), index);
 }
 
 int16_t buffer_get_int16(const uint8_t *buffer, int32_t *index) {

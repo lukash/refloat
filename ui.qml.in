@@ -316,6 +316,24 @@ Item {
 
         property bool infoReceived: false
 
+        // IEEE-754 16-bit floating-point format (without infinity and NaNs)
+        // Dynamic range: +-131008.0
+        // Normal numbers closest to zero: +-6.1035156E-5
+        // Subnormal numbers closes to zero: +-5.9604645E-8
+        // Precision: 3.311 digits
+        //
+        // https://stackoverflow.com/a/60047308
+        function getFloat16(dataView, ind) {
+            var x = dataView.getUint16(ind);
+            var e = (x&0x7C00)>>10; // exponent
+            var m16 = x&0x03FF; // original float16 mantissa
+            var m = m16<<13; // new float 32 mantissa
+            var v = m16>0 ? 140+Math.floor(Math.log2(m16)) : 0;
+            // sign | normalized | denormalized
+            var r = (x&0x8000)<<16 | (e!=0)*((e+112)<<23|m) | ((e==0)&(m!=0))*((v-37)<<23|((m<<(150-v))&0x007FE000));
+            return new Float32Array(new Uint32Array([r]).buffer)[0];
+        }
+
         function createData(size, command) {
             var data = new DataView(new ArrayBuffer(size));
             var ind = 0;
