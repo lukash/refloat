@@ -1,0 +1,6 @@
+CompileFlags:
+  Add:
+    - "-D_XOPEN_SOURCE=1"  # M_PI definition error
+    - "-Wall"
+    - "-Wextra"
+    - "-Wno-double-promotion"  # suppress, clangd doesn't support -fsingle-precision-constant
