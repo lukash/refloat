@@ -1,0 +1,7 @@
+conf/conf_default.h
+conf/conf_general.h
+conf/confparser.c
+conf/confparser.h
+conf/confxml.c
+conf/confxml.h
+package_lib.lisp
