@@ -17,10 +17,16 @@
 
 #include "time.h"
 
-#include "vesc_c_if.h"
+static inline void time_now(Time *t) {
+    if (VESC_IF->system_time_ticks) {
+        t->now = VESC_IF->system_time_ticks();
+    } else {
+        t->now = VESC_IF->system_time() * SYSTEM_TICK_RATE_HZ;
+    }
+}
 
 void time_init(Time *t) {
-    t->now = VESC_IF->system_time();
+    time_now(t);
     t->engage_timer = t->now;
     // Workaround: After startup (assume the time is very close to 0), we don't
     // want anything to be thinking we have just disengaged. Set disengage time
@@ -30,7 +36,7 @@ void time_init(Time *t) {
 }
 
 void time_update(Time *t, RunState state) {
-    t->now = VESC_IF->system_time();
+    time_now(t);
     if (state == STATE_RUNNING) {
         t->disengage_timer = t->now;
         time_refresh_idle(t);

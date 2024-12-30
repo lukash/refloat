@@ -19,7 +19,9 @@
 
 #include "state.h"
 
-typedef float time_t;
+#include "vesc_c_if.h"
+
+typedef uint32_t time_t;
 
 typedef struct {
     time_t now;
@@ -41,11 +43,11 @@ inline void timer_refresh(const Time *t, time_t *timer) {
 }
 
 inline bool timer_older(const Time *t, time_t timer, float seconds) {
-    return t->now - timer > seconds;
+    return t->now - timer > (time_t) (seconds * SYSTEM_TICK_RATE_HZ);
 }
 
 inline bool timer_older_ms(const Time *t, time_t timer, float seconds) {
-    return t->now - timer > seconds * 0.001;
+    return t->now - timer > (time_t) (seconds * SYSTEM_TICK_RATE_HZ / 1000);
 }
 
 #define time_elapsed(t, event, seconds)                                                            \

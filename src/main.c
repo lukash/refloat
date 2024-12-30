@@ -2306,6 +2306,7 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
         // likely shouldn't be here, as the type can be reconfigured and the
         // app would need to reconnect to pick up the change from this command.
         send_buffer[ind++] = d->float_conf.hardware.leds.type;
+        buffer_append_uint32(send_buffer, SYSTEM_TICK_RATE_HZ, &ind);
         VESC_IF->send_app_data(send_buffer, ind);
         return;
     }
