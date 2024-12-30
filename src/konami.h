@@ -19,9 +19,10 @@
 
 #include "footpad_sensor.h"
 #include "leds.h"
+#include "time.h"
 
 typedef struct {
-    float time;
+    time_t timer;
     uint8_t state;
     const FootpadSensorState *sequence;
     uint8_t sequence_size;
@@ -29,4 +30,4 @@ typedef struct {
 
 void konami_init(Konami *konami, const FootpadSensorState *sequence, uint8_t sequence_size);
 
-bool konami_check(Konami *konami, Leds *leds, const FootpadSensor *fs, float current_time);
+bool konami_check(Konami *konami, Leds *leds, const FootpadSensor *fs, const Time *time);

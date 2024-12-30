@@ -26,7 +26,7 @@ void motor_control_init(MotorControl *mc) {
     mc->current_requested = false;
     mc->requested_current = 0.0f;
     mc->click_counter = 0;
-    mc->brake_timeout = 0.0f;
+    mc->brake_timer = 0.0f;
     mc->parking_brake_active = false;
 }
 
@@ -41,7 +41,7 @@ void motor_control_request_current(MotorControl *mc, float current) {
     mc->requested_current = current;
 }
 
-void motor_control_apply(MotorControl *mc, float abs_erpm, RunState state, float time) {
+void motor_control_apply(MotorControl *mc, float abs_erpm, RunState state, const Time *time) {
     if (state == STATE_DISABLED) {
         if (!mc->disabled) {
             // set 0A only once to reset any previously-set current, then stop touching the motor
@@ -83,10 +83,10 @@ void motor_control_apply(MotorControl *mc, float abs_erpm, RunState state, float
     } else {
         // Brake logic
         if (abs_erpm > ERPM_MOVING_THRESHOLD) {
-            mc->brake_timeout = time + 1.0f;
+            timer_refresh(time, &mc->brake_timer);
         }
 
-        if (time > mc->brake_timeout) {
+        if (timer_older(time, mc->brake_timer, 1)) {
             // Release the motor by setting zero current
             VESC_IF->mc_set_current(0.0f);
             return;

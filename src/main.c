@@ -29,6 +29,7 @@
 #include "motor_control.h"
 #include "motor_data.h"
 #include "state.h"
+#include "time.h"
 #include "torque_tilt.h"
 #include "utils.h"
 
@@ -85,6 +86,7 @@ typedef struct {
     // Firmware version, passed in from Lisp
     int fw_version_major, fw_version_minor, fw_version_beta;
 
+    Time time;
     MotorData motor;
     MotorControl motor_control;
     TorqueTilt torque_tilt;
@@ -146,12 +148,11 @@ typedef struct {
     float applied_booster_current;
     float noseangling_interpolated, inputtilt_interpolated;
     float turntilt_target, turntilt_interpolated;
-    float current_time;
-    float disengage_timer, nag_timer;
+    time_t nag_timer;
     float idle_voltage;
-    float fault_angle_pitch_timer, fault_angle_roll_timer, fault_switch_timer,
+    time_t fault_angle_pitch_timer, fault_angle_roll_timer, fault_switch_timer,
         fault_switch_half_timer;
-    float wheelslip_timer, tb_highvoltage_timer;
+    time_t wheelslip_timer, tb_highvoltage_timer;
     float switch_warn_beep_erpm;
     bool traction_control;
 
@@ -164,7 +165,7 @@ typedef struct {
     // Darkride aka upside down mode:
     bool is_upside_down_started;  // dark ride has been engaged
     bool enable_upside_down;  // dark ride mode is enabled (10 seconds after fault)
-    float delay_upside_down_fault;
+    time_t upside_down_fault_timer;
 
     // Feature: Flywheel
     bool flywheel_abort;
@@ -172,7 +173,7 @@ typedef struct {
 
     // Feature: Reverse Stop
     float reverse_stop_step_size, reverse_tolerance, reverse_total_erpm;
-    float reverse_timer;
+    time_t reverse_timer;
 
     // Feature: Soft Start
     float softstart_pid_limit, softstart_ramp_step_size;
@@ -269,15 +270,14 @@ static void reconfigure(data *d) {
     balance_filter_configure(&d->balance_filter, &d->float_conf);
     torque_tilt_configure(&d->torque_tilt, &d->float_conf);
     atr_configure(&d->atr, &d->float_conf);
+
+    time_refresh_idle(&d->time);
 }
 
 static void configure(data *d) {
     state_init(&d->state, d->float_conf.disabled);
 
     lcm_configure(&d->lcm, &d->float_conf.leds);
-
-    // This timer is used to determine how long the board has been disengaged / idle
-    d->disengage_timer = d->current_time;
 
     // Loop time in microseconds
     d->loop_time_us = 1e6 / d->float_conf.hertz;
@@ -402,6 +402,7 @@ static void engage(data *d) {
     d->motor_control.click_counter = 3;
 
     state_engage(&d->state);
+    timer_refresh(&d->time, &d->time.engage_timer);
 }
 
 static void check_odometer(data *d) {
@@ -435,7 +436,7 @@ static void do_rc_move(data *d) {
 
         // Throttle must be greater than 2% (Help mitigate lingering throttle)
         if ((d->float_conf.remote_throttle_current_max > 0) &&
-            (d->current_time - d->disengage_timer > d->float_conf.remote_throttle_grace_period) &&
+            time_elapsed(&d->time, disengage, d->float_conf.remote_throttle_grace_period) &&
             (fabsf(d->throttle_val) > 0.02)) {
             float servo_val = d->throttle_val;
             servo_val *= (d->float_conf.inputtilt_invert_throttle ? -1.0 : 1.0);
@@ -480,7 +481,7 @@ bool can_engage(const data *d) {
     if (d->footpad_sensor.state == FS_LEFT || d->footpad_sensor.state == FS_RIGHT) {
         // 5 seconds after stopping we allow starting with a single sensor (e.g. for jump starts)
         bool is_simple_start =
-            d->float_conf.startup_simplestart_enabled && (d->current_time - d->disengage_timer > 5);
+            d->float_conf.startup_simplestart_enabled && time_elapsed(&d->time, disengage, 5);
 
         if (d->float_conf.fault_is_dual_switch || is_simple_start) {
             return true;
@@ -502,9 +503,9 @@ static bool check_faults(data *d) {
     if (d->state.darkride) {
         if (d->motor.erpm > 1000) {
             // erpms are also reversed when upside down!
-            if (((d->current_time - d->fault_switch_timer) * 1000 > 100) || d->motor.erpm > 2000 ||
-                (d->state.wheelslip && (d->current_time - d->delay_upside_down_fault > 1) &&
-                 ((d->current_time - d->fault_switch_timer) * 1000 > 30))) {
+            if (timer_older(&d->time, d->fault_switch_timer, 0.1) || d->motor.erpm > 2000 ||
+                (d->state.wheelslip && timer_older(&d->time, d->upside_down_fault_timer, 1) &&
+                 timer_older(&d->time, d->fault_switch_timer, 0.03))) {
 
                 // Trigger Reverse Stop when board is going reverse and
                 // going > 2mph for more than 100ms
@@ -514,15 +515,15 @@ static bool check_faults(data *d) {
                 return true;
             }
         } else {
-            d->fault_switch_timer = d->current_time;
+            timer_refresh(&d->time, &d->fault_switch_timer);
             if (d->motor.erpm > 300) {
                 // erpms are also reversed when upside down!
-                if ((d->current_time - d->fault_angle_roll_timer) * 1000 > 500) {
+                if (timer_older(&d->time, d->fault_angle_roll_timer, 0.5)) {
                     state_stop(&d->state, STOP_REVERSE_STOP);
                     return true;
                 }
             } else {
-                d->fault_angle_roll_timer = d->current_time;
+                timer_refresh(&d->time, &d->fault_angle_roll_timer);
             }
         }
         if (can_engage(d)) {
@@ -541,15 +542,17 @@ static bool check_faults(data *d) {
         // Switch fully open
         if (d->footpad_sensor.state == FS_NONE && d->state.mode != MODE_FLYWHEEL) {
             if (!disable_switch_faults) {
-                if ((1000.0 * (d->current_time - d->fault_switch_timer)) >
-                    d->float_conf.fault_delay_switch_full) {
+                if (timer_older_ms(
+                        &d->time, d->fault_switch_timer, d->float_conf.fault_delay_switch_full
+                    )) {
                     state_stop(&d->state, STOP_SWITCH_FULL);
                     return true;
                 }
                 // low speed (below 6 x half-fault threshold speed):
                 else if ((d->motor.abs_erpm < d->float_conf.fault_adc_half_erpm * 6) &&
-                         (1000.0 * (d->current_time - d->fault_switch_timer) >
-                          d->float_conf.fault_delay_switch_half)) {
+                         timer_older_ms(
+                             &d->time, d->fault_switch_timer, d->float_conf.fault_delay_switch_half
+                         )) {
                     state_stop(&d->state, STOP_SWITCH_FULL);
                     return true;
                 }
@@ -561,7 +564,7 @@ static bool check_faults(data *d) {
                 return true;
             }
         } else {
-            d->fault_switch_timer = d->current_time;
+            timer_refresh(&d->time, &d->fault_switch_timer);
         }
 
         // Feature: Reverse-Stop
@@ -576,12 +579,12 @@ static bool check_faults(data *d) {
                 return true;
             }
             // Above 10 degrees for a full second? Switch it off
-            if (fabsf(d->pitch) > 10 && d->current_time - d->reverse_timer > 1) {
+            if (fabsf(d->pitch) > 10 && timer_older(&d->time, d->reverse_timer, 1)) {
                 state_stop(&d->state, STOP_REVERSE_STOP);
                 return true;
             }
             // Above 5 degrees for 2 seconds? Switch it off
-            if (fabsf(d->pitch) > 5 && d->current_time - d->reverse_timer > 2) {
+            if (fabsf(d->pitch) > 5 && timer_older(&d->time, d->reverse_timer, 2)) {
                 state_stop(&d->state, STOP_REVERSE_STOP);
                 return true;
             }
@@ -590,32 +593,34 @@ static bool check_faults(data *d) {
                 return true;
             }
             if (fabsf(d->pitch) < 5) {
-                d->reverse_timer = d->current_time;
+                timer_refresh(&d->time, &d->reverse_timer);
             }
         }
 
         // Switch partially open and stopped
         if (!d->float_conf.fault_is_dual_switch) {
             if (!can_engage(d) && d->motor.abs_erpm < d->float_conf.fault_adc_half_erpm) {
-                if ((1000.0 * (d->current_time - d->fault_switch_half_timer)) >
-                    d->float_conf.fault_delay_switch_half) {
+                if (timer_older_ms(
+                        &d->time, d->fault_switch_half_timer, d->float_conf.fault_delay_switch_half
+                    )) {
                     state_stop(&d->state, STOP_SWITCH_HALF);
                     return true;
                 }
             } else {
-                d->fault_switch_half_timer = d->current_time;
+                timer_refresh(&d->time, &d->fault_switch_half_timer);
             }
         }
 
         // Check roll angle
         if (fabsf(d->roll) > d->float_conf.fault_roll) {
-            if ((1000.0 * (d->current_time - d->fault_angle_roll_timer)) >
-                d->float_conf.fault_delay_roll) {
+            if (timer_older_ms(
+                    &d->time, d->fault_angle_roll_timer, d->float_conf.fault_delay_roll
+                )) {
                 state_stop(&d->state, STOP_ROLL);
                 return true;
             }
         } else {
-            d->fault_angle_roll_timer = d->current_time;
+            timer_refresh(&d->time, &d->fault_angle_roll_timer);
 
             if (d->float_conf.fault_darkride_enabled) {
                 if (fabsf(d->roll) > 100 && fabsf(d->roll) < 135) {
@@ -634,13 +639,12 @@ static bool check_faults(data *d) {
 
     // Check pitch angle
     if (fabsf(d->pitch) > d->float_conf.fault_pitch && fabsf(d->inputtilt_interpolated) < 30) {
-        if ((1000.0 * (d->current_time - d->fault_angle_pitch_timer)) >
-            d->float_conf.fault_delay_pitch) {
+        if (timer_older_ms(&d->time, d->fault_angle_pitch_timer, d->float_conf.fault_delay_pitch)) {
             state_stop(&d->state, STOP_PITCH);
             return true;
         }
     } else {
-        d->fault_angle_pitch_timer = d->current_time;
+        timer_refresh(&d->time, &d->fault_angle_pitch_timer);
     }
 
     return false;
@@ -650,7 +654,7 @@ static void calculate_setpoint_target(data *d) {
     float input_voltage = VESC_IF->mc_get_input_voltage_filtered();
 
     if (input_voltage < d->float_conf.tiltback_hv) {
-        d->tb_highvoltage_timer = d->current_time;
+        timer_refresh(&d->time, &d->tb_highvoltage_timer);
     }
 
     if (d->state.sat == SAT_CENTERING) {
@@ -682,7 +686,7 @@ static void calculate_setpoint_target(data *d) {
                d->motor.abs_erpm > 2000) {
         d->state.wheelslip = true;
         d->state.sat = SAT_NONE;
-        d->wheelslip_timer = d->current_time;
+        timer_refresh(&d->time, &d->wheelslip_timer);
         if (d->state.darkride) {
             d->traction_control = true;
         }
@@ -693,8 +697,8 @@ static void calculate_setpoint_target(data *d) {
         }
         // Remain in wheelslip state for a bit to avoid any overreactions
         if (d->motor.duty_cycle > d->max_duty_with_margin) {
-            d->wheelslip_timer = d->current_time;
-        } else if (d->current_time - d->wheelslip_timer > 0.2) {
+            timer_refresh(&d->time, &d->wheelslip_timer);
+        } else if (timer_older(&d->time, d->wheelslip_timer, 0.2)) {
             if (d->motor.duty_raw < 0.85) {
                 d->traction_control = false;
                 d->state.wheelslip = false;
@@ -703,7 +707,7 @@ static void calculate_setpoint_target(data *d) {
         if (d->float_conf.fault_reversestop_enabled && (d->motor.erpm < 0)) {
             // the lingering wheelslip timer can cause us to blow past the reverse stop condition!
             d->state.sat = SAT_REVERSESTOP;
-            d->reverse_timer = d->current_time;
+            timer_refresh(&d->time, &d->reverse_timer);
             d->reverse_total_erpm = 0;
         }
     } else if (d->motor.duty_cycle > d->float_conf.tiltback_duty) {
@@ -725,7 +729,7 @@ static void calculate_setpoint_target(data *d) {
     } else if (d->motor.duty_cycle > 0.05 && input_voltage > d->float_conf.tiltback_hv) {
         d->beep_reason = BEEP_HV;
         beep_alert(d, 3, false);
-        if (((d->current_time - d->tb_highvoltage_timer) > .5) ||
+        if (timer_older(&d->time, d->tb_highvoltage_timer, 0.5) ||
             (input_voltage > d->float_conf.tiltback_hv + 1)) {
             // 500ms have passed or voltage is another volt higher, time for some tiltback
             if (d->motor.erpm > 0) {
@@ -795,7 +799,7 @@ static void calculate_setpoint_target(data *d) {
         // Normal running
         if (d->float_conf.fault_reversestop_enabled && d->motor.erpm < -200 && !d->state.darkride) {
             d->state.sat = SAT_REVERSESTOP;
-            d->reverse_timer = d->current_time;
+            timer_refresh(&d->time, &d->reverse_timer);
             d->reverse_total_erpm = 0;
         } else {
             d->state.sat = SAT_NONE;
@@ -811,7 +815,7 @@ static void calculate_setpoint_target(data *d) {
             // right after flipping when first engaging dark ride we add a 1 second grace period
             // before aggressively checking for board wiggle (based on acceleration)
             d->is_upside_down_started = true;
-            d->delay_upside_down_fault = d->current_time;
+            timer_refresh(&d->time, &d->upside_down_fault_timer);
         }
     }
 
@@ -980,11 +984,11 @@ static void refloat_thd(void *arg) {
     configure(d);
 
     while (!VESC_IF->should_terminate()) {
+        time_update(&d->time, d->state.state);
+
         beeper_update(d);
 
         charging_timeout(&d->charging, &d->state);
-
-        d->current_time = VESC_IF->system_time();
 
         d->pitch = rad2deg(VESC_IF->imu_get_pitch());
         d->roll = rad2deg(VESC_IF->imu_get_roll());
@@ -1125,14 +1129,13 @@ static void refloat_thd(void *arg) {
                     // dirty landings: add extra margin when rightside up
                     d->startup_pitch_tolerance =
                         d->float_conf.startup_pitch_tolerance + d->startup_pitch_trickmargin;
-                    d->fault_angle_pitch_timer = d->current_time;
+                    timer_refresh(&d->time, &d->fault_angle_pitch_timer);
                 }
                 break;
             }
             d->odometer_dirty = 1;
 
             d->enable_upside_down = true;
-            d->disengage_timer = d->current_time;
 
             // Calculate setpoint and interpolation
             calculate_setpoint_target(d);
@@ -1307,9 +1310,7 @@ static void refloat_thd(void *arg) {
             }
 
             if (d->state.mode != MODE_FLYWHEEL && d->pitch > 75 && d->pitch < 105) {
-                if (konami_check(
-                        &d->flywheel_konami, &d->leds, &d->footpad_sensor, d->current_time
-                    )) {
+                if (konami_check(&d->flywheel_konami, &d->leds, &d->footpad_sensor, &d->time)) {
                     unsigned char enabled[6] = {0x82, 0, 0, 0, 0, 1};
                     cmd_flywheel_toggle(d, enabled, 6);
                 }
@@ -1318,20 +1319,20 @@ static void refloat_thd(void *arg) {
             if (d->float_conf.hardware.leds.type != LED_TYPE_NONE) {
                 if (!d->leds.cfg->headlights_on &&
                     konami_check(
-                        &d->headlights_on_konami, &d->leds, &d->footpad_sensor, d->current_time
+                        &d->headlights_on_konami, &d->leds, &d->footpad_sensor, &d->time
                     )) {
                     leds_headlights_switch(&d->float_conf.leds, &d->lcm, true);
                 }
 
                 if (d->leds.cfg->headlights_on &&
                     konami_check(
-                        &d->headlights_off_konami, &d->leds, &d->footpad_sensor, d->current_time
+                        &d->headlights_off_konami, &d->leds, &d->footpad_sensor, &d->time
                     )) {
                     leds_headlights_switch(&d->float_conf.leds, &d->lcm, false);
                 }
             }
 
-            if (d->current_time - d->disengage_timer > 10) {
+            if (time_elapsed(&d->time, disengage, 10)) {
                 // 10 seconds of grace period between flipping the board over and allowing darkride
                 // mode
                 if (d->state.darkride) {
@@ -1340,9 +1341,10 @@ static void refloat_thd(void *arg) {
                 d->enable_upside_down = false;
                 d->state.darkride = false;
             }
-            if (d->current_time - d->disengage_timer > 1800) {  // alert user after 30 minutes
-                if (d->current_time - d->nag_timer > 60) {  // beep every 60 seconds
-                    d->nag_timer = d->current_time;
+
+            if (time_elapsed(&d->time, idle, 1800)) {  // alert user after 30 minutes
+                if (timer_older(&d->time, d->nag_timer, 60)) {  // beep every 60 seconds
+                    timer_refresh(&d->time, &d->nag_timer);
                     float input_voltage = VESC_IF->mc_get_input_voltage_filtered();
                     if (input_voltage > d->idle_voltage) {
                         // don't beep if the voltage keeps increasing (board is charging)
@@ -1353,11 +1355,11 @@ static void refloat_thd(void *arg) {
                     }
                 }
             } else {
-                d->nag_timer = d->current_time;
+                timer_refresh(&d->time, &d->nag_timer);
                 d->idle_voltage = 0;
             }
 
-            if ((d->current_time - d->fault_angle_pitch_timer) > 1) {
+            if (timer_older(&d->time, d->fault_angle_pitch_timer, 1)) {
                 // 1 second after disengaging - set startup tolerance back to normal (aka tighter)
                 d->startup_pitch_tolerance = d->float_conf.startup_pitch_tolerance;
             }
@@ -1372,7 +1374,7 @@ static void refloat_thd(void *arg) {
             }
             // Ignore roll for the first second while it's upside down
             if (d->state.darkride && (fabsf(d->balance_pitch) < d->startup_pitch_tolerance)) {
-                if ((d->current_time - d->disengage_timer) > 1) {
+                if (time_elapsed(&d->time, disengage, 1)) {
                     // after 1 second:
                     if (fabsf(fabsf(d->roll) - 180) < d->float_conf.startup_roll_tolerance) {
                         engage(d);
@@ -1404,9 +1406,7 @@ static void refloat_thd(void *arg) {
             break;
         }
 
-        motor_control_apply(
-            &d->motor_control, d->motor.abs_erpm_smooth, d->state.state, d->current_time
-        );
+        motor_control_apply(&d->motor_control, d->motor.abs_erpm_smooth, d->state.state, &d->time);
         VESC_IF->sleep_us(d->loop_time_us);
     }
 }
@@ -1496,6 +1496,7 @@ static void data_init(data *d) {
 
     d->odometer = VESC_IF->mc_get_odometer();
 
+    time_init(&d->time);
     motor_control_init(&d->motor_control);
     lcm_init(&d->lcm, &d->float_conf.hardware.leds);
     charging_init(&d->charging);

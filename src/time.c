@@ -15,33 +15,24 @@
 // You should have received a copy of the GNU General Public License along with
 // this program. If not, see <http://www.gnu.org/licenses/>.
 
-#pragma once
-
-#include <stdbool.h>
-#include <stdint.h>
-
-#include "conf/datatypes.h"
-#include "state.h"
 #include "time.h"
 
-typedef struct {
-    bool disabled;
-    bool current_requested;
-    float requested_current;
+#include "vesc_c_if.h"
 
-    uint8_t click_counter;
-    time_t brake_timer;
-    bool parking_brake_active;
+void time_init(Time *t) {
+    t->now = VESC_IF->system_time();
+    t->engage_timer = t->now;
+    // Workaround: After startup (assume the time is very close to 0), we don't
+    // want anything to be thinking we have just disengaged. Set disengage time
+    // a minute into the past to prevent this.
+    t->disengage_timer = t->now - 60;
+    time_refresh_idle(t);
+}
 
-    float brake_current;
-    float click_current;
-    ParkingBrakeMode parking_brake_mode;
-} MotorControl;
-
-void motor_control_init(MotorControl *mc);
-
-void motor_control_configure(MotorControl *mc, const RefloatConfig *config);
-
-void motor_control_request_current(MotorControl *mc, float current);
-
-void motor_control_apply(MotorControl *mc, float abs_erpm, RunState state, const Time *time);
+void time_update(Time *t, RunState state) {
+    t->now = VESC_IF->system_time();
+    if (state == STATE_RUNNING) {
+        t->disengage_timer = t->now;
+        time_refresh_idle(t);
+    }
+}
