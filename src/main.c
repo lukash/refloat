@@ -178,7 +178,6 @@ typedef struct {
     float softstart_pid_limit, softstart_ramp_step_size;
 
     // Odometer
-    float odo_timer;
     int odometer_dirty;
     uint64_t odometer;
 
@@ -410,18 +409,12 @@ static void engage(data *d) {
  */
 static void check_odometer(data *d) {
     // Make odometer persistent if we've gone 200m or more
-    if (d->odometer_dirty > 0) {
-        float stored_odo = VESC_IF->mc_get_odometer();
-        if ((stored_odo > d->odometer + 200) || (stored_odo < d->odometer - 10000)) {
-            if (d->odometer_dirty == 1) {
-                // Wait 10 seconds before writing to avoid writing if immediately continuing to ride
-                d->odo_timer = d->current_time;
-                d->odometer_dirty++;
-            } else if ((d->current_time - d->odo_timer) > 10) {
-                VESC_IF->store_backup_data();
-                d->odometer = VESC_IF->mc_get_odometer();
-                d->odometer_dirty = 0;
-            }
+    if (d->odometer_dirty) {
+        float current_odo = VESC_IF->mc_get_odometer();
+        if (current_odo > d->odometer + 200 || current_odo < d->odometer - 10000) {
+            VESC_IF->store_backup_data();
+            d->odometer = VESC_IF->mc_get_odometer();
+            d->odometer_dirty = false;
         }
     }
 }
