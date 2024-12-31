@@ -6,6 +6,8 @@ VESC_TOOL ?= vesc_tool
 
 TARGET = package_lib
 
+all: $(TARGET)
+
 REFLOAT_SOURCES = $(wildcard *.c)
 CONF_GEN_HEADERS = conf/conf_default.h conf/confparser.h conf/confxml.h
 CONF_GEN_SOURCES = conf/confparser.c conf/confxml.c
