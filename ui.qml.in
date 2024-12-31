@@ -36,7 +36,17 @@ Item {
 
     // Used to fix the float negative zero problem where applicable
     function toFixed1Zero(num) {
+        if (num == null || Number.isNaN(num)) {
+            return "-.-";
+        }
         return num.toFixed(1).replace("-0.0", "0.0");
+    }
+
+    function toFixed2Zero(num) {
+        if (num == null || Number.isNaN(num)) {
+            return "-.--";
+        }
+        return num.toFixed(2).replace("-0.00", "0.00");
     }
 
     function clamp(val, min, max) {
@@ -479,28 +489,16 @@ Item {
 
                 state.beepReason = dv.getUint8(ind++);
 
-                pitch.pitchValue = dv.getFloat32(ind); ind += 4;
-                pitch.balancePitchValue = dv.getFloat32(ind); ind += 4;
-                roll.value = dv.getFloat32(ind); ind += 4;
+                var newRt = Array(state.rtDataItems.length).fill(NaN);
 
-                state.adc1Voltage = dv.getFloat32(ind); ind += 4;
-                state.adc2Voltage = dv.getFloat32(ind); ind += 4;
-                debugRemoteInput.value = Math.round(dv.getFloat32(ind) * 100); ind += 4;
-
-                if (hasRuntime) {
-                    pitch.setpointValue = dv.getFloat32(ind); ind += 4;
-                    debugAtrSetpoint.rValue = dv.getFloat32(ind); ind += 4;
-                    debugBrakeTiltSetpoint.rValue = dv.getFloat32(ind); ind += 4;
-                    debugTorqueTiltSetpoint.rValue = dv.getFloat32(ind); ind += 4;
-                    debugTurnTiltSetpoint.rValue = dv.getFloat32(ind); ind += 4;
-                    debugRemoteTiltSetpoint.rValue = dv.getFloat32(ind); ind += 4;
-
-                    debugRequestedCurrent.rValue = dv.getFloat32(ind); ind += 4;
-                    debugFilteredCurrent.rValue = dv.getFloat32(ind); ind += 4;
-                    debugAtrAccDiff.rValue = dv.getFloat32(ind); ind += 4;
-                    debugAtrSpeedBoost.value = Math.round(dv.getFloat32(ind) * 100); ind += 4;
-                    debugBoosterCurrent.rValue = dv.getFloat32(ind); ind += 4;
+                // if runtime values are not in the message, limit the loop to
+                // read only values that are always present
+                for (var i = 0; i < (hasRuntime ? newRt.length : 5); i++) {
+                    newRt[i] = dv.getFloat32(ind);
+                    ind += 4;
                 }
+
+                state.rtData = state.newRtData(newRt);
 
                 if (hasCharging) {
                     chargingInfo.current = dv.getFloat32(ind); ind += 4;
@@ -793,8 +791,6 @@ Item {
         readonly property int fs_Both: 3
 
         property int fsState: fs_None
-        property real adc1Voltage: 0
-        property real adc2Voltage: 0
 
         onFsStateChanged: {
             leftSensor.on = false;
@@ -922,6 +918,37 @@ Item {
                 errorText = "";
                 errorDescription = "";
             }
+        }
+
+        readonly property var rtDataItems: [
+            "pitch",
+            "balancePitch",
+            "roll",
+            "adc1Voltage",
+            "adc2Voltage",
+            "remoteInput",
+            "setpoint",
+            "atrSetpoint",
+            "brakeTiltSetpoint",
+            "torqueTiltSetpoint",
+            "turnTiltSetpoint",
+            "remoteTiltSetpoint",
+            "requestedCurrent",
+            "filteredCurrent",
+            "atrAccDiff",
+            "atrSpeedBoost",
+            "boosterCurrent",
+        ]
+
+        property var rtData: newRtData(Array(rtDataItems.length).fill(NaN));
+
+        function newRtData(values) {
+            var newData = {};
+            var names = rtDataItems;
+            for (var i = 0; i < names.length; i++) {
+                newData[names[i]] = values[i];
+            }
+            return newData;
         }
     }
 
@@ -2048,14 +2075,14 @@ Item {
                         var voltageString = "";
 
                         if (preferences.showBattVoltage) {
-                            voltageString = parent.voltage.toFixed(1) + "V";
+                            voltageString = "%1V".arg(toFixed1Zero(parent.voltage));
                         }
 
                         if (preferences.showBattVoltagePerCell) {
                             if (preferences.showBattVoltage) {
                                 voltageString += " / ";
                             }
-                            voltageString += (parent.voltage / motorConfig.batteryCells).toFixed(2) + "V";
+                            voltageString += "%1V".arg(toFixed2Zero(parent.voltage / motorConfig.batteryCells));
                         }
 
                         return voltageString;
@@ -2463,8 +2490,8 @@ Item {
                             width: parent.height
                             height: width
 
-                            property real leftVoltage: preferences.swapAdcs ? state.adc2Voltage : state.adc1Voltage
-                            property real rightVoltage: preferences.swapAdcs ? state.adc1Voltage : state.adc2Voltage
+                            property real leftVoltage: preferences.swapAdcs ? state.rtData.adc2Voltage : state.rtData.adc1Voltage
+                            property real rightVoltage: preferences.swapAdcs ? state.rtData.adc1Voltage : state.rtData.adc2Voltage
 
                             property real canvasWidth: width * 0.85
                             property real scale: canvasWidth / footpadPath.width
@@ -2594,7 +2621,7 @@ Item {
                             width: parent.height
                             height: width
 
-                            property real value
+                            property real value: state.rtData.roll
                             onValueChanged: rollCanvas.requestPaint();
 
                             Behavior on value {
@@ -2655,9 +2682,9 @@ Item {
 
                         property real textWidth: 1.4 * unit
 
-                        property real pitchValue
-                        property real balancePitchValue
-                        property real setpointValue
+                        property real pitchValue: state.rtData.pitch
+                        property real balancePitchValue: state.rtData.balancePitch
+                        property real setpointValue: state.rtData.setpoint
 
                         property real runtimeOpacity: 0
 
@@ -3386,17 +3413,6 @@ Item {
                         }
                     }
 
-                    component RealValue : Value {
-                        property real rValue
-                        property int precision: 2
-
-                        value: rValue.toFixed(precision)
-
-                        onRValueChanged: {
-                            value = rValue.toFixed(precision);
-                        }
-                    }
-
                     Item {
                         width: parent.width
                         height: 0.1 * unit
@@ -3437,12 +3453,12 @@ Item {
                             spacing: 5
                             clip: true
 
-                            RealValue {id: debugRequestedCurrent; label: "Requested current"; unit: "A";}
-                            RealValue {id: debugFilteredCurrent; label: "Torque (filt. current)"; unit: "A";}
-                            RealValue {id: debugAtrAccDiff; label: "ATR Accel. diff.";}
-                            Value {id: debugAtrSpeedBoost; label: "ATR Speed Boost"; unit: "%"; value: "0"}
-                            RealValue {id: debugBoosterCurrent; label: "Booster current"; unit: "A";}
-                            Value {id: debugRemoteInput; label: "Remote input"; unit: "%";}
+                            Value {label: "Requested current"; unit: "A"; value: toFixed2Zero(state.rtData.requestedCurrent);}
+                            Value {label: "Torque (filt. current)"; unit: "A"; value: toFixed2Zero(state.rtData.filteredCurrent);}
+                            Value {label: "ATR Accel. diff."; value: toFixed2Zero(state.rtData.atrAccDiff);}
+                            Value {label: "ATR Speed Boost"; unit: "%"; value: Math.round(state.rtData.atrSpeedBoost * 100);}
+                            Value {label: "Booster current"; unit: "A"; value: toFixed2Zero(state.rtData.boosterCurrent);}
+                            Value {label: "Remote input"; unit: "%"; value: Math.round(state.rtData.remoteInput * 100);}
                         }
 
                         Column {
@@ -3450,11 +3466,11 @@ Item {
                             spacing: 5
                             clip: true
 
-                            RealValue {id: debugAtrSetpoint; label: "ATR setpoint"; unit: "°";}
-                            RealValue {id: debugBrakeTiltSetpoint; label: "Brake Tilt setpoint"; unit: "°";}
-                            RealValue {id: debugTorqueTiltSetpoint; label: "Torque Tilt setpoint"; unit: "°";}
-                            RealValue {id: debugTurnTiltSetpoint; label: "Turn Tilt setpoint"; unit: "°";}
-                            RealValue {id: debugRemoteTiltSetpoint; label: "Remote Tilt setpoint"; unit: "°";}
+                            Value {label: "ATR setpoint"; unit: "°"; value: toFixed2Zero(state.rtData.atrSetpoint);}
+                            Value {label: "Brake Tilt setpoint"; unit: "°"; value: toFixed2Zero(state.rtData.brakeTiltSetpoint);}
+                            Value {label: "Torque Tilt setpoint"; unit: "°"; value: toFixed2Zero(state.rtData.torqueTiltSetpoint);}
+                            Value {label: "Turn Tilt setpoint"; unit: "°"; value: toFixed2Zero(state.rtData.turnTiltSetpoint);}
+                            Value {label: "Remote Tilt setpoint"; unit: "°"; value: toFixed2Zero(state.rtData.remoteTiltSetpoint);}
                         }
                     }
 
