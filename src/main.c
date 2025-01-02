@@ -132,7 +132,7 @@ typedef struct {
     FootpadSensor footpad_sensor;
 
     // Feature: Turntilt
-    float last_yaw_angle, yaw_angle, abs_yaw_change, last_yaw_change, yaw_change, yaw_aggregate;
+    float yaw_rate, abs_yaw_rate, yaw_aggregate;
     float turntilt_boost_per_erpm, yaw_aggregate_target;
 
     // Rumtime state values
@@ -405,7 +405,6 @@ static void reset_vars(data *d) {
     d->kp2_accel_scale = 1.0;
 
     // Turntilt:
-    d->last_yaw_angle = 0;
     d->yaw_aggregate = 0;
 
     // Feature: click on start
@@ -922,18 +921,14 @@ static void apply_turntilt(data *d) {
 
     float abs_yaw_aggregate = fabsf(d->yaw_aggregate);
 
-    // incremental turn increment since the last iteration
-    float turn_increment = d->abs_yaw_change;
-
     // Minimum threshold based on
-    // a) minimum degrees per second (yaw/turn increment)
+    // a) minimum degrees per second (yaw/turn rate)
     // b) minimum yaw aggregate (to filter out wiggling on uneven road)
-    if (abs_yaw_aggregate < d->float_conf.turntilt_start_angle || turn_increment < 0.04) {
+    if (abs_yaw_aggregate < d->float_conf.turntilt_start_angle || d->abs_yaw_rate < 30.0f) {
         d->turntilt_target = 0;
     } else {
         // Calculate desired angle
-        float turn_change = d->abs_yaw_change;
-        d->turntilt_target = turn_change * d->float_conf.turntilt_strength;
+        d->turntilt_target = 0.0012f * d->abs_yaw_rate * d->float_conf.turntilt_strength;
 
         // Apply speed scaling
         float boost;
@@ -1125,30 +1120,17 @@ static void refloat_thd(void *arg) {
         d->throttle_val = servo_val;
 
         // Turn Tilt:
-        d->yaw_angle = VESC_IF->imu_get_yaw() * 180.0f / M_PI;
-        float new_change = d->yaw_angle - d->last_yaw_angle;
-        bool unchanged = false;
-        if ((new_change == 0)  // Exact 0's only happen when the IMU is not updating between loops
-            || (fabsf(new_change) > 100))  // yaw flips signs at 180, ignore those changes
-        {
-            new_change = d->last_yaw_change;
-            unchanged = true;
-        }
-        d->last_yaw_change = new_change;
-        d->last_yaw_angle = d->yaw_angle;
+        // To avoid overreactions at low speed, limit yaw rate here:
+        float new_yaw_rate = clampf(d->gyro[2], -80.0f, 80.0f);
+        d->yaw_rate += 0.2f * (new_yaw_rate - d->yaw_rate);
 
-        // To avoid overreactions at low speed, limit change here:
-        new_change = fminf(new_change, 0.10);
-        new_change = fmaxf(new_change, -0.10);
-        d->yaw_change = d->yaw_change * 0.8 + 0.2 * (new_change);
-        // Clear the aggregate yaw whenever we change direction
-        if (sign(d->yaw_change) != sign(d->yaw_aggregate)) {
+        if (sign(d->yaw_rate) != sign(d->yaw_aggregate)) {
             d->yaw_aggregate = 0;
         }
-        d->abs_yaw_change = fabsf(d->yaw_change);
+        d->abs_yaw_rate = fabsf(d->yaw_rate);
         // don't count tiny yaw changes towards aggregate
-        if ((d->abs_yaw_change > 0.04) && !unchanged) {
-            d->yaw_aggregate += d->yaw_change;
+        if (d->abs_yaw_rate > 30.0f) {
+            d->yaw_aggregate += d->yaw_rate / d->float_conf.hertz;
         }
 
         footpad_sensor_update(&d->footpad_sensor, &d->float_conf);
