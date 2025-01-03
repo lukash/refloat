@@ -776,7 +776,7 @@ static void calculate_setpoint_target(data *d) {
     } else if (d->motor.duty_cycle > 0.05 && input_voltage < d->float_conf.tiltback_lv) {
         beep_alert(d, 3, false);
         d->beep_reason = BEEP_LV;
-        float abs_motor_current = fabsf(d->motor.current);
+        float abs_motor_current = fabsf(d->motor.dir_current);
         float vdelta = d->float_conf.tiltback_lv - input_voltage;
         float ratio = vdelta * 20 / abs_motor_current;
         // When to do LV tiltback:
@@ -1521,9 +1521,9 @@ static float app_get_debug(int index) {
     case (7):
         return d->motor.erpm;
     case (8):
-        return d->motor.current;
+        return d->motor.dir_current;
     case (9):
-        return d->motor.filtered_current;
+        return d->motor.filt_current;
     default:
         return 0;
     }
@@ -1587,14 +1587,14 @@ static void send_realtime_data(data *d) {
 
     // DEBUG
     buffer_append_float32_auto(buffer, d->pitch, &ind);
-    buffer_append_float32_auto(buffer, d->motor.filtered_current, &ind);
+    buffer_append_float32_auto(buffer, d->motor.filt_current, &ind);
     buffer_append_float32_auto(buffer, d->atr.accel_diff, &ind);
     if (d->state.charging) {
         buffer_append_float32_auto(buffer, d->charging.current, &ind);
         buffer_append_float32_auto(buffer, d->charging.voltage, &ind);
     } else {
         buffer_append_float32_auto(buffer, d->applied_booster_current, &ind);
-        buffer_append_float32_auto(buffer, d->motor.current, &ind);
+        buffer_append_float32_auto(buffer, d->motor.dir_current, &ind);
     }
     buffer_append_float32_auto(buffer, d->throttle_val, &ind);
 
@@ -2232,7 +2232,7 @@ static void send_realtime_data2(data *d) {
 
         // DEBUG
         buffer_append_float32_auto(buffer, d->pid_value, &ind);
-        buffer_append_float32_auto(buffer, d->motor.filtered_current, &ind);
+        buffer_append_float32_auto(buffer, d->motor.filt_current, &ind);
         buffer_append_float32_auto(buffer, d->atr.accel_diff, &ind);
         buffer_append_float32_auto(buffer, d->atr.speed_boost, &ind);
         buffer_append_float32_auto(buffer, d->applied_booster_current, &ind);

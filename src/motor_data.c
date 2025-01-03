@@ -51,8 +51,8 @@ void motor_data_update(MotorData *m) {
     m->abs_erpm_smooth = m->abs_erpm_smooth * 0.9 + m->abs_erpm * 0.1;
     m->erpm_sign = sign(m->erpm);
 
-    m->current = VESC_IF->mc_get_tot_current_directional_filtered();
-    m->braking = m->abs_erpm > 250 && sign(m->current) != m->erpm_sign;
+    m->dir_current = VESC_IF->mc_get_tot_current_directional_filtered();
+    m->braking = m->abs_erpm > 250 && sign(m->dir_current) != m->erpm_sign;
 
     m->duty_raw = fabsf(VESC_IF->mc_get_duty_cycle_now());
     m->duty_cycle += 0.01f * (m->duty_raw - m->duty_cycle);
@@ -65,8 +65,8 @@ void motor_data_update(MotorData *m) {
     m->accel_idx = (m->accel_idx + 1) % ACCEL_ARRAY_SIZE;
 
     if (m->current_filter_enabled) {
-        m->filtered_current = biquad_process(&m->current_biquad, m->current);
+        m->filt_current = biquad_process(&m->current_biquad, m->dir_current);
     } else {
-        m->filtered_current = m->current;
+        m->filt_current = m->dir_current;
     }
 }

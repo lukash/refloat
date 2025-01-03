@@ -51,7 +51,7 @@ void atr_configure(ATR *atr, const RefloatConfig *config) {
 }
 
 static void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config) {
-    float abs_torque = fabsf(motor->filtered_current);
+    float abs_torque = fabsf(motor->filt_current);
     float torque_offset = 8;  // hard-code to 8A for now (shouldn't really be changed much anyways)
     float atr_threshold = motor->braking ? config->atr_threshold_down : config->atr_threshold_up;
     float accel_factor =
@@ -66,10 +66,10 @@ static void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *co
     // balance/maintain speed)
     float expected_acc;
     if (abs_torque < 25) {
-        expected_acc = (motor->filtered_current - motor->erpm_sign * torque_offset) / accel_factor;
+        expected_acc = (motor->filt_current - motor->erpm_sign * torque_offset) / accel_factor;
     } else {
         // primitive linear approximation of non-linear torque-accel relationship
-        int torque_sign = sign(motor->filtered_current);
+        int torque_sign = sign(motor->filt_current);
         expected_acc = (torque_sign * 25 - motor->erpm_sign * torque_offset) / accel_factor;
         expected_acc += torque_sign * (abs_torque - 25) / accel_factor2;
     }

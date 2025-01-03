@@ -31,7 +31,8 @@ typedef struct {
     float last_erpm;
     int8_t erpm_sign;
 
-    float current;
+    float dir_current;  // directional current (sign represents direction of torque generation)
+    float filt_current;  // filtered directional current
     bool braking;
 
     float duty_cycle;
@@ -44,7 +45,6 @@ typedef struct {
 
     bool current_filter_enabled;
     Biquad current_biquad;
-    float filtered_current;
 } MotorData;
 
 void motor_data_reset(MotorData *m);
