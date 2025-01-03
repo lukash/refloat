@@ -51,8 +51,9 @@ void motor_data_update(MotorData *m) {
     m->abs_erpm_smooth = m->abs_erpm_smooth * 0.9 + m->abs_erpm * 0.1;
     m->erpm_sign = sign(m->erpm);
 
+    m->current = VESC_IF->mc_get_tot_current_filtered();
     m->dir_current = VESC_IF->mc_get_tot_current_directional_filtered();
-    m->braking = m->abs_erpm > 250 && sign(m->dir_current) != m->erpm_sign;
+    m->braking = m->current < 0;
 
     m->duty_raw = fabsf(VESC_IF->mc_get_duty_cycle_now());
     m->duty_cycle += 0.01f * (m->duty_raw - m->duty_cycle);

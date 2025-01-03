@@ -31,6 +31,7 @@ typedef struct {
     float last_erpm;
     int8_t erpm_sign;
 
+    float current;  //  "regular" motor current (positive = accelerating, negative = braking)
     float dir_current;  // directional current (sign represents direction of torque generation)
     float filt_current;  // filtered directional current
     bool braking;
