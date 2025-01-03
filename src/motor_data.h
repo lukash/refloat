@@ -31,6 +31,8 @@ typedef struct {
     float last_erpm;
     int8_t erpm_sign;
 
+    float speed;
+
     float current;  //  "regular" motor current (positive = accelerating, negative = braking)
     float dir_current;  // directional current (sign represents direction of torque generation)
     float filt_current;  // filtered directional current
@@ -41,6 +43,13 @@ typedef struct {
 
     // an average calculated over last ACCEL_ARRAY_SIZE values
     float acceleration;
+
+    float batt_current;
+    float batt_voltage;
+
+    float mosfet_temp;
+    float motor_temp;
+
     float accel_history[ACCEL_ARRAY_SIZE];
     uint8_t accel_idx;
 

@@ -651,9 +651,7 @@ static bool check_faults(data *d) {
 }
 
 static void calculate_setpoint_target(data *d) {
-    float input_voltage = VESC_IF->mc_get_input_voltage_filtered();
-
-    if (input_voltage < d->float_conf.tiltback_hv) {
+    if (d->motor.batt_voltage < d->float_conf.tiltback_hv) {
         timer_refresh(&d->time, &d->tb_highvoltage_timer);
     }
 
@@ -726,11 +724,11 @@ static void calculate_setpoint_target(data *d) {
         if (d->state.mode != MODE_FLYWHEEL) {
             d->state.sat = SAT_PB_DUTY;
         }
-    } else if (d->motor.duty_cycle > 0.05 && input_voltage > d->float_conf.tiltback_hv) {
+    } else if (d->motor.duty_cycle > 0.05 && d->motor.batt_voltage > d->float_conf.tiltback_hv) {
         d->beep_reason = BEEP_HV;
         beep_alert(d, 3, false);
         if (timer_older(&d->time, d->tb_highvoltage_timer, 0.5) ||
-            (input_voltage > d->float_conf.tiltback_hv + 1)) {
+            d->motor.batt_voltage > d->float_conf.tiltback_hv + 1) {
             // 500ms have passed or voltage is another volt higher, time for some tiltback
             if (d->motor.erpm > 0) {
                 d->setpoint_target = d->float_conf.tiltback_hv_angle;
@@ -743,11 +741,11 @@ static void calculate_setpoint_target(data *d) {
             // The rider has 500ms to react to the triple-beep, or maybe it was just a short spike
             d->state.sat = SAT_NONE;
         }
-    } else if (VESC_IF->mc_temp_fet_filtered() > d->mc_max_temp_fet) {
+    } else if (d->motor.mosfet_temp > d->mc_max_temp_fet) {
         // Use the angle from Low-Voltage tiltback, but slower speed from High-Voltage tiltback
         beep_alert(d, 3, true);
         d->beep_reason = BEEP_TEMPFET;
-        if (VESC_IF->mc_temp_fet_filtered() > (d->mc_max_temp_fet + 1)) {
+        if (d->motor.mosfet_temp > d->mc_max_temp_fet + 1) {
             if (d->motor.erpm > 0) {
                 d->setpoint_target = d->float_conf.tiltback_lv_angle;
             } else {
@@ -758,11 +756,11 @@ static void calculate_setpoint_target(data *d) {
             // The rider has 1 degree Celsius left before we start tilting back
             d->state.sat = SAT_NONE;
         }
-    } else if (VESC_IF->mc_temp_motor_filtered() > d->mc_max_temp_mot) {
+    } else if (d->motor.motor_temp > d->mc_max_temp_mot) {
         // Use the angle from Low-Voltage tiltback, but slower speed from High-Voltage tiltback
         beep_alert(d, 3, true);
         d->beep_reason = BEEP_TEMPMOT;
-        if (VESC_IF->mc_temp_motor_filtered() > (d->mc_max_temp_mot + 1)) {
+        if (d->motor.motor_temp > d->mc_max_temp_mot + 1) {
             if (d->motor.erpm > 0) {
                 d->setpoint_target = d->float_conf.tiltback_lv_angle;
             } else {
@@ -773,11 +771,11 @@ static void calculate_setpoint_target(data *d) {
             // The rider has 1 degree Celsius left before we start tilting back
             d->state.sat = SAT_NONE;
         }
-    } else if (d->motor.duty_cycle > 0.05 && input_voltage < d->float_conf.tiltback_lv) {
+    } else if (d->motor.duty_cycle > 0.05 && d->motor.batt_voltage < d->float_conf.tiltback_lv) {
         beep_alert(d, 3, false);
         d->beep_reason = BEEP_LV;
         float abs_motor_current = fabsf(d->motor.dir_current);
-        float vdelta = d->float_conf.tiltback_lv - input_voltage;
+        float vdelta = d->float_conf.tiltback_lv - d->motor.batt_voltage;
         float ratio = vdelta * 20 / abs_motor_current;
         // When to do LV tiltback:
         // a) we're 2V below lv threshold
@@ -1109,10 +1107,9 @@ static void refloat_thd(void *arg) {
                 d->state.state = STATE_READY;
 
                 // if within 5V of LV tiltback threshold, issue 1 beep for each volt below that
-                float bat_volts = VESC_IF->mc_get_input_voltage_filtered();
                 float threshold = d->float_conf.tiltback_lv + 5;
-                if (bat_volts < threshold) {
-                    int beeps = (int) fminf(6, threshold - bat_volts);
+                if (d->motor.batt_voltage < threshold) {
+                    int beeps = (int) fminf(6, threshold - d->motor.batt_voltage);
                     beep_alert(d, beeps + 1, true);
                     d->beep_reason = BEEP_LOWBATT;
                 } else {
@@ -1345,10 +1342,9 @@ static void refloat_thd(void *arg) {
             if (time_elapsed(&d->time, idle, 1800)) {  // alert user after 30 minutes
                 if (timer_older(&d->time, d->nag_timer, 60)) {  // beep every 60 seconds
                     timer_refresh(&d->time, &d->nag_timer);
-                    float input_voltage = VESC_IF->mc_get_input_voltage_filtered();
-                    if (input_voltage > d->idle_voltage) {
+                    if (d->motor.batt_voltage > d->idle_voltage) {
                         // don't beep if the voltage keeps increasing (board is charging)
-                        d->idle_voltage = input_voltage;
+                        d->idle_voltage = d->motor.batt_voltage;
                     } else {
                         d->beep_reason = BEEP_IDLE;
                         beep_alert(d, 2, 1);
@@ -1647,12 +1643,12 @@ static void cmd_send_all_data(data *d, unsigned char mode) {
         buffer[ind++] = d->applied_booster_current + 128;
 
         // Now send motor stuff:
-        buffer_append_float16(buffer, VESC_IF->mc_get_input_voltage_filtered(), 10, &ind);
-        buffer_append_int16(buffer, VESC_IF->mc_get_rpm(), &ind);
-        buffer_append_float16(buffer, VESC_IF->mc_get_speed(), 10, &ind);
-        buffer_append_float16(buffer, VESC_IF->mc_get_tot_current(), 10, &ind);
-        buffer_append_float16(buffer, VESC_IF->mc_get_tot_current_in(), 10, &ind);
-        buffer[ind++] = VESC_IF->mc_get_duty_cycle_now() * 100 + 128;
+        buffer_append_float16(buffer, d->motor.batt_voltage, 10, &ind);
+        buffer_append_int16(buffer, d->motor.erpm, &ind);
+        buffer_append_float16(buffer, d->motor.speed, 10, &ind);
+        buffer_append_float16(buffer, d->motor.current, 10, &ind);
+        buffer_append_float16(buffer, d->motor.batt_current, 10, &ind);
+        buffer[ind++] = d->motor.duty_raw * 100 + 128;
         if (VESC_IF->foc_get_id != NULL) {
             buffer[ind++] = fabsf(VESC_IF->foc_get_id()) * 3;
         } else {
@@ -1664,8 +1660,8 @@ static void cmd_send_all_data(data *d, unsigned char mode) {
         if (mode >= 2) {
             // data not required as fast as possible
             buffer_append_float32_auto(buffer, VESC_IF->mc_get_distance_abs(), &ind);
-            buffer[ind++] = fmaxf(0, VESC_IF->mc_temp_fet_filtered() * 2);
-            buffer[ind++] = fmaxf(0, VESC_IF->mc_temp_motor_filtered() * 2);
+            buffer[ind++] = fmaxf(0, d->motor.mosfet_temp * 2);
+            buffer[ind++] = fmaxf(0, d->motor.motor_temp * 2);
             buffer[ind++] = 0;  // fmaxf(VESC_IF->mc_batt_temp() * 2);
             // ind = 42
         }

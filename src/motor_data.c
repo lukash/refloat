@@ -51,6 +51,12 @@ void motor_data_update(MotorData *m) {
     m->abs_erpm_smooth = m->abs_erpm_smooth * 0.9 + m->abs_erpm * 0.1;
     m->erpm_sign = sign(m->erpm);
 
+    // TODO mc_get_speed() calculates speed from erpm using the full formula,
+    // including four divisions. In theory multiplying by a single constant is
+    // enough, we just need to calculate the constant (and keep it up to date
+    // when motor config changes, there's no way to know, we'll have to poll).
+    m->speed = VESC_IF->mc_get_speed() * 3.6;
+
     m->current = VESC_IF->mc_get_tot_current_filtered();
     m->dir_current = VESC_IF->mc_get_tot_current_directional_filtered();
     m->braking = m->current < 0;
@@ -70,4 +76,10 @@ void motor_data_update(MotorData *m) {
     } else {
         m->filt_current = m->dir_current;
     }
+
+    m->batt_current += 0.01f * (VESC_IF->mc_get_tot_current_in_filtered() - m->batt_current);
+    m->batt_voltage = VESC_IF->mc_get_input_voltage_filtered();
+
+    m->mosfet_temp = VESC_IF->mc_temp_fet_filtered();
+    m->motor_temp = VESC_IF->mc_temp_motor_filtered();
 }
