@@ -38,6 +38,12 @@ void motor_control_configure(MotorControl *mc, const RefloatConfig *config) {
     mc->click_current = config->startup_click_current;
     mc->parking_brake_mode = config->parking_brake_mode;
     mc->main_freq = config->hertz / 2;
+
+    if (mc->parking_brake_mode == PARKING_BRAKE_ALWAYS) {
+        mc->parking_brake_active = true;
+    } else if (mc->parking_brake_mode == PARKING_BRAKE_NEVER) {
+        mc->parking_brake_active = false;
+    }
 }
 
 void motor_control_request_current(MotorControl *mc, float current) {
@@ -51,12 +57,14 @@ static inline void reset_tone(MotorControl *mc) {
     mc->tone_high = 0;
 }
 
-void motor_control_apply(MotorControl *mc, float abs_erpm, RunState state, float time) {
-    if (mc->parking_brake_mode == PARKING_BRAKE_ALWAYS ||
-        (mc->parking_brake_mode == PARKING_BRAKE_IDLE && state != STATE_RUNNING && abs_erpm < 50)) {
-        mc->parking_brake_active = true;
-    } else if (mc->parking_brake_mode == PARKING_BRAKE_NEVER || state == STATE_RUNNING) {
-        mc->parking_brake_active = false;
+void motor_control_apply(MotorControl *mc, const MotorData *md, RunState state, float time) {
+    if (mc->parking_brake_mode == PARKING_BRAKE_IDLE) {
+        if (state != STATE_RUNNING &&
+            (md->abs_erpm_smooth < 50 || md->last_erpm_sign != md->erpm_sign)) {
+            mc->parking_brake_active = true;
+        } else if (state == STATE_RUNNING) {
+            mc->parking_brake_active = false;
+        }
     }
 
     if (mc->tone_ticks > 0) {
@@ -87,7 +95,7 @@ void motor_control_apply(MotorControl *mc, float abs_erpm, RunState state, float
         VESC_IF->mc_set_current(mc->requested_current);
     } else {
         // Brake logic
-        if (abs_erpm > ERPM_MOVING_THRESHOLD) {
+        if (md->abs_erpm_smooth > ERPM_MOVING_THRESHOLD) {
             mc->brake_timeout = time + 1.0f;
         }
 
@@ -97,7 +105,7 @@ void motor_control_apply(MotorControl *mc, float abs_erpm, RunState state, float
             return;
         }
 
-        if (mc->parking_brake_active && abs_erpm < 2000) {
+        if (mc->parking_brake_active && md->abs_erpm_smooth < 2000) {
             // Duty Cycle mode has better holding power (phase-shorting on 6.05)
             VESC_IF->mc_set_duty(0);
         } else {

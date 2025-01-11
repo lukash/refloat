@@ -565,6 +565,8 @@ static bool check_faults(data *d) {
             // allow turning it off by engaging foot sensors
             state_stop(&d->state, STOP_SWITCH_HALF);
             return true;
+        } else {
+            d->motor.last_erpm_sign = d->motor.erpm_sign;
         }
     } else {
         bool disable_switch_faults = d->float_conf.fault_moving_fault_disabled &&
@@ -598,6 +600,7 @@ static bool check_faults(data *d) {
             }
         } else {
             d->fault_switch_timer = d->current_time;
+            d->motor.last_erpm_sign = d->motor.erpm_sign;
         }
 
         // Feature: Reverse-Stop
@@ -1455,9 +1458,7 @@ static void refloat_thd(void *arg) {
             break;
         }
 
-        motor_control_apply(
-            &d->motor_control, d->motor.abs_erpm_smooth, d->state.state, d->current_time
-        );
+        motor_control_apply(&d->motor_control, &d->motor, d->state.state, d->current_time);
         VESC_IF->sleep_us(d->loop_time_us);
     }
 }
