@@ -21,6 +21,7 @@
 #include <stdint.h>
 
 #include "conf/datatypes.h"
+#include "motor_data.h"
 #include "state.h"
 
 typedef struct {
@@ -48,7 +49,7 @@ void motor_control_configure(MotorControl *mc, const RefloatConfig *config);
 
 void motor_control_request_current(MotorControl *mc, float current);
 
-void motor_control_apply(MotorControl *mc, float abs_erpm, RunState state, float time);
+void motor_control_apply(MotorControl *mc, const MotorData *md, RunState state, float time);
 
 void motor_control_play_tone(MotorControl *mc, uint16_t frequency, float intensity);
 
