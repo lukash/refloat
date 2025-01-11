@@ -30,6 +30,7 @@ typedef struct {
     float abs_erpm_smooth;
     float last_erpm;
     int8_t erpm_sign;
+    int8_t last_erpm_sign;  // last erpm sign prior to footpads disengaging
 
     float current;
     bool braking;
