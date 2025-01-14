@@ -1061,7 +1061,7 @@ p, li { white-space: pre-wrap; }
             <editorScale>1</editorScale>
             <editAsPercentage>0</editAsPercentage>
             <maxInt>1000</maxInt>
-            <minInt>50</minInt>
+            <minInt>300</minInt>
             <showDisplay>0</showDisplay>
             <stepInt>10</stepInt>
             <valInt>400</valInt>
@@ -1085,7 +1085,7 @@ p, li { white-space: pre-wrap; }
             <editorDecimalsDouble>1</editorDecimalsDouble>
             <editorScale>1</editorScale>
             <editAsPercentage>0</editAsPercentage>
-            <maxDouble>50</maxDouble>
+            <maxDouble>15</maxDouble>
             <minDouble>0</minDouble>
             <showDisplay>0</showDisplay>
             <stepDouble>0.5</stepDouble>
@@ -1107,7 +1107,7 @@ p, li { white-space: pre-wrap; }
             <editorScale>1</editorScale>
             <editAsPercentage>0</editAsPercentage>
             <maxInt>1000</maxInt>
-            <minInt>50</minInt>
+            <minInt>300</minInt>
             <showDisplay>0</showDisplay>
             <stepInt>10</stepInt>
             <valInt>500</valInt>
@@ -1131,7 +1131,7 @@ p, li { white-space: pre-wrap; }
             <editorDecimalsDouble>1</editorDecimalsDouble>
             <editorScale>1</editorScale>
             <editAsPercentage>0</editAsPercentage>
-            <maxDouble>50</maxDouble>
+            <maxDouble>15</maxDouble>
             <minDouble>0</minDouble>
             <showDisplay>0</showDisplay>
             <stepDouble>0.5</stepDouble>
@@ -1152,7 +1152,7 @@ p, li { white-space: pre-wrap; }
             <cDefine>CFG_DFLT_HAPTIC_VIBRATE_FREQUENCY</cDefine>
             <editorScale>1</editorScale>
             <editAsPercentage>0</editAsPercentage>
-            <maxInt>500</maxInt>
+            <maxInt>200</maxInt>
             <minInt>10</minInt>
             <showDisplay>0</showDisplay>
             <stepInt>5</stepInt>
@@ -1177,7 +1177,7 @@ p, li { white-space: pre-wrap; }
             <editorDecimalsDouble>1</editorDecimalsDouble>
             <editorScale>1</editorScale>
             <editAsPercentage>0</editAsPercentage>
-            <maxDouble>50</maxDouble>
+            <maxDouble>30</maxDouble>
             <minDouble>0</minDouble>
             <showDisplay>0</showDisplay>
             <stepDouble>0.5</stepDouble>
