@@ -2576,5 +2576,5 @@ INIT_FUN(lib_info *info) {
 }
 
 void send_app_data_overflow_terminate() {
-    VESC_IF->request_terminate(((data *) ARG)->main_thread);
+    stop(ARG);
 }
