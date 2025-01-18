@@ -58,13 +58,23 @@
 // Declaration for the SEMD_APP_DATA macro, definition needs to be in main.c.
 void send_app_data_overflow_terminate();
 
+#define SEND_BUF_MAX_SIZE 511
+
 /**
  * DRY macro to check the buffer didn't overflow and send the app data.
  */
 #define SEND_APP_DATA(buffer, buf_size, ind)                                                       \
     do {                                                                                           \
+        _Static_assert(                                                                            \
+            buf_size <= SEND_BUF_MAX_SIZE, "Data to send too long, won't fit into send buffer."    \
+        );                                                                                         \
         if (ind > buf_size) {                                                                      \
-            log_error("%s: App data buffer overflow, terminating.", __func__);                     \
+            log_error(                                                                             \
+                "%s: App data buffer overflow (buffer: %u, data: %u), terminating.",               \
+                __func__,                                                                          \
+                buf_size,                                                                          \
+                ind                                                                                \
+            );                                                                                     \
             /* terminate the main thread, the memory has just been corrupted by buffer overflow */ \
             send_app_data_overflow_terminate();                                                    \
         }                                                                                          \
