@@ -19,6 +19,7 @@
 
 #include "vesc_c_if.h"
 
+#include <math.h>
 #include <stdint.h>
 
 #define ERPM_MOVING_THRESHOLD 10.0f
