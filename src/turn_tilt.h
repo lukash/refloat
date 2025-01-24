@@ -17,22 +17,36 @@
 
 #pragma once
 
-#include "balance_filter.h"
-#include "state.h"
+#include "atr.h"
+#include "conf/datatypes.h"
+#include "imu.h"
+#include "motor_data.h"
 
 typedef struct {
-    float pitch;
-    float balance_pitch;
-    float roll;
-    float yaw;
-    float gyro_y;
+    float step_size;
+    float boost_per_erpm;
 
-    float flywheel_pitch_offset;
-    float flywheel_roll_offset;
-} IMU;
+    float last_yaw_angle;
+    float last_yaw_change;
+    float yaw_change;
+    float abs_yaw_change;
+    float yaw_aggregate;
 
-void imu_init(IMU *imu);
+    float target;
+    float setpoint;
+} TurnTilt;
 
-void imu_update(IMU *imu, const BalanceFilterData *bf, const State *state);
+void turn_tilt_reset(TurnTilt *tt);
 
-void imu_set_flywheel_offsets(IMU *imu);
+void turn_tilt_configure(TurnTilt *tt, const RefloatConfig *config);
+
+void turn_tilt_aggregate(TurnTilt *tt, const IMU *imu);
+
+void turn_tilt_update(
+    TurnTilt *tt,
+    const MotorData *md,
+    const ATR *atr,
+    float balance_pitch,
+    float noseangling,
+    const RefloatConfig *config
+);

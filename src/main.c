@@ -34,6 +34,7 @@
 #include "state.h"
 #include "time.h"
 #include "torque_tilt.h"
+#include "turn_tilt.h"
 #include "utils.h"
 
 #include "conf/buffer.h"
@@ -96,6 +97,7 @@ typedef struct {
     MotorControl motor_control;
     TorqueTilt torque_tilt;
     ATR atr;
+    TurnTilt turn_tilt;
     Booster booster;
 
     // Beeper
@@ -118,7 +120,6 @@ typedef struct {
     float startup_step_size;
     float tiltback_duty_step_size, tiltback_hv_step_size, tiltback_lv_step_size,
         tiltback_return_step_size;
-    float turntilt_step_size;
     float tiltback_variable, tiltback_variable_max_erpm, noseangling_step_size,
         inputtilt_ramped_step_size, inputtilt_step_size;
     float mc_max_temp_fet, mc_max_temp_mot;
@@ -133,10 +134,6 @@ typedef struct {
 
     FootpadSensor footpad_sensor;
 
-    // Feature: Turntilt
-    float last_yaw_angle, yaw_angle, abs_yaw_change, last_yaw_change, yaw_change, yaw_aggregate;
-    float turntilt_boost_per_erpm, yaw_aggregate_target;
-
     // Rumtime state values
     State state;
 
@@ -144,7 +141,6 @@ typedef struct {
 
     float setpoint, setpoint_target, setpoint_target_interpolated;
     float noseangling_interpolated, inputtilt_interpolated;
-    float turntilt_target, turntilt_interpolated;
     time_t nag_timer;
     float idle_voltage;
     time_t fault_angle_pitch_timer, fault_angle_roll_timer, fault_switch_timer,
@@ -246,7 +242,6 @@ void beep_on(data *d, bool force) {
 }
 
 static void reconfigure(data *d) {
-    d->turntilt_step_size = d->float_conf.turntilt_speed / d->float_conf.hertz;
     d->startup_step_size = d->float_conf.startup_speed / d->float_conf.hertz;
     d->noseangling_step_size = d->float_conf.noseangling_speed / d->float_conf.hertz;
     d->startup_pitch_trickmargin = d->float_conf.startup_dirtylandings_enabled ? 10 : 0;
@@ -260,6 +255,7 @@ static void reconfigure(data *d) {
     balance_filter_configure(&d->balance_filter, &d->float_conf);
     torque_tilt_configure(&d->torque_tilt, &d->float_conf);
     atr_configure(&d->atr, &d->float_conf);
+    turn_tilt_configure(&d->turn_tilt, &d->float_conf);
 
     time_refresh_idle(&d->time);
 }
@@ -306,11 +302,6 @@ static void configure(data *d) {
     d->reverse_tolerance = 20000;
     d->reverse_stop_step_size = 100.0 / d->float_conf.hertz;
 
-    // Feature: Turntilt
-    d->yaw_aggregate_target = fmaxf(50, d->float_conf.turntilt_yaw_aggregate);
-    d->turntilt_boost_per_erpm = (float) d->float_conf.turntilt_erpm_boost / 100.0 /
-        (float) d->float_conf.turntilt_erpm_boost_end;
-
     // Feature: Darkride
     d->enable_upside_down = false;
 
@@ -355,6 +346,7 @@ static void reset_runtime_vars(data *d) {
     motor_data_reset(&d->motor);
     atr_reset(&d->atr);
     torque_tilt_reset(&d->torque_tilt);
+    turn_tilt_reset(&d->turn_tilt);
     booster_reset(&d->booster);
 
     pid_init(&d->pid);
@@ -366,15 +358,9 @@ static void reset_runtime_vars(data *d) {
     d->setpoint_target = 0;
     d->noseangling_interpolated = 0;
     d->inputtilt_interpolated = 0;
-    d->turntilt_target = 0;
-    d->turntilt_interpolated = 0;
     d->traction_control = false;
     d->softstart_pid_limit = 0;
     d->startup_pitch_tolerance = d->float_conf.startup_pitch_tolerance;
-
-    // Turntilt:
-    d->last_yaw_angle = 0;
-    d->yaw_aggregate = 0;
 
     // RC Move:
     d->rc_steps = 0;
@@ -872,87 +858,6 @@ static void apply_inputtilt(data *d) {
     }
 }
 
-static void apply_turntilt(data *d) {
-    if (d->float_conf.turntilt_strength == 0) {
-        return;
-    }
-
-    float abs_yaw_aggregate = fabsf(d->yaw_aggregate);
-
-    // incremental turn increment since the last iteration
-    float turn_increment = d->abs_yaw_change;
-
-    // Minimum threshold based on
-    // a) minimum degrees per second (yaw/turn increment)
-    // b) minimum yaw aggregate (to filter out wiggling on uneven road)
-    if (abs_yaw_aggregate < d->float_conf.turntilt_start_angle || turn_increment < 0.04) {
-        d->turntilt_target = 0;
-    } else {
-        // Calculate desired angle
-        float turn_change = d->abs_yaw_change;
-        d->turntilt_target = turn_change * d->float_conf.turntilt_strength;
-
-        // Apply speed scaling
-        float boost;
-        if (d->motor.abs_erpm < d->float_conf.turntilt_erpm_boost_end) {
-            boost = 1.0 + d->motor.abs_erpm * d->turntilt_boost_per_erpm;
-        } else {
-            boost = 1.0 + (float) d->float_conf.turntilt_erpm_boost / 100.0;
-        }
-        d->turntilt_target *= boost;
-
-        // Increase turntilt based on aggregate yaw change (at most: double it)
-        float aggregate_damper = 1.0;
-        if (d->motor.abs_erpm < 2000) {
-            aggregate_damper = 0.5;
-        }
-        boost = 1 + aggregate_damper * abs_yaw_aggregate / d->yaw_aggregate_target;
-        boost = fminf(boost, 2);
-        d->turntilt_target *= boost;
-
-        // Limit angle to max angle
-        if (d->turntilt_target > 0) {
-            d->turntilt_target = fminf(d->turntilt_target, d->float_conf.turntilt_angle_limit);
-        } else {
-            d->turntilt_target = fmaxf(d->turntilt_target, -d->float_conf.turntilt_angle_limit);
-        }
-
-        // Disable below erpm threshold otherwise add directionality
-        if (d->motor.abs_erpm < d->float_conf.turntilt_start_erpm) {
-            d->turntilt_target = 0;
-        } else {
-            d->turntilt_target *= d->motor.erpm_sign;
-        }
-
-        // ATR interference: Reduce turntilt_target during moments of high torque response
-        float atr_min = 2;
-        float atr_max = 5;
-        if (sign(d->atr.target_offset) != sign(d->turntilt_target)) {
-            // further reduced turntilt during moderate to steep downhills
-            atr_min = 1;
-            atr_max = 4;
-        }
-        if (fabsf(d->atr.target_offset) > atr_min) {
-            // Start scaling turntilt when ATR>2, down to 0 turntilt for ATR > 5 degrees
-            float atr_scaling = (atr_max - fabsf(d->atr.target_offset)) / (atr_max - atr_min);
-            if (atr_scaling < 0) {
-                atr_scaling = 0;
-                // during heavy torque response clear the yaw aggregate too
-                d->yaw_aggregate = 0;
-            }
-            d->turntilt_target *= atr_scaling;
-        }
-        if (fabsf(d->imu.balance_pitch - d->noseangling_interpolated) > 4) {
-            // no setpoint changes during heavy acceleration or braking
-            d->turntilt_target = 0;
-            d->yaw_aggregate = 0;
-        }
-    }
-
-    // Move towards target limited by max speed
-    rate_limitf(&d->turntilt_interpolated, d->turntilt_target, d->turntilt_step_size);
-}
-
 static void imu_ref_callback(float *acc, float *gyro, float *mag, float dt) {
     unused(mag);
 
@@ -1026,32 +931,7 @@ static void refloat_thd(void *arg) {
 
         d->throttle_val = servo_val;
 
-        // Turn Tilt:
-        d->yaw_angle = VESC_IF->imu_get_yaw() * 180.0f / M_PI;
-        float new_change = d->yaw_angle - d->last_yaw_angle;
-        bool unchanged = false;
-        if ((new_change == 0)  // Exact 0's only happen when the IMU is not updating between loops
-            || (fabsf(new_change) > 100))  // yaw flips signs at 180, ignore those changes
-        {
-            new_change = d->last_yaw_change;
-            unchanged = true;
-        }
-        d->last_yaw_change = new_change;
-        d->last_yaw_angle = d->yaw_angle;
-
-        // To avoid overreactions at low speed, limit change here:
-        new_change = fminf(new_change, 0.10);
-        new_change = fmaxf(new_change, -0.10);
-        d->yaw_change = d->yaw_change * 0.8 + 0.2 * (new_change);
-        // Clear the aggregate yaw whenever we change direction
-        if (sign(d->yaw_change) != sign(d->yaw_aggregate)) {
-            d->yaw_aggregate = 0;
-        }
-        d->abs_yaw_change = fabsf(d->yaw_change);
-        // don't count tiny yaw changes towards aggregate
-        if ((d->abs_yaw_change > 0.04) && !unchanged) {
-            d->yaw_aggregate += d->yaw_change;
-        }
+        turn_tilt_aggregate(&d->turn_tilt, &d->imu);
 
         footpad_sensor_update(&d->footpad_sensor, &d->float_conf);
 
@@ -1124,8 +1004,15 @@ static void refloat_thd(void *arg) {
                     apply_noseangling(d);
                     d->setpoint += d->noseangling_interpolated;
 
-                    apply_turntilt(d);
-                    d->setpoint += d->turntilt_interpolated;
+                    turn_tilt_update(
+                        &d->turn_tilt,
+                        &d->motor,
+                        &d->atr,
+                        d->imu.balance_pitch,
+                        d->noseangling_interpolated,
+                        &d->float_conf
+                    );
+                    d->setpoint += d->turn_tilt.setpoint;
 
                     torque_tilt_update(&d->torque_tilt, &d->motor, &d->float_conf);
                     atr_and_braketilt_update(
@@ -1454,7 +1341,7 @@ static void send_realtime_data(data *d) {
     buffer_append_float32_auto(buffer, d->atr.offset, &ind);
     buffer_append_float32_auto(buffer, d->atr.braketilt_offset, &ind);
     buffer_append_float32_auto(buffer, d->torque_tilt.offset, &ind);
-    buffer_append_float32_auto(buffer, d->turntilt_interpolated, &ind);
+    buffer_append_float32_auto(buffer, d->turn_tilt.setpoint, &ind);
     buffer_append_float32_auto(buffer, d->inputtilt_interpolated, &ind);
 
     // DEBUG
@@ -1512,7 +1399,7 @@ static void cmd_send_all_data(data *d, unsigned char mode) {
         buffer[ind++] = d->atr.offset * 5 + 128;
         buffer[ind++] = d->atr.braketilt_offset * 5 + 128;
         buffer[ind++] = d->torque_tilt.offset * 5 + 128;
-        buffer[ind++] = d->turntilt_interpolated * 5 + 128;
+        buffer[ind++] = d->turn_tilt.setpoint * 5 + 128;
         buffer[ind++] = d->inputtilt_interpolated * 5 + 128;
 
         buffer_append_float16(buffer, d->imu.pitch, 10, &ind);
@@ -2098,7 +1985,7 @@ static void send_realtime_data2(data *d) {
         buffer_append_float32_auto(buffer, d->atr.offset, &ind);
         buffer_append_float32_auto(buffer, d->atr.braketilt_offset, &ind);
         buffer_append_float32_auto(buffer, d->torque_tilt.offset, &ind);
-        buffer_append_float32_auto(buffer, d->turntilt_interpolated, &ind);
+        buffer_append_float32_auto(buffer, d->turn_tilt.setpoint, &ind);
         buffer_append_float32_auto(buffer, d->inputtilt_interpolated, &ind);
 
         // DEBUG
