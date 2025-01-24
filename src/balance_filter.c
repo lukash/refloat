@@ -133,7 +133,7 @@ void balance_filter_update(BalanceFilterData *data, float *gyro_xyz, float *acce
     data->q3 *= recip_norm;
 }
 
-float balance_filter_get_roll(BalanceFilterData *data) {
+float balance_filter_get_roll(const BalanceFilterData *data) {
     const float q0 = data->q0;
     const float q1 = data->q1;
     const float q2 = data->q2;
@@ -142,7 +142,7 @@ float balance_filter_get_roll(BalanceFilterData *data) {
     return -atan2f(q0 * q1 + q2 * q3, 0.5 - (q1 * q1 + q2 * q2));
 }
 
-float balance_filter_get_pitch(BalanceFilterData *data) {
+float balance_filter_get_pitch(const BalanceFilterData *data) {
     float sin = -2.0 * (data->q1 * data->q3 - data->q0 * data->q2);
 
     if (sin < -1) {
@@ -154,7 +154,7 @@ float balance_filter_get_pitch(BalanceFilterData *data) {
     return asinf(sin);
 }
 
-float balance_filter_get_yaw(BalanceFilterData *data) {
+float balance_filter_get_yaw(const BalanceFilterData *data) {
     const float q0 = data->q0;
     const float q1 = data->q1;
     const float q2 = data->q2;

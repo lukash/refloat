@@ -39,8 +39,8 @@ void balance_filter_configure(BalanceFilterData *data, const RefloatConfig *conf
 
 void balance_filter_update(BalanceFilterData *data, float *gyro_xyz, float *accel_xyz, float dt);
 
-float balance_filter_get_roll(BalanceFilterData *data);
-float balance_filter_get_pitch(BalanceFilterData *data);
-float balance_filter_get_yaw(BalanceFilterData *data);
+float balance_filter_get_roll(const BalanceFilterData *data);
+float balance_filter_get_pitch(const BalanceFilterData *data);
+float balance_filter_get_yaw(const BalanceFilterData *data);
 
 #endif
