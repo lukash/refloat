@@ -30,6 +30,7 @@
 #include "leds.h"
 #include "motor_control.h"
 #include "motor_data.h"
+#include "pid.h"
 #include "state.h"
 #include "time.h"
 #include "torque_tilt.h"
@@ -91,6 +92,7 @@ typedef struct {
     Time time;
     MotorData motor;
     IMU imu;
+    PID pid;
     MotorControl motor_control;
     TorqueTilt torque_tilt;
     ATR atr;
@@ -138,10 +140,7 @@ typedef struct {
     // Rumtime state values
     State state;
 
-    float proportional;
-    float integral;
-    float rate_p;
-    float pid_value;
+    float balance_current;
 
     float setpoint, setpoint_target, setpoint_target_interpolated;
     float noseangling_interpolated, inputtilt_interpolated;
@@ -153,12 +152,6 @@ typedef struct {
     time_t wheelslip_timer, tb_highvoltage_timer;
     float switch_warn_beep_erpm;
     bool traction_control;
-
-    // PID Brake Scaling
-    float kp_brake_scale;  // Used for brakes when riding forwards, and accel when riding backwards
-    float kp2_brake_scale;
-    float kp_accel_scale;  // Used for accel when riding forwards, and brakes when riding backwards
-    float kp2_accel_scale;
 
     // Darkride aka upside down mode:
     bool is_upside_down_started;  // dark ride has been engaged
@@ -364,6 +357,9 @@ static void reset_runtime_vars(data *d) {
     torque_tilt_reset(&d->torque_tilt);
     booster_reset(&d->booster);
 
+    pid_init(&d->pid);
+    d->balance_current = 0;
+
     // Set values for startup
     d->setpoint = d->imu.balance_pitch;
     d->setpoint_target_interpolated = d->imu.balance_pitch;
@@ -373,17 +369,8 @@ static void reset_runtime_vars(data *d) {
     d->turntilt_target = 0;
     d->turntilt_interpolated = 0;
     d->traction_control = false;
-    d->pid_value = 0;
-    d->rate_p = 0;
-    d->integral = 0;
     d->softstart_pid_limit = 0;
     d->startup_pitch_tolerance = d->float_conf.startup_pitch_tolerance;
-
-    // PID Brake Scaling
-    d->kp_brake_scale = 1.0;
-    d->kp2_brake_scale = 1.0;
-    d->kp_accel_scale = 1.0;
-    d->kp2_accel_scale = 1.0;
 
     // Turntilt:
     d->last_yaw_angle = 0;
@@ -669,7 +656,7 @@ static void calculate_setpoint_target(data *d) {
                     d->state.sat = SAT_NONE;
                     d->reverse_total_erpm = 0;
                     d->setpoint_target = 0;
-                    d->integral = 0;
+                    pid_reset_integral(&d->pid);
                 }
             }
         }
@@ -1141,7 +1128,9 @@ static void refloat_thd(void *arg) {
                     d->setpoint += d->turntilt_interpolated;
 
                     torque_tilt_update(&d->torque_tilt, &d->motor, &d->float_conf);
-                    atr_and_braketilt_update(&d->atr, &d->motor, &d->float_conf, d->proportional);
+                    atr_and_braketilt_update(
+                        &d->atr, &d->motor, &d->float_conf, d->setpoint - d->imu.balance_pitch
+                    );
                 }
 
                 // aggregated torque tilts:
@@ -1156,85 +1145,33 @@ static void refloat_thd(void *arg) {
                 }
             }
 
-            // Prepare Brake Scaling (ramp scale values as needed for smooth transitions)
-            if (d->motor.abs_erpm < 500) {
-                // All scaling should roll back to 1.0x when near a stop for a smooth stand-still
-                // and back-forth transition
-                d->kp_brake_scale = 0.01 + 0.99 * d->kp_brake_scale;
-                d->kp2_brake_scale = 0.01 + 0.99 * d->kp2_brake_scale;
-                d->kp_accel_scale = 0.01 + 0.99 * d->kp_accel_scale;
-                d->kp2_accel_scale = 0.01 + 0.99 * d->kp2_accel_scale;
-
-            } else if (d->motor.erpm > 0) {
-                // Once rolling forward, brakes should transition to scaled values
-                d->kp_brake_scale = 0.01 * d->float_conf.kp_brake + 0.99 * d->kp_brake_scale;
-                d->kp2_brake_scale = 0.01 * d->float_conf.kp2_brake + 0.99 * d->kp2_brake_scale;
-                d->kp_accel_scale = 0.01 + 0.99 * d->kp_accel_scale;
-                d->kp2_accel_scale = 0.01 + 0.99 * d->kp2_accel_scale;
-
-            } else {
-                // Once rolling backward, the NEW brakes (we will use kp_accel) should transition to
-                // scaled values
-                d->kp_brake_scale = 0.01 + 0.99 * d->kp_brake_scale;
-                d->kp2_brake_scale = 0.01 + 0.99 * d->kp2_brake_scale;
-                d->kp_accel_scale = 0.01 * d->float_conf.kp_brake + 0.99 * d->kp_accel_scale;
-                d->kp2_accel_scale = 0.01 * d->float_conf.kp2_brake + 0.99 * d->kp2_accel_scale;
-            }
-
-            // Do PID maths
-            d->proportional = d->setpoint - d->imu.balance_pitch;
-
-            // Resume real PID maths
-            d->integral = d->integral + d->proportional * d->float_conf.ki;
-
-            // Apply I term Filter
-            if (d->float_conf.ki_limit > 0 && fabsf(d->integral) > d->float_conf.ki_limit) {
-                d->integral = d->float_conf.ki_limit * sign(d->integral);
-            }
-            // Quickly ramp down integral component during reverse stop
-            if (d->state.sat == SAT_REVERSESTOP) {
-                d->integral = d->integral * 0.9;
-            }
-
-            // Apply P Brake Scaling
-            float scaled_kp;
-            // Choose appropriate scale based on board angle (this accomodates backwards riding)
-            if (d->proportional < 0) {
-                scaled_kp = d->float_conf.kp * d->kp_brake_scale;
-            } else {
-                scaled_kp = d->float_conf.kp * d->kp_accel_scale;
-            }
-
-            d->rate_p = -d->imu.gyro_y * d->float_conf.kp2;
-            d->rate_p *= d->rate_p > 0 ? d->kp2_accel_scale : d->kp2_brake_scale;
+            pid_update(&d->pid, d->setpoint, &d->motor, &d->imu, &d->state, &d->float_conf);
 
             float booster_proportional = d->setpoint - d->atr.braketilt_offset - d->imu.pitch;
             booster_update(&d->booster, &d->motor, &d->float_conf, booster_proportional);
 
             // Rate P and Booster are pitch-based (as opposed to balance pitch based)
             // They require to be filtered in, otherwise they'd cause a jerk
-            float pitch_based = d->rate_p + d->booster.current;
+            float pitch_based = d->pid.rate_p + d->booster.current;
             if (d->softstart_pid_limit < d->mc_current_max) {
                 pitch_based = fminf(fabs(pitch_based), d->softstart_pid_limit) * sign(pitch_based);
                 d->softstart_pid_limit += d->softstart_ramp_step_size;
             }
 
-            float new_pid_value = scaled_kp * d->proportional + d->integral + pitch_based;
-
-            // Current Limiting!
+            float new_current = d->pid.p + d->pid.i + pitch_based;
             float current_limit = d->motor.braking ? d->mc_current_min : d->mc_current_max;
-            if (fabsf(new_pid_value) > current_limit) {
-                new_pid_value = sign(new_pid_value) * current_limit;
+            if (fabsf(new_current) > current_limit) {
+                new_current = sign(new_current) * current_limit;
             }
 
             if (d->traction_control) {
                 // freewheel while traction loss is detected
-                d->pid_value = 0;
+                d->balance_current = 0;
             } else {
-                d->pid_value = d->pid_value * 0.8 + new_pid_value * 0.2;
+                d->balance_current = d->balance_current * 0.8 + new_current * 0.2;
             }
 
-            motor_control_request_current(&d->motor_control, d->pid_value);
+            motor_control_request_current(&d->motor_control, d->balance_current);
             break;
         case (STATE_READY):
             if (d->state.mode == MODE_FLYWHEEL) {
@@ -1431,6 +1368,7 @@ static void data_init(data *d) {
     d->odometer = VESC_IF->mc_get_odometer();
 
     time_init(&d->time);
+    pid_init(&d->pid);
     motor_control_init(&d->motor_control);
     lcm_init(&d->lcm, &d->float_conf.hardware.leds);
     charging_init(&d->charging);
@@ -1441,13 +1379,13 @@ static float app_get_debug(int index) {
 
     switch (index) {
     case (1):
-        return d->pid_value;
+        return d->balance_current;
     case (2):
-        return d->proportional;
+        return d->pid.p;
     case (3):
-        return d->integral;
+        return d->pid.i;
     case (4):
-        return d->rate_p;
+        return d->pid.rate_p;
     case (5):
         return d->setpoint;
     case (6):
@@ -1497,7 +1435,7 @@ static void send_realtime_data(data *d) {
     buffer[ind++] = COMMAND_GET_RTDATA;
 
     // RT Data
-    buffer_append_float32_auto(buffer, d->pid_value, &ind);
+    buffer_append_float32_auto(buffer, d->balance_current, &ind);
     buffer_append_float32_auto(buffer, d->imu.balance_pitch, &ind);
     buffer_append_float32_auto(buffer, d->imu.roll, &ind);
 
@@ -1551,7 +1489,7 @@ static void cmd_send_all_data(data *d, unsigned char mode) {
         buffer[ind++] = mode;
 
         // RT Data
-        buffer_append_float16(buffer, d->pid_value, 10, &ind);
+        buffer_append_float16(buffer, d->balance_current, 10, &ind);
         buffer_append_float16(buffer, d->imu.balance_pitch, 10, &ind);
         buffer_append_float16(buffer, d->imu.roll, 10, &ind);
 
@@ -2164,7 +2102,7 @@ static void send_realtime_data2(data *d) {
         buffer_append_float32_auto(buffer, d->inputtilt_interpolated, &ind);
 
         // DEBUG
-        buffer_append_float32_auto(buffer, d->pid_value, &ind);
+        buffer_append_float32_auto(buffer, d->balance_current, &ind);
         buffer_append_float32_auto(buffer, d->motor.filt_current, &ind);
         buffer_append_float32_auto(buffer, d->atr.accel_diff, &ind);
         buffer_append_float32_auto(buffer, d->atr.speed_boost, &ind);
