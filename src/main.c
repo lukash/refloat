@@ -1202,7 +1202,6 @@ static void refloat_thd(void *arg) {
 
             // Do PID maths
             d->proportional = d->setpoint - d->balance_pitch;
-            bool tail_down = sign(d->proportional) != d->motor.erpm_sign;
 
             // Resume real PID maths
             d->integral = d->integral + d->proportional * d->float_conf.ki;
@@ -1234,7 +1233,7 @@ static void refloat_thd(void *arg) {
             float abs_proportional = fabsf(true_proportional);
 
             float booster_current, booster_angle, booster_ramp;
-            if (tail_down) {
+            if (d->motor.braking) {
                 booster_current = d->float_conf.brkbooster_current;
                 booster_angle = d->float_conf.brkbooster_angle;
                 booster_ramp = d->float_conf.brkbooster_ramp;
@@ -1248,7 +1247,7 @@ static void refloat_thd(void *arg) {
             const int boost_min_erpm = 3000;
             if (d->motor.abs_erpm > boost_min_erpm) {
                 float speedstiffness = fminf(1, (d->motor.abs_erpm - boost_min_erpm) / 10000);
-                if (tail_down) {
+                if (d->motor.braking) {
                     // use higher current at speed when braking
                     booster_current += booster_current * speedstiffness;
                 } else {
