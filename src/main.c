@@ -31,6 +31,7 @@
 #include "motor_control.h"
 #include "motor_data.h"
 #include "pid.h"
+#include "remote.h"
 #include "state.h"
 #include "time.h"
 #include "torque_tilt.h"
@@ -99,6 +100,7 @@ typedef struct {
     ATR atr;
     TurnTilt turn_tilt;
     Booster booster;
+    Remote remote;
 
     // Beeper
     int beep_num_left;
@@ -120,8 +122,7 @@ typedef struct {
     float startup_step_size;
     float tiltback_duty_step_size, tiltback_hv_step_size, tiltback_lv_step_size,
         tiltback_return_step_size;
-    float tiltback_variable, tiltback_variable_max_erpm, noseangling_step_size,
-        inputtilt_ramped_step_size, inputtilt_step_size;
+    float tiltback_variable, tiltback_variable_max_erpm, noseangling_step_size;
     float mc_max_temp_fet, mc_max_temp_mot;
     float mc_current_max, mc_current_min;
     bool duty_beeping;
@@ -129,7 +130,6 @@ typedef struct {
     // IMU data for the balancing filter
     BalanceFilterData balance_filter;
 
-    float throttle_val;
     float max_duty_with_margin;
 
     FootpadSensor footpad_sensor;
@@ -256,6 +256,7 @@ static void reconfigure(data *d) {
     torque_tilt_configure(&d->torque_tilt, &d->float_conf);
     atr_configure(&d->atr, &d->float_conf);
     turn_tilt_configure(&d->turn_tilt, &d->float_conf);
+    remote_configure(&d->remote, &d->float_conf);
 
     time_refresh_idle(&d->time);
 }
@@ -272,7 +273,6 @@ static void configure(data *d) {
     d->tiltback_hv_step_size = d->float_conf.tiltback_hv_speed / d->float_conf.hertz;
     d->tiltback_lv_step_size = d->float_conf.tiltback_lv_speed / d->float_conf.hertz;
     d->tiltback_return_step_size = d->float_conf.tiltback_return_speed / d->float_conf.hertz;
-    d->inputtilt_step_size = d->float_conf.inputtilt_speed / d->float_conf.hertz;
 
     // Feature: Soft Start
     d->softstart_ramp_step_size = (float) 100 / d->float_conf.hertz;
@@ -307,9 +307,6 @@ static void configure(data *d) {
 
     // Feature: Flywheel
     d->flywheel_abort = false;
-
-    // Allows smoothing of Remote Tilt
-    d->inputtilt_ramped_step_size = 0;
 
     // Speed above which to warn users about an impending full switch fault
     d->switch_warn_beep_erpm = d->float_conf.is_footbeep_enabled ? 2000 : 100000;
@@ -407,8 +404,8 @@ static void do_rc_move(data *d) {
         // Throttle must be greater than 2% (Help mitigate lingering throttle)
         if ((d->float_conf.remote_throttle_current_max > 0) &&
             time_elapsed(&d->time, disengage, d->float_conf.remote_throttle_grace_period) &&
-            (fabsf(d->throttle_val) > 0.02)) {
-            float servo_val = d->throttle_val;
+            (fabsf(d->remote.input) > 0.02)) {
+            float servo_val = d->remote.input;
             servo_val *= (d->float_conf.inputtilt_invert_throttle ? -1.0 : 1.0);
             d->rc_current = d->rc_current * 0.95 +
                 (d->float_conf.remote_throttle_current_max * servo_val) * 0.05;
@@ -816,48 +813,6 @@ static void apply_noseangling(data *d) {
     rate_limitf(&d->noseangling_interpolated, noseangling_target, d->noseangling_step_size);
 }
 
-static void apply_inputtilt(data *d) {
-    float input_tiltback_target;
-
-    // Scale by Max Angle
-    input_tiltback_target = d->throttle_val * d->float_conf.inputtilt_angle_limit;
-
-    // Invert for Darkride
-    input_tiltback_target *= (d->state.darkride ? -1.0 : 1.0);
-
-    float input_tiltback_target_diff = input_tiltback_target - d->inputtilt_interpolated;
-
-    // Smoothen changes in tilt angle by ramping the step size
-    const float smoothing_factor = 0.02;
-
-    // Within X degrees of Target Angle, start ramping down step size
-    if (fabsf(input_tiltback_target_diff) < 2.0f) {
-        // Target step size is reduced the closer to center you are (needed for smoothly
-        // transitioning away from center)
-        d->inputtilt_ramped_step_size =
-            (smoothing_factor * d->inputtilt_step_size * (input_tiltback_target_diff / 2)) +
-            ((1 - smoothing_factor) * d->inputtilt_ramped_step_size);
-        // Linearly ramped down step size is provided as minimum to prevent overshoot
-        float centering_step_size =
-            fminf(
-                fabsf(d->inputtilt_ramped_step_size),
-                fabsf(input_tiltback_target_diff / 2) * d->inputtilt_step_size
-            ) *
-            sign(input_tiltback_target_diff);
-        if (fabsf(input_tiltback_target_diff) < fabsf(centering_step_size)) {
-            d->inputtilt_interpolated = input_tiltback_target;
-        } else {
-            d->inputtilt_interpolated += centering_step_size;
-        }
-    } else {
-        // Ramp up step size until the configured tilt speed is reached
-        d->inputtilt_ramped_step_size =
-            (smoothing_factor * d->inputtilt_step_size * sign(input_tiltback_target_diff)) +
-            ((1 - smoothing_factor) * d->inputtilt_ramped_step_size);
-        d->inputtilt_interpolated += d->inputtilt_ramped_step_size;
-    }
-}
-
 static void imu_ref_callback(float *acc, float *gyro, float *mag, float dt) {
     unused(mag);
 
@@ -896,40 +851,7 @@ static void refloat_thd(void *arg) {
 
         motor_data_update(&d->motor);
 
-        bool remote_connected = false;
-        float servo_val = 0;
-
-        switch (d->float_conf.inputtilt_remote_type) {
-        case (INPUTTILT_PPM):
-            servo_val = VESC_IF->get_ppm();
-            remote_connected = VESC_IF->get_ppm_age() < 1;
-            break;
-        case (INPUTTILT_UART): {
-            remote_state remote = VESC_IF->get_remote_state();
-            servo_val = remote.js_y;
-            remote_connected = remote.age_s < 1;
-            break;
-        }
-        case (INPUTTILT_NONE):
-            break;
-        }
-
-        if (!remote_connected) {
-            servo_val = 0;
-        } else {
-            // Apply Deadband
-            float deadband = d->float_conf.inputtilt_deadband;
-            if (fabsf(servo_val) < deadband) {
-                servo_val = 0.0;
-            } else {
-                servo_val = sign(servo_val) * (fabsf(servo_val) - deadband) / (1 - deadband);
-            }
-
-            // Invert Throttle
-            servo_val *= (d->float_conf.inputtilt_invert_throttle ? -1.0 : 1.0);
-        }
-
-        d->throttle_val = servo_val;
+        remote_input(&d->remote, &d->float_conf);
 
         turn_tilt_aggregate(&d->turn_tilt, &d->imu);
 
@@ -991,8 +913,8 @@ static void refloat_thd(void *arg) {
             );
             d->setpoint = d->setpoint_target_interpolated;
 
-            apply_inputtilt(d);  // Allow Input Tilt for Darkride
-            d->setpoint += d->inputtilt_interpolated;
+            remote_update(&d->remote, &d->state, &d->float_conf);
+            d->setpoint += d->remote.setpoint;
 
             if (!d->state.darkride) {
                 // in case of wheelslip, don't change torque tilts, instead slightly decrease each
@@ -1259,6 +1181,7 @@ static void data_init(data *d) {
     motor_control_init(&d->motor_control);
     lcm_init(&d->lcm, &d->float_conf.hardware.leds);
     charging_init(&d->charging);
+    remote_init(&d->remote);
 }
 
 static float app_get_debug(int index) {
@@ -1355,7 +1278,7 @@ static void send_realtime_data(data *d) {
         buffer_append_float32_auto(buffer, d->booster.current, &ind);
         buffer_append_float32_auto(buffer, d->motor.dir_current, &ind);
     }
-    buffer_append_float32_auto(buffer, d->throttle_val, &ind);
+    buffer_append_float32_auto(buffer, d->remote.input, &ind);
 
     SEND_APP_DATA(buffer, bufsize, ind);
 }
@@ -1784,7 +1707,6 @@ static void cmd_runtime_tune_other(data *d, unsigned char *cfg, int len) {
             if (inputtilt > 0) {
                 d->float_conf.inputtilt_angle_limit = cfg[12] >> 2;
                 d->float_conf.inputtilt_speed = cfg[13];
-                d->inputtilt_step_size = d->float_conf.inputtilt_speed / d->float_conf.hertz;
             }
         }
     }
@@ -1977,7 +1899,7 @@ static void send_realtime_data2(data *d) {
 
     buffer_append_float32_auto(buffer, d->footpad_sensor.adc1, &ind);
     buffer_append_float32_auto(buffer, d->footpad_sensor.adc2, &ind);
-    buffer_append_float32_auto(buffer, d->throttle_val, &ind);
+    buffer_append_float32_auto(buffer, d->remote.input, &ind);
 
     if (d->state.state == STATE_RUNNING) {
         // Setpoints
