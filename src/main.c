@@ -134,7 +134,7 @@ typedef struct {
 
     float max_duty_with_margin;
 
-    FootpadSensor footpad_sensor;
+    FootpadSensor footpad;
 
     // Rumtime state values
     State state;
@@ -445,11 +445,11 @@ bool can_engage(const data *d) {
         return false;
     }
 
-    if (d->footpad_sensor.state == FS_BOTH) {
+    if (d->footpad.state == FS_BOTH) {
         return true;
     }
 
-    if (d->footpad_sensor.state == FS_LEFT || d->footpad_sensor.state == FS_RIGHT) {
+    if (d->footpad.state == FS_LEFT || d->footpad.state == FS_RIGHT) {
         // 5 seconds after stopping we allow starting with a single sensor (e.g. for jump starts)
         bool is_simple_start =
             d->float_conf.startup_simplestart_enabled && time_elapsed(&d->time, disengage, 5);
@@ -511,7 +511,7 @@ static bool check_faults(data *d) {
 
         // Check switch
         // Switch fully open
-        if (d->footpad_sensor.state == FS_NONE && d->state.mode != MODE_FLYWHEEL) {
+        if (d->footpad.state == FS_NONE && d->state.mode != MODE_FLYWHEEL) {
             if (!disable_switch_faults) {
                 if (timer_older_ms(
                         &d->time, d->fault_switch_timer, d->float_conf.fault_delay_switch_full
@@ -541,7 +541,7 @@ static bool check_faults(data *d) {
         // Feature: Reverse-Stop
         if (d->state.sat == SAT_REVERSESTOP) {
             //  Taking your foot off entirely while reversing? Ignore delays
-            if (d->footpad_sensor.state == FS_NONE) {
+            if (d->footpad.state == FS_NONE) {
                 state_stop(&d->state, STOP_SWITCH_FULL);
                 return true;
             }
@@ -601,7 +601,7 @@ static bool check_faults(data *d) {
             }
         }
 
-        if (d->state.mode == MODE_FLYWHEEL && d->footpad_sensor.state == FS_BOTH) {
+        if (d->state.mode == MODE_FLYWHEEL && d->footpad.state == FS_BOTH) {
             state_stop(&d->state, STOP_SWITCH_HALF);
             d->flywheel_abort = true;
             return true;
@@ -859,9 +859,9 @@ static void refloat_thd(void *arg) {
 
         turn_tilt_aggregate(&d->turn_tilt, &d->imu);
 
-        footpad_sensor_update(&d->footpad_sensor, &d->float_conf);
+        footpad_sensor_update(&d->footpad, &d->float_conf);
 
-        if (d->footpad_sensor.state == FS_NONE && d->state.state == STATE_RUNNING &&
+        if (d->footpad.state == FS_NONE && d->state.state == STATE_RUNNING &&
             d->state.mode != MODE_FLYWHEEL && d->motor.abs_erpm > d->switch_warn_beep_erpm) {
             // If we're at riding speed and the switch is off => ALERT the user
             // set force=true since this could indicate an imminent shutdown/nosedive
@@ -994,14 +994,14 @@ static void refloat_thd(void *arg) {
             break;
         case (STATE_READY):
             if (d->state.mode == MODE_FLYWHEEL) {
-                if (d->flywheel_abort || d->footpad_sensor.state == FS_BOTH) {
+                if (d->flywheel_abort || d->footpad.state == FS_BOTH) {
                     flywheel_stop(d);
                     break;
                 }
             }
 
             if (d->state.mode != MODE_FLYWHEEL && d->imu.pitch > 75 && d->imu.pitch < 105) {
-                if (konami_check(&d->flywheel_konami, &d->leds, &d->footpad_sensor, &d->time)) {
+                if (konami_check(&d->flywheel_konami, &d->leds, &d->footpad, &d->time)) {
                     unsigned char enabled[6] = {0x82, 0, 0, 0, 0, 1};
                     cmd_flywheel_toggle(d, enabled, 6);
                 }
@@ -1009,16 +1009,12 @@ static void refloat_thd(void *arg) {
 
             if (d->float_conf.hardware.leds.type != LED_TYPE_NONE) {
                 if (!d->leds.cfg->headlights_on &&
-                    konami_check(
-                        &d->headlights_on_konami, &d->leds, &d->footpad_sensor, &d->time
-                    )) {
+                    konami_check(&d->headlights_on_konami, &d->leds, &d->footpad, &d->time)) {
                     leds_headlights_switch(&d->float_conf.leds, &d->lcm, true);
                 }
 
                 if (d->leds.cfg->headlights_on &&
-                    konami_check(
-                        &d->headlights_off_konami, &d->leds, &d->footpad_sensor, &d->time
-                    )) {
+                    konami_check(&d->headlights_off_konami, &d->leds, &d->footpad, &d->time)) {
                     leds_headlights_switch(&d->float_conf.leds, &d->lcm, false);
                 }
             }
@@ -1138,7 +1134,7 @@ static void led_thd(void *arg) {
     data *d = (data *) arg;
 
     while (!VESC_IF->should_terminate()) {
-        leds_update(&d->leds, &d->state, d->footpad_sensor.state);
+        leds_update(&d->leds, &d->state, d->footpad.state);
         VESC_IF->sleep_us(1e6 / LEDS_REFRESH_RATE);
     }
 }
@@ -1261,13 +1257,13 @@ static void send_realtime_data(data *d) {
 
     uint8_t state = (state_compat(&d->state) & 0xF);
     buffer[ind++] = (state & 0xF) + (sat_compat(&d->state) << 4);
-    state = footpad_sensor_state_to_switch_compat(d->footpad_sensor.state);
+    state = footpad_sensor_state_to_switch_compat(d->footpad.state);
     if (d->state.mode == MODE_HANDTEST) {
         state |= 0x8;
     }
     buffer[ind++] = (state & 0xF) + (d->beep_reason << 4);
-    buffer_append_float32_auto(buffer, d->footpad_sensor.adc1, &ind);
-    buffer_append_float32_auto(buffer, d->footpad_sensor.adc2, &ind);
+    buffer_append_float32_auto(buffer, d->footpad.adc1, &ind);
+    buffer_append_float32_auto(buffer, d->footpad.adc2, &ind);
 
     // Setpoints
     buffer_append_float32_auto(buffer, d->setpoint, &ind);
@@ -1317,15 +1313,15 @@ static void cmd_send_all_data(data *d, unsigned char mode) {
         buffer[ind++] = state;
 
         // passed switch-state includes bit3 for handtest, and bits4..7 for beep reason
-        state = footpad_sensor_state_to_switch_compat(d->footpad_sensor.state);
+        state = footpad_sensor_state_to_switch_compat(d->footpad.state);
         if (d->state.mode == MODE_HANDTEST) {
             state |= 0x8;
         }
         buffer[ind++] = (state & 0xF) + (d->beep_reason << 4);
         d->beep_reason = BEEP_NONE;
 
-        buffer[ind++] = d->footpad_sensor.adc1 * 50;
-        buffer[ind++] = d->footpad_sensor.adc2 * 50;
+        buffer[ind++] = d->footpad.adc1 * 50;
+        buffer[ind++] = d->footpad.adc2 * 50;
 
         // Setpoints (can be positive or negative)
         buffer[ind++] = d->setpoint * 5 + 128;
@@ -1897,7 +1893,7 @@ static void send_realtime_data2(data *d) {
     buffer[ind++] = d->state.mode << 4 | d->state.state;
 
     uint8_t flags = d->state.charging << 5 | d->state.darkride << 1 | d->state.wheelslip;
-    buffer[ind++] = d->footpad_sensor.state << 6 | flags;
+    buffer[ind++] = d->footpad.state << 6 | flags;
 
     buffer[ind++] = d->state.sat << 4 | d->state.stop_condition;
 
@@ -1907,8 +1903,8 @@ static void send_realtime_data2(data *d) {
     buffer_append_float32_auto(buffer, d->imu.balance_pitch, &ind);
     buffer_append_float32_auto(buffer, d->imu.roll, &ind);
 
-    buffer_append_float32_auto(buffer, d->footpad_sensor.adc1, &ind);
-    buffer_append_float32_auto(buffer, d->footpad_sensor.adc2, &ind);
+    buffer_append_float32_auto(buffer, d->footpad.adc1, &ind);
+    buffer_append_float32_auto(buffer, d->footpad.adc2, &ind);
     buffer_append_float32_auto(buffer, d->remote.input, &ind);
 
     if (d->state.state == STATE_RUNNING) {
@@ -2086,7 +2082,7 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
     }
     case COMMAND_LCM_POLL: {
         lcm_poll_request(&d->lcm, &buffer[2], len - 2);
-        lcm_poll_response(&d->lcm, &d->state, d->footpad_sensor.state, &d->motor, d->imu.pitch);
+        lcm_poll_response(&d->lcm, &d->state, d->footpad.state, &d->motor, d->imu.pitch);
         return;
     }
     case COMMAND_LCM_LIGHT_INFO: {
@@ -2242,7 +2238,7 @@ INIT_FUN(lib_info *info) {
     balance_filter_init(&d->balance_filter);
     VESC_IF->imu_set_read_callback(imu_ref_callback);
 
-    footpad_sensor_update(&d->footpad_sensor, &d->float_conf);
+    footpad_sensor_update(&d->footpad, &d->float_conf);
 
     d->main_thread = VESC_IF->spawn(refloat_thd, 1024, "Refloat Main", d);
     if (!d->main_thread) {
@@ -2250,9 +2246,8 @@ INIT_FUN(lib_info *info) {
         return false;
     }
 
-    bool have_leds = leds_init(
-        &d->leds, &d->float_conf.hardware.leds, &d->float_conf.leds, d->footpad_sensor.state
-    );
+    bool have_leds =
+        leds_init(&d->leds, &d->float_conf.hardware.leds, &d->float_conf.leds, d->footpad.state);
 
     if (have_leds) {
         d->led_thread = VESC_IF->spawn(led_thd, 1024, "Refloat LEDs", d);
