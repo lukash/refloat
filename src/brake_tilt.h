@@ -24,8 +24,8 @@
 
 typedef struct {
     float factor;
-    float target_offset;  // braketilt setpoint target offset
-    float offset;  // rate-limited braketilt setpoint offset
+    float target;
+    float setpoint;
 } BrakeTilt;
 
 void brake_tilt_reset(BrakeTilt *bt);

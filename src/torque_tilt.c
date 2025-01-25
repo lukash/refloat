@@ -23,7 +23,7 @@
 #include <math.h>
 
 void torque_tilt_reset(TorqueTilt *tt) {
-    tt->offset = 0;
+    tt->setpoint = 0;
 }
 
 void torque_tilt_configure(TorqueTilt *tt, const RefloatConfig *config) {
@@ -40,7 +40,7 @@ void torque_tilt_update(TorqueTilt *tt, const MotorData *motor, const RefloatCon
     // multiply it by "power" to get our desired angle, and min with the limit
     // to respect boundaries. Finally multiply it by motor current sign to get
     // directionality back.
-    float target_offset =
+    float target =
         fminf(
             fmaxf((fabsf(motor->filt_current) - config->torquetilt_start_current), 0) * strength,
             config->torquetilt_angle_limit
@@ -48,8 +48,7 @@ void torque_tilt_update(TorqueTilt *tt, const MotorData *motor, const RefloatCon
         sign(motor->filt_current);
 
     float step_size = 0;
-    if ((tt->offset - target_offset > 0 && target_offset > 0) ||
-        (tt->offset - target_offset < 0 && target_offset < 0)) {
+    if ((tt->setpoint - target > 0 && target > 0) || (tt->setpoint - target < 0 && target < 0)) {
         step_size = tt->off_step_size;
     } else {
         step_size = tt->on_step_size;
@@ -59,9 +58,9 @@ void torque_tilt_update(TorqueTilt *tt, const MotorData *motor, const RefloatCon
         step_size /= 2;
     }
 
-    rate_limitf(&tt->offset, target_offset, step_size);
+    rate_limitf(&tt->setpoint, target, step_size);
 }
 
 void torque_tilt_winddown(TorqueTilt *tt) {
-    tt->offset *= 0.995;
+    tt->setpoint *= 0.995;
 }

@@ -28,8 +28,8 @@ typedef struct {
     float accel_diff;
     float speed_boost;
 
-    float target_offset;  // setpoint target offset
-    float offset;  // rate-limited setpoint offset
+    float target;
+    float setpoint;
 
     float speed_boost_mult;
 } ATR;

@@ -25,8 +25,8 @@
 void atr_reset(ATR *atr) {
     atr->accel_diff = 0;
     atr->speed_boost = 0;
-    atr->target_offset = 0;
-    atr->offset = 0;
+    atr->target = 0;
+    atr->setpoint = 0;
 }
 
 void atr_configure(ATR *atr, const RefloatConfig *config) {
@@ -108,9 +108,9 @@ void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config) {
         new_atr_target -= sign(new_atr_target) * atr_threshold;
     }
 
-    atr->target_offset = atr->target_offset * 0.95 + 0.05 * new_atr_target;
-    atr->target_offset = fminf(atr->target_offset, config->atr_angle_limit);
-    atr->target_offset = fmaxf(atr->target_offset, -config->atr_angle_limit);
+    atr->target = atr->target * 0.95 + 0.05 * new_atr_target;
+    atr->target = fminf(atr->target, config->atr_angle_limit);
+    atr->target = fmaxf(atr->target, -config->atr_angle_limit);
 
     float response_boost = 1;
     if (motor->abs_erpm > 2500) {
@@ -126,13 +126,12 @@ void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config) {
     float atr_step_size = 0;
     const float TT_BOOST_MARGIN = 2;
     if (forward) {
-        if (atr->offset < 0) {
+        if (atr->setpoint < 0) {
             // downhill
-            if (atr->offset < atr->target_offset) {
+            if (atr->setpoint < atr->target) {
                 // to avoid oscillations we go down slower than we go up
                 atr_step_size = atr->off_step_size;
-                if ((atr->target_offset > 0) &&
-                    ((atr->target_offset - atr->offset) > TT_BOOST_MARGIN) &&
+                if (atr->target > 0 && atr->target - atr->setpoint > TT_BOOST_MARGIN &&
                     motor->abs_erpm > 2000) {
                     // boost the speed if tilt target has reversed (and if there's a significant
                     // margin)
@@ -144,7 +143,7 @@ void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config) {
             }
         } else {
             // uphill or other heavy resistance (grass, mud, etc)
-            if ((atr->target_offset > -3) && (atr->offset > atr->target_offset)) {
+            if (atr->target > -3 && atr->setpoint > atr->target) {
                 // ATR winding down (current ATR is bigger than the target)
                 // normal wind down case: to avoid oscillations we go down slower than we go up
                 atr_step_size = atr->off_step_size;
@@ -154,13 +153,12 @@ void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config) {
             }
         }
     } else {
-        if (atr->offset > 0) {
+        if (atr->setpoint > 0) {
             // downhill
-            if (atr->offset > atr->target_offset) {
+            if (atr->setpoint > atr->target) {
                 // to avoid oscillations we go down slower than we go up
                 atr_step_size = atr->off_step_size;
-                if ((atr->target_offset < 0) &&
-                    ((atr->offset - atr->target_offset) > TT_BOOST_MARGIN) &&
+                if (atr->target < 0 && atr->setpoint - atr->target > TT_BOOST_MARGIN &&
                     motor->abs_erpm > 2000) {
                     // boost the speed if tilt target has reversed (and if there's a significant
                     // margin)
@@ -172,7 +170,7 @@ void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config) {
             }
         } else {
             // uphill or other heavy resistance (grass, mud, etc)
-            if ((atr->target_offset < 3) && (atr->offset < atr->target_offset)) {
+            if (atr->target < 3 && atr->setpoint < atr->target) {
                 // normal wind down case: to avoid oscillations we go down slower than we go up
                 atr_step_size = atr->off_step_size;
             } else {
@@ -186,10 +184,10 @@ void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config) {
         atr_step_size /= 2;
     }
 
-    rate_limitf(&atr->offset, atr->target_offset, atr_step_size);
+    rate_limitf(&atr->setpoint, atr->target, atr_step_size);
 }
 
 void atr_winddown(ATR *atr) {
-    atr->offset *= 0.995;
-    atr->target_offset *= 0.99;
+    atr->setpoint *= 0.995;
+    atr->target *= 0.99;
 }

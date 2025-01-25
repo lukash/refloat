@@ -955,18 +955,18 @@ static void refloat_thd(void *arg) {
                 // aggregated torque tilts:
                 // if signs match between torque tilt and ATR + brake tilt, use the more significant
                 // one if signs do not match, they are simply added together
-                float ab_offset = d->atr.offset + d->brake_tilt.offset;
-                if (sign(ab_offset) == sign(d->torque_tilt.offset)) {
+                float ab_offset = d->atr.setpoint + d->brake_tilt.setpoint;
+                if (sign(ab_offset) == sign(d->torque_tilt.setpoint)) {
                     d->setpoint +=
-                        sign(ab_offset) * fmaxf(fabsf(ab_offset), fabsf(d->torque_tilt.offset));
+                        sign(ab_offset) * fmaxf(fabsf(ab_offset), fabsf(d->torque_tilt.setpoint));
                 } else {
-                    d->setpoint += ab_offset + d->torque_tilt.offset;
+                    d->setpoint += ab_offset + d->torque_tilt.setpoint;
                 }
             }
 
             pid_update(&d->pid, d->setpoint, &d->motor, &d->imu, &d->state, &d->float_conf);
 
-            float booster_proportional = d->setpoint - d->brake_tilt.offset - d->imu.pitch;
+            float booster_proportional = d->setpoint - d->brake_tilt.setpoint - d->imu.pitch;
             booster_update(&d->booster, &d->motor, &d->float_conf, booster_proportional);
 
             // Rate P and Booster are pitch-based (as opposed to balance pitch based)
@@ -1209,7 +1209,7 @@ static float app_get_debug(int index) {
     case (5):
         return d->setpoint;
     case (6):
-        return d->atr.offset;
+        return d->atr.setpoint;
     case (7):
         return d->motor.erpm;
     case (8):
@@ -1271,9 +1271,9 @@ static void send_realtime_data(data *d) {
 
     // Setpoints
     buffer_append_float32_auto(buffer, d->setpoint, &ind);
-    buffer_append_float32_auto(buffer, d->atr.offset, &ind);
-    buffer_append_float32_auto(buffer, d->brake_tilt.offset, &ind);
-    buffer_append_float32_auto(buffer, d->torque_tilt.offset, &ind);
+    buffer_append_float32_auto(buffer, d->atr.setpoint, &ind);
+    buffer_append_float32_auto(buffer, d->brake_tilt.setpoint, &ind);
+    buffer_append_float32_auto(buffer, d->torque_tilt.setpoint, &ind);
     buffer_append_float32_auto(buffer, d->turn_tilt.setpoint, &ind);
     buffer_append_float32_auto(buffer, d->inputtilt_interpolated, &ind);
 
@@ -1329,9 +1329,9 @@ static void cmd_send_all_data(data *d, unsigned char mode) {
 
         // Setpoints (can be positive or negative)
         buffer[ind++] = d->setpoint * 5 + 128;
-        buffer[ind++] = d->atr.offset * 5 + 128;
-        buffer[ind++] = d->brake_tilt.offset * 5 + 128;
-        buffer[ind++] = d->torque_tilt.offset * 5 + 128;
+        buffer[ind++] = d->atr.setpoint * 5 + 128;
+        buffer[ind++] = d->brake_tilt.setpoint * 5 + 128;
+        buffer[ind++] = d->torque_tilt.setpoint * 5 + 128;
         buffer[ind++] = d->turn_tilt.setpoint * 5 + 128;
         buffer[ind++] = d->inputtilt_interpolated * 5 + 128;
 
@@ -1914,9 +1914,9 @@ static void send_realtime_data2(data *d) {
     if (d->state.state == STATE_RUNNING) {
         // Setpoints
         buffer_append_float32_auto(buffer, d->setpoint, &ind);
-        buffer_append_float32_auto(buffer, d->atr.offset, &ind);
-        buffer_append_float32_auto(buffer, d->brake_tilt.offset, &ind);
-        buffer_append_float32_auto(buffer, d->torque_tilt.offset, &ind);
+        buffer_append_float32_auto(buffer, d->atr.setpoint, &ind);
+        buffer_append_float32_auto(buffer, d->brake_tilt.setpoint, &ind);
+        buffer_append_float32_auto(buffer, d->torque_tilt.setpoint, &ind);
         buffer_append_float32_auto(buffer, d->turn_tilt.setpoint, &ind);
         buffer_append_float32_auto(buffer, d->inputtilt_interpolated, &ind);
 

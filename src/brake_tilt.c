@@ -23,8 +23,8 @@
 #include <math.h>
 
 void brake_tilt_reset(BrakeTilt *bt) {
-    bt->target_offset = 0;
-    bt->offset = 0;
+    bt->target = 0;
+    bt->setpoint = 0;
 }
 
 void brake_tilt_configure(BrakeTilt *bt, const RefloatConfig *config) {
@@ -55,18 +55,18 @@ void brake_tilt_update(
                 (motor->erpm < -1000 && atr->accel_diff > 1)) {
                 downhill_damper += fabsf(atr->accel_diff) / 2;
             }
-            bt->target_offset = balance_offset / bt->factor / downhill_damper;
+            bt->target = balance_offset / bt->factor / downhill_damper;
             if (downhill_damper > 2) {
                 // steep downhills, we don't enable this feature at all!
-                bt->target_offset = 0;
+                bt->target = 0;
             }
         }
     } else {
-        bt->target_offset = 0;
+        bt->target = 0;
     }
 
     float braketilt_step_size = atr->off_step_size / config->braketilt_lingering;
-    if (fabsf(bt->target_offset) > fabsf(bt->offset)) {
+    if (fabsf(bt->target) > fabsf(bt->setpoint)) {
         braketilt_step_size = atr->on_step_size * 1.5;
     } else if (motor->abs_erpm < 800) {
         braketilt_step_size = atr->on_step_size;
@@ -76,10 +76,10 @@ void brake_tilt_update(
         braketilt_step_size /= 2;
     }
 
-    rate_limitf(&bt->offset, bt->target_offset, braketilt_step_size);
+    rate_limitf(&bt->setpoint, bt->target, braketilt_step_size);
 }
 
 void brake_tilt_winddown(BrakeTilt *bt) {
-    bt->offset *= 0.995;
-    bt->target_offset *= 0.99;
+    bt->setpoint *= 0.995;
+    bt->target *= 0.99;
 }

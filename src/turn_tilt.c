@@ -123,14 +123,14 @@ void turn_tilt_update(
         // ATR interference: Reduce target during moments of high torque response
         float atr_min = 2;
         float atr_max = 5;
-        if (sign(atr->target_offset) != sign(tt->target)) {
+        if (sign(atr->target) != sign(tt->target)) {
             // further reduced turntilt during moderate to steep downhills
             atr_min = 1;
             atr_max = 4;
         }
-        if (fabsf(atr->target_offset) > atr_min) {
+        if (fabsf(atr->target) > atr_min) {
             // Start scaling turntilt when ATR>2, down to 0 turntilt for ATR > 5 degrees
-            float atr_scaling = (atr_max - fabsf(atr->target_offset)) / (atr_max - atr_min);
+            float atr_scaling = (atr_max - fabsf(atr->target)) / (atr_max - atr_min);
             if (atr_scaling < 0) {
                 atr_scaling = 0;
                 // during heavy torque response clear the yaw aggregate too
