@@ -42,11 +42,11 @@ void torque_tilt_update(TorqueTilt *tt, const MotorData *motor, const RefloatCon
     // directionality back.
     float target_offset =
         fminf(
-            fmaxf((fabsf(motor->atr_filtered_current) - config->torquetilt_start_current), 0) *
+            fmaxf((fabsf(motor->filtered_current) - config->torquetilt_start_current), 0) *
                 strength,
             config->torquetilt_angle_limit
         ) *
-        sign(motor->atr_filtered_current);
+        sign(motor->filtered_current);
 
     float step_size = 0;
     if ((tt->offset - target_offset > 0 && target_offset > 0) ||
