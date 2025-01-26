@@ -25,6 +25,7 @@
 #include "booster.h"
 #include "brake_tilt.h"
 #include "charging.h"
+#include "data.h"
 #include "footpad_sensor.h"
 #include "imu.h"
 #include "lcm.h"
@@ -78,111 +79,8 @@ static const FootpadSensorState headlights_off_konami_sequence[] = {
     FS_RIGHT, FS_NONE, FS_RIGHT, FS_NONE, FS_LEFT
 };
 
-// This is all persistent state of the application, which will be allocated in init. It
-// is put here because variables can only be read-only when this program is loaded
-// in flash without virtual memory in RAM (as all RAM already is dedicated to the
-// main firmware and managed from there). This is probably the main limitation of
-// loading applications in runtime, but it is not too bad to work around.
-typedef struct {
-    lib_thread main_thread;
-    lib_thread led_thread;
-
-    RefloatConfig float_conf;
-
-    // Firmware version, passed in from Lisp
-    int fw_version_major, fw_version_minor, fw_version_beta;
-
-    Time time;
-    MotorData motor;
-    IMU imu;
-    PID pid;
-    MotorControl motor_control;
-    TorqueTilt torque_tilt;
-    ATR atr;
-    BrakeTilt brake_tilt;
-    TurnTilt turn_tilt;
-    Booster booster;
-    Remote remote;
-
-    // Beeper
-    int beep_num_left;
-    int beep_duration;
-    int beep_countdown;
-    int beep_reason;
-    bool beeper_enabled;
-
-    Leds leds;
-
-    // Lights Control Module - external lights control
-    LcmData lcm;
-
-    Charging charging;
-
-    // Config values
-    uint32_t loop_time_us;
-    float startup_pitch_trickmargin, startup_pitch_tolerance;
-    float startup_step_size;
-    float tiltback_duty_step_size, tiltback_hv_step_size, tiltback_lv_step_size,
-        tiltback_return_step_size;
-    float tiltback_variable, tiltback_variable_max_erpm, noseangling_step_size;
-    float mc_max_temp_fet, mc_max_temp_mot;
-    float mc_current_max, mc_current_min;
-    bool duty_beeping;
-
-    // IMU data for the balancing filter
-    BalanceFilterData balance_filter;
-
-    float max_duty_with_margin;
-
-    FootpadSensor footpad;
-
-    // Rumtime state values
-    State state;
-
-    float balance_current;
-
-    float setpoint, setpoint_target, setpoint_target_interpolated;
-    float noseangling_interpolated, inputtilt_interpolated;
-    time_t nag_timer;
-    float idle_voltage;
-    time_t fault_angle_pitch_timer, fault_angle_roll_timer, fault_switch_timer,
-        fault_switch_half_timer;
-    time_t wheelslip_timer, tb_highvoltage_timer;
-    float switch_warn_beep_erpm;
-    bool traction_control;
-
-    // Darkride aka upside down mode:
-    bool is_upside_down_started;  // dark ride has been engaged
-    bool enable_upside_down;  // dark ride mode is enabled (10 seconds after fault)
-    time_t upside_down_fault_timer;
-
-    // Feature: Flywheel
-    bool flywheel_abort;
-
-    // Feature: Reverse Stop
-    float reverse_stop_step_size, reverse_tolerance, reverse_total_erpm;
-    time_t reverse_timer;
-
-    // Feature: Soft Start
-    float softstart_pid_limit, softstart_ramp_step_size;
-
-    // Odometer
-    int odometer_dirty;
-    uint64_t odometer;
-
-    // Feature: RC Move (control via app while idle)
-    int rc_steps;
-    int rc_counter;
-    float rc_current_target;
-    float rc_current;
-
-    Konami flywheel_konami;
-    Konami headlights_on_konami;
-    Konami headlights_off_konami;
-} data;
-
-static void flywheel_stop(data *d);
-static void cmd_flywheel_toggle(data *d, unsigned char *cfg, int len);
+static void flywheel_stop(Data *d);
+static void cmd_flywheel_toggle(Data *d, unsigned char *cfg, int len);
 
 const VESC_PIN beeper_pin = VESC_PIN_PPM;
 
@@ -193,7 +91,7 @@ void beeper_init() {
     VESC_IF->io_set_mode(beeper_pin, VESC_PIN_MODE_OUTPUT);
 }
 
-void beeper_update(data *d) {
+void beeper_update(Data *d) {
     if (d->beeper_enabled && (d->beep_num_left > 0)) {
         d->beep_countdown--;
         if (d->beep_countdown <= 0) {
@@ -208,14 +106,14 @@ void beeper_update(data *d) {
     }
 }
 
-void beeper_enable(data *d, bool enable) {
+void beeper_enable(Data *d, bool enable) {
     d->beeper_enabled = enable;
     if (!enable) {
         EXT_BEEPER_OFF();
     }
 }
 
-void beep_alert(data *d, int num_beeps, bool longbeep) {
+void beep_alert(Data *d, int num_beeps, bool longbeep) {
     if (!d->beeper_enabled) {
         return;
     }
@@ -226,14 +124,14 @@ void beep_alert(data *d, int num_beeps, bool longbeep) {
     }
 }
 
-void beep_off(data *d, bool force) {
+void beep_off(Data *d, bool force) {
     // don't mess with the beeper if we're in the process of doing a multi-beep
     if (force || (d->beep_num_left == 0)) {
         EXT_BEEPER_OFF();
     }
 }
 
-void beep_on(data *d, bool force) {
+void beep_on(Data *d, bool force) {
     if (!d->beeper_enabled) {
         return;
     }
@@ -243,7 +141,7 @@ void beep_on(data *d, bool force) {
     }
 }
 
-static void reconfigure(data *d) {
+static void reconfigure(Data *d) {
     d->startup_step_size = d->float_conf.startup_speed / d->float_conf.hertz;
     d->noseangling_step_size = d->float_conf.noseangling_speed / d->float_conf.hertz;
     d->startup_pitch_trickmargin = d->float_conf.startup_dirtylandings_enabled ? 10 : 0;
@@ -264,7 +162,7 @@ static void reconfigure(data *d) {
     time_refresh_idle(&d->time);
 }
 
-static void configure(data *d) {
+static void configure(Data *d) {
     state_init(&d->state, d->float_conf.disabled);
 
     lcm_configure(&d->lcm, &d->float_conf.leds);
@@ -342,7 +240,7 @@ static void leds_headlights_switch(CfgLeds *cfg_leds, LcmData *lcm, bool headlig
     lcm_configure(lcm, cfg_leds);
 }
 
-static void reset_runtime_vars(data *d) {
+static void reset_runtime_vars(Data *d) {
     motor_data_reset(&d->motor);
     atr_reset(&d->atr);
     brake_tilt_reset(&d->brake_tilt);
@@ -368,7 +266,7 @@ static void reset_runtime_vars(data *d) {
     d->rc_current = 0;
 }
 
-static void engage(data *d) {
+static void engage(Data *d) {
     reset_runtime_vars(d);
     d->motor_control.click_counter = 3;
 
@@ -376,7 +274,7 @@ static void engage(data *d) {
     timer_refresh(&d->time, &d->time.engage_timer);
 }
 
-static void check_odometer(data *d) {
+static void check_odometer(Data *d) {
     // Make odometer persistent if we've gone 200m or more
     if (d->odometer_dirty) {
         if (VESC_IF->mc_get_odometer() > d->odometer + 200) {
@@ -390,7 +288,7 @@ static void check_odometer(data *d) {
 /**
  *  do_rc_move: perform motor movement while board is idle
  */
-static void do_rc_move(data *d) {
+static void do_rc_move(Data *d) {
     if (d->rc_steps > 0) {
         d->rc_current = d->rc_current * 0.95 + d->rc_current_target * 0.05;
         if (d->motor.abs_erpm > 800) {
@@ -420,7 +318,7 @@ static void do_rc_move(data *d) {
     }
 }
 
-static float get_setpoint_adjustment_step_size(data *d) {
+static float get_setpoint_adjustment_step_size(Data *d) {
     switch (d->state.sat) {
     case (SAT_NONE):
         return d->tiltback_return_step_size;
@@ -440,7 +338,7 @@ static float get_setpoint_adjustment_step_size(data *d) {
     }
 }
 
-bool can_engage(const data *d) {
+bool can_engage(const Data *d) {
     if (d->state.charging) {
         return false;
     }
@@ -469,7 +367,7 @@ bool can_engage(const data *d) {
 
 // Fault checking order does not really matter. From a UX perspective, switch should be before
 // angle.
-static bool check_faults(data *d) {
+static bool check_faults(Data *d) {
     // Aggressive reverse stop in case the board runs off when upside down
     if (d->state.darkride) {
         if (d->motor.erpm > 1000) {
@@ -621,7 +519,7 @@ static bool check_faults(data *d) {
     return false;
 }
 
-static void calculate_setpoint_target(data *d) {
+static void calculate_setpoint_target(Data *d) {
     if (d->motor.batt_voltage < d->float_conf.tiltback_hv) {
         timer_refresh(&d->time, &d->tb_highvoltage_timer);
     }
@@ -803,7 +701,7 @@ static void calculate_setpoint_target(data *d) {
     }
 }
 
-static void apply_noseangling(data *d) {
+static void apply_noseangling(Data *d) {
     // Variable Tiltback: looks at ERPM from the reference point of the set minimum ERPM
     float variable_erpm = clampf(
         d->motor.abs_erpm - d->float_conf.tiltback_variable_erpm, 0, d->tiltback_variable_max_erpm
@@ -820,12 +718,12 @@ static void apply_noseangling(data *d) {
 static void imu_ref_callback(float *acc, float *gyro, float *mag, float dt) {
     unused(mag);
 
-    data *d = (data *) ARG;
+    Data *d = (Data *) ARG;
     balance_filter_update(&d->balance_filter, gyro, acc, dt);
 }
 
 static void refloat_thd(void *arg) {
-    data *d = (data *) arg;
+    Data *d = (Data *) arg;
 
     configure(d);
 
@@ -1097,7 +995,7 @@ static void refloat_thd(void *arg) {
     }
 }
 
-static void write_cfg_to_eeprom(data *d) {
+static void write_cfg_to_eeprom(Data *d) {
     uint32_t ints = sizeof(RefloatConfig) / 4 + 1;
     uint32_t *buffer = VESC_IF->malloc(ints * sizeof(uint32_t));
     if (!buffer) {
@@ -1131,7 +1029,7 @@ static void write_cfg_to_eeprom(data *d) {
 }
 
 static void led_thd(void *arg) {
-    data *d = (data *) arg;
+    Data *d = (Data *) arg;
 
     while (!VESC_IF->should_terminate()) {
         leds_update(&d->leds, &d->state, d->footpad.state);
@@ -1175,8 +1073,8 @@ static void read_cfg_from_eeprom(RefloatConfig *config) {
     VESC_IF->free(buffer);
 }
 
-static void data_init(data *d) {
-    memset(d, 0, sizeof(data));
+static void data_init(Data *d) {
+    memset(d, 0, sizeof(Data));
 
     read_cfg_from_eeprom(&d->float_conf);
 
@@ -1191,7 +1089,7 @@ static void data_init(data *d) {
 }
 
 static float app_get_debug(int index) {
-    data *d = (data *) ARG;
+    Data *d = (Data *) ARG;
 
     switch (index) {
     case (1):
@@ -1243,7 +1141,7 @@ enum {
     COMMAND_LIGHTS_CONTROL = 202,
 } Commands;
 
-static void send_realtime_data(data *d) {
+static void send_realtime_data(Data *d) {
     static const int bufsize = 72;
     uint8_t buffer[bufsize];
     int32_t ind = 0;
@@ -1289,7 +1187,7 @@ static void send_realtime_data(data *d) {
     SEND_APP_DATA(buffer, bufsize, ind);
 }
 
-static void cmd_send_all_data(data *d, unsigned char mode) {
+static void cmd_send_all_data(Data *d, unsigned char mode) {
     static const int bufsize = 60;
     uint8_t buffer[bufsize];
     int32_t ind = 0;
@@ -1383,11 +1281,11 @@ static void split(unsigned char byte, int *h1, int *h2) {
     *h2 = byte >> 4;
 }
 
-static void cmd_print_info(data *d) {
+static void cmd_print_info(Data *d) {
     unused(d);
 }
 
-static void cmd_lock(data *d, unsigned char *cfg) {
+static void cmd_lock(Data *d, unsigned char *cfg) {
     if (d->state.state < STATE_RUNNING) {
         // restore config before locking to avoid accidentally writing temporary changes
         read_cfg_from_eeprom(&d->float_conf);
@@ -1397,7 +1295,7 @@ static void cmd_lock(data *d, unsigned char *cfg) {
     }
 }
 
-static void cmd_handtest(data *d, unsigned char *cfg) {
+static void cmd_handtest(Data *d, unsigned char *cfg) {
     if (d->state.state != STATE_READY) {
         return;
     }
@@ -1431,12 +1329,12 @@ static void cmd_handtest(data *d, unsigned char *cfg) {
     }
 }
 
-static void cmd_experiment(data *d, unsigned char *cfg) {
+static void cmd_experiment(Data *d, unsigned char *cfg) {
     unused(d);
     unused(cfg);
 }
 
-static void cmd_booster(data *d, unsigned char *cfg) {
+static void cmd_booster(Data *d, unsigned char *cfg) {
     int h1, h2;
     split(cfg[0], &h1, &h2);
     d->float_conf.booster_angle = h1 + 5;
@@ -1466,7 +1364,7 @@ static void cmd_booster(data *d, unsigned char *cfg) {
 /**
  * cmd_runtime_tune		Extract tune info from 20byte message but don't write to EEPROM!
  */
-static void cmd_runtime_tune(data *d, unsigned char *cfg, int len) {
+static void cmd_runtime_tune(Data *d, unsigned char *cfg, int len) {
     int h1, h2;
     if (len >= 12) {
         split(cfg[0], &h1, &h2);
@@ -1581,7 +1479,7 @@ static void cmd_runtime_tune(data *d, unsigned char *cfg, int len) {
     reconfigure(d);
 }
 
-static void cmd_tune_defaults(data *d) {
+static void cmd_tune_defaults(Data *d) {
     d->float_conf.kp = CFG_DFLT_KP;
     d->float_conf.kp2 = CFG_DFLT_KP2;
     d->float_conf.ki = CFG_DFLT_KI;
@@ -1641,7 +1539,7 @@ static void cmd_tune_defaults(data *d) {
 /**
  * cmd_runtime_tune_tilt: Extract settings from 20byte message but don't write to EEPROM!
  */
-static void cmd_runtime_tune_tilt(data *d, unsigned char *cfg, int len) {
+static void cmd_runtime_tune_tilt(Data *d, unsigned char *cfg, int len) {
     unused(len);
     unsigned int flags = cfg[0];
     bool duty_beep = flags & 0x1;
@@ -1662,7 +1560,7 @@ static void cmd_runtime_tune_tilt(data *d, unsigned char *cfg, int len) {
  * cmd_runtime_tune_other		Extract settings from 20byte message but don't write to
  * EEPROM!
  */
-static void cmd_runtime_tune_other(data *d, unsigned char *cfg, int len) {
+static void cmd_runtime_tune_other(Data *d, unsigned char *cfg, int len) {
     unsigned int flags = cfg[0];
     d->beeper_enabled = ((flags & 0x2) == 2);
     d->float_conf.fault_reversestop_enabled = ((flags & 0x4) == 4);
@@ -1720,7 +1618,7 @@ static void cmd_runtime_tune_other(data *d, unsigned char *cfg, int len) {
     reconfigure(d);
 }
 
-void cmd_rc_move(data *d, unsigned char *cfg) {
+void cmd_rc_move(Data *d, unsigned char *cfg) {
     int ind = 0;
     int direction = cfg[ind++];
     int current = cfg[ind++];
@@ -1748,7 +1646,7 @@ void cmd_rc_move(data *d, unsigned char *cfg) {
     }
 }
 
-static void cmd_flywheel_toggle(data *d, unsigned char *cfg, int len) {
+static void cmd_flywheel_toggle(Data *d, unsigned char *cfg, int len) {
     if ((cfg[0] & 0x80) == 0) {
         return;
     }
@@ -1862,14 +1760,14 @@ static void cmd_flywheel_toggle(data *d, unsigned char *cfg, int len) {
     }
 }
 
-void flywheel_stop(data *d) {
+void flywheel_stop(Data *d) {
     beep_on(d, 1);
     d->state.mode = MODE_NORMAL;
     read_cfg_from_eeprom(&d->float_conf);
     configure(d);
 }
 
-static void send_realtime_data2(data *d) {
+static void send_realtime_data2(Data *d) {
     static const int bufsize = 75;
     uint8_t buffer[bufsize];
     int32_t ind = 0;
@@ -1967,7 +1865,7 @@ static void lights_control_response(const CfgLeds *leds) {
 
 // Handler for incoming app commands
 static void on_command_received(unsigned char *buffer, unsigned int len) {
-    data *d = (data *) ARG;
+    Data *d = (Data *) ARG;
     uint8_t magicnr = buffer[0];
     uint8_t command = buffer[1];
 
@@ -2133,7 +2031,7 @@ static lbm_value ext_dbg(lbm_value *args, lbm_uint argn) {
 
 // Called from Lisp on init to pass in the version info of the firmware
 static lbm_value ext_set_fw_version(lbm_value *args, lbm_uint argn) {
-    data *d = (data *) ARG;
+    Data *d = (Data *) ARG;
     if (argn > 2) {
         d->fw_version_major = VESC_IF->lbm_dec_as_i32(args[0]);
         d->fw_version_minor = VESC_IF->lbm_dec_as_i32(args[1]);
@@ -2144,7 +2042,7 @@ static lbm_value ext_set_fw_version(lbm_value *args, lbm_uint argn) {
 
 // Used to send the current or default configuration to VESC Tool.
 static int get_cfg(uint8_t *buffer, bool is_default) {
-    data *d = (data *) ARG;
+    Data *d = (Data *) ARG;
 
     RefloatConfig *cfg;
     if (is_default) {
@@ -2169,7 +2067,7 @@ static int get_cfg(uint8_t *buffer, bool is_default) {
 
 // Used to set and write configuration from VESC Tool.
 static bool set_cfg(uint8_t *buffer) {
-    data *d = (data *) ARG;
+    Data *d = (Data *) ARG;
 
     // don't let users use the Refloat Cfg "write" button in special modes
     if (d->state.mode != MODE_NORMAL) {
@@ -2199,7 +2097,7 @@ static int get_cfg_xml(uint8_t **buffer) {
 
 // Called when code is stopped
 static void stop(void *arg) {
-    data *d = (data *) arg;
+    Data *d = (Data *) arg;
     VESC_IF->imu_set_read_callback(NULL);
     VESC_IF->set_app_data_handler(NULL);
     VESC_IF->conf_custom_clear_configs();
@@ -2218,7 +2116,7 @@ INIT_FUN(lib_info *info) {
     INIT_START
     log_msg("Initializing Refloat v" PACKAGE_VERSION);
 
-    data *d = VESC_IF->malloc(sizeof(data));
+    Data *d = VESC_IF->malloc(sizeof(Data));
     if (!d) {
         log_error("Out of memory, startup failed.");
         return false;
