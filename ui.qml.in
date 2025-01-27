@@ -317,7 +317,7 @@ Item {
         id: commands
         target: vescCommands
 
-        readonly property int c_GET_INFO: 0
+        readonly property int c_INFO: 0
         readonly property int c_RC_MOVE: 7
         readonly property int c_HANDTEST: 13
         readonly property int c_FLYWHEEL: 22
@@ -353,7 +353,10 @@ Item {
         }
 
         function sendGetInfo() {
-            vescCommands.sendCustomAppData(createData(2, c_GET_INFO).buffer);
+            var data = createData(4, c_INFO);
+
+            data.setUint8(2, 2); // version 2 of the INFO command
+            vescCommands.sendCustomAppData(data.buffer);
         }
 
         function sendGetRtData() {
@@ -454,8 +457,13 @@ Item {
 
             var msgtype = dv.getUint8(ind++);
 
-            if (msgtype == c_GET_INFO) {
-                ind += 2;
+            if (msgtype == c_INFO) {
+                ind += 1;  // skip version, should always be the current one
+                ind += 1;  // flags
+                ind += 19;  // 3 version numbers + 16 bytes of suffix
+                ind += 4;  // tick rate
+                ind += 4;  // capabilities
+
                 var led_type = dv.getUint8(ind++);
                 if (led_type > 0) {
                     lights.enabled = true;

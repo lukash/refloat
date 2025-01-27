@@ -1121,7 +1121,7 @@ static float app_get_debug(int index) {
 // LcmCommands in lcm.h
 // ChargingCommands in charging.h
 enum {
-    COMMAND_GET_INFO = 0,  // get version / package info
+    COMMAND_INFO = 0,  // get version / package info
     COMMAND_GET_RTDATA = 1,  // get rt data
     COMMAND_RT_TUNE = 2,  // runtime tuning (don't write to eeprom)
     COMMAND_TUNE_DEFAULTS = 3,  // set tune to defaults (no eeprom)
@@ -1865,6 +1865,67 @@ static void lights_control_response(const CfgLeds *leds) {
     SEND_APP_DATA(buffer, bufsize, ind);
 }
 
+static void cmd_info(const Data *d, unsigned char *buf, int len) {
+    static const int bufsize = 7 + 16 + 9;
+    uint8_t version = 1;
+    int32_t i = 0;
+
+    if (len > 0) {
+        version = buf[i++];
+    }
+
+    int32_t ind = 0;
+    uint8_t send_buffer[bufsize];
+    send_buffer[ind++] = 101;  // Package ID
+    send_buffer[ind++] = COMMAND_INFO;
+
+    switch (version) {
+    case 1:
+        send_buffer[ind++] = MAJOR_VERSION * 10 + MINOR_VERSION;
+        send_buffer[ind++] = 1;  // build number
+        // Send the full type here. This is redundant with cmd_light_info. It
+        // likely shouldn't be here, as the type can be reconfigured and the
+        // app would need to reconnect to pick up the change from this command.
+        send_buffer[ind++] = d->float_conf.hardware.leds.type;
+        break;
+    case 2:
+    // in case of unknown version, respond with the highest one that we know
+    default: {
+        uint8_t flags = 0;
+        if (version == 2 && len > 1) {
+            flags = buf[i++];
+        }
+
+        send_buffer[ind++] = 2;  // actual COMMAND_INFO version
+        send_buffer[ind++] = flags;  // the flags repeated in the response
+        send_buffer[ind++] = MAJOR_VERSION;
+        send_buffer[ind++] = MINOR_VERSION;
+        send_buffer[ind++] = PATCH_VERSION;
+
+        size_t i = 0;
+        for (; i < sizeof(VERSION_SUFFIX); ++i) {
+            if (i >= 16) {
+                break;
+            }
+            send_buffer[ind++] = VERSION_SUFFIX[i];
+        }
+        for (; i < 16; ++i) {
+            send_buffer[ind++] = '\0';
+        }
+
+        buffer_append_uint32(send_buffer, SYSTEM_TICK_RATE_HZ, &ind);
+        buffer_append_uint32(send_buffer, 0x0, &ind);  // capabilities
+
+        // Send the full type here. This is redundant with cmd_light_info. It
+        // likely shouldn't be here, as the type can be reconfigured and the
+        // app would need to reconnect to pick up the change from this command.
+        send_buffer[ind++] = d->float_conf.hardware.leds.type;
+    }
+    }
+
+    SEND_APP_DATA(send_buffer, bufsize, ind);
+}
+
 // Handler for incoming app commands
 static void on_command_received(unsigned char *buffer, unsigned int len) {
     Data *d = (Data *) ARG;
@@ -1881,19 +1942,8 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
     }
 
     switch (command) {
-    case COMMAND_GET_INFO: {
-        int32_t ind = 0;
-        uint8_t send_buffer[10];
-        send_buffer[ind++] = 101;  // magic nr.
-        send_buffer[ind++] = 0x0;  // command ID
-        send_buffer[ind++] = MAJOR_VERSION * 10 + MINOR_VERSION;
-        send_buffer[ind++] = 1;  // build number
-        // Send the full type here. This is redundant with cmd_light_info. It
-        // likely shouldn't be here, as the type can be reconfigured and the
-        // app would need to reconnect to pick up the change from this command.
-        send_buffer[ind++] = d->float_conf.hardware.leds.type;
-        buffer_append_uint32(send_buffer, SYSTEM_TICK_RATE_HZ, &ind);
-        VESC_IF->send_app_data(send_buffer, ind);
+    case COMMAND_INFO: {
+        cmd_info(d, &buffer[2], len - 2);
         return;
     }
     case COMMAND_GET_RTDATA: {
