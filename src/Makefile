@@ -32,9 +32,16 @@ $(CONF_GEN_FILES) &: conf/settings.xml
 	sed -i "s/^uint8_t data_/__attribute__((used)) uint8_t data_/g" conf/confxml.c
 
 VERSION=`cat ../version`
-MAJOR_MINOR=`cat ../version | cut -d. -f"1 2"`
+MAJOR=`cat ../version | cut -d. -f1`
+MINOR=`cat ../version | cut -d. -f2`
+PATCH=`cat ../version | cut -d. -f3 | cut -d- -f1`
+SUFFIX=`cat ../version | cut -d. -f3 | cut -d- -f2-`
 
 conf/conf_general.h: conf/conf_general.h.in ../version
-	cat $< | sed "s/{{VERSION}}/${VERSION}/g" | sed "s/{{MAJOR_MINOR}}/${MAJOR_MINOR}/g" > $@
+	cat $< | sed "s/{{VERSION}}/${VERSION}/g" | \
+	sed "s/{{MAJOR_VERSION}}/${MAJOR}/g" | \
+	sed "s/{{MINOR_VERSION}}/${MINOR}/g" | \
+	sed "s/{{PATCH_VERSION}}/${PATCH}/g" | \
+	sed "s/{{VERSION_SUFFIX}}/${SUFFIX}/g" > $@
 
 -include $(DEPS)

@@ -1884,7 +1884,7 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
         uint8_t send_buffer[10];
         send_buffer[ind++] = 101;  // magic nr.
         send_buffer[ind++] = 0x0;  // command ID
-        send_buffer[ind++] = (uint8_t) (10 * PACKAGE_MAJOR_MINOR_VERSION);
+        send_buffer[ind++] = MAJOR_VERSION * 10 + MINOR_VERSION;
         send_buffer[ind++] = 1;  // build number
         // Send the full type here. This is redundant with cmd_light_info. It
         // likely shouldn't be here, as the type can be reconfigured and the
