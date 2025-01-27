@@ -24,3 +24,4 @@ All commands on the VESC bus are checksummed (so they shouldn't get mangled). In
 In the commands' documentation, the first two bytes with `package_interface_id` and `command_id` are omitted, so while their offsets start at 0, in the full message their data are always preceded by them.
 
 - [INFO](INFO.md)
+- [REALTIME_DATA](REALTIME_DATA.md)

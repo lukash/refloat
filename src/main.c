@@ -34,6 +34,7 @@
 #include "motor_data.h"
 #include "pid.h"
 #include "remote.h"
+#include "rt_data.h"
 #include "state.h"
 #include "time.h"
 #include "torque_tilt.h"
@@ -1137,9 +1138,9 @@ enum {
     COMMAND_HANDTEST = 13,
     COMMAND_TUNE_TILT = 14,
     COMMAND_FLYWHEEL = 22,
+    COMMAND_REALTIME_DATA = 31,
 
     // commands above 200 are unstable and can change protocol at any time
-    COMMAND_GET_RTDATA_2 = 201,
     COMMAND_LIGHTS_CONTROL = 202,
 } Commands;
 
@@ -1769,13 +1770,13 @@ void flywheel_stop(Data *d) {
     configure(d);
 }
 
-static void send_realtime_data2(Data *d) {
+static void cmd_realtime_data(Data *d) {
     static const int bufsize = 75;
     uint8_t buffer[bufsize];
     int32_t ind = 0;
 
     buffer[ind++] = 101;  // Package ID
-    buffer[ind++] = COMMAND_GET_RTDATA_2;
+    buffer[ind++] = COMMAND_REALTIME_DATA;
 
     // mask indicates what groups of data are sent, to prevent sending data
     // that are not useful in a given state
@@ -1799,34 +1800,17 @@ static void send_realtime_data2(Data *d) {
 
     buffer[ind++] = d->beep_reason;
 
-    buffer_append_float32_auto(buffer, d->imu.pitch, &ind);
-    buffer_append_float32_auto(buffer, d->imu.balance_pitch, &ind);
-    buffer_append_float32_auto(buffer, d->imu.roll, &ind);
-
-    buffer_append_float32_auto(buffer, d->footpad.adc1, &ind);
-    buffer_append_float32_auto(buffer, d->footpad.adc2, &ind);
-    buffer_append_float32_auto(buffer, d->remote.input, &ind);
+#define WRITE_VALUE(id) buffer_append_float16_auto(buffer, d->id, &ind);
+    VISIT(RT_DATA_ITEMS, WRITE_VALUE);
 
     if (d->state.state == STATE_RUNNING) {
-        // Setpoints
-        buffer_append_float32_auto(buffer, d->setpoint, &ind);
-        buffer_append_float32_auto(buffer, d->atr.setpoint, &ind);
-        buffer_append_float32_auto(buffer, d->brake_tilt.setpoint, &ind);
-        buffer_append_float32_auto(buffer, d->torque_tilt.setpoint, &ind);
-        buffer_append_float32_auto(buffer, d->turn_tilt.setpoint, &ind);
-        buffer_append_float32_auto(buffer, d->inputtilt_interpolated, &ind);
-
-        // DEBUG
-        buffer_append_float32_auto(buffer, d->balance_current, &ind);
-        buffer_append_float32_auto(buffer, d->motor.filt_current, &ind);
-        buffer_append_float32_auto(buffer, d->atr.accel_diff, &ind);
-        buffer_append_float32_auto(buffer, d->atr.speed_boost, &ind);
-        buffer_append_float32_auto(buffer, d->booster.current, &ind);
+        VISIT(RT_DATA_RUNTIME_ITEMS, WRITE_VALUE);
     }
+#undef WRITE_VALUE
 
     if (d->state.charging) {
-        buffer_append_float32_auto(buffer, d->charging.current, &ind);
-        buffer_append_float32_auto(buffer, d->charging.voltage, &ind);
+        buffer_append_float16_auto(buffer, d->charging.current, &ind);
+        buffer_append_float16_auto(buffer, d->charging.voltage, &ind);
     }
 
     SEND_APP_DATA(buffer, bufsize, ind);
@@ -1866,7 +1850,8 @@ static void lights_control_response(const CfgLeds *leds) {
 }
 
 static void cmd_info(const Data *d, unsigned char *buf, int len) {
-    static const int bufsize = 7 + 16 + 9;
+    static const int bufsize =
+        7 + 16 + 9 + 2 + ITEMS_IDS_SIZE(RT_DATA_ITEMS) + ITEMS_IDS_SIZE(RT_DATA_RUNTIME_ITEMS);
     uint8_t version = 1;
     int32_t i = 0;
 
@@ -1920,6 +1905,26 @@ static void cmd_info(const Data *d, unsigned char *buf, int len) {
         // likely shouldn't be here, as the type can be reconfigured and the
         // app would need to reconnect to pick up the change from this command.
         send_buffer[ind++] = d->float_conf.hardware.leds.type;
+
+        if (flags & 0x1) {  // Flag: append_rt_data_ids
+#define ADD_ID(id) buffer_append_string(send_buffer, #id, &ind);
+            // Append the string ids of the realtime data items (sent via the
+            // COMMAND_REALTIME_DATA command). The format is:
+            // IDS_COUNT (1B)
+            // [
+            //   ID_LENTGTH (1B)
+            //   [ID_CHARS] (number of chars equal to ID_LENGTH, terminal null omitted)
+            // ] (ids one after another, times IDS_COUNT)
+            //
+            // The pattern is repeated twice, the first set of ids is realtime data
+            // that is always sent, the second set of ids is realtime _runtime_
+            // data, only sent when the board is engaged.
+            send_buffer[ind++] = ITEMS_COUNT(RT_DATA_ITEMS);
+            VISIT(RT_DATA_ITEMS, ADD_ID);
+            send_buffer[ind++] = ITEMS_COUNT(RT_DATA_RUNTIME_ITEMS);
+            VISIT(RT_DATA_RUNTIME_ITEMS, ADD_ID);
+#undef ADD_ID
+        }
     }
     }
 
@@ -2055,8 +2060,8 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
         charging_state_request(&d->charging, &buffer[2], len - 2, &d->state);
         return;
     }
-    case COMMAND_GET_RTDATA_2: {
-        send_realtime_data2(d);
+    case COMMAND_REALTIME_DATA: {
+        cmd_realtime_data(d);
         return;
     }
     case COMMAND_LIGHTS_CONTROL: {

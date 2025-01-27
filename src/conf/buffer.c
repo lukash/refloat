@@ -144,6 +144,17 @@ void buffer_append_float16_auto(uint8_t *buffer, float number, int32_t *index) {
     buffer_append_uint16(buffer, to_float16(number), index);
 }
 
+void buffer_append_string(uint8_t *buffer, const char *str, int32_t *index) {
+    int32_t idx = *index + 1;
+    size_t i = 0;
+    while (str[i] != '\0') {
+        buffer[idx++] = str[i++];
+    }
+
+    buffer[*index] = i;
+    *index = idx;
+}
+
 int16_t buffer_get_int16(const uint8_t *buffer, int32_t *index) {
     int16_t res = ((uint16_t) buffer[*index]) << 8 | ((uint16_t) buffer[*index + 1]);
     *index += 2;

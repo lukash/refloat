@@ -34,16 +34,23 @@ Item {
 
     property Commands vescCommands: VescIf.commands()
 
+    function round(num) {
+        if (num != num) {
+            return "--";
+        }
+        return Math.round(num);
+    }
+
     // Used to fix the float negative zero problem where applicable
     function toFixed1Zero(num) {
-        if (num == null || Number.isNaN(num)) {
+        if (num != num) {
             return "-.-";
         }
         return num.toFixed(1).replace("-0.0", "0.0");
     }
 
     function toFixed2Zero(num) {
-        if (num == null || Number.isNaN(num)) {
+        if (num != num) {
             return "-.--";
         }
         return num.toFixed(2).replace("-0.00", "0.00");
@@ -321,7 +328,7 @@ Item {
         readonly property int c_RC_MOVE: 7
         readonly property int c_HANDTEST: 13
         readonly property int c_FLYWHEEL: 22
-        readonly property int c_GET_RT_DATA_2: 201
+        readonly property int c_REALTIME_DATA: 31
         readonly property int c_LIGHTS_CONTROL: 202
 
         property bool infoReceived: false
@@ -344,6 +351,26 @@ Item {
             return new Float32Array(new Uint32Array([r]).buffer)[0];
         }
 
+        function getString(dataView, ind) {
+            var str = "";
+            var size = dataView.getUint8(ind++);
+            for (var j = 0; j < size; j++) {
+                str += String.fromCharCode(dataView.getUint8(ind++));
+            }
+            return [str, ind];
+        }
+
+        function getStrings(dataView, ind) {
+            var num = dataView.getUint8(ind++);
+            var strs = [];
+            for (var i = 0; i < num; i++) {
+                var str;
+                [str, ind] = getString(dataView, ind);
+                strs.push(str);
+            }
+            return [strs, ind];
+        }
+
         function createData(size, command) {
             var data = new DataView(new ArrayBuffer(size));
             var ind = 0;
@@ -356,11 +383,12 @@ Item {
             var data = createData(4, c_INFO);
 
             data.setUint8(2, 2); // version 2 of the INFO command
+            data.setUint8(3, 0x1); // 0x1 = include runtime data ids
             vescCommands.sendCustomAppData(data.buffer);
         }
 
         function sendGetRtData() {
-            vescCommands.sendCustomAppData(createData(2, c_GET_RT_DATA_2).buffer);
+            vescCommands.sendCustomAppData(createData(2, c_REALTIME_DATA).buffer);
         }
 
         function sendLightsControl(on, headlightsOn) {
@@ -427,22 +455,12 @@ Item {
             fault = fault.replace("FAULT_CODE_", "");
             state.vescFault = fault != "NONE" ? fault : "";
 
-            batteryBar.voltage = values.v_in;
             batteryBar.value = values.battery_level * 100;
 
-            var speed = Math.abs(values.speed * 3.6 * vescConfig.imperialFactor);
-            speedDial.value = speed;
-            speedDial.erpm = Math.abs(values.rpm);
-
-            currentDial.value = values.current_motor;
-            dutyDial.value = Math.abs(values.duty_now * 100);
-            batteryCurrent.value = values.current_in;
-
-            motorTemp.value = values.temp_motor;
-            controllerTemp.value = values.temp_mos;
             odometer.value = values.odometer * 0.001 * vescConfig.imperialFactor;
             tachometer.value = values.tachometer_abs * 0.001 * vescConfig.imperialFactor;
 
+            var speed = Math.abs(values.speed * 3.6 * vescConfig.imperialFactor);
             consumption.add(Math.max(Math.min(values.current_in * values.v_in / Math.max(speed, 1e-6), 60) , -60));
         }
 
@@ -459,7 +477,7 @@ Item {
 
             if (msgtype == c_INFO) {
                 ind += 1;  // skip version, should always be the current one
-                ind += 1;  // flags
+                var flags = dv.getUint8(ind++);
                 ind += 19;  // 3 version numbers + 16 bytes of suffix
                 ind += 4;  // tick rate
                 ind += 4;  // capabilities
@@ -471,12 +489,21 @@ Item {
                         lights.lcm = true;
                     }
                 }
+
+                if (flags & 0x1) {
+                    // Read the realtime data ids
+                    // These identify, in order, the data that are received via the REALTIME_DATA command
+                    [state.rtDataIdleItems, ind] = getStrings(dv, ind);
+                    [state.rtDataRuntimeItems, ind] = getStrings(dv, ind);
+                    state.rtDataAllItems = state.rtDataIdleItems.concat(state.rtDataRuntimeItems);
+                }
+
                 commands.infoReceived = true;
             } else if (msgtype == c_LIGHTS_CONTROL) {
                 var values = dv.getUint8(ind++);
                 lights.on = values & 0b01;
                 lights.headlightsOn = values & 0b10;
-            } else if (msgtype === c_GET_RT_DATA_2) {
+            } else if (msgtype === c_REALTIME_DATA) {
                 var mask = dv.getUint8(ind++);
                 var hasRuntime = !!(mask & 0x1);
                 var hasCharging = !!(mask & 0x2);
@@ -497,13 +524,22 @@ Item {
 
                 state.beepReason = dv.getUint8(ind++);
 
-                var newRt = Array(state.rtDataItems.length).fill(NaN);
+                var rtDataIdleIts = state.rtDataIdleItems;
+                var rtDataAllIts = state.rtDataAllItems;
+                var newRt = Array(rtDataAllIts.length).fill(NaN);
 
                 // if runtime values are not in the message, limit the loop to
                 // read only values that are always present
-                for (var i = 0; i < (hasRuntime ? newRt.length : 5); i++) {
-                    newRt[i] = dv.getFloat32(ind);
-                    ind += 4;
+                var i = 0;
+                for (; i < rtDataIdleIts.length; i++) {
+                    newRt[i] = getFloat16(dv, ind);
+                    ind += 2;
+                }
+                if (hasRuntime) {
+                    for (; i < rtDataAllIts.length; i++) {
+                        newRt[i] = getFloat16(dv, ind);
+                        ind += 2;
+                    }
                 }
 
                 state.rtData = state.newRtData(newRt);
@@ -928,31 +964,24 @@ Item {
             }
         }
 
-        readonly property var rtDataItems: [
-            "pitch",
-            "balancePitch",
-            "roll",
-            "adc1Voltage",
-            "adc2Voltage",
-            "remoteInput",
-            "setpoint",
-            "atrSetpoint",
-            "brakeTiltSetpoint",
-            "torqueTiltSetpoint",
-            "turnTiltSetpoint",
-            "remoteTiltSetpoint",
-            "requestedCurrent",
-            "filteredCurrent",
-            "atrAccDiff",
-            "atrSpeedBoost",
-            "boosterCurrent",
-        ]
+        property var rtDataIdleItems: []
+        property var rtDataRuntimeItems: []
+        property var rtDataAllItems: []
 
-        property var rtData: newRtData(Array(rtDataItems.length).fill(NaN));
+        property var rtData: newRtData();
 
         function newRtData(values) {
-            var newData = {};
-            var names = rtDataItems;
+            let newData = new Proxy({}, {
+                get: function(target, name) {
+                    return target.hasOwnProperty(name) ? target[name] : NaN;
+                }
+            });
+
+            if (!values) {
+                return newData;
+            }
+
+            var names = rtDataAllItems;
             for (var i = 0; i < names.length; i++) {
                 newData[names[i]] = values[i];
             }
@@ -1200,7 +1229,7 @@ Item {
 
             font.pixelSize: valueFontSize
             horizontalAlignment: Text.AlignHCenter
-            text: Math.round(parent.value)
+            text: round(parent.value)
         }
 
         DText {
@@ -1221,7 +1250,7 @@ Item {
             visible: !allowNegative && topAngle > 0
             z: 4
             font.pixelSize: fontSizeSmall
-            text: topValue.toFixed(1)
+            text: toFixed1Zero(topValue)
         }
     }
 
@@ -2042,7 +2071,7 @@ Item {
 
                 color: Utility.getAppHexColor("lightBackground")
 
-                property real voltage: 0
+                property real voltage: state.rtData["motor.batt_voltage"]
                 property int value: 0
 
                 Behavior on voltage {
@@ -2229,7 +2258,8 @@ Item {
                             valueFontSize: width * 0.18
                             lineWidth: 0.25 * unit
 
-                            property int erpm
+                            value: state.rtData["motor.speed"] * vescConfig.imperialFactor
+                            property int erpm: Math.abs(state.rtData["motor.erpm"])
 
                             Behavior on erpm {
                                 NumberAnimation {
@@ -2317,11 +2347,12 @@ Item {
                         }
 
                         Dial {
-                            id: currentDial
                             anchors.bottom: currentDialLabel.top
                             anchors.bottomMargin: -0.15 * unit
                             width: parent.height
                             height: width
+
+                            value: state.rtData["motor.current"]
 
                             allowNegative: true
                             minValue: motorConfig.currentMin;
@@ -2341,12 +2372,13 @@ Item {
                         }
 
                         Dial {
-                            id: dutyDial
                             anchors.bottom: currentDialLabel.top
                             anchors.bottomMargin: -0.15 * unit
                             anchors.right: parent.right
                             width: parent.height
                             height: width
+
+                            value: state.rtData["motor.duty_cycle"]
 
                             maxValue: 100
                             warnThresholdAbs: 80
@@ -2388,7 +2420,7 @@ Item {
                     Item {
                         id: batteryCurrent
 
-                        property var value: 0
+                        property var value: state.rtData["motor.batt_current"]
                         property var minValue: preferences.battCurrentLog ? -Math.log(-motorConfig.inCurrentMin + 1) : motorConfig.inCurrentMin
                         property var maxValue: preferences.battCurrentLog ? Math.log(motorConfig.inCurrentMax + 1) : motorConfig.inCurrentMax
 
@@ -2498,8 +2530,8 @@ Item {
                             width: parent.height
                             height: width
 
-                            property real leftVoltage: preferences.swapAdcs ? state.rtData.adc2Voltage : state.rtData.adc1Voltage
-                            property real rightVoltage: preferences.swapAdcs ? state.rtData.adc1Voltage : state.rtData.adc2Voltage
+                            property real leftVoltage: preferences.swapAdcs ? state.rtData["footpad.adc2"] : state.rtData["footpad.adc1"]
+                            property real rightVoltage: preferences.swapAdcs ? state.rtData["footpad.adc1"] : state.rtData["footpad.adc2"]
 
                             property real canvasWidth: width * 0.85
                             property real scale: canvasWidth / footpadPath.width
@@ -2608,7 +2640,7 @@ Item {
                                 anchors.horizontalCenterOffset: -footpadCanvas.width / 4
 
                                 font.pixelSize: fontSizeSmall
-                                text: "%1V".arg(parent.leftVoltage.toFixed(1))
+                                text: "%1V".arg(toFixed1Zero(parent.leftVoltage))
                             }
 
                             NText {
@@ -2618,7 +2650,7 @@ Item {
                                 anchors.horizontalCenterOffset: footpadCanvas.width / 4
 
                                 font.pixelSize: fontSizeSmall
-                                text: "%1V".arg(parent.rightVoltage.toFixed(1))
+                                text: "%1V".arg(toFixed1Zero(parent.rightVoltage))
                             }
                         }
 
@@ -2629,7 +2661,7 @@ Item {
                             width: parent.height
                             height: width
 
-                            property real value: state.rtData.roll
+                            property real value: state.rtData["imu.roll"]
                             onValueChanged: rollCanvas.requestPaint();
 
                             Behavior on value {
@@ -2690,9 +2722,9 @@ Item {
 
                         property real textWidth: 1.4 * unit
 
-                        property real pitchValue: state.rtData.pitch
-                        property real balancePitchValue: state.rtData.balancePitch
-                        property real setpointValue: state.rtData.setpoint
+                        property real pitchValue: state.rtData["imu.pitch"]
+                        property real balancePitchValue: state.rtData["imu.balance_pitch"]
+                        property real setpointValue: state.rtData["setpoint"]
 
                         property real runtimeOpacity: 0
 
@@ -2943,7 +2975,7 @@ Item {
                         color: !!warningThreshold && value > warningThreshold ? Utility.getAppHexColor("red") : Utility.getAppHexColor("lightText")
                         font.pixelSize: fontSizeNormal
                         horizontalAlignment: Text.AlignHCenter
-                        text: format.arg(value.toFixed(decimals))
+                        text: format.arg(toFixed1Zero(value))
                     }
                 }
 
@@ -2952,14 +2984,15 @@ Item {
                     labelText: "motor"
                     unit: "°C"
                     warningThreshold: motorConfig.tempMotorStart - preferences.tempWarningOffset
+                    value: state.rtData["motor.motor_temp"]
                 }
 
                 VerticalValue {
-                    id: controllerTemp
                     anchors.left: motorTemp.right
                     labelText: "controller"
                     unit: "°C"
                     warningThreshold: motorConfig.tempFetStart - preferences.tempWarningOffset
+                    value: state.rtData["motor.mosfet_temp"]
                 }
 
                 Item {
@@ -3461,12 +3494,12 @@ Item {
                             spacing: 5
                             clip: true
 
-                            Value {label: "Requested current"; unit: "A"; value: toFixed2Zero(state.rtData.requestedCurrent);}
-                            Value {label: "Torque (filt. current)"; unit: "A"; value: toFixed2Zero(state.rtData.filteredCurrent);}
-                            Value {label: "ATR Accel. diff."; value: toFixed2Zero(state.rtData.atrAccDiff);}
-                            Value {label: "ATR Speed Boost"; unit: "%"; value: Math.round(state.rtData.atrSpeedBoost * 100);}
-                            Value {label: "Booster current"; unit: "A"; value: toFixed2Zero(state.rtData.boosterCurrent);}
-                            Value {label: "Remote input"; unit: "%"; value: Math.round(state.rtData.remoteInput * 100);}
+                            Value {label: "Requested current"; unit: "A"; value: toFixed2Zero(state.rtData["balance_current"]);}
+                            Value {label: "Filtered current"; unit: "A"; value: toFixed2Zero(state.rtData["motor.filt_current"]);}
+                            Value {label: "ATR Accel. diff."; value: toFixed2Zero(state.rtData["atr.accel_diff"]);}
+                            Value {label: "ATR Speed Boost"; unit: "%"; value: Math.round(state.rtData["atr.speed_boost"] * 100);}
+                            Value {label: "Booster current"; unit: "A"; value: toFixed2Zero(state.rtData["booster.current"]);}
+                            Value {label: "Remote input"; unit: "%"; value: Math.round(state.rtData["remote.input"] * 100);}
                         }
 
                         Column {
@@ -3474,11 +3507,11 @@ Item {
                             spacing: 5
                             clip: true
 
-                            Value {label: "ATR setpoint"; unit: "°"; value: toFixed2Zero(state.rtData.atrSetpoint);}
-                            Value {label: "Brake Tilt setpoint"; unit: "°"; value: toFixed2Zero(state.rtData.brakeTiltSetpoint);}
-                            Value {label: "Torque Tilt setpoint"; unit: "°"; value: toFixed2Zero(state.rtData.torqueTiltSetpoint);}
-                            Value {label: "Turn Tilt setpoint"; unit: "°"; value: toFixed2Zero(state.rtData.turnTiltSetpoint);}
-                            Value {label: "Remote Tilt setpoint"; unit: "°"; value: toFixed2Zero(state.rtData.remoteTiltSetpoint);}
+                            Value {label: "ATR setpoint"; unit: "°"; value: toFixed2Zero(state.rtData["atr.setpoint"]);}
+                            Value {label: "Brake Tilt setpoint"; unit: "°"; value: toFixed2Zero(state.rtData["brake_tilt.setpoint"]);}
+                            Value {label: "Torque Tilt setpoint"; unit: "°"; value: toFixed2Zero(state.rtData["torque_tilt.setpoint"]);}
+                            Value {label: "Turn Tilt setpoint"; unit: "°"; value: toFixed2Zero(state.rtData["turn_tilt.setpoint"]);}
+                            Value {label: "Remote Tilt setpoint"; unit: "°"; value: toFixed2Zero(state.rtData["remote.setpoint"]);}
                         }
                     }
 
