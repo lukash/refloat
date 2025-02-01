@@ -1971,6 +1971,19 @@ Item {
                     }
                 }
             }
+
+//            FloatingToolButton {
+//                width: 0.8 * unit
+//                height: 0.8 * unit
+//
+//                iconPath: Path {
+//                    PathAngleArc {centerX: 25; centerY: 25; radiusX: 12; radiusY: 12; startAngle: 45; sweepAngle: 270;}
+//                }
+//
+//                onClicked: {
+//                    colorPreview.show();
+//                }
+//            }
         }
 
         Rectangle {
@@ -3846,6 +3859,101 @@ Item {
             }
         }
     }
+
+// Color Preview dialog with an overview of the colors. Uncomment this and the
+// FloatingToolButton that shows it to enable it.
+//    Rectangle {
+//        id: colorPreview
+//        anchors.fill: parent
+//        z: 100
+//        visible: false
+//
+//        color: "#0b0b0b"
+//
+//        property var cData: []
+//
+//        Component.onCompleted: {
+//            for (var i of plotSeriesMetaData) {
+//                cData.push([i[0], i[1]["color"]]);
+//            }
+//            for (var i of plotSeriesExtraColors) {
+//                cData.push(["", i]);
+//            }
+//            cData = cData;
+//        }
+//
+//        function show() {
+//            visible = true;
+//        }
+//
+//        FloatingToolButton {
+//            anchors.bottom: parent.bottom
+//            anchors.right: parent.right
+//            width: 0.6 * unit
+//            height: 0.6 * unit
+//
+//            iconPath: Path {
+//                PathSvg {path: "M 15 15 L 35 35 M 15 35 L 35 15"}
+//            }
+//
+//            onClicked: {
+//                parent.visible = false;
+//            }
+//        }
+//
+//        Grid {
+//            id: cpGrid
+//            anchors.fill: parent
+//            anchors.margins: 10
+//            columns: 2
+//            spacing: 5
+//            flow: Grid.TopToBottom
+//
+//            Repeater {
+//                model: colorPreview.cData
+//
+//                Item {
+//                    width: (cpGrid.width - cpGrid.spacing) / 2
+//                    height: (cpGrid.height - 24 * cpGrid.spacing) / 25
+//
+//                    Rectangle {
+//                        id: colRect
+//                        anchors.left: parent.left
+//                        anchors.top: parent.top
+//                        width: parent.height
+//                        height: parent.height
+//                        color: modelData[1]
+//                    }
+//
+//                    Rectangle {
+//                        anchors.left: colRect.right
+//                        anchors.bottom: colRect.bottom
+//                        anchors.margins: 2
+//                        width: parent.width - parent.height - 2
+//                        height: 1
+//                        color: modelData[1]
+//                    }
+//
+//                    NText {
+//                        anchors.left: colRect.right
+//                        anchors.top: colRect.top
+//                        anchors.leftMargin: 4
+//                        anchors.topMargin: 2
+//                        text: modelData[1]
+//                        font.pixelSize: fontSizeSuperSmall
+//                    }
+//
+//                    NText {
+//                        anchors.right: parent.right
+//                        anchors.top: colRect.top
+//                        anchors.topMargin: 2
+//                        text: modelData[0]
+//                        font.pixelSize: fontSizeSuperSmall
+//                    }
+//                }
+//            }
+//        }
+//    }
 
     OverlayPlot {
         id: recordedPlot
