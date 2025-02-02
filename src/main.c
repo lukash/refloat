@@ -1455,9 +1455,11 @@ static void refloat_thd(void *arg) {
             break;
         }
 
-        motor_control_apply(
-            &d->motor_control, d->motor.abs_erpm_smooth, d->state.state, d->current_time
-        );
+        if (d->state.state != STATE_DISABLED) {
+            motor_control_apply(
+                &d->motor_control, d->motor.abs_erpm_smooth, d->state.state, d->current_time
+            );
+        }
         VESC_IF->sleep_us(d->loop_time_us);
     }
 }
