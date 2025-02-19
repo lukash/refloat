@@ -1100,6 +1100,29 @@ Item {
         bgColor: Utility.getAppHexColor("normalBackground")
     }
 
+    component ToggleFloatingToolButton : FloatingToolButton {
+        property bool value: false
+
+        signal toggleTrue
+        signal toggleFalse
+
+        property Path trueIconPath
+        property Path falseIconPath
+        property Path trueFillIconPath
+        property Path falseFillIconPath
+
+        iconPath: value ? trueIconPath : falseIconPath
+        fillIconPath: value ? trueFillIconPath : falseFillIconPath
+
+        onClicked: {
+            if (value) {
+                toggleFalse();
+            } else {
+                toggleTrue();
+            }
+        }
+    }
+
     component Dial : Item {
         id: dial
 
