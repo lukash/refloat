@@ -1036,13 +1036,18 @@ Item {
         bottomInset: 0
 
         property Path iconPath
+        property Path fillIconPath
         property real iconSize: width * 0.7
         property color strokeColor: Utility.getAppHexColor("normalText")
+        property color fillColor: Utility.getAppHexColor("normalText")
         property color bgColor: Utility.getAppHexColor("darkBackground")
+
+        onIconPathChanged: iconCanvas.requestPaint()
+        onFillIconPathChanged: iconCanvas.requestPaint()
 
         contentItem: Item {
             Canvas {
-                id: downloadTuneArchiveCanvas
+                id: iconCanvas
                 anchors.centerIn: parent
                 implicitWidth: iconSize
                 implicitHeight: iconSize
@@ -1051,12 +1056,20 @@ Item {
                 onPaint: {
                     var context = getContext("2d");
                     context.reset();
-                    context.strokeStyle = button.strokeColor
-                    context.lineCap = "round";
-                    iconPath.scale = Qt.size(iconSize / 50, iconSize / 50)
-                    context.path = iconPath
-                    context.lineWidth = 2
-                    context.stroke()
+                    if (iconPath) {
+                        context.strokeStyle = button.strokeColor;
+                        context.lineCap = "round";
+                        iconPath.scale = Qt.size(iconSize / 50, iconSize / 50);
+                        context.path = iconPath;
+                        context.lineWidth = 2;
+                        context.stroke();
+                    }
+                    if (fillIconPath) {
+                        context.fillStyle = button.fillColor;
+                        fillIconPath.scale = Qt.size(iconSize / 50, iconSize / 50);
+                        context.path = fillIconPath;
+                        context.fill();
+                    }
                 }
             }
         }
