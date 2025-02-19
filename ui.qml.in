@@ -1041,6 +1041,7 @@ Item {
         property color strokeColor: Utility.getAppHexColor("normalText")
         property color fillColor: Utility.getAppHexColor("normalText")
         property color bgColor: Utility.getAppHexColor("darkBackground")
+        property var customBgColor
 
         onIconPathChanged: iconCanvas.requestPaint()
         onFillIconPathChanged: iconCanvas.requestPaint()
@@ -1079,12 +1080,12 @@ Item {
             radius: parent.width / 2
             opacity: 0.9
 
-            color: button.bgColor
+            color: button.customBgColor ?? button.bgColor
 
             states: [
                 State {
                     name: "change"
-                    when: button.pressed
+                    when: button.pressed && !button.customBgColor
                     PropertyChanges {target: buttonBg; color: Utility.getAppHexColor("lightestBackground");}
                 }
             ]
