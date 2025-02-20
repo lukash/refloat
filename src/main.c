@@ -2140,7 +2140,7 @@ INIT_FUN(lib_info *info) {
 
     footpad_sensor_update(&d->footpad, &d->float_conf);
 
-    d->main_thread = VESC_IF->spawn(refloat_thd, 1024, "Refloat Main", d);
+    d->main_thread = VESC_IF->spawn(refloat_thd, 1536, "Refloat Main", d);
     if (!d->main_thread) {
         log_error("Failed to spawn Refloat Main thread.");
         return false;
