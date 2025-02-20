@@ -1,5 +1,4 @@
-// Copyright 2022 Benjamin Vedder <benjamin@vedder.se>
-// Copyright 2024 Lukas Hrazky
+// Copyright 2025 Lukas Hrazky
 //
 // This file is part of the Refloat VESC package.
 //
@@ -16,24 +15,19 @@
 // You should have received a copy of the GNU General Public License along with
 // this program. If not, see <http://www.gnu.org/licenses/>.
 
-#pragma once
-
-#include "conf/datatypes.h"
 #include "led_strip.h"
 
-#include <stdbool.h>
-#include <stdint.h>
+#include <string.h>
 
-typedef struct {
-    uint16_t *bitbuffer;
-    uint32_t bitbuffer_length;
-    LedPin pin;
-    const LedStrip *strips[STRIP_COUNT];
-    uint16_t *strip_bitbuffs[STRIP_COUNT];
-} LedDriver;
+void led_strip_init(LedStrip *strip) {
+    strip->data = NULL;
+    strip->length = 0;
+    strip->color_order = LED_COLOR_GRB;
+    strip->reverse = false;
+}
 
-bool led_driver_init(LedDriver *driver, LedPin pin, const LedStrip **led_strips);
-
-void led_driver_paint(LedDriver *driver);
-
-void led_driver_destroy(LedDriver *driver);
+void led_strip_configure(LedStrip *strip, const CfgLedStrip *cfg) {
+    strip->length = cfg->count;
+    strip->color_order = cfg->color_order;
+    strip->reverse = cfg->reverse;
+}

@@ -890,7 +890,7 @@ static void refloat_thd(void *arg) {
                 }
             }
 
-            if (d->float_conf.hardware.leds.type != LED_TYPE_NONE) {
+            if (d->float_conf.hardware.leds.mode != LED_MODE_OFF) {
                 if (!d->leds.cfg->headlights_on &&
                     konami_check(&d->headlights_on_konami, &d->leds, &d->footpad, &d->time)) {
                     leds_headlights_switch(&d->float_conf.leds, &d->lcm, true);
@@ -1863,10 +1863,17 @@ static void cmd_info(const Data *d, unsigned char *buf, int len) {
     case 1:
         send_buffer[ind++] = MAJOR_VERSION * 10 + MINOR_VERSION;
         send_buffer[ind++] = 1;  // build number
+
+        // Backwards compatibility for the LED type - external used to be 3
+        uint8_t led_type = d->float_conf.hardware.leds.mode;
+        if (led_type == LED_MODE_EXTERNAL) {
+            led_type = 3;
+        }
+
         // Send the full type here. This is redundant with cmd_light_info. It
         // likely shouldn't be here, as the type can be reconfigured and the
         // app would need to reconnect to pick up the change from this command.
-        send_buffer[ind++] = d->float_conf.hardware.leds.type;
+        send_buffer[ind++] = led_type;
         break;
     case 2:
     // in case of unknown version, respond with the highest one that we know
@@ -1899,7 +1906,7 @@ static void cmd_info(const Data *d, unsigned char *buf, int len) {
         // Send the full type here. This is redundant with cmd_light_info. It
         // likely shouldn't be here, as the type can be reconfigured and the
         // app would need to reconnect to pick up the change from this command.
-        send_buffer[ind++] = d->float_conf.hardware.leds.type;
+        send_buffer[ind++] = d->float_conf.hardware.leds.mode;
 
         if (flags & 0x1) {  // Flag: append_rt_data_ids
 #define ADD_ID(id) buffer_append_string(send_buffer, #id, &ind);

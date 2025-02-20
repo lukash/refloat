@@ -1,5 +1,4 @@
-// Copyright 2022 Benjamin Vedder <benjamin@vedder.se>
-// Copyright 2024 Lukas Hrazky
+// Copyright 2025 Lukas Hrazky
 //
 // This file is part of the Refloat VESC package.
 //
@@ -19,21 +18,29 @@
 #pragma once
 
 #include "conf/datatypes.h"
-#include "led_strip.h"
 
-#include <stdbool.h>
 #include <stdint.h>
 
+#define STRIP_COUNT 3
+#define LEDS_FRONT_AND_REAR_COUNT_MAX 60
+
 typedef struct {
-    uint16_t *bitbuffer;
-    uint32_t bitbuffer_length;
-    LedPin pin;
-    const LedStrip *strips[STRIP_COUNT];
-    uint16_t *strip_bitbuffs[STRIP_COUNT];
-} LedDriver;
+    uint8_t map[LEDS_FRONT_AND_REAR_COUNT_MAX];
+} CipherData;
 
-bool led_driver_init(LedDriver *driver, LedPin pin, const LedStrip **led_strips);
+typedef union {
+    CipherData cipher;
+} TransitionData;
 
-void led_driver_paint(LedDriver *driver);
+typedef struct {
+    uint32_t *data;
+    uint8_t length;
+    LedColorOrder color_order;
+    bool reverse;
+    float brightness;
+    TransitionData trans_data;
+} LedStrip;
 
-void led_driver_destroy(LedDriver *driver);
+void led_strip_init(LedStrip *strip);
+
+void led_strip_configure(LedStrip *strip, const CfgLedStrip *cfg);

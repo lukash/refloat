@@ -146,9 +146,8 @@ static void led_set_color(
     if (strip->reverse) {
         led = strip->length - i - 1;
     }
-    led += strip->start;
 
-    if (led >= leds->led_count) {
+    if (led >= strip->length) {
         return;
     }
 
@@ -160,7 +159,7 @@ static void led_set_color(
     uint8_t w = W(color) * br + 0.5f;
 
     if (blend < 1.0f) {
-        uint32_t orig_color = leds->led_data[led];
+        uint32_t orig_color = strip->data[led];
         float orig_blend = 1.0f - blend;
 
         r = r * blend + R(orig_color) * orig_blend;
@@ -169,7 +168,7 @@ static void led_set_color(
         w = w * blend + W(orig_color) * orig_blend;
     }
 
-    leds->led_data[led] = RGBW(r, g, b, w);
+    strip->data[led] = RGBW(r, g, b, w);
 }
 
 static void strip_set_color_range(
@@ -694,34 +693,59 @@ static const LedBar *target_bar(const Leds *leds, bool flip) {
     }
 }
 
-static void led_strip_init(LedStrip *strip) {
-    strip->start = 0;
-    strip->length = 0;
-    strip->reverse = false;
-}
-
-static void led_strip_configure(LedStrip *strip, const CfgLedStrip *cfg, uint8_t offset) {
-    strip->start = offset;
-    strip->length = cfg->count;
-    strip->reverse = cfg->reverse;
-}
-
 bool leds_init(Leds *leds, CfgHwLeds *hw_cfg, const CfgLeds *cfg, FootpadSensorState fs_state) {
     led_strip_init(&leds->status_strip);
     led_strip_init(&leds->front_strip);
     led_strip_init(&leds->rear_strip);
 
+    uint8_t status_offset = 0;
+    uint8_t front_offset = 0;
+    uint8_t rear_offset = 0;
     uint8_t current_offset = 0;
-    for (uint8_t i = 1; i <= 3; ++i) {
-        if (hw_cfg->status.order == i) {
-            led_strip_configure(&leds->status_strip, &hw_cfg->status, current_offset);
+
+    const LedStrip *strip_array[STRIP_COUNT] = {NULL};
+    size_t strip_i = 0;
+    for (uint8_t i = 1; i <= STRIP_COUNT; ++i) {
+        if (hw_cfg->status.order == i && hw_cfg->status.count > 0) {
+            led_strip_configure(&leds->status_strip, &hw_cfg->status);
+            status_offset = current_offset;
             current_offset += leds->status_strip.length;
-        } else if (hw_cfg->front.order == i) {
-            led_strip_configure(&leds->front_strip, &hw_cfg->front, current_offset);
+            strip_array[strip_i++] = &leds->status_strip;
+        } else if (hw_cfg->front.order == i && hw_cfg->front.count > 0) {
+            led_strip_configure(&leds->front_strip, &hw_cfg->front);
+            front_offset = current_offset;
             current_offset += leds->front_strip.length;
-        } else if (hw_cfg->rear.order == i) {
-            led_strip_configure(&leds->rear_strip, &hw_cfg->rear, current_offset);
+            strip_array[strip_i++] = &leds->front_strip;
+        } else if (hw_cfg->rear.order == i && hw_cfg->rear.count > 0) {
+            led_strip_configure(&leds->rear_strip, &hw_cfg->rear);
+            rear_offset = current_offset;
             current_offset += leds->rear_strip.length;
+            strip_array[strip_i++] = &leds->rear_strip;
+        }
+    }
+
+    leds->led_data = NULL;
+    uint8_t led_count =
+        leds->status_strip.length + leds->front_strip.length + leds->rear_strip.length;
+
+    bool driver_init = true;
+    if (hw_cfg->mode != LED_MODE_INTERNAL || led_count == 0) {
+        driver_init = false;
+    } else if (fs_state == FS_BOTH) {
+        log_msg("Both sensors pressed, not initializing LEDs.");
+        driver_init = false;
+    } else if (leds->front_strip.length + leds->rear_strip.length > LEDS_FRONT_AND_REAR_COUNT_MAX) {
+        log_error("Front and rear LED counts exceed maximum.");
+        driver_init = false;
+    } else {
+        leds->led_data = VESC_IF->malloc(sizeof(uint32_t) * led_count);
+        if (!leds->led_data) {
+            log_error("Failed to init LED data, out of memory.");
+            driver_init = false;
+        } else {
+            leds->status_strip.data = leds->led_data + status_offset;
+            leds->front_strip.data = leds->led_data + front_offset;
+            leds->rear_strip.data = leds->led_data + rear_offset;
         }
     }
 
@@ -777,43 +801,22 @@ bool leds_init(Leds *leds, CfgHwLeds *hw_cfg, const CfgLeds *cfg, FootpadSensorS
     leds->rear_dir_target = &cfg->rear;
     leds->rear_time_target = &cfg->rear;
 
-    leds->led_count =
-        leds->status_strip.length + leds->front_strip.length + leds->rear_strip.length;
-
-    bool driver_init = true;
-    if (fs_state == FS_BOTH) {
-        log_msg("Both sensors pressed, not initializing LEDs.");
-        driver_init = false;
-    }
-
-    if (leds->front_strip.length + leds->rear_strip.length > LEDS_FRONT_AND_REAR_COUNT_MAX) {
-        log_error("Front and rear LED counts exceed maximum.");
-        driver_init = false;
-    }
-
     if (driver_init) {
-        driver_init = led_driver_init(
-            &leds->led_driver, hw_cfg->pin, hw_cfg->type, hw_cfg->color_order, leds->led_count
-        );
+        driver_init = led_driver_init(&leds->led_driver, hw_cfg->pin, strip_array);
+    } else {
+        led_driver_init(&leds->led_driver, hw_cfg->pin, NULL);
     }
 
     if (!driver_init) {
-        leds->led_data = NULL;
-        leds->led_count = 0;
+        if (leds->led_data) {
+            VESC_IF->free(leds->led_data);
+            leds->led_data = NULL;
+        }
         return false;
     }
 
-    leds->led_data = VESC_IF->malloc(sizeof(uint32_t) * leds->led_count);
-    if (!leds->led_data) {
-        log_error("Failed to init LED data, out of memory.");
-        led_driver_destroy(&leds->led_driver);
-        return false;
-    }
-
-    memset(leds->led_data, 0, sizeof(uint32_t) * leds->led_count);
-
+    memset(leds->led_data, 0, sizeof(uint32_t) * led_count);
     leds_configure(leds, cfg);
-
     return true;
 }
 
@@ -934,7 +937,7 @@ void leds_update(Leds *leds, const State *state, FootpadSensorState fs_state) {
         anim_disabled(leds, &leds->front_strip, current_time);
         anim_disabled(leds, &leds->rear_strip, current_time);
         anim_disabled(leds, &leds->status_strip, current_time);
-        led_driver_paint(&leds->led_driver, leds->led_data, leds->led_count);
+        led_driver_paint(&leds->led_driver);
         return;
     }
 
@@ -1131,7 +1134,7 @@ void leds_update(Leds *leds, const State *state, FootpadSensorState fs_state) {
         );
     }
 
-    led_driver_paint(&leds->led_driver, leds->led_data, leds->led_count);
+    led_driver_paint(&leds->led_driver);
 }
 
 void leds_status_confirm(Leds *leds) {
@@ -1152,5 +1155,4 @@ void leds_destroy(Leds *leds) {
         VESC_IF->free(leds->led_data);
         leds->led_data = NULL;
     }
-    leds->led_count = 0;
 }

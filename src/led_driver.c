@@ -29,8 +29,8 @@
 
 #define WS2812_CLK_HZ 800000
 #define TIM_PERIOD ((168000000 / 2 / WS2812_CLK_HZ) - 1)
-#define WS2812_ZERO (TIM_PERIOD * 0.3)
-#define WS2812_ONE (TIM_PERIOD * 0.7)
+#define WS2812_ZERO (((uint32_t) TIM_PERIOD) * 0.3)
+#define WS2812_ONE (((uint32_t) TIM_PERIOD) * 0.7)
 #define BITBUFFER_PAD 1000
 
 static DMA_Stream_TypeDef *get_dma_stream(LedPin pin) {
@@ -127,31 +127,64 @@ static void deinit_dma(LedPin pin) {
     DMA_DeInit(get_dma_stream(pin));
 }
 
-bool led_driver_init(
-    LedDriver *driver, LedPin pin, LedType type, LedColorOrder color_order, uint8_t led_nr
-) {
-    if (type != LED_TYPE_RGB && type != LED_TYPE_RGBW) {
+inline static uint8_t color_order_bits(LedColorOrder order) {
+    switch (order) {
+    case LED_COLOR_GRBW:
+    case LED_COLOR_WRGB:
+        return 32;
+    case LED_COLOR_GRB:
+    case LED_COLOR_RGB:
+        return 24;
+    }
+
+    // the switch above should be exhaustive, just silence the warning
+    return 24;
+}
+
+bool led_driver_init(LedDriver *driver, LedPin pin, const LedStrip **led_strips) {
+    driver->bitbuffer_length = 0;
+
+    if (!led_strips) {
         driver->bitbuffer = NULL;
-        driver->bitbuffer_length = 0;
         return false;
     }
 
-    driver->bit_nr = type == LED_TYPE_RGBW ? 32 : 24;
-    driver->bitbuffer_length = driver->bit_nr * led_nr + BITBUFFER_PAD;
+    size_t offsets[3] = {0};
+    for (size_t i = 0; i < STRIP_COUNT; ++i) {
+        const LedStrip *strip = led_strips[i];
+        if (!strip) {
+            driver->strips[i] = NULL;
+            driver->strip_bitbuffs[i] = NULL;
+            continue;
+        }
+
+        driver->strips[i] = strip;
+        offsets[i] = driver->bitbuffer_length;
+        driver->bitbuffer_length += color_order_bits(strip->color_order) * strip->length;
+    }
+
+    uint32_t padding_offset = driver->bitbuffer_length;
+
+    driver->bitbuffer_length += BITBUFFER_PAD;
     driver->bitbuffer = VESC_IF->malloc(sizeof(uint16_t) * driver->bitbuffer_length);
     driver->pin = pin;
-    driver->color_order = color_order;
 
     if (!driver->bitbuffer) {
         log_error("Failed to init LED driver, out of memory.");
         return false;
     }
 
-    for (uint32_t i = 0; i < driver->bit_nr * led_nr; ++i) {
+    for (size_t i = 0; i < STRIP_COUNT; ++i) {
+        if (driver->strips[i]) {
+            driver->strip_bitbuffs[i] = driver->bitbuffer + offsets[i];
+        }
+    }
+
+    for (uint32_t i = 0; i < padding_offset; ++i) {
         driver->bitbuffer[i] = WS2812_ZERO;
     }
 
-    memset(driver->bitbuffer + driver->bit_nr * led_nr, 0, sizeof(uint16_t) * BITBUFFER_PAD);
+    memset(driver->bitbuffer + padding_offset, 0, sizeof(uint16_t) * BITBUFFER_PAD);
     init_dma(pin, driver->bitbuffer, driver->bitbuffer_length);
     return true;
 }
@@ -160,37 +193,67 @@ inline static uint8_t cgamma(uint8_t c) {
     return (c * c + c) / 256;
 }
 
-void led_driver_paint(LedDriver *driver, uint32_t *data, uint32_t length) {
+static uint32_t color_grb(uint8_t w, uint8_t r, uint8_t g, uint8_t b) {
+    unused(w);
+    return (g << 16) | (r << 8) | b;
+}
+
+static uint32_t color_grbw(uint8_t w, uint8_t r, uint8_t g, uint8_t b) {
+    return (g << 24) | (r << 16) | (b << 8) | w;
+}
+
+static uint32_t color_rgb(uint8_t w, uint8_t r, uint8_t g, uint8_t b) {
+    unused(w);
+    return (r << 16) | (g << 8) | b;
+}
+
+static uint32_t color_wrgb(uint8_t w, uint8_t r, uint8_t g, uint8_t b) {
+    return (w << 24) | (r << 16) | (g << 8) | b;
+}
+
+void led_driver_paint(LedDriver *driver) {
     if (!driver->bitbuffer) {
         return;
     }
 
-    for (uint32_t i = 0; i < length; ++i) {
-        uint32_t color = data[i];
-        uint8_t w = cgamma((color >> 24) & 0xFF);
-        uint8_t r = cgamma((color >> 16) & 0xFF);
-        uint8_t g = cgamma((color >> 8) & 0xFF);
-        uint8_t b = cgamma(color & 0xFF);
-
-        if (driver->color_order == LED_COLOR_GRBW) {
-            color = (g << 16) | (r << 8) | b;
-        } else {
-            color = (r << 16) | (g << 8) | b;
+    for (size_t i = 0; i < STRIP_COUNT; ++i) {
+        const LedStrip *strip = driver->strips[i];
+        if (!strip) {
+            break;
         }
 
-        if (driver->bit_nr == 32) {
-            // White LED byte placement
-            if (driver->color_order == LED_COLOR_WRGB) {
-                color |= (w << 24);
-            } else {
-                color <<= 8;
-                color |= w;
+        uint32_t (*color_conv)(uint8_t, uint8_t, uint8_t, uint8_t);
+        switch (strip->color_order) {
+        case LED_COLOR_GRB:
+            color_conv = color_grb;
+            break;
+        case LED_COLOR_GRBW:
+            color_conv = color_grbw;
+            break;
+        case LED_COLOR_RGB:
+            color_conv = color_rgb;
+            break;
+        case LED_COLOR_WRGB:
+            color_conv = color_wrgb;
+            break;
+        }
+
+        uint8_t bits = color_order_bits(strip->color_order);
+        uint16_t *strip_bitbuffer = driver->strip_bitbuffs[i];
+
+        for (uint32_t j = 0; j < strip->length; ++j) {
+            uint32_t color = strip->data[j];
+            uint8_t w = cgamma((color >> 24) & 0xFF);
+            uint8_t r = cgamma((color >> 16) & 0xFF);
+            uint8_t g = cgamma((color >> 8) & 0xFF);
+            uint8_t b = cgamma(color & 0xFF);
+
+            color = color_conv(w, r, g, b);
+
+            for (int8_t bit = bits - 1; bit >= 0; --bit) {
+                strip_bitbuffer[bit + j * bits] = color & 0x1 ? WS2812_ONE : WS2812_ZERO;
+                color >>= 1;
             }
-        }
-
-        for (int8_t bit = driver->bit_nr - 1; bit >= 0; --bit) {
-            driver->bitbuffer[bit + i * driver->bit_nr] = color & 0x1 ? WS2812_ONE : WS2812_ZERO;
-            color >>= 1;
         }
     }
 }

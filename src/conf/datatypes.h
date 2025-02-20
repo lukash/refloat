@@ -34,11 +34,10 @@ typedef enum {
 } ParkingBrakeMode;
 
 typedef enum {
-    LED_TYPE_NONE = 0,
-    LED_TYPE_RGB,
-    LED_TYPE_RGBW,
-    LED_TYPE_EXTERNAL,
-} LedType;
+    LED_MODE_OFF = 0,
+    LED_MODE_INTERNAL,
+    LED_MODE_EXTERNAL,
+} LedMode;
 
 typedef enum {
     LED_PIN_B6 = 0,
@@ -46,8 +45,9 @@ typedef enum {
 } LedPin;
 
 typedef enum {
-    LED_COLOR_GRBW = 0,
-    LED_COLOR_RGBW,
+    LED_COLOR_GRB = 0,
+    LED_COLOR_GRBW,
+    LED_COLOR_RGB,
     LED_COLOR_WRGB
 } LedColorOrder;
 
@@ -147,13 +147,13 @@ typedef struct {
 typedef struct {
     LedStripOrder order;
     uint8_t count;
+    LedColorOrder color_order;
     bool reverse;
 } CfgLedStrip;
 
 typedef struct {
-    LedType type;
+    LedMode mode;
     LedPin pin;
-    LedColorOrder color_order;
     CfgLedStrip status;
     CfgLedStrip front;
     CfgLedStrip rear;
