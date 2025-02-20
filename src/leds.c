@@ -315,22 +315,22 @@ static void led_strip_animate(Leds *leds, const LedStrip *strip, const LedBar *b
     time *= bar->speed;
 
     switch (bar->mode) {
-    case LED_MODE_SOLID:
+    case LED_ANIM_SOLID:
         strip_set_color(leds, strip, colors[bar->color1], strip->brightness, 1.0f);
         break;
-    case LED_MODE_FADE:
+    case LED_ANIM_FADE:
         anim_fade(leds, strip, bar, time);
         break;
-    case LED_MODE_PULSE:
+    case LED_ANIM_PULSE:
         anim_pulse(leds, strip, bar, time, strip->length / 5.0f);
         break;
-    case LED_MODE_STROBE:
+    case LED_ANIM_STROBE:
         anim_strobe(leds, strip, bar, time);
         break;
-    case LED_MODE_KNIGHT_RIDER:
+    case LED_ANIM_KNIGHT_RIDER:
         anim_knight_rider(leds, strip, bar, time);
         break;
-    case LED_MODE_FELONY:
+    case LED_ANIM_FELONY:
         anim_felony(leds, strip, bar, time);
         break;
     }
@@ -419,7 +419,7 @@ static void anim_disabled(Leds *leds, const LedStrip *strip, float time) {
         .brightness = 0.0f,
         .color1 = COLOR_RED,
         .color2 = COLOR_BLACK,
-        .mode = LED_MODE_PULSE,
+        .mode = LED_ANIM_PULSE,
         .speed = 0.0f
     };
     anim_pulse(leds, strip, &disabled_bar, time / 2.0f, strip->length / 3.0f);
@@ -553,7 +553,7 @@ static void transition_reset(const Leds *leds, TransitionState *trans, LedStrip 
 }
 
 static uint32_t led_bar_to_color(const LedBar *bar) {
-    return bar->mode == LED_MODE_SOLID ? bar->color1 : bar->color2;
+    return bar->mode == LED_ANIM_SOLID ? bar->color1 : bar->color2;
 }
 
 static void trans_fade(Leds *leds, const LedStrip *strip, float progress, const LedBar *to_bar) {

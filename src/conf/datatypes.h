@@ -94,13 +94,13 @@ typedef enum {
 } LedColor;
 
 typedef enum {
-    LED_MODE_SOLID = 0,
-    LED_MODE_FADE,
-    LED_MODE_PULSE,
-    LED_MODE_STROBE,
-    LED_MODE_KNIGHT_RIDER,
-    LED_MODE_FELONY,
-} LedMode;
+    LED_ANIM_SOLID = 0,
+    LED_ANIM_FADE,
+    LED_ANIM_PULSE,
+    LED_ANIM_STROBE,
+    LED_ANIM_KNIGHT_RIDER,
+    LED_ANIM_FELONY,
+} LedAnimMode;
 
 typedef enum {
     LED_TRANS_FADE = 0,
@@ -113,7 +113,7 @@ typedef struct {
     float brightness;
     LedColor color1;
     LedColor color2;
-    LedMode mode;
+    LedAnimMode mode;
     float speed;
 } LedBar;
 
