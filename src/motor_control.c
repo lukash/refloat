@@ -22,6 +22,7 @@
 #include "vesc_c_if.h"
 
 void motor_control_init(MotorControl *mc) {
+    mc->disabled = false;
     mc->current_requested = false;
     mc->requested_current = 0.0f;
     mc->click_counter = 0;
@@ -41,6 +42,17 @@ void motor_control_request_current(MotorControl *mc, float current) {
 }
 
 void motor_control_apply(MotorControl *mc, float abs_erpm, RunState state, float time) {
+    if (state == STATE_DISABLED) {
+        if (!mc->disabled) {
+            // set 0A only once to reset any previously-set current, then stop touching the motor
+            VESC_IF->mc_set_current(0.0f);
+            mc->disabled = true;
+        }
+        return;
+    } else {
+        mc->disabled = false;
+    }
+
     if (mc->parking_brake_mode == PARKING_BRAKE_ALWAYS ||
         (mc->parking_brake_mode == PARKING_BRAKE_IDLE && state != STATE_RUNNING && abs_erpm < 50)) {
         mc->parking_brake_active = true;
