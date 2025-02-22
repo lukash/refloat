@@ -24,6 +24,7 @@
 #include "state.h"
 
 typedef struct {
+    bool disabled;
     bool current_requested;
     float requested_current;
 
