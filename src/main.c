@@ -404,14 +404,10 @@ static void engage(data *d) {
     state_engage(&d->state);
 }
 
-/**
- * check_odometer: see if we need to write back the odometer during fault state
- */
 static void check_odometer(data *d) {
     // Make odometer persistent if we've gone 200m or more
     if (d->odometer_dirty) {
-        float current_odo = VESC_IF->mc_get_odometer();
-        if (current_odo > d->odometer + 200 || current_odo < d->odometer - 10000) {
+        if (VESC_IF->mc_get_odometer() > d->odometer + 200) {
             VESC_IF->store_backup_data();
             d->odometer = VESC_IF->mc_get_odometer();
             d->odometer_dirty = false;
