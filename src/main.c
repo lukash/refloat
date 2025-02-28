@@ -257,17 +257,6 @@ static void engage(Data *d) {
     timer_refresh(&d->time, &d->time.engage_timer);
 }
 
-static void check_odometer(Data *d) {
-    // Make odometer persistent if we've gone 200m or more
-    if (d->odometer_dirty) {
-        if (VESC_IF->mc_get_odometer() > d->odometer + 200) {
-            VESC_IF->store_backup_data();
-            d->odometer = VESC_IF->mc_get_odometer();
-            d->odometer_dirty = false;
-        }
-    }
-}
-
 /**
  *  do_rc_move: perform motor movement while board is idle
  */
@@ -787,7 +776,6 @@ static void refloat_thd(void *arg) {
                 }
                 break;
             }
-            d->odometer_dirty = 1;
 
             d->enable_upside_down = true;
 
@@ -933,8 +921,6 @@ static void refloat_thd(void *arg) {
                 d->startup_pitch_tolerance = d->float_conf.startup_pitch_tolerance;
             }
 
-            check_odometer(d);
-
             // Check for valid startup position and switch state
             if (fabsf(d->imu.balance_pitch) < d->startup_pitch_tolerance &&
                 fabsf(d->imu.roll) < d->float_conf.startup_roll_tolerance && can_engage(d)) {
@@ -1018,6 +1004,13 @@ static void aux_thd(void *arg) {
 
     while (!VESC_IF->should_terminate()) {
         leds_update(&d->leds, &d->state, d->footpad.state);
+
+        // store odometer if we've gone more than 200m
+        if (d->state.state != STATE_RUNNING && VESC_IF->mc_get_odometer() > d->odometer + 200) {
+            VESC_IF->store_backup_data();
+            d->odometer = VESC_IF->mc_get_odometer();
+        }
+
         VESC_IF->sleep_us(1e6 / LEDS_REFRESH_RATE);
     }
 }

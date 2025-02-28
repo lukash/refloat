@@ -120,8 +120,6 @@ typedef struct {
     // Feature: Soft Start
     float softstart_pid_limit, softstart_ramp_step_size;
 
-    // Odometer
-    int odometer_dirty;
     uint64_t odometer;
 
     // Feature: RC Move (control via app while idle)
