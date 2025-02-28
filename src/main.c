@@ -164,7 +164,7 @@ static void reconfigure(Data *d) {
 }
 
 static void configure(Data *d) {
-    state_init(&d->state, d->float_conf.disabled);
+    state_set_disabled(&d->state, d->float_conf.disabled);
 
     lcm_configure(&d->lcm, &d->float_conf.leds);
 
@@ -1065,6 +1065,7 @@ static void data_init(Data *d) {
 
     d->odometer = VESC_IF->mc_get_odometer();
 
+    state_init(&d->state);
     time_init(&d->time);
     pid_init(&d->pid);
     motor_control_init(&d->motor_control);
@@ -1283,11 +1284,11 @@ static void cmd_print_info(Data *d) {
 }
 
 static void cmd_lock(Data *d, unsigned char *cfg) {
-    if (d->state.state < STATE_RUNNING) {
+    if (d->state.state != STATE_RUNNING) {
         // restore config before locking to avoid accidentally writing temporary changes
         read_cfg_from_eeprom(&d->float_conf);
-        d->float_conf.disabled = cfg[0] ? true : false;
-        d->state.state = cfg[0] ? STATE_DISABLED : STATE_STARTUP;
+        d->float_conf.disabled = cfg[0];
+        state_set_disabled(&d->state, cfg[0]);
         write_cfg_to_eeprom(d);
     }
 }

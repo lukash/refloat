@@ -65,11 +65,13 @@ typedef struct {
     bool darkride;
 } State;
 
-void state_init(State *state, bool disable);
+void state_init(State *state);
 
 void state_stop(State *state, StopCondition stop_condition);
 
 void state_engage(State *state);
+
+void state_set_disabled(State *state, bool disabled);
 
 /**
  * Compatibility function for the Float State enum for the app data commands.

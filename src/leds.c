@@ -715,7 +715,7 @@ bool leds_init(Leds *leds, CfgHwLeds *hw_cfg, const CfgLeds *cfg, FootpadSensorS
     leds->cfg = cfg;
 
     leds->last_updated = 0.0f;
-    state_init(&leds->state, false);
+    state_init(&leds->state);
     leds->pitch = 0.0f;
 
     leds->left_sensor = 0.0f;

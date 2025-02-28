@@ -17,8 +17,8 @@
 
 #include "state.h"
 
-void state_init(State *state, bool disable) {
-    state->state = disable ? STATE_DISABLED : STATE_STARTUP;
+void state_init(State *state) {
+    state->state = STATE_STARTUP;
     state->mode = MODE_NORMAL;
     state->sat = SAT_NONE;
     state->stop_condition = STOP_NONE;
@@ -37,6 +37,14 @@ void state_engage(State *state) {
     state->state = STATE_RUNNING;
     state->sat = SAT_CENTERING;
     state->stop_condition = STOP_NONE;
+}
+
+void state_set_disabled(State *state, bool disabled) {
+    if (state->state != STATE_RUNNING && disabled) {
+        state->state = STATE_DISABLED;
+    } else if (state->state == STATE_DISABLED && !disabled) {
+        state->state = STATE_STARTUP;
+    }
 }
 
 uint8_t state_compat(const State *state) {
