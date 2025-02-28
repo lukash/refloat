@@ -141,13 +141,13 @@ inline static uint8_t color_order_bits(LedColorOrder order) {
     return 24;
 }
 
-bool led_driver_init(LedDriver *driver, LedPin pin, const LedStrip **led_strips) {
+void led_driver_init(LedDriver *driver) {
     driver->bitbuffer_length = 0;
+    driver->bitbuffer = NULL;
+}
 
-    if (!led_strips) {
-        driver->bitbuffer = NULL;
-        return false;
-    }
+bool led_driver_setup(LedDriver *driver, LedPin pin, const LedStrip **led_strips) {
+    driver->bitbuffer_length = 0;
 
     size_t offsets[3] = {0};
     for (size_t i = 0; i < STRIP_COUNT; ++i) {

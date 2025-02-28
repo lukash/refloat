@@ -1072,6 +1072,7 @@ static void data_init(Data *d) {
     lcm_init(&d->lcm, &d->float_conf.hardware.leds);
     charging_init(&d->charging);
     remote_init(&d->remote);
+    leds_init(&d->leds);
 
     konami_init(&d->flywheel_konami, flywheel_konami_sequence, sizeof(flywheel_konami_sequence));
     konami_init(
@@ -2209,7 +2210,7 @@ INIT_FUN(lib_info *info) {
     }
 
     bool have_leds =
-        leds_init(&d->leds, &d->float_conf.hardware.leds, &d->float_conf.leds, d->footpad.state);
+        leds_setup(&d->leds, &d->float_conf.hardware.leds, &d->float_conf.leds, d->footpad.state);
 
     if (have_leds) {
         d->led_thread = VESC_IF->spawn(led_thd, 1024, "Refloat LEDs", d);

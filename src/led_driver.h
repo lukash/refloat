@@ -32,7 +32,9 @@ typedef struct {
     uint16_t *strip_bitbuffs[STRIP_COUNT];
 } LedDriver;
 
-bool led_driver_init(LedDriver *driver, LedPin pin, const LedStrip **led_strips);
+void led_driver_init(LedDriver *driver);
+
+bool led_driver_setup(LedDriver *driver, LedPin pin, const LedStrip **led_strips);
 
 void led_driver_paint(LedDriver *driver);
 

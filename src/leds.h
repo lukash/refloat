@@ -80,7 +80,9 @@ typedef struct {
     LedDriver led_driver;
 } Leds;
 
-bool leds_init(Leds *leds, CfgHwLeds *hw_cfg, const CfgLeds *cfg, FootpadSensorState fs_state);
+void leds_init(Leds *leds);
+
+bool leds_setup(Leds *leds, CfgHwLeds *hw_cfg, const CfgLeds *cfg, FootpadSensorState fs_state);
 
 void leds_configure(Leds *leds, const CfgLeds *cfg);
 
