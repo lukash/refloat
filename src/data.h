@@ -39,7 +39,7 @@
 
 typedef struct {
     lib_thread main_thread;
-    lib_thread led_thread;
+    lib_thread aux_thread;
 
     RefloatConfig float_conf;
 

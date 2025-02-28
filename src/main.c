@@ -1013,7 +1013,7 @@ static void write_cfg_to_eeprom(Data *d) {
     leds_status_confirm(&d->leds);
 }
 
-static void led_thd(void *arg) {
+static void aux_thd(void *arg) {
     Data *d = (Data *) arg;
 
     while (!VESC_IF->should_terminate()) {
@@ -1065,6 +1065,7 @@ static void data_init(Data *d) {
 
     d->odometer = VESC_IF->mc_get_odometer();
 
+    balance_filter_init(&d->balance_filter);
     state_init(&d->state);
     time_init(&d->time);
     pid_init(&d->pid);
@@ -2166,8 +2167,8 @@ static void stop(void *arg) {
     VESC_IF->imu_set_read_callback(NULL);
     VESC_IF->set_app_data_handler(NULL);
     VESC_IF->conf_custom_clear_configs();
-    if (d->led_thread) {
-        VESC_IF->request_terminate(d->led_thread);
+    if (d->aux_thread) {
+        VESC_IF->request_terminate(d->aux_thread);
     }
     if (d->main_thread) {
         VESC_IF->request_terminate(d->main_thread);
@@ -2191,17 +2192,10 @@ INIT_FUN(lib_info *info) {
     info->stop_fun = stop;
     info->arg = d;
 
-    VESC_IF->conf_custom_add_config(get_cfg, set_cfg, get_cfg_xml);
-
     if ((d->float_conf.is_beeper_enabled) ||
         (d->float_conf.inputtilt_remote_type != INPUTTILT_PPM)) {
         beeper_init();
     }
-
-    balance_filter_init(&d->balance_filter);
-    VESC_IF->imu_set_read_callback(imu_ref_callback);
-
-    footpad_sensor_update(&d->footpad, &d->float_conf);
 
     d->main_thread = VESC_IF->spawn(refloat_thd, 1536, "Refloat Main", d);
     if (!d->main_thread) {
@@ -2209,17 +2203,18 @@ INIT_FUN(lib_info *info) {
         return false;
     }
 
-    bool have_leds =
-        leds_setup(&d->leds, &d->float_conf.hardware.leds, &d->float_conf.leds, d->footpad.state);
-
-    if (have_leds) {
-        d->led_thread = VESC_IF->spawn(led_thd, 1024, "Refloat LEDs", d);
-        if (!d->led_thread) {
-            log_error("Failed to spawn Refloat LEDs thread.");
-            leds_destroy(&d->leds);
-        }
+    d->aux_thread = VESC_IF->spawn(aux_thd, 1024, "Refloat Aux", d);
+    if (!d->aux_thread) {
+        log_error("Failed to spawn Refloat Auxiliary thread.");
+        VESC_IF->request_terminate(d->main_thread);
+        return false;
     }
 
+    footpad_sensor_update(&d->footpad, &d->float_conf);
+    leds_setup(&d->leds, &d->float_conf.hardware.leds, &d->float_conf.leds, d->footpad.state);
+
+    VESC_IF->imu_set_read_callback(imu_ref_callback);
+    VESC_IF->conf_custom_add_config(get_cfg, set_cfg, get_cfg_xml);
     VESC_IF->set_app_data_handler(on_command_received);
     VESC_IF->lbm_add_extension("ext-dbg", ext_dbg);
     VESC_IF->lbm_add_extension("ext-set-fw-version", ext_set_fw_version);

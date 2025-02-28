@@ -745,7 +745,7 @@ void leds_init(Leds *leds) {
     led_driver_init(&leds->led_driver);
 }
 
-bool leds_setup(Leds *leds, CfgHwLeds *hw_cfg, const CfgLeds *cfg, FootpadSensorState fs_state) {
+void leds_setup(Leds *leds, CfgHwLeds *hw_cfg, const CfgLeds *cfg, FootpadSensorState fs_state) {
     uint8_t status_offset = 0;
     uint8_t front_offset = 0;
     uint8_t rear_offset = 0;
@@ -775,24 +775,20 @@ bool leds_setup(Leds *leds, CfgHwLeds *hw_cfg, const CfgLeds *cfg, FootpadSensor
     uint8_t led_count =
         leds->status_strip.length + leds->front_strip.length + leds->rear_strip.length;
 
-    bool driver_init = true;
-    if (hw_cfg->mode != LED_MODE_INTERNAL || led_count == 0) {
-        driver_init = false;
-    } else if (fs_state == FS_BOTH) {
+    uint32_t *led_data = NULL;
+    if (fs_state == FS_BOTH) {
         log_msg("Both sensors pressed, not initializing LEDs.");
-        driver_init = false;
     } else if (leds->front_strip.length + leds->rear_strip.length > LEDS_FRONT_AND_REAR_COUNT_MAX) {
         log_error("Front and rear LED counts exceed maximum.");
-        driver_init = false;
-    } else {
-        leds->led_data = VESC_IF->malloc(sizeof(uint32_t) * led_count);
-        if (!leds->led_data) {
+    } else if (hw_cfg->mode == LED_MODE_INTERNAL && led_count > 0) {
+        led_data = VESC_IF->malloc(sizeof(uint32_t) * led_count);
+        if (!led_data) {
             log_error("Failed to init LED data, out of memory.");
-            driver_init = false;
         } else {
-            leds->status_strip.data = leds->led_data + status_offset;
-            leds->front_strip.data = leds->led_data + front_offset;
-            leds->rear_strip.data = leds->led_data + rear_offset;
+            memset(led_data, 0, sizeof(uint32_t) * led_count);
+            leds->status_strip.data = led_data + status_offset;
+            leds->front_strip.data = led_data + front_offset;
+            leds->rear_strip.data = led_data + rear_offset;
         }
     }
 
@@ -814,21 +810,15 @@ bool leds_setup(Leds *leds, CfgHwLeds *hw_cfg, const CfgLeds *cfg, FootpadSensor
     leds->rear_dir_target = &cfg->rear;
     leds->rear_time_target = &cfg->rear;
 
-    if (driver_init) {
-        driver_init = led_driver_setup(&leds->led_driver, hw_cfg->pin, strip_array);
-    }
-
-    if (!driver_init) {
-        if (leds->led_data) {
-            VESC_IF->free(leds->led_data);
-            leds->led_data = NULL;
-        }
-        return false;
-    }
-
-    memset(leds->led_data, 0, sizeof(uint32_t) * led_count);
     leds_configure(leds, cfg);
-    return true;
+
+    if (led_data) {
+        if (led_driver_setup(&leds->led_driver, hw_cfg->pin, strip_array)) {
+            leds->led_data = led_data;
+        } else {
+            VESC_IF->free(led_data);
+        }
+    }
 }
 
 void leds_configure(Leds *leds, const CfgLeds *cfg) {
