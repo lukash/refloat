@@ -204,28 +204,10 @@ static void configure(Data *d) {
     d->reverse_tolerance = 20000;
     d->reverse_stop_step_size = 100.0 / d->float_conf.hertz;
 
-    // Feature: Darkride
-    d->enable_upside_down = false;
-
-    // Feature: Flywheel
-    d->flywheel_abort = false;
-
     // Speed above which to warn users about an impending full switch fault
     d->switch_warn_beep_erpm = d->float_conf.is_footbeep_enabled ? 2000 : 100000;
 
     d->beeper_enabled = d->float_conf.is_beeper_enabled;
-
-    konami_init(&d->flywheel_konami, flywheel_konami_sequence, sizeof(flywheel_konami_sequence));
-    konami_init(
-        &d->headlights_on_konami,
-        headlights_on_konami_sequence,
-        sizeof(headlights_on_konami_sequence)
-    );
-    konami_init(
-        &d->headlights_off_konami,
-        headlights_off_konami_sequence,
-        sizeof(headlights_off_konami_sequence)
-    );
 
     reconfigure(d);
 
@@ -1089,6 +1071,18 @@ static void data_init(Data *d) {
     lcm_init(&d->lcm, &d->float_conf.hardware.leds);
     charging_init(&d->charging);
     remote_init(&d->remote);
+
+    konami_init(&d->flywheel_konami, flywheel_konami_sequence, sizeof(flywheel_konami_sequence));
+    konami_init(
+        &d->headlights_on_konami,
+        headlights_on_konami_sequence,
+        sizeof(headlights_on_konami_sequence)
+    );
+    konami_init(
+        &d->headlights_off_konami,
+        headlights_off_konami_sequence,
+        sizeof(headlights_off_konami_sequence)
+    );
 }
 
 static float app_get_debug(int index) {
