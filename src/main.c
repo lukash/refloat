@@ -2127,6 +2127,11 @@ static bool set_cfg(uint8_t *buffer) {
 
     bool res = confparser_deserialize_refloatconfig(buffer, &d->float_conf);
 
+    // don't allow to disable the package in the RUNNING state
+    if (d->state.state == STATE_RUNNING) {
+        d->float_conf.disabled = false;
+    }
+
     // Store to EEPROM
     if (res) {
         write_cfg_to_eeprom(d);
