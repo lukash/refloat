@@ -25,3 +25,6 @@ If you don't have `vesc_tool` in your `$PATH` (but you have, for example, a down
 ```sh
 make VESC_TOOL=/path/to/vesc_tool
 ```
+
+## Documentation
+[Development Documentation](doc/index.md)
