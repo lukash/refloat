@@ -409,7 +409,7 @@ Item {
 
             motorTemp.value = values.temp_motor;
             controllerTemp.value = values.temp_mos;
-            odometer.value = Math.round(values.odometer * 0.001 * vescConfig.imperialFactor);
+            odometer.value = values.odometer * 0.001 * vescConfig.imperialFactor;
             tachometer.value = values.tachometer_abs * 0.001 * vescConfig.imperialFactor;
 
             consumption.add(Math.max(Math.min(values.current_in * values.v_in / Math.max(speed, 1e-6), 60) , -60));
