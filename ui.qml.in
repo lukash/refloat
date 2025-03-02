@@ -736,8 +736,16 @@ Item {
                     "name": packageName,
                     "version": packageVersion
                 },
+                "board": {
+                    "id": board.getId(),
+                },
                 "settings": settings
             };
+
+            var boardName = board.getName();
+            if (boardName) {
+                tune.board.name = boardName;
+            }
 
             if (description) {
                 tune.description = description;
