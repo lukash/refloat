@@ -192,6 +192,27 @@ Item {
         }
     }
 
+    QtObject {
+        id: board
+
+        function getId() {
+            return VescIf.getLastBleAddr();
+        }
+
+        function getName() {
+            var name = VescIf.getBleName(VescIf.getLastBleAddr());
+            if (!name) {
+                return null;
+            }
+            return name;
+        }
+
+        function setName(name) {
+            VescIf.storeBleName(VescIf.getLastBleAddr(), name);
+            VescIf.storeSettings();
+        }
+    }
+
     Connections {
         id: vescConfig
         target: VescIf
@@ -3510,8 +3531,7 @@ Item {
         standardButtons: Dialog.Save | Dialog.Cancel
 
         onAccepted: {
-            VescIf.storeBleName(VescIf.getLastBleAddr(), boardNameInput.text);
-            VescIf.storeSettings();
+            board.setName(boardNameInput.text);
             boardNameText.load();
         }
 
@@ -3520,7 +3540,7 @@ Item {
             width: editBoardNameDialog.availableWidth
 
             maximumLength: 30
-            text: boardNameText.bleName
+            text: boardNameText.name
         }
     }
 
@@ -4110,17 +4130,18 @@ Item {
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignVCenter
 
-                    property string bleName
                     property string name
+                    property string nameOrId
 
-                    color: bleName ? Utility.getAppHexColor("lightText") : Utility.getAppHexColor("normalText")
+                    color: name ? Utility.getAppHexColor("lightText") : Utility.getAppHexColor("normalText")
                     font.pixelSize: 0.45 * unit
                     clip: true
-                    text: name
+                    text: nameOrId
 
                     function load() {
-                        bleName = VescIf.getBleName(VescIf.getLastBleAddr());
-                        name = bleName ? bleName : VescIf.getLastBleAddr();
+                        var boardName = board.getName();
+                        name = boardName;
+                        nameOrId = boardName ?? board.getId();
                     }
 
                     Component.onCompleted: load();
