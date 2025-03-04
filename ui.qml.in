@@ -286,7 +286,7 @@ Item {
         }
 
         function fetchConfig(tuneOnly) {
-            if (!checkConfig()) return;
+            if (!checkConfig()) return null;
 
             var tuneBlacklist = [
                 "inputtilt_remote_type",
@@ -766,7 +766,11 @@ Item {
         }
 
         function createBackup() {
-            return createTune("Full Backup", "", packageConfig.fetchConfig(false));
+            var config = packageConfig.fetchConfig(false);
+            if (!config) {
+                return null;
+            }
+            return createTune("Full Backup", "", config);
         }
 
         function saveTune(slot, tune) {
