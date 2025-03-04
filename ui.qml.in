@@ -285,6 +285,36 @@ Item {
             vescCommands.customConfigSet(0, pkgConfig);
         }
 
+        function paramNameToObject(name) {
+            var obj = {
+                "name": name
+            };
+
+            if (pkgConfig.isParamDouble(name)) {
+                obj.type = "Double";
+                obj.value = pkgConfig.getParamDouble(name);
+            } else if (pkgConfig.isParamInt(name)) {
+                obj.type = "Int";
+                obj.value = pkgConfig.getParamInt(name);
+            } else if (pkgConfig.isParamEnum(name)) {
+                obj.type = "Enum";
+                obj.value = pkgConfig.getParamEnum(name);
+            } else if (pkgConfig.isParamBool(name)) {
+                obj.type = "Bool";
+                obj.value = pkgConfig.getParamBool(name);
+            } else if (pkgConfig.isParamQString(name)) {
+                obj.type = "String";
+                obj.value = pkgConfig.getParamQString(name);
+            } else if (pkgConfig.isParamBitfield(name)) {
+                obj.type = "Bitfield";
+                obj.value = pkgConfig.getParamInt(name);
+            } else {
+                return null;
+            }
+
+            return obj;
+        }
+
         function fetchConfig(tuneOnly) {
             if (!checkConfig()) return null;
 
@@ -307,32 +337,11 @@ Item {
                         continue;
                     }
 
-                    var item = {"name": param};
+                    var item = paramNameToObject(param);
 
-                    if (pkgConfig.isParamDouble(param)) {
-                        item.type = "Double";
-                        item.value = pkgConfig.getParamDouble(param);
-                    } else if (pkgConfig.isParamInt(param)) {
-                        item.type = "Int";
-                        item.value = pkgConfig.getParamInt(param);
-                    } else if (pkgConfig.isParamEnum(param)) {
-                        item.type = "Enum";
-                        item.value = pkgConfig.getParamEnum(param);
-                    } else if (pkgConfig.isParamBool(param)) {
-                        item.type = "Bool";
-                        item.value = pkgConfig.getParamBool(param);
-                    } else if (pkgConfig.isParamQString(param)) {
-                        item.type = "String";
-                        item.value = pkgConfig.getParamQString(param);
-                    } else if (pkgConfig.isParamBitfield(param)) {
-                        item.type = "Bitfield";
-                        item.value = pkgConfig.getParamInt(param);
-                    } else {
-                        // e.g. a separator
-                        continue;
+                    if (item) {
+                        settings.push(item);
                     }
-
-                    settings.push(item);
                 }
             }
 
@@ -364,6 +373,44 @@ Item {
             }
 
             vescCommands.customConfigSet(0, pkgConfig);
+        }
+
+        function diffConfig(other) {
+            var otherSettings = {};
+            for (let item of other.settings) {
+                otherSettings[item.name] = item;
+            }
+            var typeDiffers = [];
+            var differs = [];
+            var otherMissing = [];
+            for (let subGroup of pkgConfig.getParamSubgroups("General")) {
+                for (let paramName of pkgConfig.getParamsFromSubgroup("General", subGroup)) {
+                    var param = paramNameToObject(paramName);
+                    if (!param) {
+                        continue;
+                    }
+
+                    if (otherSettings.hasOwnProperty(paramName)) {
+                        var otherParam = otherSettings[paramName];
+                        if (param.type !== otherParam.type) {
+                            param.otherType = otherParam.type;
+                            typeDiffers.push(param);
+                        } else if (param.value !== otherParam.value) {
+                            param.otherValue = otherParam.value;
+                            differs.push(param);
+                        }
+                        delete otherSettings[paramName];
+                    } else {
+                        otherMissing.push(param);
+                    }
+                }
+            }
+
+            return {
+                "differs": differs,
+                "missing": otherSettings,
+                "otherMissing": otherMissing,
+            }
         }
 
         // TODO don't do this...
