@@ -756,6 +756,7 @@ Item {
         property alias battCurrentLog: prefBattCurrentLog.checked
         property int tempWarningOffset: 10
         property alias tuneSlotCount: prefTuneSlotCount.value
+        property alias showTuneDiffCount: prefShowTuneDiffCount.checked
         property alias showWelcomeDialog: prefShowWelcomeDialog.checked
     }
 
@@ -3474,6 +3475,12 @@ Item {
                         }
 
                         RightSwitch {
+                            id: prefShowTuneDiffCount
+                            checked: false
+                            label: "Show changed options count on tunes"
+                        }
+
+                        RightSwitch {
                             id: prefShowWelcomeDialog
                             checked: true
                             label: "Show Welcome dialog"
@@ -5241,7 +5248,8 @@ Item {
 
                             onClicked: {
                                 if (tuneName) {
-                                    packageConfig.applyConfig(tuneManager.loadTune(slot));
+                                    var tune = tuneManager.loadTune(slot);
+                                    packageConfig.applyConfig(tune);
                                 }
                             }
 
@@ -5279,6 +5287,17 @@ Item {
                                         horizontalAlignment: Text.AlignHCenter
                                         text: "press and hold to set"
                                     }
+                                }
+
+                                DText {
+                                    id: tuneButtonDiffCount
+                                    anchors.bottom: parent.bottom
+                                    anchors.right: parent.right
+
+                                    font.pixelSize: fontSizeSmall
+                                    visible: preferences.showTuneDiffCount && tuneDiff > 0
+                                    horizontalAlignment: Text.AlignHRight
+                                    text: tuneDiff
                                 }
                             }
 
