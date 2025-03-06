@@ -3344,6 +3344,13 @@ Item {
             font.pointSize: 15
         }
 
+        component SubHeading : LText {
+            Layout.fillWidth: true
+            Layout.topMargin: 10
+            horizontalAlignment: TextInput.AlignHCenter
+            font.pointSize: 12
+        }
+
         component OptionDescription : LText {
             Layout.fillWidth: true
             Layout.leftMargin: 20
@@ -3544,19 +3551,19 @@ Item {
                             text: "Backup / Restore"
                         }
 
-                        property string backupDate: tuneManager.fullBackup ? Qt.formatDateTime(tuneManager.fullBackup.date) : ""
-                        property string backupPackage: tuneManager.fullBackup ? "%1-%2".arg(tuneManager.fullBackup.package.name).arg(tuneManager.fullBackup.package.version) : ""
-
-                        NText {
-                            font.pointSize: 11
-                            visible: !!tuneManager.fullBackup
-                            text: "Backup date: %1".arg(parent.backupDate);
+                        SetupDescription {
+                            text: "Backups are stored in VESC Tool's internal storage."
                         }
 
-                        NText {
-                            font.pointSize: 11
+                        SubHeading {
+                            text: "Shared Backup"
+                        }
+
+                        SetupDescription {
+                            font.pointSize: 10
+                            horizontalAlignment: TextInput.AlignHCenter
                             visible: !!tuneManager.fullBackup
-                            text: "Saved by: %1".arg(parent.backupPackage);
+                            text: tuneManager.fullBackup ? Qt.formatDateTime(tuneManager.fullBackup.date) : ""
                         }
 
                         RowLayout {
@@ -3582,10 +3589,6 @@ Item {
                                     applyConfigDialog.show(tuneManager.fullBackup);
                                 }
                             }
-                        }
-
-                        SetupDescription {
-                            text: "Backup is stored in VESC Tool's internal storage."
                         }
 
                         // Doesn't work on Android :(
