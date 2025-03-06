@@ -3507,7 +3507,7 @@ Item {
                         }
 
                         SetupDescription {
-                            text: "If you've installed Refloat before running the motor wizard, you need to disable the package to prevent it from conflicting with the wizard (this is equivalent to setting Disable Package to True in Refloat Cfg > Spec). After configuring your motor (and IMU, though it's not necessary to disable Refloat for IMU configuration), re-enable the package."
+                            text: "Before running the motor wizard, you need to disable the package to prevent the two fighting over the motor. After configuring your motor, you can re-enable the package."
                         }
 
                         Button {
