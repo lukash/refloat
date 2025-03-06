@@ -3358,7 +3358,7 @@ Item {
             wrapMode: Text.WordWrap
         }
 
-        component SetupDescription : LText {
+        component SetupDescription : NText {
             Layout.fillWidth: true
             font.pointSize: 10
             wrapMode: Text.WordWrap
