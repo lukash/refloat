@@ -35,14 +35,16 @@ bool konami_check(Konami *konami, Leds *leds, const FootpadSensor *fs, const Tim
     }
 
     if (fs->state == konami->sequence[konami->state]) {
-        ++konami->state;
-        if (konami->state == konami->sequence_size) {
-            konami_reset(konami);
-            leds_status_confirm(leds);
-            return true;
-        }
+        if (timer_older(time, konami->timer, 0.15)) {
+            ++konami->state;
+            if (konami->state == konami->sequence_size) {
+                konami_reset(konami);
+                leds_status_confirm(leds);
+                return true;
+            }
 
-        timer_refresh(time, &konami->timer);
+            timer_refresh(time, &konami->timer);
+        }
     } else if (konami->state > 0 && fs->state != konami->sequence[konami->state - 1]) {
         konami_reset(konami);
     }
