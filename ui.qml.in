@@ -818,7 +818,8 @@ Item {
         readonly property int sat_HighVoltage: 10
         readonly property int sat_LowVoltage: 11
         readonly property int sat_Temperature: 12
-
+        readonly property int sat_BMSConnection: 13
+        
         // setpoint adjustment class
         readonly property int sac_Normal: 0
         readonly property int sac_Warning: 1
@@ -832,6 +833,7 @@ Item {
             [sat_HighVoltage, "pushback: high voltage"],
             [sat_LowVoltage, "pushback: low voltage"],
             [sat_Temperature, "pushback: temperature"],
+            [sat_BMSConnection, "pushback: bms connection"],
         ])
 
         property int setpointAdjustmentType: sat_None
@@ -881,6 +883,13 @@ Item {
             [8, "Low Battery"],
             [9, "Board Idle"],
             [10, "Other"],
+            [11, "BMS: Cell Under Temp"],
+            [12, "BMS: Cell Over Temp"],
+            [13, "BMS: Cell Low Voltage"],
+            [14, "BMS: Cell High Voltage"],
+            [15, "BMS: Cell Balance"],
+            [16, "BMS: Connection Lost"],
+            [17, "BMS: BMS Temp"],
         ])
 
         property int beepReason: 0

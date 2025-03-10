@@ -7,6 +7,25 @@
 
 ; Set firmware version:
 (apply ext-set-fw-version (sysinfo 'fw-ver))
+(def version_major (first (sysinfo 'fw-ver)))
+(def version_minor (second (sysinfo 'fw-ver)))
+
+; Setup thread for BMS Tiltback
+(if (or (and (= version_major 6) (>= version_minor 6)) (>= version_major 7)) {
+    (loopwhile-thd 50 t {
+        (if (and (>= (get-bms-val 'bms-can-id) 0) (ext-bms)) {
+            (var bms-temp-cell-max (get-bms-val 'bms-temp-cell-max))
+            (var bms-temp-cell-min bms-temp-cell-max)
+            (var bms-temp-mosfet -281)
+            (if (= (get-bms-val 'bms-data-version) 1) {
+                (setq bms-temp-cell-min (get-bms-val 'bms-temps-adc 1))
+                (setq bms-temp-mosfet (get-bms-val 'bms-temps-adc 3))
+            })
+            (ext-bms (get-bms-val 'bms-v-cell-min) (get-bms-val 'bms-v-cell-max) bms-temp-cell-min bms-temp-cell-max bms-temp-mosfet (get-bms-val 'bms-msg-age))
+        })
+        (sleep 0.2)
+    })
+})
 
 ; Set to 1 to monitor debug variables
 (define debug 1)
