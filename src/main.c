@@ -1000,12 +1000,12 @@ static void write_cfg_to_eeprom(Data *d) {
         eeprom_var v;
         v.as_u32 = REFLOATCONFIG_SIGNATURE;
         VESC_IF->store_eeprom_var(&v, 0);
+
+        beep_alert(d, 1, 0);
+        leds_status_confirm(&d->leds);
     } else {
         log_error("Failed to write config to EEPROM.");
     }
-
-    beep_alert(d, 1, 0);
-    leds_status_confirm(&d->leds);
 }
 
 static void aux_thd(void *arg) {
