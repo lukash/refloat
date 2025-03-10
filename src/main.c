@@ -1001,6 +1001,7 @@ static void write_cfg_to_eeprom(Data *d) {
         v.as_u32 = REFLOATCONFIG_SIGNATURE;
         VESC_IF->store_eeprom_var(&v, 0);
 
+        d->config_read_fail = false;
         beep_alert(d, 1, 0);
         leds_status_confirm(&d->leds);
     } else {
@@ -1024,7 +1025,7 @@ static void aux_thd(void *arg) {
     }
 }
 
-static void read_cfg_from_eeprom(RefloatConfig *config) {
+static void read_cfg_from_eeprom(Data *d) {
     uint32_t ints = sizeof(RefloatConfig) / 4 + 1;
     uint32_t *buffer = VESC_IF->malloc(ints * sizeof(uint32_t));
     if (!buffer) {
@@ -1045,16 +1046,18 @@ static void read_cfg_from_eeprom(RefloatConfig *config) {
             }
         } else {
             log_error("Failed signature check while reading config from EEPROM, using defaults.");
-            confparser_set_defaults_refloatconfig(config);
+            d->config_read_fail = true;
+            confparser_set_defaults_refloatconfig(&d->float_conf);
             return;
         }
     }
 
     if (read_ok) {
-        memcpy(config, buffer, sizeof(RefloatConfig));
+        memcpy(&d->float_conf, buffer, sizeof(RefloatConfig));
     } else {
-        confparser_set_defaults_refloatconfig(config);
         log_error("Failed to read config from EEPROM, using defaults.");
+        d->config_read_fail = true;
+        confparser_set_defaults_refloatconfig(&d->float_conf);
     }
 
     VESC_IF->free(buffer);
@@ -1063,7 +1066,7 @@ static void read_cfg_from_eeprom(RefloatConfig *config) {
 static void data_init(Data *d) {
     memset(d, 0, sizeof(Data));
 
-    read_cfg_from_eeprom(&d->float_conf);
+    read_cfg_from_eeprom(d);
 
     d->odometer = VESC_IF->mc_get_odometer();
 
@@ -1293,7 +1296,7 @@ static void cmd_print_info(Data *d) {
 static void cmd_lock(Data *d, unsigned char *cfg) {
     if (d->state.state != STATE_RUNNING) {
         // restore config before locking to avoid accidentally writing temporary changes
-        read_cfg_from_eeprom(&d->float_conf);
+        read_cfg_from_eeprom(d);
         d->float_conf.disabled = cfg[0];
         state_set_disabled(&d->state, cfg[0]);
         write_cfg_to_eeprom(d);
@@ -1329,7 +1332,7 @@ static void cmd_handtest(Data *d, unsigned char *cfg) {
         d->float_conf.fault_delay_pitch = 50;
         d->float_conf.fault_delay_roll = 50;
     } else {
-        read_cfg_from_eeprom(&d->float_conf);
+        read_cfg_from_eeprom(d);
         configure(d);
     }
 }
@@ -1768,7 +1771,7 @@ static void cmd_flywheel_toggle(Data *d, unsigned char *cfg, int len) {
 void flywheel_stop(Data *d) {
     beep_on(d, 1);
     d->state.mode = MODE_NORMAL;
-    read_cfg_from_eeprom(&d->float_conf);
+    read_cfg_from_eeprom(d);
     configure(d);
 }
 
@@ -1858,7 +1861,7 @@ static void lights_control_response(const CfgLeds *leds) {
 }
 
 static void cmd_info(const Data *d, unsigned char *buf, int len) {
-    static const int bufsize = 7 + 16 + 9 + 2 + ITEMS_IDS_SIZE(RT_DATA_ALL_ITEMS);
+    static const int bufsize = 7 + 16 + 10 + 2 + ITEMS_IDS_SIZE(RT_DATA_ALL_ITEMS);
     uint8_t version = 1;
     int32_t i = 0;
 
@@ -1918,6 +1921,12 @@ static void cmd_info(const Data *d, unsigned char *buf, int len) {
             capabilities |= 1 << 31;
         }
         buffer_append_uint32(send_buffer, capabilities, &ind);
+
+        uint8_t extra_flags = 0;
+        if (d->config_read_fail) {
+            extra_flags |= 0x1;
+        }
+        send_buffer[ind++] = extra_flags;
 
         // Send the full type here. This is redundant with cmd_light_info. It
         // likely shouldn't be here, as the type can be reconfigured and the
@@ -2002,7 +2011,7 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
         return;
     }
     case COMMAND_CFG_RESTORE: {
-        read_cfg_from_eeprom(&d->float_conf);
+        read_cfg_from_eeprom(d);
         return;
     }
     case COMMAND_TUNE_DEFAULTS: {

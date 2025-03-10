@@ -649,6 +649,8 @@ Item {
                 state.ticksPerSecond = dv.getUint32(ind); ind += 4;
                 state.capabilities = dv.getUint32(ind); ind += 4;
 
+                var extraFlags = dv.getUint8(ind++);
+
                 var led_type = dv.getUint8(ind++);
                 if (led_type > 0) {
                     lights.enabled = true;
