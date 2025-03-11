@@ -861,6 +861,21 @@ Item {
             return createTune("Full Backup", "", config);
         }
 
+        function globalBackup() {
+            var backup = createBackup();
+            if (!backup) {
+                return;
+            }
+            fullBackup = backup;
+        }
+
+        function globalRestore() {
+            if (!fullBackup) {
+                return;
+            }
+            applyConfigDialog.show(fullBackup);
+        }
+
         function saveTune(slot, tune) {
             var id = tuneId(slot);
 
@@ -3584,17 +3599,17 @@ Item {
                                 text: "Backup"
 
                                 onClicked: {
-                                    tuneManager.fullBackup = tuneManager.createBackup();
+                                    tuneManager.globalBackup();
                                 }
                             }
 
                             Button {
                                 Layout.alignment: Qt.AlignHCenter
 
-                                text: "Restore"
+                                text: "View"
 
                                 onClicked: {
-                                    applyConfigDialog.show(tuneManager.fullBackup);
+                                    tuneManager.globalRestore();
                                 }
                             }
                         }
