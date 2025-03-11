@@ -776,6 +776,8 @@ Item {
         readonly property string packageVersion: "{{VERSION}}"
         readonly property int maxTunes: 6
 
+        signal idBackupFinished(var backup)
+
         // Storage for tunes as well as full package configs
         property var tuneStorage: Settings {
             id: tuneStorage
@@ -874,6 +876,23 @@ Item {
                 return;
             }
             applyConfigDialog.show(fullBackup);
+        }
+
+        function idBackup() {
+            var backup = createBackup();
+            if (!backup) {
+                return;
+            }
+            tuneStorage.setValue("backup_" + board.getId(), backup);
+            idBackupFinished(backup);
+        }
+
+        function idRestore() {
+            var backup = tuneStorage.value("backup_" + board.getId());
+            if (!backup) {
+                return;
+            }
+            applyConfigDialog.show(backup);
         }
 
         function saveTune(slot, tune) {
@@ -1006,6 +1025,10 @@ Item {
 
         Component.onCompleted: {
             convertFloatQuicksaves();
+            var idBackup = tuneStorage.value("backup_" + board.getId());
+            if (idBackup) {
+                idBackupFinished(idBackup);
+            }
         }
     }
 
@@ -3610,6 +3633,52 @@ Item {
 
                                 onClicked: {
                                     tuneManager.globalRestore();
+                                }
+                            }
+                        }
+
+                        SubHeading {
+                            text: "Board Backup"
+                        }
+
+                        SetupDescription {
+                            id: setupIdBackupDate
+                            font.pointSize: 10
+                            horizontalAlignment: TextInput.AlignHCenter
+                            property var backup: null
+                            visible: !!backup
+                            text: backup ? Qt.formatDateTime(backup.date) : ""
+
+                            Connections {
+                                target: tuneManager
+
+                                function onIdBackupFinished(backup) {
+                                    setupIdBackupDate.backup = backup;
+                                }
+                            }
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            Layout.alignment: Qt.AlignHCenter
+
+                            Button {
+                                Layout.alignment: Qt.AlignHCenter
+
+                                text: "Backup"
+
+                                onClicked: {
+                                    tuneManager.idBackup();
+                                }
+                            }
+
+                            Button {
+                                Layout.alignment: Qt.AlignHCenter
+
+                                text: "View"
+
+                                onClicked: {
+                                    tuneManager.idRestore();
                                 }
                             }
                         }
