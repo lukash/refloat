@@ -650,6 +650,7 @@ Item {
                 state.capabilities = dv.getUint32(ind); ind += 4;
 
                 var extraFlags = dv.getUint8(ind++);
+                tuneManager.triggerAutoRestore(extraFlags & 0x1);  // 0x1 = package has default config, it was probably reset
 
                 var led_type = dv.getUint8(ind++);
                 if (led_type > 0) {
@@ -776,7 +777,10 @@ Item {
         readonly property string packageVersion: "{{VERSION}}"
         readonly property int maxTunes: 6
 
+        property bool defaultConfigChecked
+
         signal idBackupFinished(var backup)
+        signal autoBackupFinished(var backup)
 
         // Storage for tunes as well as full package configs
         property var tuneStorage: Settings {
@@ -807,6 +811,7 @@ Item {
         }
 
         function onUpdate() {
+            triggerAutoBackup();
             // force recalculation of dependent variables
             tunes = tunes;
         }
@@ -893,6 +898,45 @@ Item {
                 return;
             }
             applyConfigDialog.show(backup);
+        }
+
+        function autoBackup() {
+            var backup = createBackup();
+            if (!backup) {
+                return;
+            }
+
+            tuneStorage.setValue("auto_backup_" + board.getId(), backup);
+            autoBackupFinished(backup);
+        }
+
+        function autoRestore() {
+            var backup = tuneStorage.value("auto_backup_" + board.getId());
+            if (!backup) {
+                return;
+            }
+            applyConfigDialog.show(backup);
+        }
+
+        function triggerAutoBackup() {
+            if (!defaultConfigChecked) {
+                return;
+            }
+
+            autoBackup();
+        }
+
+        function triggerAutoRestore(isDefault) {
+            if (isDefault) {
+                var backup = tuneStorage.value("auto_backup_" + board.getId());
+                if (backup) {
+                    applyConfigDialog.show(backup);
+                }
+            } else {
+                autoBackup();
+            }
+
+            defaultConfigChecked = true;
         }
 
         function saveTune(slot, tune) {
@@ -1028,6 +1072,10 @@ Item {
             var idBackup = tuneStorage.value("backup_" + board.getId());
             if (idBackup) {
                 idBackupFinished(idBackup);
+            }
+            var autoBackup = tuneStorage.value("auto_backup_" + board.getId());
+            if (autoBackup) {
+                autoBackupFinished(autoBackup);
             }
         }
     }
@@ -3680,6 +3728,37 @@ Item {
                                 onClicked: {
                                     tuneManager.idRestore();
                                 }
+                            }
+                        }
+
+                        SubHeading {
+                            text: "Automatic Board Backup"
+                        }
+
+                        SetupDescription {
+                            id: setupAutoBackupDate
+                            font.pointSize: 10
+                            horizontalAlignment: TextInput.AlignHCenter
+                            property var backup: null
+                            visible: !!backup
+                            text: backup ? Qt.formatDateTime(backup.date) : ""
+
+                            Connections {
+                                target: tuneManager
+
+                                function onAutoBackupFinished(backup) {
+                                    setupAutoBackupDate.backup = backup;
+                                }
+                            }
+                        }
+
+                        Button {
+                            Layout.alignment: Qt.AlignHCenter
+
+                            text: "View"
+
+                            onClicked: {
+                                tuneManager.autoRestore();
                             }
                         }
 
