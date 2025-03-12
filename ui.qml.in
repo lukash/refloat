@@ -342,6 +342,14 @@ Item {
             return obj;
         }
 
+        function getDisplayName(name) {
+            return pkgConfig.getLongName(name);
+        }
+
+        function getEnumNames(name) {
+            return pkgConfig.getParamEnumNames(name);
+        }
+
         function fetchConfig(tuneOnly) {
             if (!checkConfig()) return null;
 
@@ -3820,9 +3828,8 @@ Item {
     BaseDialog {
         id: editTuneDialog
 
-        title: "Edit Tune"
-        standardButtons: Dialog.Save | Dialog.Discard | Dialog.Cancel
-        placeAtTop: true
+        title: tune ? "Edit Tune" : "Save Tune"
+        standardButtons: !!tune ? Dialog.Save | Dialog.Discard | Dialog.Close : Dialog.Save | Dialog.Close
 
         property var tuneSlot
         property var tune: null
@@ -3830,6 +3837,14 @@ Item {
         function show(slot) {
             tuneSlot = slot;
             tune = tuneManager.loadTune(slot);
+            editTuneDiff.setModel(packageConfig.diffConfig(tune).differs);
+            editTuneDiff.reset();
+
+            standardButton(Dialog.Save).enabled = !!tune;
+            if (!!tune) {
+                standardButton(Dialog.Discard).text = "Erase"
+            }
+
             open();
         }
 
@@ -3855,15 +3870,6 @@ Item {
             close();
         }
 
-        onOpened: {
-            standardButton(Dialog.Save).enabled = !!tune;
-            standardButton(Dialog.Discard).enabled = !!tune;
-        }
-
-        Component.onCompleted: {
-            standardButton(Dialog.Discard).text = "Erase"
-        }
-
         ColumnLayout {
             width: editTuneDialog.availableWidth
 
@@ -3871,23 +3877,26 @@ Item {
                 Layout.fillWidth: true
 
                 visible: editTuneDialog.tune
-                text: "Tune date: %1".arg(Qt.formatDateTime(new Date(editTuneDialog.tuneAttr("date"))));
+                text: "Last saved: %1".arg(Qt.formatDateTime(new Date(editTuneDialog.tuneAttr("date"))));
             }
 
-            LText {
-                Layout.fillWidth: true
-                text: "Name:"
-            }
-
-            TextField {
-                id: saveTuneNameInput
+            RowLayout {
                 Layout.fillWidth: true
 
-                maximumLength: 30
-                text: editTuneDialog.tuneAttr("name")
+                LText {
+                    text: "Name:"
+                }
 
-                onTextEdited: {
-                    editTuneDialog.standardButton(Dialog.Save).enabled = !!text;
+                TextField {
+                    id: saveTuneNameInput
+                    Layout.fillWidth: true
+
+                    maximumLength: 30
+                    text: editTuneDialog.tuneAttr("name")
+
+                    onTextEdited: {
+                        editTuneDialog.standardButton(Dialog.Save).enabled = !!text;
+                    }
                 }
             }
 
@@ -3905,11 +3914,18 @@ Item {
                 text: editTuneDialog.tuneAttr("description") || ""
             }
 
+            ConfigDiff {
+                id: editTuneDiff
+                Layout.fillWidth: true
+                dialog: editTuneDialog
+                isTune: true
+            }
+
             CheckBox {
                 id: saveTuneOverwrite
 
-                checked: !editTuneDialog.tune
-                visible: editTuneDialog.tune
+                checked: true
+                visible: editTuneDialog.tune && !editTuneDiff.isEmpty
                 text: "Overwrite with current tune"
             }
         }
@@ -4015,11 +4031,236 @@ Item {
         }
     }
 
+    component ConfigDiff : ColumnLayout {
+        id: configDiff
+
+        property BaseDialog dialog
+        property bool isTune: false
+
+        property bool isEmpty: diffModel.count === 0
+
+        property real rowHeight: 30
+        property real valueColumnWidth: 60
+
+        property real animation: 0
+        property real contentHeight: Math.min(maxHeight, diffView.contentHeight + diffHeader.height + 5)
+        property real autoHeight: animation * contentHeight
+        property real maxHeight
+
+        Behavior on animation {
+            id: animBehavior
+            NumberAnimation {
+                easing.type: Easing.InOutExpo
+                duration: 400
+            }
+        }
+
+        function reset() {
+            animBehavior.enabled = false;
+            diffCheckbox.checked = false;
+            animation = 0;
+            animBehavior.enabled = true;
+        }
+
+        function showHideDiff(show) {
+            if (show) {
+                maxHeight = dialog.fullHeight - dialog.height;
+            }
+            animation = show ? 1 : 0;
+        }
+
+        function displayValue(item, value) {
+            if (item.type === "Double" || item.type === "Int") {
+                return value.toString();
+            } else if (item.type === "Bool") {
+                return value ? "On" : "Off";
+            } else if (item.type === "Enum") {
+                return packageConfig.getEnumNames(item.name)[value];
+            } else if (item.type === "String") {
+                return value;
+            } else if (item.type === "Bitfield") {
+                return "[option set]";
+            }
+
+            return "[unknown]";
+        }
+
+        function setModel(m) {
+            var model = diffModel;
+            model.clear();
+            var empty = true;
+            for (var item of m) {
+                item.value = displayValue(item, item.value);
+                item.otherValue = displayValue(item, item.otherValue);
+                model.append(item);
+                empty = false;
+            }
+            if (empty) {
+                diffCheckbox.checked = false;
+            }
+        }
+
+        CheckBox {
+            id: diffCheckbox
+            implicitHeight: indicator.height
+            Layout.leftMargin: -4
+            visible: !isEmpty
+
+            checked: false
+
+            onCheckedChanged: {
+                configDiff.showHideDiff(checked);
+            }
+
+            contentItem: Item {
+                implicitWidth: checkLabel.implicitWidth + 22
+                implicitHeight: checkLabel.implicitHeight
+
+                Label {
+                    id: checkLabel
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.leftMargin: 22
+                    text: "Differences (%1)".arg(diffModel.count)
+                    color: Utility.getAppHexColor("lightText")
+                    verticalAlignment: Text.AlignVCenter
+                }
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: parent.checked = !parent.checked
+            }
+
+            indicator: Item {
+                width: 30
+                height: 30
+                Item {
+                    anchors.centerIn: parent
+                    height: 18
+                    width: height / 2
+                    clip: true
+                    rotation: 90 * animation
+
+                    Rectangle {
+                        height: parent.height
+                        width: height
+                        x: -parent.width
+                        rotation: 45
+                        scale: 0.707
+                        color: Utility.getAppHexColor("lightText")
+                    }
+                }
+            }
+        }
+
+        Item {
+            implicitHeight: configDiff.autoHeight
+            Layout.fillWidth: true
+            clip: true
+
+            Row {
+                id: diffHeader
+                anchors.horizontalCenter: parent.horizontalCenter
+
+                NText {
+                    width: diffView.width - 2 * valueColumnWidth - 10
+                    horizontalAlignment: Text.AlignLeft
+                    verticalAlignment: Text.AlignVCenter
+                    text: "Option"
+                }
+
+                NText {
+                    width: valueColumnWidth
+                    horizontalAlignment: Text.AlignRight
+                    verticalAlignment: Text.AlignVCenter
+                    text: isTune ? "Tune" : "Current";
+                }
+
+                NText {
+                    width: valueColumnWidth
+                    horizontalAlignment: Text.AlignRight
+                    verticalAlignment: Text.AlignVCenter
+                    text: isTune ? "Current" : "Backup";
+                }
+            }
+
+            TableView {
+                id: diffView
+                anchors.top: diffHeader.bottom
+                anchors.topMargin: 5
+                height: parent.height - diffHeader.height - 5
+                width: parent.width
+                clip: true
+
+                model: ListModel {
+                    id: diffModel
+                }
+
+                delegate: Rectangle {
+                    color: index % 2 === 0 ? Utility.getAppHexColor("lightBackground") : Utility.getAppHexColor("normalBackground")
+                    implicitWidth: diffView.width
+                    implicitHeight: rowHeight
+
+                    Row {
+                        id: diffRow
+                        anchors.centerIn: parent
+
+                        NText {
+                            width: diffView.width - 2 * valueColumnWidth - 10
+                            height: rowHeight
+                            horizontalAlignment: Text.AlignLeft
+                            verticalAlignment: Text.AlignVCenter
+                            wrapMode: Text.WordWrap
+                            fontSizeMode: Text.Fit
+                            minimumPointSize: 4
+                            text: packageConfig.getDisplayName(name)
+                            color: Utility.getAppHexColor("lightText")
+                        }
+
+                        NText {
+                            width: valueColumnWidth
+                            height: rowHeight
+                            horizontalAlignment: Text.AlignRight
+                            verticalAlignment: Text.AlignVCenter
+                            wrapMode: Text.WordWrap
+                            fontSizeMode: Text.Fit
+                            minimumPointSize: 4
+                            text: isTune ? otherValue : value
+                        }
+
+                        NText {
+                            width: valueColumnWidth
+                            height: rowHeight
+                            horizontalAlignment: Text.AlignRight
+                            verticalAlignment: Text.AlignVCenter
+                            wrapMode: Text.WordWrap
+                            fontSizeMode: Text.Fit
+                            minimumPointSize: 4
+                            text: isTune ? value : otherValue
+                            color: Utility.getAppHexColor("lightAccent")
+                        }
+                    }
+                }
+            }
+        }
+
+        NText {
+            Layout.fillWidth: true
+            horizontalAlignment: Text.AlignHCenter
+            visible: isEmpty && !isTune
+            text: "Current config is the same as this backup."
+        }
+
+        Item {
+            Layout.fillWidth: true
+        }
+    }
+
     BaseDialog {
         id: applyConfigDialog
 
         title: "Restore Config"
-        standardButtons: Dialog.Apply | Dialog.Cancel
 
         property var config
 
@@ -4027,10 +4268,24 @@ Item {
         property var date: config && config.date ? Qt.formatDateTime(new Date(config.date)) : ""
         property var pkg: config && config.package ? "%1 %2".arg(config.package.name).arg(config.package.version) : ""
         property var description: config && config.description ? config.description : ""
+        property var diff: config ? packageConfig.diffConfig(config).differs : []
+
+        onDiffChanged: {
+            applyConfigDiff.setModel(diff);
+        }
 
         function show(cfg) {
             config = cfg;
+            applyConfigDiff.reset();
+            if (!applyConfigDiff.isEmpty) {
+                standardButton(Dialog.Apply).text = "Restore";
+            }
             open();
+        }
+
+        // workaround: the buttons sometimes wouldn't appear if declared via `standardButtons` only
+        footer: DialogButtonBox {
+            standardButtons: applyConfigDiff.isEmpty ? Dialog.Close : Dialog.Apply | Dialog.Close
         }
 
         function set(cfg) {
@@ -4047,6 +4302,7 @@ Item {
             width: applyConfigDialog.availableWidth
 
             LText {
+                id: applyConfigName
                 Layout.fillWidth: true
                 font.pointSize: 14
                 horizontalAlignment: Text.AlignHCenter
@@ -4084,12 +4340,20 @@ Item {
                 text: applyConfigDialog.description
             }
 
+            ConfigDiff {
+                id: applyConfigDiff
+                Layout.fillWidth: true
+                dialog: applyConfigDialog
+            }
+
             LText {
                 Layout.fillWidth: true
+                Layout.topMargin: 16
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
                 wrapMode: Text.WordWrap
-                text: "Applying this config will overwrite your current one."
+                visible: !applyConfigDiff.isEmpty
+                text: "Restoring this backup will overwrite your current config."
             }
         }
     }
