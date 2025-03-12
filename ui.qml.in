@@ -4018,14 +4018,14 @@ Item {
     BaseDialog {
         id: applyConfigDialog
 
-        title: "Apply Config"
+        title: "Restore Config"
         standardButtons: Dialog.Apply | Dialog.Cancel
 
         property var config
 
-        property var name: config ? config.name : ""
+        property var name: config ? config.name : "(Unknown)"
         property var date: config && config.date ? Qt.formatDateTime(new Date(config.date)) : ""
-        property var pkg: config && config.package ? "%1-%2".arg(config.package.name).arg(config.package.version) : ""
+        property var pkg: config && config.package ? "%1 %2".arg(config.package.name).arg(config.package.version) : ""
         property var description: config && config.description ? config.description : ""
 
         function show(cfg) {
@@ -4044,25 +4044,29 @@ Item {
         }
 
         ColumnLayout {
-            width: editTuneDialog.availableWidth
+            width: applyConfigDialog.availableWidth
 
             LText {
                 Layout.fillWidth: true
-                text: "Name: %1".arg(applyConfigDialog.name);
+                font.pointSize: 14
+                horizontalAlignment: Text.AlignHCenter
+                text: applyConfigDialog.name;
             }
 
             NText {
                 Layout.fillWidth: true
                 font.pointSize: 11
+                horizontalAlignment: Text.AlignHCenter
                 visible: !!applyConfigDialog.date
-                text: "Backup date: %1".arg(applyConfigDialog.date)
+                text: applyConfigDialog.date
             }
 
             NText {
                 Layout.fillWidth: true
                 font.pointSize: 11
+                horizontalAlignment: Text.AlignHCenter
                 visible: !!applyConfigDialog.pkg
-                text: "Saved by: %1".arg(applyConfigDialog.pkg)
+                text: "Stored by: " + applyConfigDialog.pkg
             }
 
             LText {
@@ -4074,6 +4078,8 @@ Item {
             LText {
                 Layout.fillWidth: true
                 font.pointSize: 11
+                horizontalAlignment: Text.AlignHCenter
+                wrapMode: Text.WordWrap
                 visible: !!applyConfigDialog.description
                 text: applyConfigDialog.description
             }
@@ -4083,7 +4089,7 @@ Item {
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
                 wrapMode: Text.WordWrap
-                text: "Applying this config will OVERWRITE your current one. Would you like to apply it?"
+                text: "Applying this config will overwrite your current one."
             }
         }
     }
