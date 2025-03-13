@@ -133,6 +133,8 @@ typedef struct {
     HapticFeedback haptic_feedback;
     DataRecord data_record;
 
+    uint32_t bms_fault;
+
     Konami flywheel_konami;
     Konami headlights_on_konami;
     Konami headlights_off_konami;
