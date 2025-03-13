@@ -130,6 +130,8 @@ typedef struct {
     float rc_current_target;
     float rc_current;
 
+    uint32_t bms_fault;
+
     Konami flywheel_konami;
     Konami headlights_on_konami;
     Konami headlights_off_konami;

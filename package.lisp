@@ -8,6 +8,13 @@
 ; Set firmware version:
 (apply ext-set-fw-version (sysinfo 'fw-ver))
 
+; Init bms
+(if (>= (first (sysinfo 'fw-ver)) 6) {
+    (import "src/bms.lisp" 'bms)
+    (read-eval-program bms)
+    (spawn "bms" 50 init-bms)
+})
+
 ; Set to 1 to monitor debug variables
 (define debug 1)
 
