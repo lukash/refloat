@@ -350,25 +350,30 @@ Item {
             return pkgConfig.getParamEnumNames(name);
         }
 
-        function fetchConfig(tuneOnly) {
-            if (!checkConfig()) return null;
-
+        function paramIsTune(name) {
             var tuneBlacklist = [
-                "inputtilt_remote_type",
-                "inputtilt_deadband",
                 "disabled",
-                "hertz",
-                "tiltback_hv",
-                "tiltback_lv",
                 "fault_adc1",
                 "fault_adc2",
-                "dark_pitch_offset",
+                "hertz",
+                "inputtilt_remote_type",
+                "inputtilt_deadband",
+                "is_footbeep_enabled",
+                "is_beeper_enabled",
+                "tiltback_hv",
+                "tiltback_lv",
             ];
+
+            return !name.startsWith("hardware.") && !tuneBlacklist.includes(name);
+        }
+
+        function fetchConfig(tuneOnly) {
+            if (!checkConfig()) return null;
 
             var settings = [];
             for (let subGroup of pkgConfig.getParamSubgroups("General")) {
                 for (let param of pkgConfig.getParamsFromSubgroup("General", subGroup)) {
-                    if (tuneOnly && tuneBlacklist.includes(param)) {
+                    if (tuneOnly && !paramIsTune(param)) {
                         continue;
                     }
 
