@@ -943,7 +943,7 @@ Item {
             if (isDefault) {
                 var backup = tuneStorage.value("auto_backup_" + board.getId());
                 if (backup) {
-                    applyConfigDialog.show(backup);
+                    applyConfigDialog.show(backup, true);
                 }
             } else {
                 autoBackup();
@@ -4268,6 +4268,7 @@ Item {
         title: "Restore Config"
 
         property var config
+        property bool automatic: false
 
         property var name: config ? config.name : "(Unknown)"
         property var date: config && config.date ? Qt.formatDateTime(new Date(config.date)) : ""
@@ -4279,8 +4280,9 @@ Item {
             applyConfigDiff.setModel(diff);
         }
 
-        function show(cfg) {
+        function show(cfg, autoRestore) {
             config = cfg;
+            automatic = !!autoRestore;
             applyConfigDiff.reset();
             if (!applyConfigDiff.isEmpty) {
                 standardButton(Dialog.Apply).text = "Restore";
@@ -4305,6 +4307,16 @@ Item {
 
         ColumnLayout {
             width: applyConfigDialog.availableWidth
+
+            LText {
+                Layout.fillWidth: true
+                Layout.bottomMargin: 16
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+                wrapMode: Text.WordWrap
+                visible: applyConfigDialog.automatic
+                text: "Your package config has been reset after installing a new version. Do you want to restore a backup?"
+            }
 
             LText {
                 id: applyConfigName
