@@ -275,29 +275,51 @@ Item {
             target: packageConfig.pkgConfig
 
             function onParamChangedDouble(src, name, newParam) {
-                packageConfig.update();
+                packageConfig.pendingUpdate();
             }
 
             function onParamChangedInt(src, name, newParam) {
-                packageConfig.update();
+                packageConfig.pendingUpdate();
             }
 
             function onParamChangedEnum(src, name, newParam) {
-                packageConfig.update();
+                packageConfig.pendingUpdate();
             }
 
             function onParamChangedQString(src, name, newParam) {
-                packageConfig.update();
+                packageConfig.pendingUpdate();
             }
 
             function onParamChangedBool(src, name, newParam) {
+                packageConfig.pendingUpdate();
+            }
+        }
+
+        // There is no reliable signal for when the whole config changes,
+        // instead, we hook onto property changes and run a timer for a short
+        // while before we fire off the actual update() signal
+        property Timer updateTimer: Timer {
+            id: updateTimer
+            interval: 100
+
+            onTriggered: {
                 packageConfig.update();
             }
         }
 
+        function pendingUpdate() {
+            updateTimer.restart();
+        }
+
         function onCustomConfigLoadDone() {
             pkgConfig = VescIf.customConfig(0);
-            packageConfig.update();
+            update();
+        }
+
+        Component.onCompleted: {
+            if (pkgConfig !== null) {
+                update();
+            }
         }
 
         function checkConfig() {
