@@ -1904,16 +1904,7 @@ static void cmd_info(const Data *d, unsigned char *buf, int len) {
         send_buffer[ind++] = MINOR_VERSION;
         send_buffer[ind++] = PATCH_VERSION;
 
-        size_t i = 0;
-        for (; i < sizeof(VERSION_SUFFIX); ++i) {
-            if (i >= 16) {
-                break;
-            }
-            send_buffer[ind++] = VERSION_SUFFIX[i];
-        }
-        for (; i < 16; ++i) {
-            send_buffer[ind++] = '\0';
-        }
+        buffer_append_string_fixed(send_buffer, VERSION_SUFFIX, &ind, 16);
 
         buffer_append_uint32(send_buffer, SYSTEM_TICK_RATE_HZ, &ind);
         uint32_t capabilities = 0;

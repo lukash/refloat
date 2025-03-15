@@ -155,6 +155,20 @@ void buffer_append_string(uint8_t *buffer, const char *str, int32_t *index) {
     *index = idx;
 }
 
+void buffer_append_string_fixed(uint8_t *buffer, const char *str, int32_t *index, uint8_t length) {
+    int32_t idx = *index;
+    size_t i = 0;
+    while (i < length && str[i] != '\0') {
+        buffer[idx++] = str[i++];
+    }
+
+    for (; i < length; ++i) {
+        buffer[idx++] = '\0';
+    }
+
+    *index = idx;
+}
+
 int16_t buffer_get_int16(const uint8_t *buffer, int32_t *index) {
     int16_t res = ((uint16_t) buffer[*index]) << 8 | ((uint16_t) buffer[*index + 1]);
     *index += 2;
