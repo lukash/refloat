@@ -1861,7 +1861,7 @@ static void lights_control_response(const CfgLeds *leds) {
 }
 
 static void cmd_info(const Data *d, unsigned char *buf, int len) {
-    static const int bufsize = 7 + 16 + 9 + 2 + ITEMS_IDS_SIZE(RT_DATA_ALL_ITEMS);
+    static const int bufsize = 4 + 16 + 3 + 16 + 13 + 2 + ITEMS_IDS_SIZE(RT_DATA_ALL_ITEMS);
     uint8_t version = 1;
     int32_t i = 0;
 
@@ -1900,11 +1900,15 @@ static void cmd_info(const Data *d, unsigned char *buf, int len) {
 
         send_buffer[ind++] = 2;  // actual COMMAND_INFO version
         send_buffer[ind++] = flags;  // the flags repeated in the response
+
+        buffer_append_string_fixed(send_buffer, PACKAGE_NAME, &ind, 16);
+
         send_buffer[ind++] = MAJOR_VERSION;
         send_buffer[ind++] = MINOR_VERSION;
         send_buffer[ind++] = PATCH_VERSION;
 
         buffer_append_string_fixed(send_buffer, VERSION_SUFFIX, &ind, 16);
+        buffer_append_uint32(send_buffer, GIT_HASH, &ind);
 
         buffer_append_uint32(send_buffer, SYSTEM_TICK_RATE_HZ, &ind);
         uint32_t capabilities = 0;
