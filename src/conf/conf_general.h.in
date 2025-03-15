@@ -24,6 +24,7 @@
 #define MINOR_VERSION {{MINOR_VERSION}}
 #define PATCH_VERSION {{PATCH_VERSION}}
 #define VERSION_SUFFIX "{{VERSION_SUFFIX}}"
+#define GIT_HASH 0x{{GIT_HASH}}
 
 #include "conf_default.h"
 

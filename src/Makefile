@@ -37,6 +37,7 @@ MAJOR=`cat ../version | cut -d. -f1`
 MINOR=`cat ../version | cut -d. -f2`
 PATCH=`cat ../version | cut -d. -f3 | cut -d- -f1`
 SUFFIX=`cat ../version | cut -d. -f3 | cut -d- -f2- | cut -c-16`
+GIT_HASH=`git rev-parse --short=8 HEAD | cut -c-8`
 
 conf/conf_general.h: conf/conf_general.h.in ../package_name ../version
 	cat $< | \
@@ -45,6 +46,7 @@ conf/conf_general.h: conf/conf_general.h.in ../package_name ../version
 	sed "s/{{MAJOR_VERSION}}/${MAJOR}/g" | \
 	sed "s/{{MINOR_VERSION}}/${MINOR}/g" | \
 	sed "s/{{PATCH_VERSION}}/${PATCH}/g" | \
-	sed "s/{{VERSION_SUFFIX}}/${SUFFIX}/g" > $@
+	sed "s/{{VERSION_SUFFIX}}/${SUFFIX}/g" | \
+	sed "s/{{GIT_HASH}}/${GIT_HASH}/g" > $@
 
 -include $(DEPS)

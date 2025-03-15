@@ -2209,7 +2209,7 @@ static void stop(void *arg) {
 
 INIT_FUN(lib_info *info) {
     INIT_START
-    log_msg("Initializing " PACKAGE_NAME " " PACKAGE_VERSION);
+    log_msg("Initializing " PACKAGE_NAME " " PACKAGE_VERSION " (%x)", GIT_HASH);
 
     Data *d = VESC_IF->malloc(sizeof(Data));
     if (!d) {
