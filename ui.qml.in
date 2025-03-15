@@ -682,7 +682,8 @@ Item {
                 var flags = dv.getUint8(ind++);
                 ind += 19;  // 3 version numbers + 16 bytes of suffix
                 state.ticksPerSecond = dv.getUint32(ind); ind += 4;
-                state.capabilities = dv.getUint32(ind); ind += 4;
+                var capabilities = dv.getUint32(ind) >>> 0; ind += 4;
+                state.setCapabilities(capabilities);
 
                 var extraFlags = dv.getUint8(ind++);
                 tuneManager.triggerAutoRestore(extraFlags & 0x1);  // 0x1 = package has default config, it was probably reset
@@ -1129,10 +1130,10 @@ Item {
         // package capabilities
         readonly property int cap_DataRecord: 2**31
 
-        property int capabilities: 0
+        property bool capDataRecord
 
-        function hasCapability(cap) {
-            return (capabilities & cap) !== 0;
+        function setCapabilities(caps) {
+            capDataRecord = caps & cap_DataRecord;
         }
 
         // package state
@@ -3306,7 +3307,7 @@ Item {
 
         property bool vertical: parent.height > parent.width
 
-        showRecordDownload: parent.state.hasCapability(parent.state.cap_DataRecord)
+        showRecordDownload: parent.state.capDataRecord
         toolbarOffset: 0.9
 
         FloatingToolButton {
@@ -6048,7 +6049,7 @@ Item {
 
                         followEnd: true
 
-                        showRecordDownload: state.hasCapability(state.cap_DataRecord)
+                        showRecordDownload: state.capDataRecord
 
                         plotData: PlotData {
                             id: rtPlotData
