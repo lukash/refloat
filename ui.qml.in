@@ -801,7 +801,7 @@ Item {
         target: packageConfig
 
         readonly property string formatVersion: "1.0"
-        readonly property string packageName: "Refloat"
+        readonly property string packageName: "{{PACKAGE_NAME}}"
         readonly property string packageVersion: "{{VERSION}}"
         readonly property int maxTunes: 6
 

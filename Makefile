@@ -12,6 +12,7 @@ src:
 	$(MAKE) -C $@
 
 VERSION=`cat version`
+PACKAGE_NAME=`cat package_name | cut -c-16`
 
 ifeq ($(strip $(MINIFY_QML)),1)
     MINIFY_CMD="./rjsmin.py"
@@ -27,8 +28,11 @@ package_README-gen.md: package_README.md version
 	echo "- Build Date: `date --rfc-3339=seconds`" >> $@
 	echo "- Git Commit: #`git rev-parse --short HEAD`" >> $@
 
-ui.qml: ui.qml.in version
-	cat $< | sed "s/{{VERSION}}/${VERSION}/g" | ${MINIFY_CMD} > $@
+ui.qml: ui.qml.in package_name version
+	cat $< | \
+	sed "s/{{PACKAGE_NAME}}/${PACKAGE_NAME}/g" | \
+	sed "s/{{VERSION}}/${VERSION}/g" | \
+	${MINIFY_CMD} > $@
 
 clean:
 	rm -f refloat.vescpkg package_README-gen.md ui.qml
