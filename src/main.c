@@ -1143,6 +1143,7 @@ enum {
     COMMAND_TUNE_TILT = 14,
     COMMAND_FLYWHEEL = 22,
     COMMAND_REALTIME_DATA = 31,
+    COMMAND_REALTIME_DATA_IDS = 32,
     COMMAND_DATA_RECORD_REQUEST = 41,
 
     // commands above 200 are unstable and can change protocol at any time
@@ -1775,6 +1776,34 @@ void flywheel_stop(Data *d) {
     configure(d);
 }
 
+static void cmd_realtime_data_ids() {
+    static const int bufsize = 2 + 2 + ITEMS_IDS_SIZE(RT_DATA_ALL_ITEMS);
+    uint8_t buffer[bufsize];
+    int32_t ind = 0;
+
+    buffer[ind++] = 101;  // Package ID
+    buffer[ind++] = COMMAND_REALTIME_DATA_IDS;
+
+#define ADD_ID(id) buffer_append_string(buffer, #id, &ind);
+    // Send string ids of the realtime data items. The format is:
+    // IDS_COUNT (1B)
+    // [
+    //   ID_LENTGTH (1B)
+    //   [ID_CHARS] (number of chars equal to ID_LENGTH, terminal null omitted)
+    // ] (ids one after another, times IDS_COUNT)
+    //
+    // The pattern is repeated twice, the first set of ids is realtime data
+    // that is always sent, the second set of ids is realtime _runtime_
+    // data, only sent when the board is engaged.
+    buffer[ind++] = ITEMS_COUNT(RT_DATA_ITEMS);
+    VISIT(RT_DATA_ITEMS, ADD_ID);
+    buffer[ind++] = ITEMS_COUNT(RT_DATA_RUNTIME_ITEMS);
+    VISIT(RT_DATA_RUNTIME_ITEMS, ADD_ID);
+#undef ADD_ID
+
+    SEND_APP_DATA(buffer, bufsize, ind);
+}
+
 static void cmd_realtime_data(Data *d) {
     static const int bufsize = 79;
     uint8_t buffer[bufsize];
@@ -1861,7 +1890,7 @@ static void lights_control_response(const CfgLeds *leds) {
 }
 
 static void cmd_info(const Data *d, unsigned char *buf, int len) {
-    static const int bufsize = 4 + 16 + 3 + 16 + 13 + 2 + ITEMS_IDS_SIZE(RT_DATA_ALL_ITEMS);
+    static const int bufsize = 4 + 16 + 3 + 16 + 13;
     uint8_t version = 1;
     int32_t i = 0;
 
@@ -1929,26 +1958,6 @@ static void cmd_info(const Data *d, unsigned char *buf, int len) {
             extra_flags |= 0x1;
         }
         send_buffer[ind++] = extra_flags;
-
-        if (flags & 0x1) {  // Flag: append_rt_data_ids
-#define ADD_ID(id) buffer_append_string(send_buffer, #id, &ind);
-            // Append the string ids of the realtime data items (sent via the
-            // COMMAND_REALTIME_DATA command). The format is:
-            // IDS_COUNT (1B)
-            // [
-            //   ID_LENTGTH (1B)
-            //   [ID_CHARS] (number of chars equal to ID_LENGTH, terminal null omitted)
-            // ] (ids one after another, times IDS_COUNT)
-            //
-            // The pattern is repeated twice, the first set of ids is realtime data
-            // that is always sent, the second set of ids is realtime _runtime_
-            // data, only sent when the board is engaged.
-            send_buffer[ind++] = ITEMS_COUNT(RT_DATA_ITEMS);
-            VISIT(RT_DATA_ITEMS, ADD_ID);
-            send_buffer[ind++] = ITEMS_COUNT(RT_DATA_RUNTIME_ITEMS);
-            VISIT(RT_DATA_RUNTIME_ITEMS, ADD_ID);
-#undef ADD_ID
-        }
     }
     }
 
@@ -2086,6 +2095,10 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
     }
     case COMMAND_REALTIME_DATA: {
         cmd_realtime_data(d);
+        return;
+    }
+    case COMMAND_REALTIME_DATA_IDS: {
+        cmd_realtime_data_ids();
         return;
     }
     case COMMAND_LIGHTS_CONTROL: {

@@ -12,7 +12,7 @@ No data.
 
 The beginning of the response contains information about the state of the package. Following it is a sequence of realtime values in the 2-byte [float16](float16.md) format. Depending on the `mask`, these are optionally followed by a sequence of realtime _runtime_ values or charging values.
 
-The definition of what realtime and realtime _runtime_ values are sent is provided in the [INFO](INFO.md) command as two sequences of string IDs.
+The definition of what realtime and realtime _runtime_ values are sent is provided in the [REALTIME_DATA_IDS](REALTIME_DATA_IDS.md) command as two sequences of string IDs.
 
 The actual list of values sent is in [rt_data.h](/src/rt_data.h). See also [Realtime Value Tracking](../realtime_value_tracking.md) for more details.
 

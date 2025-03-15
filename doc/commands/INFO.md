@@ -15,7 +15,7 @@ _Note: What is now referred to as version `1` of this command originally had no 
 | Offset | Size | Name      | Mandatory | Description   |
 |--------|------|-----------|-----------|---------------|
 | 0      | 1    | `version` | No        | Requested version of the INFO command. In case the package doesn't support version this high, it shall respond with the highest version of the command it supports. Default value: `1` |
-| 1      | 1    | `flags`   | No        | Only for version 2. Flags for toggling extra information in the response:<br> `0x1`: Include `REALTIME_DATA` IDs in the response. See the [REALTIME_DATA](REALTIME_DATA.md) command for more information. |
+| 1      | 1    | `flags`   | No        | Only for version 2. Flags for toggling extra information in the response (currently unused). |
 
 ## Response
 
@@ -42,26 +42,3 @@ _Note: What is now referred to as version `1` of this command originally had no 
 | 41     | 4    | `tick_rate`              | Tick rate of the system in Hz. This number can be used to convert time measured in ticks in other commands (namely `REALTIME_DATA`) to seconds by dividing by this number. Currently the tick rate for VESC is always `10000`. |
 | 45     | 4    | `capabilities`           | Capability flags of the package:<br> `0x1`: LED lighting.<br> `0x2`: LED lighting is external through a module.<br> `0x80000000`: Data Recording. See the [Realtime Value Tracking](../realtime_value_tracking.md) page for details. |
 | 49     | 1    | `extra_flags`            | Extra flags:<br> `0x1`: Config read failure, normally due to installing a package with different config signature. |
-
-#### flags
-
-Flags indicate extra data in the response. The data follow in the response in the order of the flags as they are listed (for each flag that is enabled).
-
-**`0x1`: [REALTIME_DATA](REALTIME_DATA.md) command IDs**
-
-Contains two sequences of string IDs for data that are sent in the [REALTIME_DATA](REALTIME_DATA.md) command.
-
-The actual list of IDs that are sent is in [rt_data.h](/src/rt_data.h). See [Realtime Value Tracking](../realtime_value_tracking.md) for more details.
-
-| Offset | Size | Name                             | Description   |
-|--------|------|----------------------------------|---------------|
-| 0      | 1    | `realtime_data_id_count`         | Number of IDs of the `REALTIME_DATA` items which are always sent. |
-| 1      | ?    | `realtime_data_ids`              | A `string` sequence repeated `realtime_data_id_count` times. |
-| ?      | 1    | `realtime_runtime_data_id_count` | Number of IDs of the `REALTIME_DATA` items which are sent only when the package is running. |
-| ?      | ?    | `realtime_runtime_data_ids`      | A `string` sequence repeated `realtime_runtime_data_id_count` times. |
-
-**`string`**:
-| Offset | Size | Name     | Description   |
-|--------|------|----------|---------------|
-| 0      | 1    | `length` | Length of the string. |
-| 1      | ?    | `string` | `length` number of characters of the string (not null-terminated). |

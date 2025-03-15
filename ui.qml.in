@@ -123,8 +123,10 @@ Item {
         onTriggered: {
             vescCommands.getValuesSetup();
 
-            if (!state.infoReceived) {
+            if (state.commsState === state.comms_Info) {
                 commands.sendGetInfo();
+            } else if (state.commsState === state.comms_RTDataIDs) {
+                commands.sendGetRtDataIds();
             } else {
                 commands.sendGetRtData();
             }
@@ -500,6 +502,7 @@ Item {
         readonly property int c_HANDTEST: 13
         readonly property int c_FLYWHEEL: 22
         readonly property int c_REALTIME_DATA: 31
+        readonly property int c_REALTIME_DATA_IDS: 32
         readonly property int c_LIGHTS_CONTROL: 202
         readonly property int c_DATA_RECORD_REQUEST: 41
         readonly property int c_DATA_RECORD_HEADER: 42
@@ -555,12 +558,15 @@ Item {
             var data = createData(4, c_INFO);
 
             data.setUint8(2, 2); // version 2 of the INFO command
-            data.setUint8(3, 0x1); // 0x1 = include runtime data ids
             vescCommands.sendCustomAppData(data.buffer);
         }
 
         function sendGetRtData() {
             vescCommands.sendCustomAppData(createData(2, c_REALTIME_DATA).buffer);
+        }
+
+        function sendGetRtDataIds() {
+            vescCommands.sendCustomAppData(createData(2, c_REALTIME_DATA_IDS).buffer);
         }
 
         function sendLightsControl(on, headlightsOn) {
@@ -688,25 +694,18 @@ Item {
                 var extraFlags = dv.getUint8(ind++);
                 tuneManager.triggerAutoRestore(extraFlags & 0x1);  // 0x1 = package has default config, it was probably reset
 
-                if (flags & 0x1) {
-                    // Read the realtime data ids
-                    // These identify, in order, the data that are received via the REALTIME_DATA command
-                    [state.rtDataIdleItems, ind] = getStrings(dv, ind);
-                    [state.rtDataRuntimeItems, ind] = getStrings(dv, ind);
-                    state.rtDataAllItems = state.rtDataIdleItems.concat(state.rtDataRuntimeItems);
-                }
-
-                state.infoReceived = true;
+                state.commsState = state.comms_RTDataIDs;
             } else if (msgtype == c_LIGHTS_CONTROL) {
                 var values = dv.getUint8(ind++);
                 lights.on = values & 0b01;
                 lights.headlightsOn = values & 0b10;
             } else if (msgtype === c_REALTIME_DATA) {
-                if (!state.infoReceived) {
+                if (state.commsState !== state.comms_Initialized) {
                     // rt data came because another client app requested them,
                     // ignore until info is received
                     return;
                 }
+
                 var mask = dv.getUint8(ind++);
                 var hasRuntime = !!(mask & 0x1);
                 var hasCharging = !!(mask & 0x2);
@@ -766,6 +765,15 @@ Item {
                 var running = +(state.pkgState === state.s_Running);
                 rtPlotData.addSample([time, running, wheelslip, sat, fpState].concat(newRt));
                 rtPlotData.makeReady();
+            } else if (msgtype === c_REALTIME_DATA_IDS) {
+                if (state.commsState !== state.comms_RTDataIDs) {
+                    return;
+                }
+                [state.rtDataIdleItems, ind] = getStrings(dv, ind);
+                [state.rtDataRuntimeItems, ind] = getStrings(dv, ind);
+                state.rtDataAllItems = state.rtDataIdleItems.concat(state.rtDataRuntimeItems);
+
+                state.commsState = state.comms_Initialized;
             } else if (msgtype === c_DATA_RECORD_HEADER) {
                 recordedPlotData.receiveHeader(dv, ind);
             } else if (msgtype === c_DATA_RECORD_DATA) {
@@ -1111,7 +1119,19 @@ Item {
     property var state: QtObject {
         id: state
 
-        property bool infoReceived: false
+        readonly property int comms_Info: 1
+        readonly property int comms_RTDataIDs: 2
+        readonly property int comms_Initialized: 3
+
+        property int commsState: comms_Info
+
+        signal commsInitialized
+
+        onCommsStateChanged: {
+            if (commsState == comms_Initialized) {
+                commsInitialized();
+            }
+        }
 
         property bool extraRecording: false
         property bool extraRecAutostart: false
@@ -6058,7 +6078,7 @@ Item {
                         Connections {
                             target: state
 
-                            function onInfoReceivedChanged() {
+                            function onCommsInitialized() {
                                 rtPlotData.init(state.rtDataAllItems, state.ticksPerSecond);
                                 rtPlot.init(state.ticksPerSecond);
                             }
