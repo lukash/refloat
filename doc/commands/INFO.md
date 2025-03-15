@@ -38,9 +38,8 @@ _Note: What is now referred to as version `1` of this command originally had no 
 | 4      | 1    | `package_patch_version`  | Patch version of the package. |
 | 5      | 16   | `package_version_suffix` | An optional package version suffix. Zero-padded to 16 bytes, but not zero-terminated in case all 16 bytes are used. |
 | 21     | 4    | `tick_rate`              | Tick rate of the system in Hz. This number can be used to convert time measured in ticks in other commands (namely `REALTIME_DATA`) to seconds by dividing by this number. Currently the tick rate for VESC is always `10000`. |
-| 25     | 4    | `capabilities`           | Capability flags of the package:<br> `0x80000000`: Data Recording. See the [Realtime Value Tracking](../realtime_value_tracking.md) page for details. |
+| 25     | 4    | `capabilities`           | Capability flags of the package:<br> `0x1`: LED lighting.<br> `0x2`: LED lighting is external through a module.<br> `0x80000000`: Data Recording. See the [Realtime Value Tracking](../realtime_value_tracking.md) page for details. |
 | 29     | 1    | `extra_flags`            | Extra flags:<br> `0x1`: Config read failure, normally due to installing a package with different config signature. |
-| 30     | 1    | `leds_mode`              | LEDs mode:<br> `0`: None<br> `1`: Internal<br> `2`: External |
 
 #### flags
 

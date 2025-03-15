@@ -1861,7 +1861,7 @@ static void lights_control_response(const CfgLeds *leds) {
 }
 
 static void cmd_info(const Data *d, unsigned char *buf, int len) {
-    static const int bufsize = 7 + 16 + 10 + 2 + ITEMS_IDS_SIZE(RT_DATA_ALL_ITEMS);
+    static const int bufsize = 7 + 16 + 9 + 2 + ITEMS_IDS_SIZE(RT_DATA_ALL_ITEMS);
     uint8_t version = 1;
     int32_t i = 0;
 
@@ -1920,6 +1920,13 @@ static void cmd_info(const Data *d, unsigned char *buf, int len) {
         if (data_recorder_has_capability(&d->data_record)) {
             capabilities |= 1 << 31;
         }
+        if (d->float_conf.hardware.leds.mode != LED_MODE_OFF) {
+            capabilities |= 1;
+            if (d->float_conf.hardware.leds.mode == LED_MODE_EXTERNAL) {
+                capabilities |= 1 << 1;
+            }
+        }
+
         buffer_append_uint32(send_buffer, capabilities, &ind);
 
         uint8_t extra_flags = 0;
@@ -1927,11 +1934,6 @@ static void cmd_info(const Data *d, unsigned char *buf, int len) {
             extra_flags |= 0x1;
         }
         send_buffer[ind++] = extra_flags;
-
-        // Send the full type here. This is redundant with cmd_light_info. It
-        // likely shouldn't be here, as the type can be reconfigured and the
-        // app would need to reconnect to pick up the change from this command.
-        send_buffer[ind++] = d->float_conf.hardware.leds.mode;
 
         if (flags & 0x1) {  // Flag: append_rt_data_ids
 #define ADD_ID(id) buffer_append_string(send_buffer, #id, &ind);

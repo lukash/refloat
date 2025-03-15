@@ -688,14 +688,6 @@ Item {
                 var extraFlags = dv.getUint8(ind++);
                 tuneManager.triggerAutoRestore(extraFlags & 0x1);  // 0x1 = package has default config, it was probably reset
 
-                var led_type = dv.getUint8(ind++);
-                if (led_type > 0) {
-                    lights.enabled = true;
-                    if (led_type == 3) {
-                        lights.lcm = true;
-                    }
-                }
-
                 if (flags & 0x1) {
                     // Read the realtime data ids
                     // These identify, in order, the data that are received via the REALTIME_DATA command
@@ -1128,11 +1120,17 @@ Item {
         property int ticksPerSecond
 
         // package capabilities
+        readonly property int cap_Lights: 1
+        readonly property int cap_LightsExternal: 2
         readonly property int cap_DataRecord: 2**31
 
+        property bool capLights
+        property bool capLightsExternal
         property bool capDataRecord
 
         function setCapabilities(caps) {
+            capLights = caps & cap_Lights;
+            capLightsExternal = caps & cap_LightsExternal;
             capDataRecord = caps & cap_DataRecord;
         }
 
@@ -1343,8 +1341,8 @@ Item {
     QtObject {
         id: lights
 
-        property bool enabled: false
-        property bool lcm: false
+        property bool enabled: state.capLights
+        property bool lcm: state.capLightsExternal
 
         property bool on: false
         property bool headlightsOn: false
