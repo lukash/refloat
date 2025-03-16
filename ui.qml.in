@@ -4814,7 +4814,7 @@ Item {
                             valueFontSize: width * 0.18
                             lineWidth: 0.25 * unit
 
-                            value: state.rtData["motor.speed"] * vescConfig.imperialFactor
+                            value: Math.abs(state.rtData["motor.speed"]) * vescConfig.imperialFactor
                             property int erpm: Math.abs(state.rtData["motor.erpm"])
 
                             Behavior on erpm {
@@ -4934,7 +4934,7 @@ Item {
                             width: parent.height
                             height: width
 
-                            value: state.rtData["motor.duty_cycle"]
+                            value: state.rtData["motor.duty_cycle"] * 100
 
                             maxValue: 100
                             warnThresholdAbs: 80
