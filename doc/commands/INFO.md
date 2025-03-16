@@ -33,12 +33,12 @@ _Note: What is now referred to as version `1` of this command originally had no 
 |--------|------|--------------------------|---------------|
 | 0      | 1    | `version`                | The actual version of this `INFO` command response, for the case a lower than requested version is returned.<br> _Note: version 1 does not return this, but its first byte in the response is always higher than 10, which can be used to distinguish the version._ |
 | 1      | 1    | `flags`                  | The `flags` from the request repeated in the response, to indicate which extra data are present. |
-| 2      | 16   | `package_name`           | The package name string. Zero-padded to 16 bytes, not zero-terminated in case all 16 bytes are used. |
-| 18     | 1    | `package_major_version`  | Major version of the package. |
-| 19     | 1    | `package_minor_version`  | Minor version of the package. |
-| 20     | 1    | `package_patch_version`  | Patch version of the package. |
-| 21     | 16   | `package_version_suffix` | An optional package version suffix string. Zero-padded to 16 bytes, not zero-terminated in case all 16 bytes are used. |
-| 37     | 4    | `git_hash`               | First 4 bytes of the git hash from which the package was built. |
-| 41     | 4    | `tick_rate`              | Tick rate of the system in Hz. This number can be used to convert time measured in ticks in other commands (namely `REALTIME_DATA`) to seconds by dividing by this number. Currently the tick rate for VESC is always `10000`. |
-| 45     | 4    | `capabilities`           | Capability flags of the package:<br> `0x1`: LED lighting.<br> `0x2`: LED lighting is external through a module.<br> `0x80000000`: Data Recording. See the [Realtime Value Tracking](../realtime_value_tracking.md) page for details. |
-| 49     | 1    | `extra_flags`            | Extra flags:<br> `0x1`: Config read failure, normally due to installing a package with different config signature. |
+| 2      | 20   | `package_name`           | The package name string. Zero-padded to 20 bytes, not zero-terminated in case all 20 bytes are used. |
+| 22     | 1    | `package_major_version`  | Major version of the package. |
+| 23     | 1    | `package_minor_version`  | Minor version of the package. |
+| 24     | 1    | `package_patch_version`  | Patch version of the package. |
+| 25     | 20   | `package_version_suffix` | An optional package version suffix string. Zero-padded to 20 bytes, not zero-terminated in case all 20 bytes are used. |
+| 45     | 4    | `git_hash`               | First 4 bytes of the git hash from which the package was built. |
+| 49     | 4    | `tick_rate`              | Tick rate of the system in Hz. This number can be used to convert time measured in ticks in other commands (namely `REALTIME_DATA`) to seconds by dividing by this number. Currently the tick rate for VESC is always `10000`. |
+| 53     | 4    | `capabilities`           | Capability flags of the package:<br> `0x1`: LED lighting.<br> `0x2`: LED lighting is external through a module.<br> `0x80000000`: Data Recording. See the [Realtime Value Tracking](../realtime_value_tracking.md) page for details. |
+| 57     | 1    | `extra_flags`            | Extra flags:<br> `0x1`: Config read failure, normally due to installing a package with different config signature. |

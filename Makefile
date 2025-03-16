@@ -12,7 +12,7 @@ src:
 	$(MAKE) -C $@
 
 VERSION=`cat version`
-PACKAGE_NAME=`cat package_name | cut -c-16`
+PACKAGE_NAME=`cat package_name | cut -c-20`
 
 ifeq ($(strip $(MINIFY_QML)),1)
     MINIFY_CMD="./rjsmin.py"

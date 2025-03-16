@@ -686,7 +686,7 @@ Item {
             if (msgtype == c_INFO) {
                 ind += 1;  // skip version, should always be the current one
                 var flags = dv.getUint8(ind++);
-                ind += 39;  // 16 bytes package name, 3 version numbers, 16 bytes suffix, 4 bytes git hash
+                ind += 47;  // 20 bytes package name, 3 version numbers, 20 bytes suffix, 4 bytes git hash
                 state.ticksPerSecond = dv.getUint32(ind); ind += 4;
                 var capabilities = dv.getUint32(ind) >>> 0; ind += 4;
                 state.setCapabilities(capabilities);
