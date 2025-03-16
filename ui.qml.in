@@ -3462,8 +3462,11 @@ Item {
 
             property string label
             property string valueUnit: ""
-            property int value: Number(textField.text)
+            property int value
             property int sourceValue
+
+            property int minValue: 0
+            property int maxValue: 100
 
             LText {
                 Layout.fillWidth: true
@@ -3474,11 +3477,30 @@ Item {
                 id: textField
                 implicitWidth: 50
 
-                maximumLength: 2
+                maximumLength: 4
                 horizontalAlignment: TextInput.AlignRight
                 inputMethodHints: Qt.ImhDigitsOnly
                 text: parent.sourceValue
-                validator: IntValidator {bottom: 0; top: 99;}
+
+                property string prevText
+
+                onTextChanged: {
+                    var number = Number(text);
+                    if (text !== "" && (number > maxValue || number < minValue)) {
+                        text = prevText;
+                    } else {
+                        if (text !== "") {
+                            parent.value = number;
+                            prevText = text;
+                        }
+                    }
+                }
+
+                onActiveFocusChanged: {
+                    if (!activeFocus) {
+                        text = parent.value;
+                    }
+                }
             }
 
             LText {
@@ -3562,6 +3584,8 @@ Item {
                             label: "Speed dial max"
                             valueUnit: vescConfig.speedUnit
                             sourceValue: preferences.speedDialMax
+                            minValue: 10
+                            maxValue: 200
                             onValueChanged: {
                                 preferences.speedDialMax = value
                             }
@@ -3641,6 +3665,8 @@ Item {
                             label: "Realtime plot maximum window"
                             valueUnit: "minutes"
                             sourceValue: preferences.plotMaxWindowMinutes
+                            minValue: 1
+                            maxValue: 1000
                             onValueChanged: {
                                 preferences.plotMaxWindowMinutes = value
                             }
