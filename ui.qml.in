@@ -3041,12 +3041,15 @@ Item {
                     var series = pd.series;
 
                     var textX = cursorCoord;
-                    if (cursorCoord > xLength - 80) {
+                    var textFormat;
+                    if (cursorCoord > xLength / 2) {
                         textX -= 4;
                         ctx.textAlign = "right";
+                        textFormat = "%2  %1";
                     } else {
                         textX += 4;
                         ctx.textAlign = "left";
+                        textFormat = "%1  %2";
                     }
 
                     var vals = [];
@@ -3068,7 +3071,7 @@ Item {
                         var p = vals[i];
                         var n = p[2];
                         ctx.fillStyle = series[n].color;
-                        var str = Number(cursor[n + 1].toPrecision(4));
+                        var str = textFormat.arg(Number(cursor[n + 1].toPrecision(4))).arg(series[n].name);
                         var textY = Math.min(p[0] + yOffset, topLimit);
                         textY = Math.max(bottomLimit + (vals.length - i - 1) * labelHeight, textY);
                         topLimit = textY - labelHeight;
