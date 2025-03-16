@@ -42,22 +42,36 @@ void haptic_feedback_configure(HapticFeedback *hf, const RefloatConfig *cfg) {
     hf->str_poly_c = (1 - a - hf->str_poly_b * m) / (m * m);
 }
 
-static HapticFeedbackType state_to_haptic_type(const State *state) {
-    if (state->state != STATE_RUNNING) {
+static HapticFeedbackType haptic_feedback_get_type(
+    const HapticFeedback *hf, const State *state, const MotorData *md
+) {
+    // TODO: Ideally we don't even do pushback in handtest, as it can be confusing
+    if (state->state != STATE_RUNNING || state->mode == MODE_HANDTEST) {
         return HAPTIC_FEEDBACK_NONE;
     }
 
     switch (state->sat) {
     case SAT_PB_DUTY:
-        return HAPTIC_FEEDBACK_DUTY;
+        if (md->duty_cycle > hf->duty_solid_threshold) {
+            return HAPTIC_FEEDBACK_DUTY_CONTINUOUS;
+        } else {
+            return HAPTIC_FEEDBACK_DUTY;
+        }
     case SAT_PB_TEMPERATURE:
         return HAPTIC_FEEDBACK_ERROR_TEMPERATURE;
     case SAT_PB_LOW_VOLTAGE:
     case SAT_PB_HIGH_VOLTAGE:
         return HAPTIC_FEEDBACK_ERROR_VOLTAGE;
     default:
-        return HAPTIC_FEEDBACK_NONE;
+        break;
     }
+
+    if (hf->cfg->current_threshold > 0.0f &&
+        motor_data_get_current_saturation(md) > hf->cfg->current_threshold) {
+        return HAPTIC_FEEDBACK_DUTY_CONTINUOUS;
+    }
+
+    return HAPTIC_FEEDBACK_NONE;
 }
 
 // Returns the number of "beats" per period of a given tone. Tones are played
@@ -110,15 +124,7 @@ static inline void foc_play_tone(int channel, float freq, float voltage) {
 void haptic_feedback_update(
     HapticFeedback *hf, MotorControl *mc, const State *state, const MotorData *md, const Time *time
 ) {
-    HapticFeedbackType type_to_play = state_to_haptic_type(state);
-    if (type_to_play == HAPTIC_FEEDBACK_DUTY && md->duty_cycle > hf->duty_solid_threshold) {
-        type_to_play = HAPTIC_FEEDBACK_DUTY_CONTINUOUS;
-    }
-
-    if (type_to_play == HAPTIC_FEEDBACK_NONE && hf->cfg->current_threshold > 0.0f &&
-        motor_data_get_current_saturation(md) > hf->cfg->current_threshold) {
-        type_to_play = HAPTIC_FEEDBACK_DUTY_CONTINUOUS;
-    }
+    HapticFeedbackType type_to_play = haptic_feedback_get_type(hf, state, md);
 
     if (type_to_play != hf->type_playing && timer_older(time, hf->tone_timer, TONE_LENGTH)) {
         hf->type_playing = type_to_play;
