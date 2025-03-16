@@ -2545,7 +2545,7 @@ Item {
                     id: plotMover
 
                     property real bounceOffset: 0.05
-                    property real minWindow: 0.001
+                    property real minWindow: 0.001 * plot.ticksPerSecond
 
                     property real moveReferencePos
                     property real moveUnbluntedPos
