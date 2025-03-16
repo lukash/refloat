@@ -801,6 +801,7 @@ Item {
         property int tempWarningOffset: 10
         property alias tuneSlotCount: prefTuneSlotCount.value
         property alias showTuneDiffCount: prefShowTuneDiffCount.checked
+        property int plotMaxWindowMinutes: 30
         property alias showWelcomeDialog: prefShowWelcomeDialog.checked
     }
 
@@ -2130,6 +2131,7 @@ Item {
         property real toolbarOffset: 0
 
         property bool showRecordDownload: false
+        property int maxWindowMinutes
 
         function init(ticksPerSec) {
             ticksPerSecond = ticksPerSec;
@@ -2546,6 +2548,7 @@ Item {
 
                     property real bounceOffset: 0.05
                     property real minWindow: 0.001 * plot.ticksPerSecond
+                    property real maxWindow: Math.max(plot.followEnd ? plot.startWindow * plot.ticksPerSecond : 0, Math.min(plot.maxWindowMinutes * 60 * plot.ticksPerSecond, plotData.timeRange))
 
                     property real moveReferencePos
                     property real moveUnbluntedPos
@@ -2619,10 +2622,6 @@ Item {
                         return a * Math.exp(x / a) - a;
                     }
 
-                    function maxWindow() {
-                        return Math.max(plot.followEnd ? plot.startWindow * plot.ticksPerSecond : 0, plotData.timeRange);
-                    }
-
                     function moveRelative(pos, x) {
                         moveUnbluntedPos = plotCanvas.toPlotPos(pos, x);
                         var newPos = moveUnbluntedPos;
@@ -2680,7 +2679,7 @@ Item {
                         bounceBackZoom.stop();
                         lastZoomCenter = center;
 
-                        var maxWin = maxWindow();
+                        var maxWin = maxWindow;
                         var maxDist = maxWin - newWindow;
                         if (maxDist < 0) {
                             newWindow = (1 - blunt(maxDist / maxWin, bounceOffset * 2)) * maxWin;
@@ -2703,7 +2702,7 @@ Item {
                     }
 
                     function snapToBounds() {
-                        var windowTo = clamp(plotCanvas.window, minWindow, maxWindow());
+                        var windowTo = clamp(plotCanvas.window, minWindow, maxWindow);
 
                         bounceBackZoom.stop();
                         bounceBackZoom.to = windowTo;
@@ -3636,6 +3635,15 @@ Item {
                             id: prefShowTuneDiffCount
                             checked: false
                             label: "Show changed options count on tunes"
+                        }
+
+                        IntTextField {
+                            label: "Realtime plot maximum window"
+                            valueUnit: "minutes"
+                            sourceValue: preferences.plotMaxWindowMinutes
+                            onValueChanged: {
+                                preferences.plotMaxWindowMinutes = value
+                            }
                         }
 
                         RightSwitch {
@@ -4581,6 +4589,8 @@ Item {
 
     OverlayPlot {
         id: recordedPlot
+
+        maxWindowMinutes: preferences.plotMaxWindowMinutes
 
         plotData: RecordedPlotData {
             id: recordedPlotData
@@ -6069,6 +6079,7 @@ Item {
                         height: parent.height - dataTopColumn.height
 
                         followEnd: true
+                        maxWindowMinutes: preferences.plotMaxWindowMinutes
 
                         showRecordDownload: state.capDataRecord
 
