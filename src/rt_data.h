@@ -40,9 +40,9 @@
     R(motor.erpm)                                                                                  \
     S(motor.current)                                                                               \
     R(motor.dir_current)                                                                           \
-    R(motor.filt_current)                                                                          \
-    S(motor.duty_cycle)                                                                            \
-    S(motor.batt_voltage)                                                                          \
+    S(motor.filt_current)                                                                          \
+    R(motor.duty_cycle)                                                                            \
+    R(motor.batt_voltage)                                                                          \
     S(motor.batt_current)                                                                          \
     S(motor.mosfet_temp)                                                                           \
     S(motor.motor_temp)                                                                            \
