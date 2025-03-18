@@ -44,7 +44,6 @@ typedef struct {
     lib_thread aux_thread;
 
     RefloatConfig float_conf;
-    bool config_read_fail;
 
     // Firmware version, passed in from Lisp
     int fw_version_major, fw_version_minor, fw_version_beta;

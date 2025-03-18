@@ -180,6 +180,10 @@ typedef struct {
 } CfgHapticFeedback;
 
 typedef struct {
+    bool is_default;
+} CfgMeta;
+
+typedef struct {
     bool disabled;
     float kp;
     float ki;
@@ -278,6 +282,8 @@ typedef struct {
 
     CfgLeds leds;
     CfgHardware hardware;
+
+    CfgMeta meta;
 } RefloatConfig;
 
 // DATATYPES_H_

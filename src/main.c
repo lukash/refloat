@@ -1001,7 +1001,6 @@ static void write_cfg_to_eeprom(Data *d) {
         v.as_u32 = REFLOATCONFIG_SIGNATURE;
         VESC_IF->store_eeprom_var(&v, 0);
 
-        d->config_read_fail = false;
         beep_alert(d, 1, 0);
         leds_status_confirm(&d->leds);
     } else {
@@ -1046,7 +1045,6 @@ static void read_cfg_from_eeprom(Data *d) {
             }
         } else {
             log_error("Failed signature check while reading config from EEPROM, using defaults.");
-            d->config_read_fail = true;
             confparser_set_defaults_refloatconfig(&d->float_conf);
             return;
         }
@@ -1056,7 +1054,6 @@ static void read_cfg_from_eeprom(Data *d) {
         memcpy(&d->float_conf, buffer, sizeof(RefloatConfig));
     } else {
         log_error("Failed to read config from EEPROM, using defaults.");
-        d->config_read_fail = true;
         confparser_set_defaults_refloatconfig(&d->float_conf);
     }
 
@@ -1954,9 +1951,6 @@ static void cmd_info(const Data *d, unsigned char *buf, int len) {
         buffer_append_uint32(send_buffer, capabilities, &ind);
 
         uint8_t extra_flags = 0;
-        if (d->config_read_fail) {
-            extra_flags |= 0x1;
-        }
         send_buffer[ind++] = extra_flags;
     }
     }
@@ -2178,6 +2172,10 @@ static bool set_cfg(uint8_t *buffer) {
     if (d->state.state == STATE_RUNNING) {
         d->float_conf.disabled = false;
     }
+
+    // Always reset the is_default flag on writing - whatever we write we
+    // consider to not be the default config anymore
+    d->float_conf.meta.is_default = false;
 
     // Store to EEPROM
     if (res) {
