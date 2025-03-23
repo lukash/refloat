@@ -3672,7 +3672,7 @@ Item {
                 clip: true
 
                 Repeater {
-                    model: ["Preferences", "Setup"]
+                    model: ["Setup", "Preferences"]
 
                     TabButton {
                         text: modelData
@@ -3694,115 +3694,6 @@ Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 clip: true
-
-                ScrollView {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    contentWidth: availableWidth
-                    clip: true
-
-                    ColumnLayout {
-                        anchors.fill: parent
-
-                        IntTextField {
-                            label: "Speed dial max"
-                            valueUnit: vescConfig.speedUnit
-                            sourceValue: preferences.speedDialMax
-                            minValue: 10
-                            maxValue: 200
-                            onValueChanged: {
-                                preferences.speedDialMax = value
-                            }
-                        }
-
-                        RightSwitch {
-                            id: prefSwapAdcs
-                            label: "Swap Footpad Sensor ADCs"
-                        }
-
-                        OptionDescription {
-                            visible: prefSwapAdcs.checked
-                            text: "Note: This swaps only the sensor visualization. You should swap your ADC1/2 physical connection, as this way, for example, your Konamies (sensor tap codes that control the board) will be reversed as well."
-                        }
-
-                        RightSwitch {
-                            id: prefShowBattVoltage
-                            checked: true
-                            label: "Show battery voltage"
-                        }
-
-                        RightSwitch {
-                            id: prefShowBattVoltagePerCell
-                            label: "Show battery voltage per cell"
-                        }
-
-                        RightSwitch {
-                            id: prefBattCurrentLog
-                            checked: true
-                            label: "Use logarithmic scale for battery current bar"
-                        }
-
-                        IntTextField {
-                            label: "Temperature warning offset"
-                            valueUnit: "°C"
-                            sourceValue: preferences.tempWarningOffset
-                            onValueChanged: {
-                                preferences.tempWarningOffset = value
-                            }
-                        }
-
-                        OptionDescription {
-                            text: "Motor/Controller temperatures will be highlighted red if above TEMP - OFFSET, where TEMP is your Motor/MOSFET Temp Cutoff Start in Motor config. The package beeps when temperatures cross the TEMP - 3°C threshold and pushback triggers at TEMP - 2°C."
-                        }
-
-                        RowLayout {
-                            Layout.fillWidth: true
-                            Layout.rightMargin: 20
-
-                            LText {
-                                text: "Number of tune slots"
-                            }
-
-                            Slider {
-                                id: prefTuneSlotCount
-                                Layout.fillWidth: true
-
-                                from: 2
-                                to: tuneManager.maxTunes
-                                value: 4
-                                stepSize: 1
-                            }
-
-                            LText {
-                                text: prefTuneSlotCount.value
-                                font.pointSize: 16
-                            }
-                        }
-
-                        RightSwitch {
-                            id: prefShowTuneDiffCount
-                            checked: false
-                            label: "Show changed options count on tunes"
-                        }
-
-                        IntTextField {
-                            label: "Realtime plot maximum window"
-                            valueUnit: "minutes"
-                            sourceValue: preferences.plotMaxWindowMinutes
-                            minValue: 1
-                            maxValue: 1000
-                            onValueChanged: {
-                                preferences.plotMaxWindowMinutes = value
-                            }
-                        }
-
-                        RightSwitch {
-                            id: prefShowWelcomeDialog
-                            checked: true
-                            label: "Show Welcome dialog"
-                        }
-                    }
-                }
 
                 ScrollView {
                     Layout.fillWidth: true
@@ -4006,6 +3897,115 @@ Item {
                         //        }
                         //    }
                         //}
+                    }
+                }
+
+                ScrollView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    contentWidth: availableWidth
+                    clip: true
+
+                    ColumnLayout {
+                        anchors.fill: parent
+
+                        IntTextField {
+                            label: "Speed dial max"
+                            valueUnit: vescConfig.speedUnit
+                            sourceValue: preferences.speedDialMax
+                            minValue: 10
+                            maxValue: 200
+                            onValueChanged: {
+                                preferences.speedDialMax = value
+                            }
+                        }
+
+                        RightSwitch {
+                            id: prefSwapAdcs
+                            label: "Swap Footpad Sensor ADCs"
+                        }
+
+                        OptionDescription {
+                            visible: prefSwapAdcs.checked
+                            text: "Note: This swaps only the sensor visualization. You should swap your ADC1/2 physical connection, as this way, for example, your Konamies (sensor tap codes that control the board) will be reversed as well."
+                        }
+
+                        RightSwitch {
+                            id: prefShowBattVoltage
+                            checked: true
+                            label: "Show battery voltage"
+                        }
+
+                        RightSwitch {
+                            id: prefShowBattVoltagePerCell
+                            label: "Show battery voltage per cell"
+                        }
+
+                        RightSwitch {
+                            id: prefBattCurrentLog
+                            checked: true
+                            label: "Use logarithmic scale for battery current bar"
+                        }
+
+                        IntTextField {
+                            label: "Temperature warning offset"
+                            valueUnit: "°C"
+                            sourceValue: preferences.tempWarningOffset
+                            onValueChanged: {
+                                preferences.tempWarningOffset = value
+                            }
+                        }
+
+                        OptionDescription {
+                            text: "Motor/Controller temperatures will be highlighted red if above TEMP - OFFSET, where TEMP is your Motor/MOSFET Temp Cutoff Start in Motor config. The package beeps when temperatures cross the TEMP - 3°C threshold and pushback triggers at TEMP - 2°C."
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            Layout.rightMargin: 20
+
+                            LText {
+                                text: "Number of tune slots"
+                            }
+
+                            Slider {
+                                id: prefTuneSlotCount
+                                Layout.fillWidth: true
+
+                                from: 2
+                                to: tuneManager.maxTunes
+                                value: 4
+                                stepSize: 1
+                            }
+
+                            LText {
+                                text: prefTuneSlotCount.value
+                                font.pointSize: 16
+                            }
+                        }
+
+                        RightSwitch {
+                            id: prefShowTuneDiffCount
+                            checked: false
+                            label: "Show changed options count on tunes"
+                        }
+
+                        IntTextField {
+                            label: "Realtime plot maximum window"
+                            valueUnit: "minutes"
+                            sourceValue: preferences.plotMaxWindowMinutes
+                            minValue: 1
+                            maxValue: 1000
+                            onValueChanged: {
+                                preferences.plotMaxWindowMinutes = value
+                            }
+                        }
+
+                        RightSwitch {
+                            id: prefShowWelcomeDialog
+                            checked: true
+                            label: "Show Welcome dialog"
+                        }
                     }
                 }
             }
