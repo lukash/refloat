@@ -480,11 +480,22 @@ Item {
             return settings;
         }
 
+        function versionCompatible(config) {
+            var verArray = config.version.split(".");
+            var major = Number(verArray[0]);
+            var minor = Number(verArray[1]);
+            if (major !== tuneManager.formatVersionMajor || minor > tuneManager.formatVersionMinor) {
+                VescIf.emitStatusMessage("Error: Incompatible version: %1".arg(config.version), false);
+                return false;
+            }
+
+            return true;
+        }
+
         function applyConfig(config) {
             if (!checkConfig()) return;
 
-            if (config.version !== "1.0") {
-                VescIf.emitStatusMessage("Error: Unexpected version: %1".arg(config.version), false);
+            if (!versionCompatible(config)) {
                 return;
             }
 
@@ -876,7 +887,9 @@ Item {
         id: tuneManager
         target: packageConfig
 
-        readonly property string formatVersion: "1.0"
+        readonly property int formatVersionMajor: 1
+        readonly property int formatVersionMinor: 0
+        readonly property string formatVersion: "%1.%2".arg(formatVersionMajor).arg(formatVersionMinor)
         readonly property string packageName: "{{PACKAGE_NAME}}"
         readonly property string packageVersion: "{{VERSION}}"
         readonly property int maxTunes: 6
@@ -952,6 +965,10 @@ Item {
         }
 
         function updateTune(tune, name, description, settings) {
+            if (!packageConfig.versionCompatible(tune)) {
+                return false;
+            }
+
             tune.name = name;
             if (description) {
                 tune.description = description;
@@ -960,6 +977,9 @@ Item {
                 tune.settings = settings;
                 tune.date = new Date();
             }
+            tune.version = formatVersion;
+
+            return true;
         }
 
         function createBackup() {
@@ -4044,7 +4064,10 @@ Item {
                 if (!tune) {
                     tune = tuneManager.createTune(saveTuneNameInput.text, saveTuneDescInput.text, packageConfig.fetchConfig(true));
                 } else {
-                    tuneManager.updateTune(tune, saveTuneNameInput.text, saveTuneDescInput.text, saveTuneOverwrite.checked ? packageConfig.fetchConfig(true) : null);
+                    var success = tuneManager.updateTune(tune, saveTuneNameInput.text, saveTuneDescInput.text, saveTuneOverwrite.checked ? packageConfig.fetchConfig(true) : null);
+                    if (!success) {
+                        return;
+                    }
                 }
                 tuneManager.saveTune(tuneSlot, tune);
                 VescIf.emitStatusMessage(saveTuneNameInput.text + " saved", true);
