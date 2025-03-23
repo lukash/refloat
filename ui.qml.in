@@ -3756,38 +3756,33 @@ Item {
                         }
 
                         SubHeading {
-                            text: "Shared Backup"
+                            text: "Automatic Board Backup"
                         }
 
                         SetupDescription {
+                            id: setupAutoBackupDate
                             font.pointSize: 10
                             horizontalAlignment: TextInput.AlignHCenter
-                            visible: !!tuneManager.fullBackup
-                            text: tuneManager.fullBackup ? Qt.formatDateTime(tuneManager.fullBackup.date) : ""
-                        }
+                            property var backup: null
+                            visible: !!backup
+                            text: backup ? Qt.formatDateTime(backup.date) : ""
 
-                        RowLayout {
-                            Layout.fillWidth: true
-                            Layout.alignment: Qt.AlignHCenter
+                            Connections {
+                                target: tuneManager
 
-                            Button {
-                                Layout.alignment: Qt.AlignHCenter
-
-                                text: "Backup"
-
-                                onClicked: {
-                                    tuneManager.globalBackup();
+                                function onAutoBackupFinished(backup) {
+                                    setupAutoBackupDate.backup = backup;
                                 }
                             }
+                        }
 
-                            Button {
-                                Layout.alignment: Qt.AlignHCenter
+                        Button {
+                            Layout.alignment: Qt.AlignHCenter
 
-                                text: "View"
+                            text: "View"
 
-                                onClicked: {
-                                    tuneManager.globalRestore();
-                                }
+                            onClicked: {
+                                tuneManager.autoRestore();
                             }
                         }
 
@@ -3838,33 +3833,38 @@ Item {
                         }
 
                         SubHeading {
-                            text: "Automatic Board Backup"
+                            text: "Shared Backup"
                         }
 
                         SetupDescription {
-                            id: setupAutoBackupDate
                             font.pointSize: 10
                             horizontalAlignment: TextInput.AlignHCenter
-                            property var backup: null
-                            visible: !!backup
-                            text: backup ? Qt.formatDateTime(backup.date) : ""
-
-                            Connections {
-                                target: tuneManager
-
-                                function onAutoBackupFinished(backup) {
-                                    setupAutoBackupDate.backup = backup;
-                                }
-                            }
+                            visible: !!tuneManager.fullBackup
+                            text: tuneManager.fullBackup ? Qt.formatDateTime(tuneManager.fullBackup.date) : ""
                         }
 
-                        Button {
+                        RowLayout {
+                            Layout.fillWidth: true
                             Layout.alignment: Qt.AlignHCenter
 
-                            text: "View"
+                            Button {
+                                Layout.alignment: Qt.AlignHCenter
 
-                            onClicked: {
-                                tuneManager.autoRestore();
+                                text: "Backup"
+
+                                onClicked: {
+                                    tuneManager.globalBackup();
+                                }
+                            }
+
+                            Button {
+                                Layout.alignment: Qt.AlignHCenter
+
+                                text: "View"
+
+                                onClicked: {
+                                    tuneManager.globalRestore();
+                                }
                             }
                         }
 
