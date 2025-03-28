@@ -12,7 +12,7 @@ A full-featured self-balancing skateboard package.
 - Realtime Data Plotting and Recording: For developers and power users to analyze board behavior
 - Many minor features and fixes
 
-[1.1 release post](https://pev.dev/t/refloat-version-1-1/2480)
+For more details, read the [1.1 release post](https://pev.dev/t/refloat-version-1-1/2480).
 
 ## Installation
 ### Upgrading
