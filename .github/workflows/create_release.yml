@@ -37,6 +37,15 @@ jobs:
             echo "PREVIEW=false" >> $GITHUB_ENV
           fi
 
+
+      - name: Check Tag Matches Version
+        run: |
+          VER="`cat version`"
+          if [ "${{env.VERSION}}" != "$VER" ]; then
+            echo "Error: Tag version (${{env.VERSION}}) doesn't match version file ($VER)."
+            exit 1
+          fi
+
       - name: Build Package
         uses: ./.github/actions/build
 
