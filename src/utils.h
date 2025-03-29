@@ -57,7 +57,7 @@
 #endif
 
 // Declaration for the SEMD_APP_DATA macro, definition needs to be in main.c.
-void send_app_data_overflow_terminate();
+void fatal_error_terminate();
 
 #define SEND_BUF_MAX_SIZE 511
 
@@ -77,7 +77,7 @@ void send_app_data_overflow_terminate();
                 ind                                                                                \
             );                                                                                     \
             /* terminate the main thread, the memory has just been corrupted by buffer overflow */ \
-            send_app_data_overflow_terminate();                                                    \
+            fatal_error_terminate();                                                               \
         }                                                                                          \
         VESC_IF->send_app_data(buffer, ind);                                                       \
     } while (0)

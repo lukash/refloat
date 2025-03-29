@@ -976,20 +976,37 @@ static void refloat_thd(void *arg) {
     }
 }
 
+// TODO: The required buffer size is not provided by the confparser. Until it's
+// added, use a number that should always be bigger. On a config write, we
+// check if we've written past the buffer end and crash. On a config read,
+// there's no way to check and the trailing end of the config will have bogus
+// numbers read from the EEPROM.
+#ifndef SERIALIZED_CONFIG_LENGTH
+#define SERIALIZED_CONFIG_LENGTH 400
+#endif
+
 static void write_cfg_to_eeprom(Data *d) {
-    uint32_t ints = sizeof(RefloatConfig) / 4 + 1;
-    uint32_t *buffer = VESC_IF->malloc(ints * sizeof(uint32_t));
+    uint32_t words = (SERIALIZED_CONFIG_LENGTH - 1) / 4 + 1;
+    uint32_t *buffer = VESC_IF->malloc(words * sizeof(uint32_t));
     if (!buffer) {
         log_error("Failed to write config to EEPROM: Out of memory.");
         return;
     }
 
     bool write_ok = true;
-    memcpy(buffer, &(d->float_conf), sizeof(RefloatConfig));
-    for (uint32_t i = 0; i < ints; i++) {
+    uint32_t written_bytes = confparser_serialize_refloatconfig((uint8_t *) buffer, &d->float_conf);
+    if (written_bytes > words * sizeof(uint32_t)) {
+        log_error("Config write buffer overflow.");
+        fatal_error_terminate();
+    }
+
+    const uint32_t real_words = (written_bytes - 1) / 4 + 1;
+    // The confparser stores the signature at the beginning of the buffer.
+    // Write from the back so that the signature gets written last.
+    for (int32_t i = real_words - 1; i >= 0; --i) {
         eeprom_var v;
         v.as_u32 = buffer[i];
-        if (!VESC_IF->store_eeprom_var(&v, i + 1)) {
+        if (!VESC_IF->store_eeprom_var(&v, i)) {
             write_ok = false;
             break;
         }
@@ -998,10 +1015,7 @@ static void write_cfg_to_eeprom(Data *d) {
     VESC_IF->free(buffer);
 
     if (write_ok) {
-        eeprom_var v;
-        v.as_u32 = REFLOATCONFIG_SIGNATURE;
-        VESC_IF->store_eeprom_var(&v, 0);
-
+        log_msg("Config written: %uB", written_bytes);
         beep_alert(d, 1, 0);
         leds_status_confirm(&d->leds);
     } else {
@@ -1026,33 +1040,29 @@ static void aux_thd(void *arg) {
 }
 
 static void read_cfg_from_eeprom(Data *d) {
-    uint32_t ints = sizeof(RefloatConfig) / 4 + 1;
-    uint32_t *buffer = VESC_IF->malloc(ints * sizeof(uint32_t));
+    uint32_t words = (SERIALIZED_CONFIG_LENGTH - 1) / 4 + 1;
+    uint32_t *buffer = VESC_IF->malloc(words * sizeof(uint32_t));
     if (!buffer) {
         log_error("Failed to read config from EEPROM: Out of memory.");
         return;
     }
 
     eeprom_var v;
-    bool read_ok = VESC_IF->read_eeprom_var(&v, 0);
-    if (read_ok) {
-        if (v.as_u32 == REFLOATCONFIG_SIGNATURE) {
-            for (uint32_t i = 0; i < ints; i++) {
-                if (!VESC_IF->read_eeprom_var(&v, i + 1)) {
-                    read_ok = false;
-                    break;
-                }
-                buffer[i] = v.as_u32;
-            }
-        } else {
-            log_error("Failed signature check while reading config from EEPROM, using defaults.");
-            confparser_set_defaults_refloatconfig(&d->float_conf);
-            return;
+    bool read_ok = true;
+    for (uint32_t i = 0; i < words; ++i) {
+        if (!VESC_IF->read_eeprom_var(&v, i)) {
+            read_ok = false;
+            break;
         }
+        buffer[i] = v.as_u32;
     }
 
     if (read_ok) {
-        memcpy(&d->float_conf, buffer, sizeof(RefloatConfig));
+        read_ok = confparser_deserialize_refloatconfig((uint8_t *) buffer, &d->float_conf);
+        if (!read_ok) {
+            log_error("Failed signature check while reading config from EEPROM, using defaults.");
+            confparser_set_defaults_refloatconfig(&d->float_conf);
+        }
     } else {
         log_error("Failed to read config from EEPROM, using defaults.");
         confparser_set_defaults_refloatconfig(&d->float_conf);
@@ -2258,6 +2268,6 @@ INIT_FUN(lib_info *info) {
     return true;
 }
 
-void send_app_data_overflow_terminate() {
+void fatal_error_terminate() {
     stop(ARG);
 }
