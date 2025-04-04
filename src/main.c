@@ -1241,7 +1241,7 @@ static void cmd_send_all_data(Data *d, unsigned char mode) {
         // Now send motor stuff:
         buffer_append_float16(buffer, d->motor.batt_voltage, 10, &ind);
         buffer_append_int16(buffer, d->motor.erpm, &ind);
-        buffer_append_float16(buffer, d->motor.speed, 10, &ind);
+        buffer_append_float16(buffer, d->motor.speed * (1.0f / 3.6f), 10, &ind);
         buffer_append_float16(buffer, d->motor.current, 10, &ind);
         buffer_append_float16(buffer, d->motor.batt_current, 10, &ind);
         buffer[ind++] = d->motor.duty_raw * 100 + 128;
