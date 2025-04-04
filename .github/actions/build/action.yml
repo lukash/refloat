@@ -12,4 +12,4 @@ runs:
 
     - name: Build
       shell: bash
-      run: make -j
+      run: make -j OLDVT=1

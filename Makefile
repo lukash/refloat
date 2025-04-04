@@ -2,11 +2,17 @@
 VESC_TOOL ?= vesc_tool
 # use `make MINIFY_QML=0` to skip qml minification and pack the qml verbatim
 MINIFY_QML ?= 1
+# use `make OLDVT=1` to build with old vesc_tool which doesn't support pkgdesc.qml
+OLDVT ?= 0
 
 all: refloat.vescpkg
 
 refloat.vescpkg: src package.lisp package_README-gen.md ui.qml
+ifeq ($(OLDVT), 1)
 	$(VESC_TOOL) --buildPkg "refloat.vescpkg:package.lisp:ui.qml:0:package_README-gen.md:Refloat"
+else
+	$(VESC_TOOL) --buildPkgFromDesc pkgdesc.qml
+endif
 
 src:
 	$(MAKE) -C $@
