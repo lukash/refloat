@@ -444,6 +444,15 @@ Item {
 
         function paramIsTune(name) {
             var tuneBlacklist = [
+                "tiltback_return_speed",
+                "tiltback_duty",
+                "tiltback_duty_angle",
+                "tiltback_duty_speed",
+                "is_dutybeep_enabled",
+                "tiltback_hv_angle",
+                "tiltback_hv_speed",
+                "tiltback_lv_angle",
+                "tiltback_lv_speed",
                 "disabled",
                 "fault_adc1",
                 "fault_adc2",
@@ -456,7 +465,7 @@ Item {
                 "tiltback_lv",
             ];
 
-            return !name.startsWith("hardware.") && !tuneBlacklist.includes(name);
+            return !name.startsWith("haptic.") && !name.startsWith("hardware.") && !tuneBlacklist.includes(name);
         }
 
         function fetchConfig(tuneOnly) {
