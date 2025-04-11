@@ -1674,10 +1674,8 @@ Item {
     }
 
     component ToggleFloatingToolButton : FloatingToolButton {
+        property bool autonomous: true
         property bool value: false
-
-        signal toggleTrue
-        signal toggleFalse
 
         property Path trueIconPath
         property Path falseIconPath
@@ -1688,10 +1686,8 @@ Item {
         fillIconPath: value ? trueFillIconPath : falseFillIconPath
 
         onClicked: {
-            if (value) {
-                toggleFalse();
-            } else {
-                toggleTrue();
+            if (autonomous) {
+                value = !value;
             }
         }
     }
@@ -2283,6 +2279,7 @@ Item {
                 height: 0.8 * unit
                 visible: plot.showRecordDownload
 
+                autonomous: false
                 value: mainItem.state.extraRecording
 
                 customBgColor: value ? Utility.getAppHexColor("red") : Utility.getAppHexColor("normalBackground")
@@ -6173,39 +6170,68 @@ Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
 
-                Column {
-                    anchors.fill: parent
-                    anchors.margins: 5
+                ToggleFloatingToolButton {
+                    id: toggleDataPlotButton
+                    anchors.top: parent.top
+                    anchors.right: parent.right
+                    width: 0.8 * unit
+                    height: 0.8 * unit
+                    z: 1
 
-                    component Value : Item {
-                        implicitHeight: label.implicitHeight
-                        implicitWidth: parent.width
-
-                        property string label
-                        property string value
-                        property string unit: ""
-
-                        NText {
-                            id: label
-                            anchors.right: parent.horizontalCenter
-                            anchors.top: parent.top
-                            font.pixelSize: fontSizeNormal
-                            text: "%1:".arg(parent.label)
-                        }
-
-                        LText {
-                            anchors.left: label.right
-                            anchors.top: parent.top
-                            anchors.leftMargin: 3
-                            font.pixelSize: fontSizeNormal
-                            text: parent.value + parent.unit
-                        }
+                    trueIconPath: Path {
+                        PathSvg {path: "M 6 13 L 31 13 M 6 21 L 21 21 M 6 29 L 21 29 M 6 37 L 21 37 M 29 21 L 44 21 M 29 29 L 44 29 M 29 37 L 44 37"}
                     }
 
+                    falseIconPath: Path {
+                        PathSvg {path: "M 10 12 L 10 38 L 42 38 M 10 30 L 22 22 L 32 28 L 39 18"}
+                    }
+                }
+
+                ScrollView {
+                    anchors.fill: parent
+                    contentWidth: availableWidth
+                    clip: true
+                    visible: !toggleDataPlotButton.value
+
                     Column {
-                        id: dataTopColumn
-                        width: parent.width
+                        id: debugColumn
+                        anchors.fill: parent
+                        anchors.leftMargin: 0.15 * unit
+                        anchors.rightMargin: 0.15 * unit
                         spacing: 5
+
+                        property real itemWidth: width * 0.5
+                        property real labelWidth: itemWidth * 0.7
+
+                        component Value : Item {
+                            implicitHeight: label.implicitHeight
+                            implicitWidth: debugColumn.itemWidth
+
+                            property string label
+                            property string value
+                            property string unit: ""
+
+                            NText {
+                                id: label
+                                width: debugColumn.labelWidth
+                                anchors.left: parent.left
+                                anchors.top: parent.top
+                                font.pixelSize: fontSizeNormal
+                                text: "%1:".arg(parent.label)
+                            }
+
+                            LText {
+                                anchors.left: label.right
+                                anchors.top: parent.top
+                                font.pixelSize: fontSizeNormal
+                                text: parent.value + parent.unit
+                            }
+                        }
+
+                        Item {
+                            width: parent.width
+                            height: 0.1 * unit
+                        }
 
                         LText {
                             width: parent.width
@@ -6226,38 +6252,72 @@ Item {
                             text: state.errorDescription
                         }
 
-                        Value {id: debugLastBeepReason; label: "Last Alert"; value: state.beepReasonString; visible: value;}
-                        Value {id: debugStopReason; label: "Disengage Reason"; value: state.stopConditionString; visible: value;}
+                        Value {id: debugStopReason; label: "Stop Condition"; value: state.stopConditionString}
+                        Value {id: debugLastBeepReason; label: "Last Beep Reason"; value: state.beepReasonString}
 
                         Item {
-                            height: 0.1
                             width: parent.width
+                            height: 0.1 * unit
+                        }
+
+                        Row {
+                            width: parent.width
+
+                            Column {
+                                width: parent.width / 2
+                                spacing: 5
+                                clip: true
+
+                                Value {label: "Requested current"; unit: "A"; value: toFixed2Zero(state.rtData["balance_current"]);}
+                                Value {label: "Filtered current"; unit: "A"; value: toFixed2Zero(state.rtData["motor.filt_current"]);}
+                                Value {label: "ATR Accel. diff."; value: toFixed2Zero(state.rtData["atr.accel_diff"]);}
+                                Value {label: "ATR Speed Boost"; unit: "%"; value: round(state.rtData["atr.speed_boost"] * 100);}
+                                Value {label: "Booster current"; unit: "A"; value: toFixed2Zero(state.rtData["booster.current"]);}
+                                Value {label: "Remote input"; unit: "%"; value: round(state.rtData["remote.input"] * 100);}
+                            }
+
+                            Column {
+                                width: parent.width / 2
+                                spacing: 5
+                                clip: true
+
+                                Value {label: "ATR setpoint"; unit: "°"; value: toFixed2Zero(state.rtData["atr.setpoint"]);}
+                                Value {label: "Brake Tilt setpoint"; unit: "°"; value: toFixed2Zero(state.rtData["brake_tilt.setpoint"]);}
+                                Value {label: "Torque Tilt setpoint"; unit: "°"; value: toFixed2Zero(state.rtData["torque_tilt.setpoint"]);}
+                                Value {label: "Turn Tilt setpoint"; unit: "°"; value: toFixed2Zero(state.rtData["turn_tilt.setpoint"]);}
+                                Value {label: "Remote Tilt setpoint"; unit: "°"; value: toFixed2Zero(state.rtData["remote.setpoint"]);}
+                            }
+                        }
+
+                        Item {
+                            width: parent.width
+                            height: 0.1 * unit
                         }
                     }
+                }
 
-                    Plot {
-                        id: rtPlot
-                        width: parent.width
-                        height: parent.height - dataTopColumn.height
+                Plot {
+                    id: rtPlot
+                    anchors.fill: parent
+                    visible: toggleDataPlotButton.value
 
-                        followEnd: true
-                        maxWindowMinutes: preferences.plotMaxWindowMinutes
+                    followEnd: true
+                    maxWindowMinutes: preferences.plotMaxWindowMinutes
 
-                        showRecordDownload: state.capDataRecord
+                    showRecordDownload: state.capDataRecord
 
-                        plotData: PlotData {
-                            id: rtPlotData
-                            seriesMetaData: plotSeriesMetaData
-                            seriesExtraColors: plotSeriesExtraColors
-                        }
+                    plotData: PlotData {
+                        id: rtPlotData
+                        seriesMetaData: plotSeriesMetaData
+                        seriesExtraColors: plotSeriesExtraColors
+                    }
 
-                        Connections {
-                            target: state
+                    Connections {
+                        target: state
 
-                            function onCommsInitialized() {
-                                rtPlotData.init(state.rtDataAllItems, state.ticksPerSecond);
-                                rtPlot.init(state.ticksPerSecond);
-                            }
+                        function onCommsInitialized() {
+                            rtPlotData.init(state.rtDataAllItems, state.ticksPerSecond);
+                            rtPlot.init(state.ticksPerSecond);
                         }
                     }
                 }
