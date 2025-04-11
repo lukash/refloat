@@ -87,6 +87,7 @@ static void cmd_flywheel_toggle(Data *d, unsigned char *cfg, int len);
 
 const VESC_PIN beeper_pin = VESC_PIN_PPM;
 
+#define REVSTOP_ERPM_INCR 0.00008
 #define EXT_BEEPER_ON() VESC_IF->io_write(beeper_pin, 1)
 #define EXT_BEEPER_OFF() VESC_IF->io_write(beeper_pin, 0)
 
@@ -508,7 +509,7 @@ static void calculate_setpoint_target(Data *d) {
         if (fabsf(d->reverse_total_erpm) > d->reverse_tolerance) {
             // tilt down by 10 degrees after exceeding aggregate erpm
             d->setpoint_target =
-                10 * (fabsf(d->reverse_total_erpm) - d->reverse_tolerance) * 0.000008;
+                (fabsf(d->reverse_total_erpm) - d->reverse_tolerance) * REVSTOP_ERPM_INCR;
         } else {
             if (fabsf(d->reverse_total_erpm) <= d->reverse_tolerance * 0.5) {
                 if (d->motor.erpm >= 0) {
@@ -519,6 +520,18 @@ static void calculate_setpoint_target(Data *d) {
                 }
             }
         }
+    } else if (d->float_conf.fault_reversestop_enabled && d->motor.erpm < -200 && !d->state.darkride) {
+        // Detecting reverse stop takes priority over any error condition SAT
+        if (d->state.sat >= SAT_PB_HIGH_VOLTAGE) {
+            // If this happens while in Error-Tiltback (LV/HV/TEMP) then we need to
+            // take the already existing setpoint into account
+            d->reverse_total_erpm =
+                -1 * (d->reverse_tolerance + d->setpoint_target_interpolated / REVSTOP_ERPM_INCR);
+        } else {
+            d->reverse_total_erpm = 0;
+        }
+        d->state.sat = SAT_REVERSESTOP;
+        timer_refresh(&d->time, &d->reverse_timer);
     } else if (d->state.mode != MODE_FLYWHEEL &&
                // not normal, either wheelslip or wheel getting stuck
                fabsf(d->motor.acceleration) > 15 &&
@@ -544,12 +557,6 @@ static void calculate_setpoint_target(Data *d) {
                 d->traction_control = false;
                 d->state.wheelslip = false;
             }
-        }
-        if (d->float_conf.fault_reversestop_enabled && (d->motor.erpm < 0)) {
-            // the lingering wheelslip timer can cause us to blow past the reverse stop condition!
-            d->state.sat = SAT_REVERSESTOP;
-            timer_refresh(&d->time, &d->reverse_timer);
-            d->reverse_total_erpm = 0;
         }
     } else if (d->motor.duty_cycle > d->float_conf.tiltback_duty) {
         if (d->motor.erpm > 0) {
@@ -638,13 +645,7 @@ static void calculate_setpoint_target(Data *d) {
         }
     } else {
         // Normal running
-        if (d->float_conf.fault_reversestop_enabled && d->motor.erpm < -200 && !d->state.darkride) {
-            d->state.sat = SAT_REVERSESTOP;
-            timer_refresh(&d->time, &d->reverse_timer);
-            d->reverse_total_erpm = 0;
-        } else {
-            d->state.sat = SAT_NONE;
-        }
+        d->state.sat = SAT_NONE;
         d->setpoint_target = 0;
     }
 
