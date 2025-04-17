@@ -1727,7 +1727,12 @@ static void cmd_runtime_tune_other(Data *d, unsigned char *cfg, int len) {
         if (tiltspeed > 0) {
             d->float_conf.noseangling_speed = tiltspeed / 10;
         }
-        d->float_conf.tiltback_variable = tiltvarrate / 100;
+        if (tiltvarrate > 100) {
+            // numbers above 100 are negative
+            d->float_conf.tiltback_variable = (tiltvarrate - 100) / (-100);
+        } else {
+            d->float_conf.tiltback_variable = tiltvarrate / 100;
+        }
         d->float_conf.tiltback_variable_max = tiltvarmax / 10;
         d->float_conf.tiltback_variable_erpm = cfg[11] * 100;
     }
@@ -1741,6 +1746,18 @@ static void cmd_runtime_tune_other(Data *d, unsigned char *cfg, int len) {
                 d->float_conf.inputtilt_speed = cfg[13];
             }
         }
+    }
+
+    if (len >= 15) {
+        int flags2 = cfg[14];
+        // bits 0 & 1:
+        d->float_conf.fault_moving_fault_disabled = ((flags2 & 0x1) == 0x1);
+        d->float_conf.is_footbeep_enabled = ((flags2 & 0x2) == 0x2);
+        d->switch_warn_beep_erpm = d->float_conf.is_footbeep_enabled ? 2000 : 100000;
+        // bits 2 & 3:
+        int pbmode = (flags2 >> 2) & 0x3;
+        d->motor_control.parking_brake_mode = pbmode;
+        d->float_conf.parking_brake_mode = pbmode;
     }
 
     reconfigure(d);
