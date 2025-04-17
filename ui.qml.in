@@ -3611,16 +3611,17 @@ Item {
                 maximumLength: 4
                 horizontalAlignment: TextInput.AlignRight
                 inputMethodHints: Qt.ImhDigitsOnly
-                text: parent.sourceValue
 
                 property string prevText
 
                 onTextChanged: {
-                    var number = Number(text);
-                    if (text !== "" && (number > maxValue || number < minValue)) {
-                        text = prevText;
-                    } else {
-                        if (text !== "") {
+                    if (text !== "") {
+                        var number = Number(text);
+                        if (number > maxValue) {
+                            text = prevText;
+                        } else if (number < minValue) {
+                            parent.value = Math.max(number, minValue);
+                        } else {
                             parent.value = number;
                             prevText = text;
                         }
@@ -3631,6 +3632,11 @@ Item {
                     if (!activeFocus) {
                         text = parent.value;
                     }
+                }
+
+                Component.onCompleted: {
+                    text = parent.sourceValue;
+                    prevText = text;
                 }
             }
 
