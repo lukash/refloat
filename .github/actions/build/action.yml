@@ -1,11 +1,18 @@
 name: Build Package
 
+inputs:
+  cache-auth-token:
+    description: Cachix auth token
+    default: ""
+
 runs:
   using: "composite"
   steps:
-    - uses: DeterminateSystems/nix-installer-action@main
-    - uses: DeterminateSystems/magic-nix-cache-action@main
-    - uses: DeterminateSystems/flake-checker-action@main
+    - uses: cachix/install-nix-action@v25
+    - uses: cachix/cachix-action@v14
+      with:
+        name: refloat
+        authToken: '${{ inputs.cache-auth-token }}'
     - uses: rrbutani/use-nix-shell-action@v1
       with:
         flakes: nixpkgs/nixos-24.11#gcc-arm-embedded-7, nixpkgs#gnumake, github:lukash/vesc_tool-flake/release_6_05

@@ -48,6 +48,8 @@ jobs:
 
       - name: Build Package
         uses: ./.github/actions/build
+        with:
+          cache-auth-token: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
       - name: Extract Config Signature
         run: cat src/conf/confparser.h | sed -n 's/^#define .\+_SIGNATURE\W\+\([0-9]*\)/\1/p' > config_signature.txt

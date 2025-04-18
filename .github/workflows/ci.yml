@@ -12,9 +12,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - uses: DeterminateSystems/nix-installer-action@main
-      - uses: DeterminateSystems/magic-nix-cache-action@main
-      - uses: DeterminateSystems/flake-checker-action@main
+      - uses: cachix/install-nix-action@v25
       - uses: rrbutani/use-nix-shell-action@v1
         with:
           flakes: nixpkgs#clang-tools_18, nixpkgs#lefthook
@@ -26,3 +24,5 @@ jobs:
       - name: Build Package
         if: success() || (failure() && steps.clang-format.conclusion == 'failure')
         uses: ./.github/actions/build
+        with:
+          cache-auth-token: '${{ secrets.CACHIX_AUTH_TOKEN }}'
