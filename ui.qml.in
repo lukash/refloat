@@ -776,7 +776,7 @@ Item {
                 var flags = dv.getUint8(ind++);
                 ind += 47;  // 20 bytes package name, 3 version numbers, 20 bytes suffix, 4 bytes git hash
                 state.ticksPerSecond = dv.getUint32(ind); ind += 4;
-                var capabilities = dv.getUint32(ind) >>> 0; ind += 4;
+                var capabilities = dv.getUint32(ind); ind += 4;
                 state.setCapabilities(capabilities);
 
                 var extraFlags = dv.getUint8(ind++);
@@ -1245,7 +1245,9 @@ Item {
         function setCapabilities(caps) {
             capLights = caps & cap_Lights;
             capLightsExternal = caps & cap_LightsExternal;
-            capDataRecord = caps & cap_DataRecord;
+            // Javascript can't work with 32bit ints, an "&" check doesn't work for 2**31 (on Android).
+            // The >>> 0 hack is needed for desktop.
+            capDataRecord = caps >= (cap_DataRecord >>> 0);
         }
 
         // package state
