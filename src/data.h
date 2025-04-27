@@ -92,7 +92,7 @@ typedef struct {
     int32_t main_loop_ticks;
 
     float startup_pitch_trickmargin, startup_pitch_tolerance;
-    float tiltback_variable, tiltback_variable_max_erpm, noseangling_step_size;
+    float tiltback_variable, tiltback_variable_max_erpm;
     bool duty_beeping;
 
     float balance_current;
@@ -121,7 +121,7 @@ typedef struct {
     time_t reverse_timer;
 
     // Feature: Soft Start
-    float softstart_pid_limit, softstart_ramp_step_size;
+    float softstart_pid_limit;
 
     uint64_t odometer;
 

@@ -170,7 +170,6 @@ static void reconfigure(Data *d) {
     haptic_feedback_configure(&d->haptic_feedback, &d->float_conf);
     alert_tracker_configure(&d->alert_tracker, &d->float_conf);
 
-    d->noseangling_step_size = d->float_conf.noseangling_speed / d->float_conf.hertz;
     d->startup_pitch_trickmargin = d->float_conf.startup_dirtylandings_enabled ? 10 : 0;
     d->tiltback_variable =
         d->float_conf.tiltback_variable / 1000 * sign(d->float_conf.tiltback_variable_max);
@@ -186,9 +185,6 @@ static void configure(Data *d) {
     lcm_configure(&d->lcm, &d->float_conf.leds);
 
     d->main_loop_ticks = SYSTEM_TICK_RATE_HZ / d->float_conf.hertz;
-
-    // Feature: Soft Start
-    d->softstart_ramp_step_size = (float) 100 / d->float_conf.hertz;
 
     // Backwards compatibility hack:
     // If mahony kp from the firmware internal filter is higher than 1, it's
@@ -733,7 +729,7 @@ static void calculate_setpoint_target(Data *d) {
     }
 }
 
-static void apply_noseangling(Data *d) {
+static void apply_noseangling(Data *d, float dt) {
     // Variable Tiltback: looks at ERPM from the reference point of the set minimum ERPM
     float variable_erpm = clampf(
         d->motor.abs_erpm - d->float_conf.tiltback_variable_erpm, 0, d->tiltback_variable_max_erpm
@@ -744,7 +740,9 @@ static void apply_noseangling(Data *d) {
         noseangling_target += d->float_conf.tiltback_constant * d->motor.erpm_sign;
     }
 
-    rate_limitf(&d->noseangling_interpolated, noseangling_target, d->noseangling_step_size);
+    rate_limitf(
+        &d->noseangling_interpolated, noseangling_target, d->float_conf.noseangling_speed * dt
+    );
 }
 
 static void imu_ref_callback(float *acc, float *gyro, float *mag, float dt) {
@@ -888,7 +886,7 @@ static void refloat_thd(void *arg) {
                     atr_winddown(&d->atr);
                     brake_tilt_winddown(&d->brake_tilt);
                 } else {
-                    apply_noseangling(d);
+                    apply_noseangling(d, dt);
                     turn_tilt_update(&d->turn_tilt, &d->motor, &d->float_conf);
 
                     torque_tilt_update(&d->torque_tilt, &d->motor, &d->float_conf);
@@ -927,7 +925,7 @@ static void refloat_thd(void *arg) {
             float pitch_based = d->pid.rate_p + d->booster.current;
             if (d->softstart_pid_limit < d->motor.current_max) {
                 pitch_based = fminf(fabs(pitch_based), d->softstart_pid_limit) * sign(pitch_based);
-                d->softstart_pid_limit += d->softstart_ramp_step_size;
+                d->softstart_pid_limit += 100.0f * dt;
             }
 
             float new_current = d->pid.p + d->pid.i + pitch_based;
