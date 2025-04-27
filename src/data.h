@@ -92,9 +92,6 @@ typedef struct {
     int32_t main_loop_ticks;
 
     float startup_pitch_trickmargin, startup_pitch_tolerance;
-    float startup_step_size;
-    float tiltback_duty_step_size, tiltback_hv_step_size, tiltback_lv_step_size,
-        tiltback_return_step_size;
     float tiltback_variable, tiltback_variable_max_erpm, noseangling_step_size;
     bool duty_beeping;
 
@@ -120,7 +117,7 @@ typedef struct {
     bool flywheel_abort;
 
     // Feature: Reverse Stop
-    float reverse_stop_step_size, reverse_tolerance, reverse_total_erpm;
+    float reverse_tolerance, reverse_total_erpm;
     time_t reverse_timer;
 
     // Feature: Soft Start
