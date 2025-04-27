@@ -170,7 +170,6 @@ static void reconfigure(Data *d) {
     haptic_feedback_configure(&d->haptic_feedback, &d->float_conf);
     alert_tracker_configure(&d->alert_tracker, &d->float_conf);
 
-    d->startup_step_size = d->float_conf.startup_speed / d->float_conf.hertz;
     d->noseangling_step_size = d->float_conf.noseangling_speed / d->float_conf.hertz;
     d->startup_pitch_trickmargin = d->float_conf.startup_dirtylandings_enabled ? 10 : 0;
     d->tiltback_variable =
@@ -189,11 +188,6 @@ static void configure(Data *d) {
 
     d->main_loop_ticks = SYSTEM_TICK_RATE_HZ / d->float_conf.hertz;
 
-    d->tiltback_duty_step_size = d->float_conf.tiltback_duty_speed / d->float_conf.hertz;
-    d->tiltback_hv_step_size = d->float_conf.tiltback_hv_speed / d->float_conf.hertz;
-    d->tiltback_lv_step_size = d->float_conf.tiltback_lv_speed / d->float_conf.hertz;
-    d->tiltback_return_step_size = d->float_conf.tiltback_return_speed / d->float_conf.hertz;
-
     // Feature: Soft Start
     d->softstart_ramp_step_size = (float) 100 / d->float_conf.hertz;
 
@@ -211,7 +205,6 @@ static void configure(Data *d) {
 
     // Feature: Reverse Stop
     d->reverse_tolerance = 20000;
-    d->reverse_stop_step_size = 100.0 / d->float_conf.hertz;
 
     // Speed above which to warn users about an impending full switch fault
     d->switch_warn_beep_erpm = d->float_conf.is_footbeep_enabled ? 2000 : 100000;
@@ -301,27 +294,26 @@ static void do_rc_move(Data *d) {
     }
 }
 
-static float get_setpoint_adjustment_step_size(Data *d) {
+static float get_setpoint_adjustment_speed(Data *d) {
     switch (d->state.sat) {
     case (SAT_NONE):
-        return d->tiltback_return_step_size;
+        return d->float_conf.tiltback_return_speed;
     case (SAT_CENTERING):
-        return d->startup_step_size;
+        return d->float_conf.startup_speed;
     case (SAT_REVERSESTOP):
-        return d->reverse_stop_step_size;
+        return 100.0f;
+    case (SAT_PB_SPEED):
     case (SAT_PB_DUTY):
-        return d->tiltback_duty_step_size;
+        return d->float_conf.tiltback_duty_speed;
     case (SAT_PB_HIGH_VOLTAGE):
     case (SAT_PB_TEMPERATURE):
     case (SAT_PB_ERROR):
-        return d->tiltback_hv_step_size;
+        return d->float_conf.tiltback_hv_speed;
     case (SAT_PB_LOW_VOLTAGE):
-        return d->tiltback_lv_step_size;
-    case (SAT_PB_SPEED):
-        return d->tiltback_duty_step_size;
-    default:
-        return 0;
+        return d->float_conf.tiltback_lv_speed;
     }
+
+    return 0;
 }
 
 bool can_engage(const Data *d) {
@@ -881,7 +873,7 @@ static void refloat_thd(void *arg) {
             rate_limitf(
                 &d->setpoint_target_interpolated,
                 d->setpoint_target,
-                get_setpoint_adjustment_step_size(d)
+                get_setpoint_adjustment_speed(d) * dt
             );
             d->setpoint = d->setpoint_target_interpolated;
 
@@ -1672,7 +1664,6 @@ static void cmd_runtime_tune_tilt(Data *d, unsigned char *cfg, int len) {
     float retspeed = cfg[1];
     if (retspeed > 0) {
         d->float_conf.tiltback_return_speed = retspeed / 10;
-        d->tiltback_return_step_size = d->float_conf.tiltback_return_speed / d->float_conf.hertz;
     }
     d->float_conf.tiltback_duty = (float) cfg[2] / 100.0;
     d->float_conf.tiltback_duty_angle = (float) cfg[3] / 10.0;
@@ -1851,8 +1842,6 @@ static void cmd_flywheel_toggle(Data *d, unsigned char *cfg, int len) {
             d->float_conf.tiltback_duty_speed = cfg[6] * 0.5f;
             d->float_conf.tiltback_return_speed = cfg[6] * 0.5f;
         }
-        d->tiltback_duty_step_size = d->float_conf.tiltback_duty_speed / d->float_conf.hertz;
-        d->tiltback_return_step_size = d->float_conf.tiltback_return_speed / d->float_conf.hertz;
 
         // Disable I-term and all tune modifiers and tilts
         d->float_conf.ki = 0;
