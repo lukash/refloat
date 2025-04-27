@@ -766,7 +766,16 @@ static void refloat_thd(void *arg) {
 
     configure(d);
 
+    uint32_t timer_last = VESC_IF->timer_time_now();
+    float dt = 0.0f;
+
     while (!VESC_IF->should_terminate()) {
+        // sleep first to have a correct dt on the first iteration
+        VESC_IF->sleep_us(d->loop_time_us);
+
+        dt = VESC_IF->timer_seconds_elapsed_since(timer_last);
+        timer_last = VESC_IF->timer_time_now();
+
         time_update(&d->time, d->state.state);
 
         imu_update(&d->imu, &d->balance_filter, &d->state);
@@ -1060,8 +1069,6 @@ static void refloat_thd(void *arg) {
         motor_control_apply(&d->motor_control, d->motor.abs_erpm_smooth, d->state.state, &d->time);
 
         data_recorder_sample(&d->data_record, d, d->time.now);
-
-        VESC_IF->sleep_us(d->loop_time_us);
     }
 }
 
