@@ -100,6 +100,9 @@ typedef enum {
     LED_ANIM_STROBE,
     LED_ANIM_KNIGHT_RIDER,
     LED_ANIM_FELONY,
+    LED_ANIM_RAINBOW_CYCLE,
+    LED_ANIM_RAINBOW_FADE,
+    LED_ANIM_RAINBOW_ROLL,
 } LedAnimMode;
 
 typedef enum {
