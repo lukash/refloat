@@ -322,6 +322,32 @@ static void anim_felony(Leds *leds, const LedStrip *strip, const LedBar *bar, fl
     }
 }
 
+static void anim_rainbow_cycle(Leds *leds, const LedStrip *strip, float time) {
+    const uint8_t count = 10;
+    const float segment = 255.0f / count;
+    uint8_t color_idx = ((uint8_t) (time * count) % count) * segment;
+    strip_set_color(leds, strip, hue_to_color(color_idx), strip->brightness, 1.0f);
+}
+
+static void anim_rainbow_fade(Leds *leds, const LedStrip *strip, float time) {
+    uint8_t offset = fmodf(time, 1.0f) * 255.0f;
+    strip_set_color(leds, strip, hue_to_color(offset), strip->brightness, 1.0f);
+}
+
+static void anim_rainbow_roll(Leds *leds, const LedStrip *strip, float time) {
+    uint8_t offset = fmodf(time, 1.0f) * 255.0f;
+    for (int i = 0; i < strip->length; ++i) {
+        led_set_color(
+            leds,
+            strip,
+            i,
+            hue_to_color(255.0f / strip->length * i + offset),
+            strip->brightness,
+            1.0f
+        );
+    }
+}
+
 static void led_strip_animate(Leds *leds, const LedStrip *strip, const LedBar *bar, float time) {
     time *= bar->speed;
 
@@ -343,6 +369,15 @@ static void led_strip_animate(Leds *leds, const LedStrip *strip, const LedBar *b
         break;
     case LED_ANIM_FELONY:
         anim_felony(leds, strip, bar, time);
+        break;
+    case LED_ANIM_RAINBOW_CYCLE:
+        anim_rainbow_cycle(leds, strip, time);
+        break;
+    case LED_ANIM_RAINBOW_FADE:
+        anim_rainbow_fade(leds, strip, time);
+        break;
+    case LED_ANIM_RAINBOW_ROLL:
+        anim_rainbow_roll(leds, strip, time);
         break;
     }
 }
