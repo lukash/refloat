@@ -76,11 +76,15 @@ static const uint32_t colors[] = {
     0x00FF70A0,  // LAVENDER
 };
 
-#define BATTERY_COLOR 0x00909090
+static const uint32_t battery_colors[] = {
+    0x00FF0000,
+    0x00FFB040,
+    0x0088FF00,
+};
+
 #define DUTY_COLOR 0x00FFB030
 #define FOOTPAD_SENSOR_COLOR 0x0000C0FF
 #define RED_BAR_COLOR 0x00FF3828
-#define BATTERY10_BAR_COLOR 0x00FF5038
 #define CONFIRM_COLOR 0x00A040FF
 
 #define CONFIRM_ANIMATION_DURATION 0.8f
@@ -508,8 +512,17 @@ static void status_animate(
         bool reverse = strip == &leds->front_strip;
         if (leds->status_duty_blend < 1.0f) {
             float battery = VESC_IF->mc_get_battery_level(NULL);
+            uint32_t battery_color;
+            if (battery <= 0.2f) {
+                battery_color = battery_colors[0];
+            } else if (battery <= 0.6f) {
+                battery_color = battery_colors[1];
+            } else {
+                battery_color = battery_colors[2];
+            }
+
             anim_progress_bar(
-                leds, strip, battery, BATTERY_COLOR, false, reverse, fminf(blend, 1.0f - idle_blend)
+                leds, strip, battery, battery_color, false, reverse, fminf(blend, 1.0f - idle_blend)
             );
         }
 
