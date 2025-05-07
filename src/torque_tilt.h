@@ -22,8 +22,8 @@
 #include "motor_data.h"
 
 typedef struct {
-    float on_step_size;
-    float off_step_size;
+    float on_speed;
+    float off_speed;
 
     float ramped_step_size;
     float setpoint;
@@ -35,6 +35,8 @@ void torque_tilt_reset(TorqueTilt *tt);
 
 void torque_tilt_configure(TorqueTilt *tt, const RefloatConfig *config);
 
-void torque_tilt_update(TorqueTilt *tt, const MotorData *motor, const RefloatConfig *config);
+void torque_tilt_update(
+    TorqueTilt *tt, const MotorData *motor, const RefloatConfig *config, float dt
+);
 
 void torque_tilt_winddown(TorqueTilt *tt);
