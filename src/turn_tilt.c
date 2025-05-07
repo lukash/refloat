@@ -22,7 +22,7 @@
 #include <math.h>
 
 void turn_tilt_init(TurnTilt *tt) {
-    tt->step_size = 0.0f;
+    tt->speed = 0.0f;
     tt->boost_per_erpm = 0.0f;
     turn_tilt_reset(tt);
 }
@@ -40,7 +40,7 @@ void turn_tilt_reset(TurnTilt *tt) {
 }
 
 void turn_tilt_configure(TurnTilt *tt, const RefloatConfig *config) {
-    tt->step_size = config->turntilt_speed / config->hertz;
+    tt->speed = config->turntilt_speed;
     tt->boost_per_erpm =
         (float) config->turntilt_erpm_boost / 100.0 / config->turntilt_erpm_boost_end;
 }
@@ -73,7 +73,7 @@ void turn_tilt_aggregate(TurnTilt *tt, const IMU *imu) {
     }
 }
 
-void turn_tilt_update(TurnTilt *tt, const MotorData *md, const RefloatConfig *config) {
+void turn_tilt_update(TurnTilt *tt, const MotorData *md, const RefloatConfig *config, float dt) {
     if (config->turntilt_strength == 0) {
         return;
     }
@@ -123,7 +123,7 @@ void turn_tilt_update(TurnTilt *tt, const MotorData *md, const RefloatConfig *co
     }
 
     // Smoothen changes in tilt angle by ramping the step size
-    smooth_rampf(&tt->setpoint, &tt->ramped_step_size, tt->target, tt->step_size, 0.04, 1.5);
+    smooth_rampf(&tt->setpoint, &tt->ramped_step_size, tt->target, tt->speed * dt, 0.04, 1.5);
 }
 
 void turn_tilt_winddown(TurnTilt *tt) {

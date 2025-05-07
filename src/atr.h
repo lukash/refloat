@@ -22,8 +22,8 @@
 #include "motor_data.h"
 
 typedef struct {
-    float on_step_size;
-    float off_step_size;
+    float on_speed;
+    float off_speed;
     float speed_boost_mult;
 
     float accel_diff;
@@ -40,6 +40,6 @@ void atr_reset(ATR *atr);
 
 void atr_configure(ATR *atr, const RefloatConfig *config);
 
-void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config);
+void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config, float dt);
 
 void atr_winddown(ATR *atr);

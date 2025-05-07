@@ -47,7 +47,8 @@ void brake_tilt_update(
     const MotorData *motor,
     const ATR *atr,
     const RefloatConfig *config,
-    float balance_offset
+    float balance_offset,
+    float dt
 ) {
     // braking also should cause setpoint change lift, causing a delayed lingering nose lift
     if (bt->factor < 0 && motor->braking && motor->abs_erpm > 2000) {
@@ -71,11 +72,11 @@ void brake_tilt_update(
         bt->target = 0;
     }
 
-    float braketilt_step_size = atr->off_step_size / max(config->braketilt_lingering, 1);
+    float braketilt_step_size = atr->off_speed * dt / max(config->braketilt_lingering, 1);
     if (fabsf(bt->target) > fabsf(bt->setpoint)) {
-        braketilt_step_size = atr->on_step_size * 1.5;
+        braketilt_step_size = atr->on_speed * dt * 1.5;
     } else if (motor->abs_erpm < 800) {
-        braketilt_step_size = atr->on_step_size;
+        braketilt_step_size = atr->on_speed * dt;
     }
 
     if (motor->abs_erpm < 500) {

@@ -23,8 +23,8 @@
 #include <math.h>
 
 void torque_tilt_init(TorqueTilt *tt) {
-    tt->on_step_size = 0.0f;
-    tt->off_step_size = 0.0f;
+    tt->on_speed = 0.0f;
+    tt->off_speed = 0.0f;
     torque_tilt_reset(tt);
 }
 
@@ -34,11 +34,13 @@ void torque_tilt_reset(TorqueTilt *tt) {
 }
 
 void torque_tilt_configure(TorqueTilt *tt, const RefloatConfig *config) {
-    tt->on_step_size = config->torquetilt_on_speed / config->hertz;
-    tt->off_step_size = config->torquetilt_off_speed / config->hertz;
+    tt->on_speed = config->torquetilt_on_speed;
+    tt->off_speed = config->torquetilt_off_speed;
 }
 
-void torque_tilt_update(TorqueTilt *tt, const MotorData *motor, const RefloatConfig *config) {
+void torque_tilt_update(
+    TorqueTilt *tt, const MotorData *motor, const RefloatConfig *config, float dt
+) {
     float strength =
         motor->braking ? config->torquetilt_strength_regen : config->torquetilt_strength;
 
@@ -58,13 +60,13 @@ void torque_tilt_update(TorqueTilt *tt, const MotorData *motor, const RefloatCon
     if (tt->setpoint * target < 0) {
         // Moving towards opposite sign (crossing zero);
         // Use the faster tilt speed until 0 is reached
-        step_size = fmaxf(tt->off_step_size, tt->on_step_size);
+        step_size = fmaxf(tt->off_speed, tt->on_speed) * dt;
     } else if (fabsf(tt->setpoint) > fabsf(target)) {
         // Moving towards smaller angle of same sign or zero
-        step_size = tt->off_step_size;
+        step_size = tt->off_speed * dt;
     } else {
         // Moving towards larger angle of same sign
-        step_size = tt->on_step_size;
+        step_size = tt->on_speed * dt;
     }
 
     if (motor->abs_erpm < 500) {
