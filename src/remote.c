@@ -31,7 +31,7 @@ void remote_reset(Remote *remote) {
 }
 
 void remote_configure(Remote *remote, const RefloatConfig *config) {
-    remote->step_size = config->inputtilt_speed / config->hertz;
+    remote->speed = config->inputtilt_speed;
 }
 
 void remote_input(Remote *remote, const RefloatConfig *config) {
@@ -72,7 +72,7 @@ void remote_input(Remote *remote, const RefloatConfig *config) {
     remote->input = value;
 }
 
-void remote_update(Remote *remote, const State *state, const RefloatConfig *config) {
+void remote_update(Remote *remote, const State *state, const RefloatConfig *config, float dt) {
     float target = remote->input * config->inputtilt_angle_limit;
 
     if (state->darkride) {
@@ -88,11 +88,11 @@ void remote_update(Remote *remote, const State *state, const RefloatConfig *conf
     if (fabsf(target_diff) < 2.0f) {
         // Target step size is reduced the closer to center you are (needed for smoothly
         // transitioning away from center)
-        remote->ramped_step_size = smoothing_factor * remote->step_size * target_diff / 2 +
+        remote->ramped_step_size = smoothing_factor * remote->speed * dt * target_diff / 2 +
             (1 - smoothing_factor) * remote->ramped_step_size;
         // Linearly ramped down step size is provided as minimum to prevent overshoot
         float centering_step_size =
-            fminf(fabsf(remote->ramped_step_size), fabsf(target_diff / 2) * remote->step_size) *
+            fminf(fabsf(remote->ramped_step_size), fabsf(target_diff / 2) * remote->speed * dt) *
             sign(target_diff);
         if (fabsf(target_diff) < fabsf(centering_step_size)) {
             remote->setpoint = target;
@@ -101,7 +101,7 @@ void remote_update(Remote *remote, const State *state, const RefloatConfig *conf
         }
     } else {
         // Ramp up step size until the configured tilt speed is reached
-        remote->ramped_step_size = smoothing_factor * remote->step_size * sign(target_diff) +
+        remote->ramped_step_size = smoothing_factor * remote->speed * dt * sign(target_diff) +
             (1 - smoothing_factor) * remote->ramped_step_size;
         remote->setpoint += remote->ramped_step_size;
     }

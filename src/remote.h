@@ -21,7 +21,7 @@
 #include "state.h"
 
 typedef struct {
-    float step_size;
+    float speed;
 
     float input;
     float ramped_step_size;
@@ -37,4 +37,4 @@ void remote_configure(Remote *remote, const RefloatConfig *config);
 
 void remote_input(Remote *remote, const RefloatConfig *config);
 
-void remote_update(Remote *remote, const State *state, const RefloatConfig *config);
+void remote_update(Remote *remote, const State *state, const RefloatConfig *config, float dt);

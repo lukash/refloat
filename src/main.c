@@ -874,7 +874,7 @@ static void refloat_thd(void *arg) {
             );
             d->setpoint = d->setpoint_target_interpolated;
 
-            remote_update(&d->remote, &d->state, &d->float_conf);
+            remote_update(&d->remote, &d->state, &d->float_conf, dt);
             d->setpoint += d->remote.setpoint;
 
             if (!d->state.darkride) {
@@ -887,16 +887,17 @@ static void refloat_thd(void *arg) {
                     brake_tilt_winddown(&d->brake_tilt);
                 } else {
                     apply_noseangling(d, dt);
-                    turn_tilt_update(&d->turn_tilt, &d->motor, &d->float_conf);
+                    turn_tilt_update(&d->turn_tilt, &d->motor, &d->float_conf, dt);
 
-                    torque_tilt_update(&d->torque_tilt, &d->motor, &d->float_conf);
-                    atr_update(&d->atr, &d->motor, &d->float_conf);
+                    torque_tilt_update(&d->torque_tilt, &d->motor, &d->float_conf, dt);
+                    atr_update(&d->atr, &d->motor, &d->float_conf, dt);
                     brake_tilt_update(
                         &d->brake_tilt,
                         &d->motor,
                         &d->atr,
                         &d->float_conf,
-                        d->setpoint - d->imu.balance_pitch
+                        d->setpoint - d->imu.balance_pitch,
+                        dt
                     );
                 }
 

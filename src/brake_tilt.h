@@ -40,7 +40,8 @@ void brake_tilt_update(
     const MotorData *motor,
     const ATR *atr,
     const RefloatConfig *config,
-    float balance_offset
+    float balance_offset,
+    float dt
 );
 
 void brake_tilt_winddown(BrakeTilt *bt);
