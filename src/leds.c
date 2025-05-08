@@ -40,6 +40,7 @@
 #define W(c) ((uint8_t) ((c) >> 24))
 #define RGB(r, g, b) ((r) << 16 | (g) << 8 | (b))
 #define RGBW(r, g, b, w) ((w) << 24 | (r) << 16 | (g) << 8 | (b))
+#define TAU (2.0f * M_PI)
 
 static const uint32_t colors[] = {
     0x00000000,  // BLACK
@@ -102,18 +103,37 @@ static uint32_t color_blend(uint32_t color1, uint32_t color2, float blend) {
     return RGBW(r, g, b, w);
 }
 
-// Borrowed from WLED
+// This function is an approximation of `sqrtf(sinf(x) * 0.5 + 0.5)`
+inline static float taylor_series(float zero_to_tau) {
+    float x = (-0.5 * zero_to_tau) + 2.4;
+    float x3 = x * x * x;
+    float x5 = x3 * x * x;
+    float r = fabs(x - (x3 / 6.0) + (x5 / 120.0));
+    return fminf(r, 1.0f);
+}
+
+// Mostly oklch, with a few tweaks for more visual uniformity
 static uint32_t color_wheel(uint8_t pos) {
-    pos = 255 - pos;
-    if (pos < 85) {
-        return ((uint32_t) (255 - pos * 3) << 16) | ((uint32_t) 0 << 8) | (pos * 3);
-    } else if (pos < 170) {
-        pos -= 85;
-        return ((uint32_t) 0 << 16) | ((uint32_t) (pos * 3) << 8) | (255 - pos * 3);
-    } else {
-        pos -= 170;
-        return ((uint32_t) (pos * 3) << 16) | ((uint32_t) (255 - pos * 3) << 8) | 0;
-    }
+    float lightness = 0.75f;
+    float chroma = 0.1275f;
+    float hue_rad = TAU * pos / 256.0f;
+
+    float a_ = chroma * cosf(hue_rad);
+    float b_ = chroma * sinf(hue_rad);
+
+    float l_ = lightness + 0.3963377774f * a_ + 0.2158037573f * b_;
+    float m_ = lightness - 0.1055613458f * a_ - 0.0638541728f * b_;
+    float s_ = lightness - 0.0894841775f * a_ - 1.2914855480f * b_;
+
+    float l = l_ * l_ * l_;
+    float m = m_ * m_ * m_;
+    float s = s_ * s_ * s_;
+
+    float r = +4.0767416621f * l - 3.2077115913f * m + 0.2309699292f * s;
+    float g = -1.1684380046f * l + 2.8097574011f * m - 0.2413193965f * s;
+    float b = -0.0041960863f * l - 0.7034186147f * m + 1.5796147010f * s;
+
+    return ((uint8_t) (r * 255) << 16) | ((uint8_t) (g * 255) << 8) | (uint8_t) (b * 255);
 }
 
 static void sattolo_shuffle(uint32_t seed, uint8_t *array, uint8_t length) {
@@ -310,6 +330,32 @@ static void anim_felony(Leds *leds, const LedStrip *strip, const LedBar *bar, fl
     }
 }
 
+static void anim_rainbow_cycle(Leds *leds, const LedStrip *strip, float time) {
+    uint8_t count = 10;
+    uint8_t segment = 256 / count;
+    uint8_t color_idx = ((uint8_t) (time / 0.1f) % count) * segment;
+    strip_set_color(leds, strip, color_wheel(color_idx), strip->brightness, 1.0f);
+}
+
+static void anim_rgb_fade(Leds *leds, const LedStrip *strip, float time) {
+    uint8_t offset = floorf(fmodf(time, 4.0f) * 255.0f);
+    strip_set_color(leds, strip, color_wheel(offset), strip->brightness, 1.0f);
+}
+
+static void anim_rgb_roll(Leds *leds, const LedStrip *strip, float time) {
+    uint8_t offset = floorf(fmodf(time, 4.0f) * 255.0f);
+    for (int i = 0; i < strip->length; ++i) {
+        led_set_color(
+            leds,
+            strip,
+            i,
+            color_wheel((uint8_t) (255.0f * ((float) i / strip->length) + offset)),
+            strip->brightness,
+            1.0f
+        );
+    }
+}
+
 static void led_strip_animate(Leds *leds, const LedStrip *strip, const LedBar *bar, float time) {
     time *= bar->speed;
 
@@ -331,6 +377,15 @@ static void led_strip_animate(Leds *leds, const LedStrip *strip, const LedBar *b
         break;
     case LED_ANIM_FELONY:
         anim_felony(leds, strip, bar, time);
+        break;
+    case LED_ANIM_RAINBOW_CYCLE:
+        anim_rainbow_cycle(leds, strip, time);
+        break;
+    case LED_ANIM_RAINBOW_FADE:
+        anim_rgb_fade(leds, strip, time);
+        break;
+    case LED_ANIM_RAINBOW_ROLL:
+        anim_rgb_roll(leds, strip, time);
         break;
     }
 }
