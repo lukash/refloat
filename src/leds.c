@@ -192,16 +192,19 @@ static void strip_set_color(
     strip_set_color_range(leds, strip, color, brightness, blend, 0, strip->length);
 }
 
-// Returns a cosine wave oscillating from 0 to 1, starting at 0, with a period of 2s.
+// Bhaskara cosine approximation.
+// Returns a cosine wave oscillating from 0 to 1, starting at 0, with a period of 2s:
+// (1 - cos(x)) / 2
 static float cosine_progress(float time) {
     uint32_t rounded = lroundf(time);
     float x = (time - rounded) * M_PI;
-    // Bhaskara cosine approximation, optimized to return: (1 - cos(x)) / 2
-    float cos = 10 * x * x / (4 * x * x + 4 * M_PI * M_PI);
+    x *= x;
+    float cos = 2.5f * x / (x + M_PI * M_PI);
     if (rounded % 2 == 1) {
-        cos = 1 - cos;
+        return 1 - cos;
+    } else {
+        return cos;
     }
-    return cos;
 }
 
 static void anim_fade(Leds *leds, const LedStrip *strip, const LedBar *bar, float time) {
