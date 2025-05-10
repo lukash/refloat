@@ -1183,6 +1183,7 @@ static void data_init(Data *d) {
     leds_init(&d->leds);
     data_recorder_init(&d->data_record);
     bms_init(&d->bms);
+    footpad_sensor_init(&d->footpad);
 
     torque_tilt_init(&d->torque_tilt);
     atr_init(&d->atr);

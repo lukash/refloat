@@ -19,6 +19,12 @@
 
 #include "vesc_c_if.h"
 
+void footpad_sensor_init(FootpadSensor *fs) {
+    fs->adc1 = 0.0f;
+    fs->adc2 = 0.0f;
+    fs->state = FS_NONE;
+}
+
 void footpad_sensor_update(FootpadSensor *fs, const RefloatConfig *config) {
     fs->adc1 = VESC_IF->io_read_analog(VESC_PIN_ADC1);
     // Returns -1.0 if the pin is missing on the hardware
