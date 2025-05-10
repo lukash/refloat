@@ -24,6 +24,16 @@
 
 #define ERPM_MOVING_THRESHOLD 10.0f
 
+// Compensation coefficient for constants which were previously tied to the
+// loop frequency. It was most commonly configured to 832Hz (or 800Hz), but the
+// actual frequency varied quite a lot depending on the ZVF and the IMU Sample
+// Rate. 720Hz is an average of measured values for common configurations
+// (25-35kHz ZVF, 416Hz and 833Hz IMU Sample Rate). This means a difference of
+// ~13% from the expected configured value. The minimum and maximum measured
+// values were 701Hz and 748Hz, a deviation of <4%.
+#define LOOP_HERTZ_COMPAT 720.0f
+#define LOOP_HERTZ_COMPAT_RECIP (1.0f / LOOP_HERTZ_COMPAT)
+
 #define unused(x) (void) (x)
 
 #if defined(__GNUC__) && __GNUC__ < 9
