@@ -155,6 +155,19 @@ void beep_on(Data *d, bool force) {
 }
 
 static void reconfigure(Data *d) {
+    balance_filter_configure(&d->balance_filter, &d->float_conf);
+
+    motor_data_configure(&d->motor, d->float_conf.atr_filter / d->float_conf.hertz);
+    motor_control_configure(&d->motor_control, &d->float_conf);
+
+    torque_tilt_configure(&d->torque_tilt, &d->float_conf);
+    atr_configure(&d->atr, &d->float_conf);
+    brake_tilt_configure(&d->brake_tilt, &d->float_conf);
+    turn_tilt_configure(&d->turn_tilt, &d->float_conf);
+    remote_configure(&d->remote, &d->float_conf);
+
+    haptic_feedback_configure(&d->haptic_feedback, &d->float_conf);
+
     d->startup_step_size = d->float_conf.startup_speed / d->float_conf.hertz;
     d->noseangling_step_size = d->float_conf.noseangling_speed / d->float_conf.hertz;
     d->startup_pitch_trickmargin = d->float_conf.startup_dirtylandings_enabled ? 10 : 0;
@@ -162,16 +175,6 @@ static void reconfigure(Data *d) {
         d->float_conf.tiltback_variable / 1000 * sign(d->float_conf.tiltback_variable_max);
     d->tiltback_variable_max_erpm =
         fabsf(d->float_conf.tiltback_variable_max / d->tiltback_variable);
-
-    motor_data_configure(&d->motor, d->float_conf.atr_filter / d->float_conf.hertz);
-    motor_control_configure(&d->motor_control, &d->float_conf);
-    balance_filter_configure(&d->balance_filter, &d->float_conf);
-    torque_tilt_configure(&d->torque_tilt, &d->float_conf);
-    atr_configure(&d->atr, &d->float_conf);
-    brake_tilt_configure(&d->brake_tilt, &d->float_conf);
-    turn_tilt_configure(&d->turn_tilt, &d->float_conf);
-    remote_configure(&d->remote, &d->float_conf);
-    haptic_feedback_configure(&d->haptic_feedback, &d->float_conf);
 
     time_refresh_idle(&d->time);
 }
@@ -229,14 +232,15 @@ static void leds_headlights_switch(CfgLeds *cfg_leds, LcmData *lcm, bool headlig
 
 static void reset_runtime_vars(Data *d) {
     motor_data_reset(&d->motor);
+    pid_init(&d->pid);
+
+    torque_tilt_reset(&d->torque_tilt);
     atr_reset(&d->atr);
     brake_tilt_reset(&d->brake_tilt);
-    torque_tilt_reset(&d->torque_tilt);
     turn_tilt_reset(&d->turn_tilt);
     remote_reset(&d->remote);
     booster_reset(&d->booster);
 
-    pid_init(&d->pid);
     d->balance_current = 0;
 
     // Set values for startup
@@ -1168,28 +1172,31 @@ static void data_init(Data *d) {
 
     read_cfg_from_eeprom(d);
 
-    d->odometer = VESC_IF->mc_get_odometer();
-
-    motor_data_init(&d->motor);
     balance_filter_init(&d->balance_filter);
-    state_init(&d->state);
+
     time_init(&d->time);
+    motor_data_init(&d->motor);
+    imu_init(&d->imu);
     pid_init(&d->pid);
     motor_control_init(&d->motor_control);
-    haptic_feedback_init(&d->haptic_feedback);
-    lcm_init(&d->lcm, &d->float_conf.hardware.leds);
-    charging_init(&d->charging);
-    remote_init(&d->remote);
-    leds_init(&d->leds);
-    data_recorder_init(&d->data_record);
-    bms_init(&d->bms);
-    footpad_sensor_init(&d->footpad);
 
     torque_tilt_init(&d->torque_tilt);
     atr_init(&d->atr);
     brake_tilt_init(&d->brake_tilt);
     turn_tilt_init(&d->turn_tilt);
     booster_init(&d->booster);
+    remote_init(&d->remote);
+
+    state_init(&d->state);
+    footpad_sensor_init(&d->footpad);
+    haptic_feedback_init(&d->haptic_feedback);
+
+    leds_init(&d->leds);
+    lcm_init(&d->lcm, &d->float_conf.hardware.leds);
+    charging_init(&d->charging);
+    bms_init(&d->bms);
+
+    data_recorder_init(&d->data_record);
 
     konami_init(&d->flywheel_konami, flywheel_konami_sequence, sizeof(flywheel_konami_sequence));
     konami_init(
@@ -1202,6 +1209,8 @@ static void data_init(Data *d) {
         headlights_off_konami_sequence,
         sizeof(headlights_off_konami_sequence)
     );
+
+    d->odometer = VESC_IF->mc_get_odometer();
 }
 
 // See also:

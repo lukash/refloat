@@ -49,11 +49,15 @@ typedef struct {
     // Firmware version, passed in from Lisp
     int fw_version_major, fw_version_minor, fw_version_beta;
 
+    // IMU data for the balancing filter
+    BalanceFilterData balance_filter;
+
     Time time;
     MotorData motor;
     IMU imu;
     PID pid;
     MotorControl motor_control;
+
     TorqueTilt torque_tilt;
     ATR atr;
     BrakeTilt brake_tilt;
@@ -61,19 +65,27 @@ typedef struct {
     Booster booster;
     Remote remote;
 
+    State state;
+    FootpadSensor footpad;
+    HapticFeedback haptic_feedback;
+
+    Leds leds;
+    LcmData lcm;
+    Charging charging;
+    BMS bms;
+
+    DataRecord data_record;
+
+    Konami flywheel_konami;
+    Konami headlights_on_konami;
+    Konami headlights_off_konami;
+
     // Beeper
     int beep_num_left;
     int beep_duration;
     int beep_countdown;
     int beep_reason;
     bool beeper_enabled;
-
-    Leds leds;
-
-    // Lights Control Module - external lights control
-    LcmData lcm;
-
-    Charging charging;
 
     // Config values
     uint32_t loop_time_us;
@@ -83,14 +95,6 @@ typedef struct {
         tiltback_return_step_size;
     float tiltback_variable, tiltback_variable_max_erpm, noseangling_step_size;
     bool duty_beeping;
-
-    // IMU data for the balancing filter
-    BalanceFilterData balance_filter;
-
-    FootpadSensor footpad;
-
-    // Rumtime state values
-    State state;
 
     float balance_current;
 
@@ -127,12 +131,4 @@ typedef struct {
     int rc_counter;
     float rc_current_target;
     float rc_current;
-
-    HapticFeedback haptic_feedback;
-    DataRecord data_record;
-    BMS bms;
-
-    Konami flywheel_konami;
-    Konami headlights_on_konami;
-    Konami headlights_off_konami;
 } Data;
