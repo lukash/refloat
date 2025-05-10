@@ -24,6 +24,8 @@ typedef struct {
     float current;
 } Booster;
 
+void booster_init(Booster *b);
+
 void booster_reset(Booster *b);
 
 void booster_update(

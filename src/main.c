@@ -1184,6 +1184,12 @@ static void data_init(Data *d) {
     data_recorder_init(&d->data_record);
     bms_init(&d->bms);
 
+    torque_tilt_init(&d->torque_tilt);
+    atr_init(&d->atr);
+    brake_tilt_init(&d->brake_tilt);
+    turn_tilt_init(&d->turn_tilt);
+    booster_init(&d->booster);
+
     konami_init(&d->flywheel_konami, flywheel_konami_sequence, sizeof(flywheel_konami_sequence));
     konami_init(
         &d->headlights_on_konami,

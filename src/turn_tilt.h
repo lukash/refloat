@@ -36,6 +36,8 @@ typedef struct {
     float setpoint;
 } TurnTilt;
 
+void turn_tilt_init(TurnTilt *tt);
+
 void turn_tilt_reset(TurnTilt *tt);
 
 void turn_tilt_configure(TurnTilt *tt, const RefloatConfig *config);

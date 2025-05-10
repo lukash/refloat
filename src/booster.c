@@ -21,8 +21,12 @@
 
 #include <math.h>
 
+void booster_init(Booster *b) {
+    booster_reset(b);
+}
+
 void booster_reset(Booster *b) {
-    b->current = 0;
+    b->current = 0.0f;
 }
 
 void booster_update(

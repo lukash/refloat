@@ -21,14 +21,21 @@
 
 #include <math.h>
 
-void turn_tilt_reset(TurnTilt *tt) {
-    tt->last_yaw_angle = 0;
-    tt->last_yaw_change = 0;
-    tt->yaw_change = 0;
-    tt->yaw_aggregate = 0;
+void turn_tilt_init(TurnTilt *tt) {
+    tt->step_size = 0.0f;
+    tt->boost_per_erpm = 0.0f;
+    turn_tilt_reset(tt);
+}
 
-    tt->target = 0;
-    tt->setpoint = 0;
+void turn_tilt_reset(TurnTilt *tt) {
+    tt->last_yaw_angle = 0.0f;
+    tt->last_yaw_change = 0.0f;
+    tt->yaw_change = 0.0f;
+    tt->abs_yaw_change = 0.0f;
+    tt->yaw_aggregate = 0.0f;
+
+    tt->target = 0.0f;
+    tt->setpoint = 0.0f;
 }
 
 void turn_tilt_configure(TurnTilt *tt, const RefloatConfig *config) {

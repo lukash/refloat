@@ -22,9 +22,14 @@
 
 #include <math.h>
 
+void brake_tilt_init(BrakeTilt *bt) {
+    bt->factor = 0.0f;
+    brake_tilt_reset(bt);
+}
+
 void brake_tilt_reset(BrakeTilt *bt) {
-    bt->target = 0;
-    bt->setpoint = 0;
+    bt->target = 0.0f;
+    bt->setpoint = 0.0f;
 }
 
 void brake_tilt_configure(BrakeTilt *bt, const RefloatConfig *config) {

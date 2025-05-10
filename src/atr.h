@@ -24,16 +24,17 @@
 typedef struct {
     float on_step_size;
     float off_step_size;
-    float ramped_step_size;
+    float speed_boost_mult;
 
     float accel_diff;
     float speed_boost;
 
     float target;
+    float ramped_step_size;
     float setpoint;
-
-    float speed_boost_mult;
 } ATR;
+
+void atr_init(ATR *atr);
 
 void atr_reset(ATR *atr);
 

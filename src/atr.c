@@ -22,12 +22,20 @@
 
 #include <math.h>
 
+void atr_init(ATR *atr) {
+    atr->on_step_size = 0.0f;
+    atr->off_step_size = 0.0f;
+    atr->speed_boost_mult = 0.0f;
+    atr_reset(atr);
+}
+
 void atr_reset(ATR *atr) {
-    atr->accel_diff = 0;
-    atr->speed_boost = 0;
-    atr->target = 0;
-    atr->setpoint = 0;
-    atr->ramped_step_size = 0;
+    atr->accel_diff = 0.0f;
+    atr->speed_boost = 0.0f;
+
+    atr->target = 0.0f;
+    atr->ramped_step_size = 0.0f;
+    atr->setpoint = 0.0f;
 }
 
 void atr_configure(ATR *atr, const RefloatConfig *config) {

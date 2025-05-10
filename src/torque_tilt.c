@@ -22,9 +22,15 @@
 
 #include <math.h>
 
+void torque_tilt_init(TorqueTilt *tt) {
+    tt->on_step_size = 0.0f;
+    tt->off_step_size = 0.0f;
+    torque_tilt_reset(tt);
+}
+
 void torque_tilt_reset(TorqueTilt *tt) {
-    tt->setpoint = 0;
-    tt->ramped_step_size = 0;
+    tt->ramped_step_size = 0.0f;
+    tt->setpoint = 0.0f;
 }
 
 void torque_tilt_configure(TorqueTilt *tt, const RefloatConfig *config) {

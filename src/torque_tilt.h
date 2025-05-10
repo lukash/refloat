@@ -24,10 +24,12 @@
 typedef struct {
     float on_step_size;
     float off_step_size;
-    float ramped_step_size;
 
+    float ramped_step_size;
     float setpoint;
 } TorqueTilt;
+
+void torque_tilt_init(TorqueTilt *tt);
 
 void torque_tilt_reset(TorqueTilt *tt);
 

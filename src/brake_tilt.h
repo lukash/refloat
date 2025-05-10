@@ -28,6 +28,8 @@ typedef struct {
     float setpoint;
 } BrakeTilt;
 
+void brake_tilt_init(BrakeTilt *bt);
+
 void brake_tilt_reset(BrakeTilt *bt);
 
 void brake_tilt_configure(BrakeTilt *bt, const RefloatConfig *config);
