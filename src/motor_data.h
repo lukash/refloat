@@ -68,6 +68,8 @@ typedef struct {
     Biquad current_biquad;
 } MotorData;
 
+void motor_data_init(MotorData *m);
+
 void motor_data_reset(MotorData *m);
 
 void motor_data_refresh_motor_config(MotorData *m, float lv_threshold, float hv_threshold);

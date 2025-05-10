@@ -23,9 +23,45 @@
 
 #include <math.h>
 
+void motor_data_init(MotorData *m) {
+    m->erpm = 0.0f;
+    m->abs_erpm = 0.0f;
+    m->abs_erpm_smooth = 0.0f;
+    m->last_erpm = 0.0f;
+    m->erpm_sign = 1;
+
+    m->speed = 0.0f;
+
+    m->current = 0.0f;
+    m->dir_current = 0.0f;
+    m->filt_current = 0.0f;
+    m->braking = false;
+
+    m->duty_raw = 0.0f;
+
+    m->batt_current = 0.0f;
+    m->batt_voltage = 0.0f;
+
+    m->mosfet_temp = 0.0f;
+    m->motor_temp = 0.0f;
+
+    m->current_min = 0.0f;
+    m->current_max = 0.0f;
+    m->battery_current_min = 0.0f;
+    m->battery_current_max = 0.0f;
+    m->mosfet_temp_max = 0.0f;
+    m->motor_temp_max = 0.0f;
+    m->duty_max_with_margin = 0.0f;
+    m->lv_threshold = 0.0f;
+    m->hv_threshold = 0.0f;
+
+    m->current_filter_enabled = false;
+
+    motor_data_reset(m);
+}
+
 void motor_data_reset(MotorData *m) {
-    m->abs_erpm_smooth = 0;
-    m->duty_raw = 0;
+    m->duty_cycle = 0;
 
     m->acceleration = 0;
     m->accel_idx = 0;

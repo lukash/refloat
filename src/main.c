@@ -1170,6 +1170,7 @@ static void data_init(Data *d) {
 
     d->odometer = VESC_IF->mc_get_odometer();
 
+    motor_data_init(&d->motor);
     balance_filter_init(&d->balance_filter);
     state_init(&d->state);
     time_init(&d->time);
