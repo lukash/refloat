@@ -19,6 +19,8 @@
 
 #include "alert_tracker.h"
 #include "filters/biquad.h"
+#include "filters/ema.h"
+#include "filters/sma.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -28,9 +30,9 @@
 typedef struct {
     float erpm;
     float abs_erpm;
-    float abs_erpm_smooth;
     float last_erpm;
     int8_t erpm_sign;
+    EMA abs_erpm_smooth;
 
     float speed;
 
@@ -39,13 +41,12 @@ typedef struct {
     Biquad filt_current;  // filtered directional current
     bool braking;
 
-    float duty_cycle;
     float duty_raw;
+    EMA duty_cycle;
 
-    // an average calculated over last ACCEL_ARRAY_SIZE values
-    float acceleration;
+    SMA acceleration;
 
-    float batt_current;
+    EMA batt_current;
     float batt_voltage;
 
     float mosfet_temp;
@@ -61,12 +62,11 @@ typedef struct {
     float duty_max_with_margin;
     float lv_threshold;
     float hv_threshold;
-
-    float accel_history[ACCEL_ARRAY_SIZE];
-    uint8_t accel_idx;
 } MotorData;
 
 void motor_data_init(MotorData *m);
+
+void motor_data_destroy(MotorData *m);
 
 void motor_data_reset(MotorData *m);
 
@@ -74,7 +74,7 @@ void motor_data_refresh_motor_config(MotorData *m, float lv_threshold, float hv_
 
 void motor_data_configure(MotorData *m, float current_cutoff_freq, float frequency);
 
-void motor_data_update(MotorData *m);
+void motor_data_update(MotorData *m, float dt);
 
 void motor_data_evaluate_alerts(const MotorData *m, AlertTracker *at, const Time *time);
 

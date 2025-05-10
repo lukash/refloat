@@ -540,8 +540,9 @@ static void calculate_setpoint_target(Data *d) {
         timer_refresh(&d->time, &d->reverse_timer);
     } else if (d->state.mode != MODE_FLYWHEEL &&
                // not normal, either wheelslip or wheel getting stuck
-               fabsf(d->motor.acceleration) > 15 &&
-               sign(d->motor.acceleration) == d->motor.erpm_sign && d->motor.duty_cycle > 0.3 &&
+               fabsf(d->motor.acceleration.value) > 10000 &&
+               sign(d->motor.acceleration.value) == d->motor.erpm_sign &&
+               d->motor.duty_cycle.value > 0.3 &&
                // acceleration can jump a lot at very low speeds
                d->motor.abs_erpm > 2000) {
         d->state.wheelslip = true;
@@ -551,12 +552,12 @@ static void calculate_setpoint_target(Data *d) {
             d->traction_control = true;
         }
     } else if (d->state.wheelslip) {
-        if (fabsf(d->motor.acceleration) < 10) {
+        if (fabsf(d->motor.acceleration.value) < 7000) {
             // acceleration is slowing down, traction control seems to have worked
             d->traction_control = false;
         }
         // Remain in wheelslip state for a bit to avoid any overreactions
-        if (d->motor.duty_cycle > d->motor.duty_max_with_margin) {
+        if (d->motor.duty_cycle.value > d->motor.duty_max_with_margin) {
             timer_refresh(&d->time, &d->wheelslip_timer);
         } else if (timer_older(&d->time, d->wheelslip_timer, 0.2)) {
             if (d->motor.duty_raw < 0.85) {
@@ -564,7 +565,7 @@ static void calculate_setpoint_target(Data *d) {
                 d->state.wheelslip = false;
             }
         }
-    } else if (d->motor.duty_cycle > d->float_conf.tiltback_duty) {
+    } else if (d->motor.duty_cycle.value > d->float_conf.tiltback_duty) {
         if (d->motor.erpm > 0) {
             d->setpoint_target = d->float_conf.tiltback_duty_angle;
         } else {
@@ -580,7 +581,7 @@ static void calculate_setpoint_target(Data *d) {
         if (d->state.mode != MODE_FLYWHEEL) {
             d->state.sat = SAT_PB_DUTY;
         }
-    } else if (d->motor.duty_cycle > 0.05 &&
+    } else if (d->motor.duty_cycle.value > 0.05 &&
                (d->motor.batt_voltage > d->motor.hv_threshold ||
                 bms_is_fault(&d->bms, BMSF_CELL_OVER_VOLTAGE))) {
         if (bms_is_fault(&d->bms, BMSF_CELL_OVER_VOLTAGE)) {
@@ -662,7 +663,7 @@ static void calculate_setpoint_target(Data *d) {
             d->setpoint_target = -d->float_conf.tiltback_lv_angle;
         }
         d->state.sat = SAT_PB_TEMPERATURE;
-    } else if (d->motor.duty_cycle > 0.05 &&
+    } else if (d->motor.duty_cycle.value > 0.05 &&
                (d->motor.batt_voltage < d->motor.lv_threshold ||
                 bms_is_fault(&d->bms, BMSF_CELL_UNDER_VOLTAGE))) {
         beep_alert(d, 3, false);
@@ -706,7 +707,7 @@ static void calculate_setpoint_target(Data *d) {
         d->setpoint_target = 0;
     }
 
-    if (d->state.wheelslip && d->motor.duty_cycle > d->motor.duty_max_with_margin) {
+    if (d->state.wheelslip && d->motor.duty_cycle.value > d->motor.duty_max_with_margin) {
         d->setpoint_target = 0;
     }
     if (d->state.darkride) {
@@ -802,7 +803,7 @@ static void refloat_thd(void *arg) {
             }
         }
 
-        motor_data_update(&d->motor);
+        motor_data_update(&d->motor, dt);
 
         remote_input(&d->remote, &d->float_conf);
 
@@ -1083,7 +1084,9 @@ static void refloat_thd(void *arg) {
             break;
         }
 
-        motor_control_apply(&d->motor_control, d->motor.abs_erpm_smooth, d->state.state, &d->time);
+        motor_control_apply(
+            &d->motor_control, d->motor.abs_erpm_smooth.value, d->state.state, &d->time
+        );
 
         int32_t ticks =
             lrintf(VESC_IF->timer_seconds_elapsed_since(loop_timer) * SYSTEM_TICK_RATE_HZ);
@@ -1377,7 +1380,7 @@ static void cmd_send_all_data(Data *d, unsigned char mode) {
         buffer_append_int16(buffer, d->motor.erpm, &ind);
         buffer_append_float16(buffer, d->motor.speed * (1.0f / 3.6f), 10, &ind);
         buffer_append_float16(buffer, d->motor.current, 10, &ind);
-        buffer_append_float16(buffer, d->motor.batt_current, 10, &ind);
+        buffer_append_float16(buffer, d->motor.batt_current.value, 10, &ind);
         buffer[ind++] = d->motor.duty_raw * 100 + 128;
         if (VESC_IF->foc_get_id != NULL) {
             buffer[ind++] = fabsf(VESC_IF->foc_get_id()) * 3;
@@ -2422,6 +2425,7 @@ static void stop(void *arg) {
         VESC_IF->request_terminate(d->main_thread);
     }
     log_msg("Terminating.");
+    motor_data_destroy(&d->motor);
     leds_destroy(&d->leds);
     VESC_IF->free(d);
 }
