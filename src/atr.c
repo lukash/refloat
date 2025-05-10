@@ -59,8 +59,7 @@ void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config, f
     float accel_factor2 = accel_factor * 1.3;
 
     // compare measured acceleration to expected acceleration
-    float measured_acc = fmaxf(motor->acceleration, -5);
-    measured_acc = fminf(measured_acc, 5);
+    float measured_acc = clampf(motor->acceleration.value * LOOP_HERTZ_COMPAT_RECIP, -5.0f, 5.0f);
 
     // expected acceleration is proportional to current (minus an offset, required to
     // balance/maintain speed)
