@@ -18,6 +18,7 @@
 #pragma once
 
 #include "conf/datatypes.h"
+#include "filters/ema.h"
 #include "imu.h"
 #include "motor_data.h"
 
@@ -27,14 +28,23 @@ typedef struct {
     float rate_p;  // used instead of d, works better with high Mahony KP
 
     // PID brake scaling
-    float p_fwd_scale;
-    float rate_p_fwd_scale;
-    float p_bwd_scale;
-    float rate_p_bwd_scale;
+    EMA p_fwd_scale;
+    EMA rate_p_fwd_scale;
+    EMA p_bwd_scale;
+    EMA rate_p_bwd_scale;
 } PID;
 
 void pid_init(PID *pid);
 
+void pid_reset(PID *pid);
+
+void pid_configure(PID *pid, float frequency);
+
 void pid_update(
-    PID *pid, float setpoint, const MotorData *md, const IMU *imu, const RefloatConfig *config
+    PID *pid,
+    float setpoint,
+    const MotorData *md,
+    const IMU *imu,
+    const RefloatConfig *config,
+    float dt
 );

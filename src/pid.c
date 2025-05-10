@@ -19,55 +19,69 @@
 
 #include "lib/utils.h"
 
-#include "vesc_c_if.h"
-
 #include <math.h>
 
 void pid_init(PID *pid) {
+    ema_init(&pid->p_fwd_scale);
+    ema_init(&pid->rate_p_fwd_scale);
+    ema_init(&pid->p_bwd_scale);
+    ema_init(&pid->rate_p_bwd_scale);
+
+    pid_reset(pid);
+}
+
+void pid_reset(PID *pid) {
     pid->p = 0;
     pid->i = 0;
     pid->rate_p = 0;
 
-    pid->p_bwd_scale = 1.0;
-    pid->rate_p_bwd_scale = 1.0;
-    pid->p_fwd_scale = 1.0;
-    pid->rate_p_fwd_scale = 1.0;
+    pid->p_fwd_scale.value = 1.0f;
+    pid->rate_p_fwd_scale.value = 1.0f;
+    pid->p_bwd_scale.value = 1.0f;
+    pid->rate_p_bwd_scale.value = 1.0f;
+}
+
+void pid_configure(PID *pid, float frequency) {
+    ema_configure(&pid->p_fwd_scale, 1.0f, frequency);
+    ema_configure(&pid->rate_p_fwd_scale, 1.0f, frequency);
+    ema_configure(&pid->p_bwd_scale, 1.0f, frequency);
+    ema_configure(&pid->rate_p_bwd_scale, 1.0f, frequency);
 }
 
 void pid_update(
-    PID *pid, float setpoint, const MotorData *md, const IMU *imu, const RefloatConfig *config
+    PID *pid,
+    float setpoint,
+    const MotorData *md,
+    const IMU *imu,
+    const RefloatConfig *config,
+    float dt
 ) {
     pid->p = setpoint - imu->balance_pitch;
-    pid->i = pid->i + pid->p * config->ki;
+    pid->i = pid->i + pid->p * config->ki * LOOP_HERTZ_COMPAT * dt;
 
-    // I term filter
     if (config->ki_limit > 0 && fabsf(pid->i) > config->ki_limit) {
         pid->i = config->ki_limit * sign(pid->i);
     }
 
     // brake scale coefficient smoothing
-    if (md->abs_erpm < 500) {
-        // all scaling should roll back to 1.0 when near a stop for smooth transitions
-        pid->p_bwd_scale = 0.01 + 0.99 * pid->p_bwd_scale;
-        pid->rate_p_bwd_scale = 0.01 + 0.99 * pid->rate_p_bwd_scale;
-        pid->p_fwd_scale = 0.01 + 0.99 * pid->p_fwd_scale;
-        pid->rate_p_fwd_scale = 0.01 + 0.99 * pid->rate_p_fwd_scale;
-    } else if (md->erpm > 0) {
-        // rolling forward - brakes transition to scaled values
-        pid->p_bwd_scale = 0.01 * config->kp_brake + 0.99 * pid->p_bwd_scale;
-        pid->rate_p_bwd_scale = 0.01 * config->kp2_brake + 0.99 * pid->rate_p_bwd_scale;
-        pid->p_fwd_scale = 0.01 + 0.99 * pid->p_fwd_scale;
-        pid->rate_p_fwd_scale = 0.01 + 0.99 * pid->rate_p_fwd_scale;
+    if (md->erpm < -500) {
+        ema_update(&pid->p_fwd_scale, config->kp_brake);
+        ema_update(&pid->rate_p_fwd_scale, config->kp2_brake);
     } else {
-        // rolling backward, NEW brakes (we use kp_accel) transition to scaled values
-        pid->p_bwd_scale = 0.01 + 0.99 * pid->p_bwd_scale;
-        pid->rate_p_bwd_scale = 0.01 + 0.99 * pid->rate_p_bwd_scale;
-        pid->p_fwd_scale = 0.01 * config->kp_brake + 0.99 * pid->p_fwd_scale;
-        pid->rate_p_fwd_scale = 0.01 * config->kp2_brake + 0.99 * pid->rate_p_fwd_scale;
+        ema_update(&pid->p_fwd_scale, 1.0f);
+        ema_update(&pid->rate_p_fwd_scale, 1.0f);
     }
 
-    pid->p *= config->kp * (pid->p > 0 ? pid->p_fwd_scale : pid->p_bwd_scale);
+    if (md->erpm > 500) {
+        ema_update(&pid->p_bwd_scale, config->kp_brake);
+        ema_update(&pid->rate_p_bwd_scale, config->kp2_brake);
+    } else {
+        ema_update(&pid->p_bwd_scale, 1.0f);
+        ema_update(&pid->rate_p_bwd_scale, 1.0f);
+    }
+
+    pid->p *= config->kp * (pid->p > 0 ? pid->p_fwd_scale.value : pid->p_bwd_scale.value);
 
     pid->rate_p = -imu->pitch_rate * config->kp2;
-    pid->rate_p *= pid->rate_p > 0 ? pid->rate_p_fwd_scale : pid->rate_p_bwd_scale;
+    pid->rate_p *= pid->rate_p > 0 ? pid->rate_p_fwd_scale.value : pid->rate_p_bwd_scale.value;
 }
