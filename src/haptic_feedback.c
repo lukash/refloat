@@ -57,7 +57,7 @@ static HapticFeedbackType haptic_feedback_get_type(
 
     switch (state->sat) {
     case SAT_PB_DUTY:
-        if (md->duty_cycle > hf->duty_solid_threshold) {
+        if (md->duty_cycle.value > hf->duty_solid_threshold) {
             return HAPTIC_FEEDBACK_DUTY_CONTINUOUS;
         } else {
             return HAPTIC_FEEDBACK_DUTY_SPEED;

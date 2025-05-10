@@ -45,9 +45,9 @@
     S(motor.current, "current")                                                                    \
     R(motor.dir_current, "dir_current")                                                            \
     S(motor.filt_current.value, "filt_current")                                                    \
-    R(motor.duty_cycle, "duty_cycle")                                                              \
+    R(motor.duty_cycle.value, "duty_cycle")                                                        \
     R(motor.batt_voltage, "batt_voltage")                                                          \
-    S(motor.batt_current, "batt_current")                                                          \
+    S(motor.batt_current.value, "batt_current")                                                    \
     S(motor.mosfet_temp, "mosfet_temp")                                                            \
     S(motor.motor_temp, "motor_temp")                                                              \
     R(imu.pitch, "pitch")                                                                          \

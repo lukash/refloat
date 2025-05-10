@@ -26,9 +26,9 @@
 void motor_data_init(MotorData *m) {
     m->erpm = 0.0f;
     m->abs_erpm = 0.0f;
-    m->abs_erpm_smooth = 0.0f;
     m->last_erpm = 0.0f;
     m->erpm_sign = 1;
+    ema_init(&m->abs_erpm_smooth);
 
     m->speed = 0.0f;
 
@@ -38,8 +38,10 @@ void motor_data_init(MotorData *m) {
     m->braking = false;
 
     m->duty_raw = 0.0f;
+    ema_init(&m->duty_cycle);
+    sma_init(&m->acceleration);
 
-    m->batt_current = 0.0f;
+    ema_init(&m->batt_current);
     m->batt_voltage = 0.0f;
 
     m->mosfet_temp = 0.0f;
@@ -58,15 +60,13 @@ void motor_data_init(MotorData *m) {
     motor_data_reset(m);
 }
 
+void motor_data_destroy(MotorData *m) {
+    sma_destroy(&m->acceleration);
+}
+
 void motor_data_reset(MotorData *m) {
-    m->duty_cycle = 0;
-
-    m->acceleration = 0;
-    m->accel_idx = 0;
-    for (int i = 0; i < 40; i++) {
-        m->accel_history[i] = 0;
-    }
-
+    ema_reset(&m->duty_cycle, 0.0f);
+    sma_reset(&m->acceleration);
     biquad_reset(&m->filt_current);
 }
 
@@ -95,18 +95,24 @@ void motor_data_refresh_motor_config(MotorData *m, float lv_threshold, float hv_
 }
 
 void motor_data_configure(MotorData *m, float current_cutoff_freq, float frequency) {
+    ema_configure(&m->abs_erpm_smooth, 10.0f, frequency);
+
     // setting cutoff freq to 0 used to turn off the filtering
     if (current_cutoff_freq < 1) {
         current_cutoff_freq = 20;
     }
     biquad_configure(&m->filt_current, BQ_LOWPASS, current_cutoff_freq, frequency);
+
+    ema_configure(&m->duty_cycle, 1.0f, frequency);
+    sma_configure(&m->acceleration, 8.0f, frequency);
+    ema_configure(&m->batt_current, 1.0f, frequency);
 }
 
-void motor_data_update(MotorData *m) {
+void motor_data_update(MotorData *m, float dt) {
     m->erpm = VESC_IF->mc_get_rpm();
     m->abs_erpm = fabsf(m->erpm);
-    m->abs_erpm_smooth = m->abs_erpm_smooth * 0.9 + m->abs_erpm * 0.1;
     m->erpm_sign = sign(m->erpm);
+    ema_update(&m->abs_erpm_smooth, m->abs_erpm);
 
     // TODO mc_get_speed() calculates speed from erpm using the full formula,
     // including four divisions. In theory multiplying by a single constant is
@@ -120,18 +126,14 @@ void motor_data_update(MotorData *m) {
     m->braking = m->current < 0;
 
     m->duty_raw = fabsf(VESC_IF->mc_get_duty_cycle_now());
-    m->duty_cycle += 0.01f * (m->duty_raw - m->duty_cycle);
+    ema_update(&m->duty_cycle, m->duty_raw);
 
-    float current_acceleration = m->erpm - m->last_erpm;
+    sma_update(&m->acceleration, (m->erpm - m->last_erpm) / dt);
     m->last_erpm = m->erpm;
-
-    m->acceleration += (current_acceleration - m->accel_history[m->accel_idx]) / ACCEL_ARRAY_SIZE;
-    m->accel_history[m->accel_idx] = current_acceleration;
-    m->accel_idx = (m->accel_idx + 1) % ACCEL_ARRAY_SIZE;
 
     biquad_update(&m->filt_current, m->dir_current);
 
-    m->batt_current += 0.01f * (VESC_IF->mc_get_tot_current_in_filtered() - m->batt_current);
+    ema_update(&m->batt_current, VESC_IF->mc_get_tot_current_in_filtered());
     m->batt_voltage = VESC_IF->mc_get_input_voltage_filtered();
 
     m->mosfet_temp = VESC_IF->mc_temp_fet_filtered();
@@ -150,8 +152,8 @@ void motor_data_evaluate_alerts(const MotorData *m, AlertTracker *at, const Time
 float motor_data_get_current_saturation(const MotorData *m) {
     float motor_saturation =
         fabsf(m->filt_current.value) / (m->braking ? m->current_min : m->current_max);
-    float battery_saturation =
-        m->batt_current / (m->batt_current < 0 ? m->battery_current_min : m->battery_current_max);
+    float battery_saturation = m->batt_current.value /
+        (m->batt_current.value < 0 ? m->battery_current_min : m->battery_current_max);
 
     return max(motor_saturation, battery_saturation);
 }

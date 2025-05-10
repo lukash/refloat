@@ -98,7 +98,7 @@ void lcm_poll_response(
         buffer[ind++] = VESC_IF->mc_get_fault();
 
         if (state->state == STATE_RUNNING) {
-            buffer[ind++] = fminf(100, fabsf(motor->duty_cycle * 100));
+            buffer[ind++] = fminf(100, fabsf(motor->duty_cycle.value * 100));
         } else {
             // pitch is a value between -180 and +180, so abs(pitch) fits into uint8
             buffer[ind++] = lcm->lights_off_when_lifted ? fabsf(pitch) : 0;
