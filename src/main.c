@@ -159,6 +159,7 @@ static void reconfigure(Data *d) {
     balance_filter_configure(&d->balance_filter, &d->float_conf);
 
     motor_data_configure(&d->motor, d->float_conf.atr_filter, d->float_conf.hertz);
+    pid_configure(&d->pid, d->float_conf.hertz);
     motor_control_configure(&d->motor_control, &d->float_conf, d->float_conf.hertz);
 
     torque_tilt_configure(&d->torque_tilt, &d->float_conf);
@@ -225,7 +226,7 @@ static void leds_headlights_switch(CfgLeds *cfg_leds, LcmData *lcm, bool headlig
 
 static void reset_runtime_vars(Data *d) {
     motor_data_reset(&d->motor);
-    pid_init(&d->pid);
+    pid_reset(&d->pid);
 
     torque_tilt_reset(&d->torque_tilt);
     atr_reset(&d->atr);
@@ -926,7 +927,7 @@ static void refloat_thd(void *arg) {
                 }
             }
 
-            pid_update(&d->pid, d->setpoint, &d->motor, &d->imu, &d->float_conf);
+            pid_update(&d->pid, d->setpoint, &d->motor, &d->imu, &d->float_conf, dt);
 
             float booster_proportional = d->setpoint - d->brake_tilt.setpoint - d->imu.pitch;
             booster_update(&d->booster, &d->motor, &d->float_conf, booster_proportional);
