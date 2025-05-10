@@ -25,6 +25,10 @@ void remote_init(Remote *remote) {
     remote->setpoint = 0;
 }
 
+void remote_reset(Remote *remote) {
+    remote->input = 0;
+}
+
 void remote_configure(Remote *remote, const RefloatConfig *config) {
     remote->step_size = config->inputtilt_speed / config->hertz;
 }
