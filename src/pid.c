@@ -28,10 +28,10 @@ void pid_init(PID *pid) {
     pid->i = 0;
     pid->rate_p = 0;
 
-    pid->kp_brake_scale = 1.0;
-    pid->kp2_brake_scale = 1.0;
-    pid->kp_accel_scale = 1.0;
-    pid->kp2_accel_scale = 1.0;
+    pid->p_bwd_scale = 1.0;
+    pid->rate_p_bwd_scale = 1.0;
+    pid->p_fwd_scale = 1.0;
+    pid->rate_p_fwd_scale = 1.0;
 }
 
 void pid_update(
@@ -48,26 +48,26 @@ void pid_update(
     // brake scale coefficient smoothing
     if (md->abs_erpm < 500) {
         // all scaling should roll back to 1.0 when near a stop for smooth transitions
-        pid->kp_brake_scale = 0.01 + 0.99 * pid->kp_brake_scale;
-        pid->kp2_brake_scale = 0.01 + 0.99 * pid->kp2_brake_scale;
-        pid->kp_accel_scale = 0.01 + 0.99 * pid->kp_accel_scale;
-        pid->kp2_accel_scale = 0.01 + 0.99 * pid->kp2_accel_scale;
+        pid->p_bwd_scale = 0.01 + 0.99 * pid->p_bwd_scale;
+        pid->rate_p_bwd_scale = 0.01 + 0.99 * pid->rate_p_bwd_scale;
+        pid->p_fwd_scale = 0.01 + 0.99 * pid->p_fwd_scale;
+        pid->rate_p_fwd_scale = 0.01 + 0.99 * pid->rate_p_fwd_scale;
     } else if (md->erpm > 0) {
         // rolling forward - brakes transition to scaled values
-        pid->kp_brake_scale = 0.01 * config->kp_brake + 0.99 * pid->kp_brake_scale;
-        pid->kp2_brake_scale = 0.01 * config->kp2_brake + 0.99 * pid->kp2_brake_scale;
-        pid->kp_accel_scale = 0.01 + 0.99 * pid->kp_accel_scale;
-        pid->kp2_accel_scale = 0.01 + 0.99 * pid->kp2_accel_scale;
+        pid->p_bwd_scale = 0.01 * config->kp_brake + 0.99 * pid->p_bwd_scale;
+        pid->rate_p_bwd_scale = 0.01 * config->kp2_brake + 0.99 * pid->rate_p_bwd_scale;
+        pid->p_fwd_scale = 0.01 + 0.99 * pid->p_fwd_scale;
+        pid->rate_p_fwd_scale = 0.01 + 0.99 * pid->rate_p_fwd_scale;
     } else {
         // rolling backward, NEW brakes (we use kp_accel) transition to scaled values
-        pid->kp_brake_scale = 0.01 + 0.99 * pid->kp_brake_scale;
-        pid->kp2_brake_scale = 0.01 + 0.99 * pid->kp2_brake_scale;
-        pid->kp_accel_scale = 0.01 * config->kp_brake + 0.99 * pid->kp_accel_scale;
-        pid->kp2_accel_scale = 0.01 * config->kp2_brake + 0.99 * pid->kp2_accel_scale;
+        pid->p_bwd_scale = 0.01 + 0.99 * pid->p_bwd_scale;
+        pid->rate_p_bwd_scale = 0.01 + 0.99 * pid->rate_p_bwd_scale;
+        pid->p_fwd_scale = 0.01 * config->kp_brake + 0.99 * pid->p_fwd_scale;
+        pid->rate_p_fwd_scale = 0.01 * config->kp2_brake + 0.99 * pid->rate_p_fwd_scale;
     }
 
-    pid->p *= config->kp * (pid->p > 0 ? pid->kp_accel_scale : pid->kp_brake_scale);
+    pid->p *= config->kp * (pid->p > 0 ? pid->p_fwd_scale : pid->p_bwd_scale);
 
     pid->rate_p = -imu->pitch_rate * config->kp2;
-    pid->rate_p *= pid->rate_p > 0 ? pid->kp2_accel_scale : pid->kp2_brake_scale;
+    pid->rate_p *= pid->rate_p > 0 ? pid->rate_p_fwd_scale : pid->rate_p_bwd_scale;
 }

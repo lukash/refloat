@@ -27,10 +27,10 @@ typedef struct {
     float rate_p;  // used instead of d, works better with high Mahony KP
 
     // PID brake scaling
-    float kp_brake_scale;
-    float kp2_brake_scale;
-    float kp_accel_scale;
-    float kp2_accel_scale;
+    float p_fwd_scale;
+    float rate_p_fwd_scale;
+    float p_bwd_scale;
+    float rate_p_bwd_scale;
 } PID;
 
 void pid_init(PID *pid);
