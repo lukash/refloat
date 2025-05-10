@@ -31,6 +31,8 @@ typedef struct {
 
 void remote_init(Remote *remote);
 
+void remote_reset(Remote *remote);
+
 void remote_configure(Remote *remote, const RefloatConfig *config);
 
 void remote_input(Remote *remote, const RefloatConfig *config);

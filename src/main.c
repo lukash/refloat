@@ -229,6 +229,7 @@ static void reset_runtime_vars(Data *d) {
     brake_tilt_reset(&d->brake_tilt);
     torque_tilt_reset(&d->torque_tilt);
     turn_tilt_reset(&d->turn_tilt);
+    remote_reset(&d->remote);
     booster_reset(&d->booster);
 
     pid_init(&d->pid);
@@ -239,7 +240,6 @@ static void reset_runtime_vars(Data *d) {
     d->setpoint_target_interpolated = d->imu.balance_pitch;
     d->setpoint_target = 0;
     d->noseangling_interpolated = 0;
-    d->inputtilt_interpolated = 0;
     d->traction_control = false;
     d->softstart_pid_limit = 0;
     d->startup_pitch_tolerance = d->float_conf.startup_pitch_tolerance;
@@ -403,7 +403,7 @@ static bool check_faults(Data *d) {
             }
 
             if (d->motor.abs_erpm < 200 && fabsf(d->imu.pitch) > 14 &&
-                fabsf(d->inputtilt_interpolated) < 30 && sign(d->imu.pitch) == d->motor.erpm_sign) {
+                fabsf(d->remote.setpoint) < 30 && sign(d->imu.pitch) == d->motor.erpm_sign) {
                 state_stop(&d->state, STOP_QUICKSTOP);
                 return true;
             }
@@ -482,7 +482,7 @@ static bool check_faults(Data *d) {
     }
 
     // Check pitch angle
-    if (fabsf(d->imu.pitch) > d->float_conf.fault_pitch && fabsf(d->inputtilt_interpolated) < 30) {
+    if (fabsf(d->imu.pitch) > d->float_conf.fault_pitch && fabsf(d->remote.setpoint) < 30) {
         if (timer_older_ms(&d->time, d->fault_angle_pitch_timer, d->float_conf.fault_delay_pitch)) {
             state_stop(&d->state, STOP_PITCH);
             return true;
@@ -1177,7 +1177,7 @@ static void send_realtime_data(Data *d) {
     buffer_append_float32_auto(buffer, d->brake_tilt.setpoint, &ind);
     buffer_append_float32_auto(buffer, d->torque_tilt.setpoint, &ind);
     buffer_append_float32_auto(buffer, d->turn_tilt.setpoint, &ind);
-    buffer_append_float32_auto(buffer, d->inputtilt_interpolated, &ind);
+    buffer_append_float32_auto(buffer, d->remote.setpoint, &ind);
 
     // DEBUG
     buffer_append_float32_auto(buffer, d->imu.pitch, &ind);
@@ -1235,7 +1235,7 @@ static void cmd_send_all_data(Data *d, unsigned char mode) {
         buffer[ind++] = d->brake_tilt.setpoint * 5 + 128;
         buffer[ind++] = d->torque_tilt.setpoint * 5 + 128;
         buffer[ind++] = d->turn_tilt.setpoint * 5 + 128;
-        buffer[ind++] = d->inputtilt_interpolated * 5 + 128;
+        buffer[ind++] = d->remote.setpoint * 5 + 128;
 
         buffer_append_float16(buffer, d->imu.pitch, 10, &ind);
         buffer[ind++] = d->booster.current + 128;
