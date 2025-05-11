@@ -34,11 +34,11 @@ void motor_control_init(MotorControl *mc) {
     mc->tone_intensity = 0.0f;
 }
 
-void motor_control_configure(MotorControl *mc, const RefloatConfig *config) {
+void motor_control_configure(MotorControl *mc, const RefloatConfig *config, uint16_t frequency) {
     mc->brake_current = config->brake_current;
     mc->click_current = config->startup_click_current;
     mc->parking_brake_mode = config->parking_brake_mode;
-    mc->main_freq = config->hertz / 2;
+    mc->main_freq = frequency / 2;
 }
 
 void motor_control_request_current(MotorControl *mc, float current) {
