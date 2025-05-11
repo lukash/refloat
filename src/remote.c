@@ -26,7 +26,8 @@ void remote_init(Remote *remote) {
 }
 
 void remote_reset(Remote *remote) {
-    remote->input = 0;
+    remote->setpoint = 0;
+    remote->ramped_step_size = 0;
 }
 
 void remote_configure(Remote *remote, const RefloatConfig *config) {
