@@ -46,7 +46,7 @@ typedef struct {
 
 void motor_control_init(MotorControl *mc);
 
-void motor_control_configure(MotorControl *mc, const RefloatConfig *config);
+void motor_control_configure(MotorControl *mc, const RefloatConfig *config, uint16_t frequency);
 
 void motor_control_request_current(MotorControl *mc, float current);
 
