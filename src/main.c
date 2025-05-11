@@ -773,6 +773,47 @@ static void apply_noseangling(Data *d, float dt) {
     );
 }
 
+static void pid_control(Data *d, float dt) {
+    pid_update(&d->pid, d->setpoint, &d->motor, &d->imu, &d->float_conf, dt);
+
+    float booster_proportional = d->setpoint - d->brake_tilt.setpoint - d->imu.pitch;
+    booster_update(&d->booster, &d->motor, &d->float_conf, booster_proportional);
+
+    // Rate P and Booster are pitch-based (as opposed to balance pitch based)
+    // They require to be filtered in, otherwise they'd cause a jerk
+    float pitch_based = d->pid.rate_p + d->booster.current;
+    if (d->softstart_pid_limit < d->motor.current_max) {
+        pitch_based = fminf(fabs(pitch_based), d->softstart_pid_limit) * sign(pitch_based);
+        d->softstart_pid_limit += 100.0f * dt;
+    }
+
+    float new_current = d->pid.p + d->pid.i + pitch_based;
+    float current_limit;
+    if (d->state.mode == MODE_HANDTEST) {
+        current_limit = 7;
+    } else if (d->state.mode == MODE_FLYWHEEL) {
+        current_limit = 40;
+    } else {
+        current_limit = d->motor.braking ? d->motor.current_min : d->motor.current_max;
+    }
+    if (fabsf(new_current) > current_limit) {
+        new_current = sign(new_current) * current_limit;
+    }
+
+    if (d->state.darkride) {
+        new_current = -new_current;
+    }
+
+    if (d->traction_control) {
+        // freewheel while traction loss is detected
+        d->balance_current = 0;
+    } else {
+        d->balance_current = d->balance_current * 0.8 + new_current * 0.2;
+    }
+
+    motor_control_request_current(&d->motor_control, d->balance_current);
+}
+
 static void imu_ref_callback(float *acc, float *gyro, float *mag, float dt) {
     unused(mag);
 
@@ -784,8 +825,6 @@ static void imu_ref_callback(float *acc, float *gyro, float *mag, float dt) {
 
 static void refloat_thd(void *arg) {
     Data *d = (Data *) arg;
-
-    configure(d);
 
     uint32_t sleep_ticks = d->main_loop_ticks;
 
@@ -948,44 +987,8 @@ static void refloat_thd(void *arg) {
                 }
             }
 
-            pid_update(&d->pid, d->setpoint, &d->motor, &d->imu, &d->float_conf, dt);
+            pid_control(d, dt);
 
-            float booster_proportional = d->setpoint - d->brake_tilt.setpoint - d->imu.pitch;
-            booster_update(&d->booster, &d->motor, &d->float_conf, booster_proportional);
-
-            // Rate P and Booster are pitch-based (as opposed to balance pitch based)
-            // They require to be filtered in, otherwise they'd cause a jerk
-            float pitch_based = d->pid.rate_p + d->booster.current;
-            if (d->softstart_pid_limit < d->motor.current_max) {
-                pitch_based = fminf(fabs(pitch_based), d->softstart_pid_limit) * sign(pitch_based);
-                d->softstart_pid_limit += 100.0f * dt;
-            }
-
-            float new_current = d->pid.p + d->pid.i + pitch_based;
-            float current_limit;
-            if (d->state.mode == MODE_HANDTEST) {
-                current_limit = 7;
-            } else if (d->state.mode == MODE_FLYWHEEL) {
-                current_limit = 40;
-            } else {
-                current_limit = d->motor.braking ? d->motor.current_min : d->motor.current_max;
-            }
-            if (fabsf(new_current) > current_limit) {
-                new_current = sign(new_current) * current_limit;
-            }
-
-            if (d->state.darkride) {
-                new_current = -new_current;
-            }
-
-            if (d->traction_control) {
-                // freewheel while traction loss is detected
-                d->balance_current = 0;
-            } else {
-                d->balance_current = d->balance_current * 0.8 + new_current * 0.2;
-            }
-
-            motor_control_request_current(&d->motor_control, d->balance_current);
             break;
         case (STATE_READY):
             if (d->state.mode == MODE_FLYWHEEL) {
@@ -1277,6 +1280,8 @@ static void data_init(Data *d) {
     );
 
     d->odometer = VESC_IF->mc_get_odometer();
+
+    configure(d);
 }
 
 // See also:
