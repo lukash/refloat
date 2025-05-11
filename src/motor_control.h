@@ -26,8 +26,7 @@
 
 typedef struct {
     bool disabled;
-    bool current_requested;
-    float requested_current;
+    float requested_current;  // NAN if no current is requested
 
     uint8_t click_counter;
     time_t brake_timer;
