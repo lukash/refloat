@@ -20,7 +20,6 @@
 #include "conf/datatypes.h"
 #include "imu.h"
 #include "motor_data.h"
-#include "state.h"
 
 typedef struct {
     float p;
@@ -37,12 +36,5 @@ typedef struct {
 void pid_init(PID *pid);
 
 void pid_update(
-    PID *pid,
-    float setpoint,
-    const MotorData *md,
-    const IMU *imu,
-    const State *state,
-    const RefloatConfig *config
+    PID *pid, float setpoint, const MotorData *md, const IMU *imu, const RefloatConfig *config
 );
-
-void pid_reset_integral(PID *pid);
