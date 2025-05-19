@@ -518,7 +518,6 @@ static void calculate_setpoint_target(Data *d) {
                     d->state.sat = SAT_NONE;
                     d->reverse_total_erpm = 0;
                     d->setpoint_target = 0;
-                    pid_reset_integral(&d->pid);
                 }
             }
         }
@@ -844,7 +843,7 @@ static void refloat_thd(void *arg) {
                 }
             }
 
-            pid_update(&d->pid, d->setpoint, &d->motor, &d->imu, &d->state, &d->float_conf);
+            pid_update(&d->pid, d->setpoint, &d->motor, &d->imu, &d->float_conf);
 
             float booster_proportional = d->setpoint - d->brake_tilt.setpoint - d->imu.pitch;
             booster_update(&d->booster, &d->motor, &d->float_conf, booster_proportional);
