@@ -1063,8 +1063,12 @@ static void refloat_thd(void *arg) {
                 if ((fabsf(d->imu.balance_pitch) < 45) && (fabsf(d->imu.roll) < 45)) {
                     // 45 to prevent board engaging when upright or laying sideways
                     // 45 degree tolerance is more than plenty for tricks / extreme mounts
-                    engage(d);
-                    break;
+                    if (d->float_conf.fault_reversestop_enabled && d->motor.erpm < 0) {
+                        // ignore push start backwards if reverse stop is enabled
+                    } else {
+                        engage(d);
+                        break;
+                    }
                 }
             }
 
