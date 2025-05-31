@@ -1125,33 +1125,6 @@ static void data_init(Data *d) {
     );
 }
 
-static float app_get_debug(int index) {
-    Data *d = (Data *) ARG;
-
-    switch (index) {
-    case (1):
-        return d->balance_current;
-    case (2):
-        return d->pid.p;
-    case (3):
-        return d->pid.i;
-    case (4):
-        return d->pid.rate_p;
-    case (5):
-        return d->setpoint;
-    case (6):
-        return d->atr.setpoint;
-    case (7):
-        return d->motor.erpm;
-    case (8):
-        return d->motor.dir_current;
-    case (9):
-        return d->motor.filt_current;
-    default:
-        return 0;
-    }
-}
-
 // See also:
 // LcmCommands in lcm.h
 // ChargingCommands in charging.h
@@ -2128,15 +2101,6 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
     }
 }
 
-// Register get_debug as a lisp extension
-static lbm_value ext_dbg(lbm_value *args, lbm_uint argn) {
-    if (argn != 1 || !VESC_IF->lbm_is_number(args[0])) {
-        return VESC_IF->lbm_enc_sym_eerror;
-    }
-
-    return VESC_IF->lbm_enc_float(app_get_debug(VESC_IF->lbm_dec_as_i32(args[0])));
-}
-
 // Called from Lisp on init to pass in the version info of the firmware
 static lbm_value ext_set_fw_version(lbm_value *args, lbm_uint argn) {
     Data *d = (Data *) ARG;
@@ -2272,7 +2236,6 @@ INIT_FUN(lib_info *info) {
     VESC_IF->imu_set_read_callback(imu_ref_callback);
     VESC_IF->conf_custom_add_config(get_cfg, set_cfg, get_cfg_xml);
     VESC_IF->set_app_data_handler(on_command_received);
-    VESC_IF->lbm_add_extension("ext-dbg", ext_dbg);
     VESC_IF->lbm_add_extension("ext-set-fw-version", ext_set_fw_version);
 
     return true;
