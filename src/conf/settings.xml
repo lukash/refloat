@@ -4194,14 +4194,6 @@ p, li { white-space: pre-wrap; }
                     <param>::sep::Low Voltage Alert Pushback</param>
                     <param>tiltback_lv_angle</param>
                     <param>tiltback_lv_speed</param>
-                    <param>::sep::BMS Pushback (6.0+)</param>
-                    <param>bms.enabled</param>
-                    <param>bms.cell_lv_threshold</param>
-                    <param>bms.cell_hv_threshold</param>
-                    <param>bms.cell_balance_threshold</param>
-                    <param>bms.cell_lt_threshold</param>
-                    <param>bms.cell_ht_threshold</param>
-                    <param>bms.bms_ht_threshold</param>
                 </subgroupParams>
             </subgroup>
             <subgroup>
@@ -4318,6 +4310,18 @@ p, li { white-space: pre-wrap; }
                     <param>hardware.leds.rear.count</param>
                     <param>hardware.leds.rear.color_order</param>
                     <param>hardware.leds.rear.reverse</param>
+                </subgroupParams>
+            </subgroup>
+            <subgroup>
+                <subgroupName>BMS</subgroupName>
+                <subgroupParams>
+                    <param>bms.enabled</param>
+                    <param>bms.cell_lv_threshold</param>
+                    <param>bms.cell_hv_threshold</param>
+                    <param>bms.cell_balance_threshold</param>
+                    <param>bms.cell_lt_threshold</param>
+                    <param>bms.cell_ht_threshold</param>
+                    <param>bms.bms_ht_threshold</param>
                 </subgroupParams>
             </subgroup>
         </group>
