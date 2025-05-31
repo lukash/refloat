@@ -1324,10 +1324,10 @@ Item {
         readonly property int sat_Centering: 1
         readonly property int sat_ReverseStop: 2
         readonly property int sat_Duty: 6
+        readonly property int sat_PushbackAlert: 7
         readonly property int sat_HighVoltage: 10
         readonly property int sat_LowVoltage: 11
         readonly property int sat_Temperature: 12
-        readonly property int sat_BMSConnection: 13
 
         // setpoint adjustment class
         readonly property int sac_Normal: 0
@@ -1339,10 +1339,10 @@ Item {
             [sat_Centering, "centering"],
             [sat_ReverseStop, "reverse stop"],
             [sat_Duty, "pushback: duty"],
+            [sat_PushbackAlert, "pushback: alert"],
             [sat_HighVoltage, "pushback: high voltage"],
             [sat_LowVoltage, "pushback: low voltage"],
             [sat_Temperature, "pushback: temperature"],
-            [sat_BMSConnection, "pushback: bms connection"],
         ])
 
         property int setpointAdjustmentType: sat_None
