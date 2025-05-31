@@ -101,7 +101,6 @@ uint8_t sat_compat(const State *state) {
     case SAT_PB_DUTY:
         return 3;  // TILTBACK_DUTY
     case SAT_PB_HIGH_VOLTAGE:
-    case SAT_PB_BMS_CONNECTION:
         return 4;  // TILTBACK_HV
     case SAT_PB_LOW_VOLTAGE:
         return 5;  // TILTBACK_LV
@@ -109,6 +108,8 @@ uint8_t sat_compat(const State *state) {
         return 6;  // TILTBACK_TEMP
     case SAT_PB_SPEED:
         return 7;
+    case SAT_PB_ERROR:
+        return 8;
     }
     return 0;  // CENTERING
 }

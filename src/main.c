@@ -307,7 +307,7 @@ static float get_setpoint_adjustment_step_size(Data *d) {
         return d->tiltback_duty_step_size;
     case (SAT_PB_HIGH_VOLTAGE):
     case (SAT_PB_TEMPERATURE):
-    case (SAT_PB_BMS_CONNECTION):
+    case (SAT_PB_ERROR):
         return d->tiltback_hv_step_size;
     case (SAT_PB_LOW_VOLTAGE):
         return d->tiltback_lv_step_size;
@@ -616,7 +616,7 @@ static void calculate_setpoint_target(Data *d) {
         } else {
             d->setpoint_target = -d->float_conf.tiltback_hv_angle;
         }
-        d->state.sat = SAT_PB_BMS_CONNECTION;
+        d->state.sat = SAT_PB_ERROR;
     } else if (d->motor.mosfet_temp > d->motor.mosfet_temp_max) {
         // Use the angle from Low-Voltage tiltback, but slower speed from High-Voltage tiltback
         beep_alert(d, 3, true);
