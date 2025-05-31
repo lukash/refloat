@@ -99,6 +99,7 @@ typedef struct {
 
     float setpoint, setpoint_target, setpoint_target_interpolated;
     float noseangling_interpolated;
+    time_t alert_timer;
     time_t nag_timer;
     float dt;
     float idle_voltage;
