@@ -18,6 +18,7 @@
 #pragma once
 
 #include "atr.h"
+#include "bms.h"
 #include "booster.h"
 #include "brake_tilt.h"
 #include "charging.h"
@@ -128,8 +129,7 @@ typedef struct {
 
     HapticFeedback haptic_feedback;
     DataRecord data_record;
-
-    uint32_t bms_fault;
+    BMS bms;
 
     Konami flywheel_konami;
     Konami headlights_on_konami;
