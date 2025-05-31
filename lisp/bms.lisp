@@ -7,6 +7,7 @@
     (var temp-fet -281)
     (loopwhile t {
         (if (and (>= (get-bms-val 'bms-can-id) 0) (ext-bms)) {
+            (var msg-age (get-bms-val 'bms-msg-age))
             (setq temp-max (get-bms-val 'bms-temp-cell-max))
             (setq temp-min temp-max)
 
@@ -29,7 +30,7 @@
                     })
                 })
             })
-            (ext-bms v-min v-max temp-min temp-max temp-fet (get-bms-val 'bms-msg-age))
+            (ext-bms v-min v-max temp-min temp-max temp-fet msg-age)
         })
         (sleep 0.2)
     })
