@@ -1,4 +1,5 @@
 // Copyright 2024 Syler Clayton
+// Copyright 2025 Lukas Hrazky
 //
 // This file is part of the Refloat VESC package.
 //
@@ -17,6 +18,8 @@
 
 #pragma once
 
+#include "conf/datatypes.h"
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -31,6 +34,19 @@ typedef enum {
     BMSF_CELL_BALANCE = 7
 } BMSFaultCode;
 
-bool bms_get_fault(uint32_t fault_mask, BMSFaultCode fault_code);
+typedef struct {
+    float cell_lv;
+    float cell_hv;
+    int16_t cell_lt;
+    int16_t cell_ht;
+    int16_t bms_ht;
+    float msg_age;
 
-void bms_set_fault(uint32_t *fault_mask, BMSFaultCode fault_code);
+    uint32_t fault_mask;
+} BMS;
+
+void bms_init(BMS *bms);
+
+void bms_update(BMS *bms, const CfgBMS *cfg);
+
+bool bms_is_fault(const BMS *bms, BMSFaultCode fault_code);

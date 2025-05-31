@@ -1,4 +1,5 @@
 // Copyright 2024 Syler Clayton
+// Copyright 2025 Lukas Hrazky
 //
 // This file is part of the Refloat VESC package.
 //
@@ -17,15 +18,63 @@
 
 #include "bms.h"
 
-bool bms_get_fault(uint32_t fault_mask, BMSFaultCode fault_code) {
-    return (fault_mask & (1U << (fault_code - 1))) != 0;
+#include <math.h>
+
+void bms_init(BMS *bms) {
+    bms->cell_lv = 0.0f;
+    bms->cell_hv = 0.0f;
+    bms->cell_lt = 0;
+    bms->cell_ht = 0;
+    bms->bms_ht = 0;
+    bms->msg_age = 42.0f;
+    bms->fault_mask = BMSF_NONE;
 }
 
-void bms_set_fault(uint32_t *fault_mask, BMSFaultCode fault_code) {
-    if (fault_code == BMSF_NONE) {
-        *fault_mask = BMSF_NONE;
+static inline void set_fault(uint32_t *fault_mask, BMSFaultCode fault_code) {
+    *fault_mask |= 1u << (fault_code - 1);
+}
+
+void bms_update(BMS *bms, const CfgBMS *cfg) {
+    if (!cfg->enabled) {
+        bms->fault_mask = BMSF_NONE;
         return;
     }
 
-    *fault_mask |= (1U << (fault_code - 1));
+    uint32_t fault_mask = BMSF_NONE;
+
+    if (bms->msg_age > 2.0f) {
+        set_fault(&fault_mask, BMSF_CONNECTION);
+        bms->fault_mask = fault_mask;
+        return;
+    }
+
+    if (bms->cell_lv < cfg->cell_lv_threshold) {
+        set_fault(&fault_mask, BMSF_CELL_UNDER_VOLTAGE);
+    }
+
+    if (bms->cell_hv > cfg->cell_hv_threshold) {
+        set_fault(&fault_mask, BMSF_CELL_OVER_VOLTAGE);
+    }
+
+    if (bms->cell_lt < cfg->cell_lt_threshold) {
+        set_fault(&fault_mask, BMSF_CELL_UNDER_TEMP);
+    }
+
+    if (bms->cell_ht > cfg->cell_ht_threshold) {
+        set_fault(&fault_mask, BMSF_CELL_OVER_TEMP);
+    }
+
+    if (bms->bms_ht > cfg->bms_ht_threshold) {
+        set_fault(&fault_mask, BMSF_OVER_TEMP);
+    }
+
+    if (fabsf(bms->cell_lv - bms->cell_hv) > cfg->cell_balance_threshold) {
+        set_fault(&fault_mask, BMSF_CELL_BALANCE);
+    }
+
+    bms->fault_mask = fault_mask;
+}
+
+bool bms_is_fault(const BMS *bms, BMSFaultCode fault_code) {
+    return (bms->fault_mask & (1u << (fault_code - 1))) != 0;
 }
