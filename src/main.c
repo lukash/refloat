@@ -213,7 +213,7 @@ static void configure(Data *d) {
 
     d->beeper_enabled = d->float_conf.is_beeper_enabled;
 
-    if (d->float_conf.tiltback_bms_enabled) {
+    if (d->float_conf.bms.enabled) {
         d->bms_fault = BMSF_CONNECTION;
     } else {
         d->bms_fault = BMSF_NONE;
@@ -2187,35 +2187,35 @@ static lbm_value ext_bms(lbm_value *args, lbm_uint argn) {
     Data *d = (Data *) ARG;
     d->bms_fault = BMSF_NONE;
 
-    if (argn == 0 || !d->float_conf.tiltback_bms_enabled) {
-        return d->float_conf.tiltback_bms_enabled;
+    if (argn == 0 || !d->float_conf.bms.enabled) {
+        return d->float_conf.bms.enabled;
     }
 
-    if (VESC_IF->lbm_dec_as_float(args[5]) > d->float_conf.tiltback_bms_msg) {
+    if (VESC_IF->lbm_dec_as_float(args[5]) > 2) {
         bms_set_fault(&d->bms_fault, BMSF_CONNECTION);
-        return d->float_conf.tiltback_bms_enabled;
+        return d->float_conf.bms.enabled;
     }
-    if (VESC_IF->lbm_dec_as_float(args[0]) < d->float_conf.tiltback_cell_lv) {
+    if (VESC_IF->lbm_dec_as_float(args[0]) < d->float_conf.bms.cell_lv_threshold) {
         bms_set_fault(&d->bms_fault, BMSF_CELL_UNDER_VOLTAGE);
     }
-    if (VESC_IF->lbm_dec_as_float(args[1]) > d->float_conf.tiltback_cell_hv) {
+    if (VESC_IF->lbm_dec_as_float(args[1]) > d->float_conf.bms.cell_hv_threshold) {
         bms_set_fault(&d->bms_fault, BMSF_CELL_OVER_VOLTAGE);
     }
-    if (VESC_IF->lbm_dec_as_i32(args[2]) < d->float_conf.tiltback_cell_lt) {
+    if (VESC_IF->lbm_dec_as_i32(args[2]) < d->float_conf.bms.cell_lt_threshold) {
         bms_set_fault(&d->bms_fault, BMSF_CELL_UNDER_TEMP);
     }
-    if (VESC_IF->lbm_dec_as_i32(args[3]) > d->float_conf.tiltback_cell_ht) {
+    if (VESC_IF->lbm_dec_as_i32(args[3]) > d->float_conf.bms.cell_ht_threshold) {
         bms_set_fault(&d->bms_fault, BMSF_CELL_OVER_TEMP);
     }
-    if (VESC_IF->lbm_dec_as_i32(args[4]) > d->float_conf.tiltback_bms_ht) {
+    if (VESC_IF->lbm_dec_as_i32(args[4]) > d->float_conf.bms.bms_ht_threshold) {
         bms_set_fault(&d->bms_fault, BMSF_OVER_TEMP);
     }
     if (fabsf(VESC_IF->lbm_dec_as_float(args[0]) - VESC_IF->lbm_dec_as_float(args[1])) >
-        d->float_conf.tiltback_cell_bal) {
+        d->float_conf.bms.cell_balance_threshold) {
         bms_set_fault(&d->bms_fault, BMSF_CELL_BALANCE);
     }
 
-    return d->float_conf.tiltback_bms_enabled;
+    return d->float_conf.bms.enabled;
 }
 
 // Used to send the current or default configuration to VESC Tool.

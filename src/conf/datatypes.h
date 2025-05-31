@@ -190,6 +190,16 @@ typedef struct {
 } CfgHapticFeedback;
 
 typedef struct {
+    bool enabled;
+    float cell_lv_threshold;
+    float cell_hv_threshold;
+    float cell_balance_threshold;
+    int8_t cell_lt_threshold;
+    int8_t cell_ht_threshold;
+    int8_t bms_ht_threshold;
+} CfgBMS;
+
+typedef struct {
     bool is_default;
 } CfgMeta;
 
@@ -233,14 +243,6 @@ typedef struct {
     float tiltback_variable;
     float tiltback_variable_max;
     uint16_t tiltback_variable_erpm;
-    bool tiltback_bms_enabled;
-    float tiltback_cell_lv;
-    float tiltback_cell_hv;
-    int8_t tiltback_cell_lt;
-    int8_t tiltback_cell_ht;
-    int8_t tiltback_bms_ht;
-    uint8_t tiltback_bms_msg;
-    float tiltback_cell_bal;
     FLOAT_INPUTTILT_REMOTE_TYPE inputtilt_remote_type;
     float inputtilt_speed;
     float inputtilt_angle_limit;
@@ -299,7 +301,7 @@ typedef struct {
     bool is_footbeep_enabled;
 
     CfgHapticFeedback haptic;
-
+    CfgBMS bms;
     CfgLeds leds;
     CfgHardware hardware;
 
