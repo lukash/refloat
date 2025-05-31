@@ -975,15 +975,19 @@ static void refloat_thd(void *arg) {
                 d->enable_upside_down = false;
                 d->state.darkride = false;
 
-                // Alert user if cells are out of balance
-                if (bms_is_fault(&d->bms, BMSF_CELL_BALANCE)) {
-                    beep_alert(d, 1, false);
-                    d->beep_reason = BEEP_CELL_BALANCE;
-                }
-                // Alert user if bms connection failed.
-                if (bms_is_fault(&d->bms, BMSF_CONNECTION)) {
-                    beep_alert(d, 1, true);
-                    d->beep_reason = BEEP_BMS_CONNECTION;
+                // alert if cells are out of balance or bms connection failed
+                if (bms_is_fault(&d->bms, BMSF_CELL_BALANCE) ||
+                    bms_is_fault(&d->bms, BMSF_CONNECTION)) {
+                    if (timer_older(&d->time, d->alert_timer, 15)) {
+                        timer_refresh(&d->time, &d->alert_timer);
+                        beep_alert(d, 4, false);
+
+                        if (bms_is_fault(&d->bms, BMSF_CONNECTION)) {
+                            d->beep_reason = BEEP_BMS_CONNECTION;
+                        } else {
+                            d->beep_reason = BEEP_CELL_BALANCE;
+                        }
+                    }
                 }
             }
 
