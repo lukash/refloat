@@ -101,12 +101,13 @@ uint8_t sat_compat(const State *state) {
     case SAT_PB_DUTY:
         return 3;  // TILTBACK_DUTY
     case SAT_PB_HIGH_VOLTAGE:
-    case SAT_PB_BMS_CONNECTION:
         return 4;  // TILTBACK_HV
     case SAT_PB_LOW_VOLTAGE:
         return 5;  // TILTBACK_LV
     case SAT_PB_TEMPERATURE:
         return 6;  // TILTBACK_TEMP
+    case SAT_PB_ALERT:
+        return 7;  // not originally present, what could possibly break?
     }
     return 0;  // CENTERING
 }

@@ -50,10 +50,10 @@ typedef enum {
     SAT_CENTERING = 1,
     SAT_REVERSESTOP = 2,
     SAT_PB_DUTY = 6,
+    SAT_PB_ALERT = 7,
     SAT_PB_HIGH_VOLTAGE = 10,
     SAT_PB_LOW_VOLTAGE = 11,
-    SAT_PB_TEMPERATURE = 12,
-    SAT_PB_BMS_CONNECTION = 13
+    SAT_PB_TEMPERATURE = 12
 } SetpointAdjustmentType;
 
 typedef struct {
