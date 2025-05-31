@@ -974,19 +974,20 @@ static void refloat_thd(void *arg) {
                 }
                 d->enable_upside_down = false;
                 d->state.darkride = false;
+            }
 
-                // alert if cells are out of balance or bms connection failed
-                if (bms_is_fault(&d->bms, BMSF_CELL_BALANCE) ||
-                    bms_is_fault(&d->bms, BMSF_CONNECTION)) {
-                    if (timer_older(&d->time, d->alert_timer, 15)) {
-                        timer_refresh(&d->time, &d->alert_timer);
-                        beep_alert(d, 4, false);
+            // alert if cells are out of balance or bms connection failed
+            if (bms_is_fault(&d->bms, BMSF_CONNECTION) ||
+                (bms_is_fault(&d->bms, BMSF_CELL_BALANCE) && time_elapsed(&d->time, disengage, 5)
+                )) {
+                if (timer_older(&d->time, d->alert_timer, 15)) {
+                    timer_refresh(&d->time, &d->alert_timer);
+                    beep_alert(d, 4, false);
 
-                        if (bms_is_fault(&d->bms, BMSF_CONNECTION)) {
-                            d->beep_reason = BEEP_BMS_CONNECTION;
-                        } else {
-                            d->beep_reason = BEEP_CELL_BALANCE;
-                        }
+                    if (bms_is_fault(&d->bms, BMSF_CONNECTION)) {
+                        d->beep_reason = BEEP_BMS_CONNECTION;
+                    } else {
+                        d->beep_reason = BEEP_CELL_BALANCE;
                     }
                 }
             }
