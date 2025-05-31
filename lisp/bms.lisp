@@ -1,4 +1,4 @@
-(defun init-bms () {
+(defun bms-loop () {
     (var v-cell-support (eq (first (trap (get-bms-val 'bms-v-cell-min))) 'exit-ok))
     (var temp-max 0)
     (var temp-min 0)
