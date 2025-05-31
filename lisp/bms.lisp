@@ -1,12 +1,10 @@
 (defun bms-loop () {
     (var v-cell-support (eq (first (trap (get-bms-val 'bms-v-cell-min))) 'exit-ok))
-    (var temp-max 0)
-    (var temp-min 0)
     (var v-min 0)
     (var v-max 0)
+    (var temp-min 0)
+    (var temp-max 0)
     (var temp-fet -281)
-    (var num-cells 0)
-    (var cell-v 0.0)
     (loopwhile t {
         (if (and (>= (get-bms-val 'bms-can-id) 0) (ext-bms)) {
             (setq temp-max (get-bms-val 'bms-temp-cell-max))
@@ -20,12 +18,12 @@
                 (setq v-min (get-bms-val 'bms-v-cell-min))
                 (setq v-max (get-bms-val 'bms-v-cell-max))
             } {
-                (setq num-cells (get-bms-val 'bms-cell-num))
+                (var num-cells (get-bms-val 'bms-cell-num))
                 (if (> num-cells 0) {
                     (setq v-min (get-bms-val 'bms-v-cell 0))
                     (setq v-max v-min)
                     (looprange i 1 num-cells {
-                        (setq cell-v (get-bms-val 'bms-v-cell i))
+                        (var cell-v (get-bms-val 'bms-v-cell i))
                         (if (< cell-v v-min) (setq v-min cell-v))
                         (if (> cell-v v-max) (setq v-max cell-v))
                     })
