@@ -7,9 +7,9 @@ OLDVT ?= 0
 
 all: refloat.vescpkg
 
-refloat.vescpkg: src package.lisp package_README-gen.md ui.qml
+refloat.vescpkg: src lisp/package.lisp package_README-gen.md ui.qml
 ifeq ($(OLDVT), 1)
-	$(VESC_TOOL) --buildPkg "refloat.vescpkg:package.lisp:ui.qml:0:package_README-gen.md:Refloat"
+	$(VESC_TOOL) --buildPkg "refloat.vescpkg:lisp/package.lisp:ui.qml:0:package_README-gen.md:Refloat"
 else
 	$(VESC_TOOL) --buildPkgFromDesc pkgdesc.qml
 endif
