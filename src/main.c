@@ -2199,7 +2199,7 @@ static lbm_value ext_bms(lbm_value *args, lbm_uint argn) {
         d->bms.msg_age = VESC_IF->lbm_dec_as_float(args[5]);
     }
 
-    return d->float_conf.bms.enabled;
+    return d->float_conf.bms.enabled ? VESC_IF->lbm_enc_sym_true : VESC_IF->lbm_enc_sym_nil;
 }
 
 // Used to send the current or default configuration to VESC Tool.
