@@ -1458,7 +1458,7 @@ Item {
             [14, "BMS: Cell Low Voltage"],
             [15, "BMS: Cell High Voltage"],
             [16, "BMS: Cell Balance"],
-            [17, "BMS: Connection Lost"],
+            [17, "BMS: Connection Error"],
             [18, "BMS: BMS Temp"],
         ])
 
