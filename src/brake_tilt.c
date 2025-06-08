@@ -49,6 +49,7 @@ void brake_tilt_configure(BrakeTilt *bt, const RefloatConfig *config, float freq
         config->atr.filter.time_constant,
         config->atr.filter.on_speed_time_constant,
         config->atr.filter.off_speed_time_constant,
+        // TODO downhill or uphill speeds?
         config->atr_on_speed,
         off_speed,
         config->atr_on_speed,
