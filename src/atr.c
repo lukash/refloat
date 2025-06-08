@@ -60,8 +60,8 @@ void atr_configure(ATR *atr, const RefloatConfig *config, float frequency) {
         config->atr.filter.off_ease_in_strength,
         config->atr_on_speed,
         config->atr_off_speed,
-        config->atr_on_speed,
-        config->atr_off_speed,
+        config->atr_on_speed_downhill,
+        config->atr_off_speed_downhill,
         frequency
     );
 }

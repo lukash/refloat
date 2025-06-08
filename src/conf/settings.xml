@@ -1992,7 +1992,7 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Max Rate at which Torque Tiltback will tilt to the desired angle (tilt will be slower if current increases slowly).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Max Rate at which Torque Tiltback will tilt to the desired angle while accelerating.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_TORQUETILT_ON_SPEED</cDefine>
             <editorDecimalsDouble>1</editorDecimalsDouble>
             <editorScale>1</editorScale>
@@ -2014,7 +2014,7 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Max Rate at which Torque Tiltback will release from the desired angle back to 0 (tilt will be slower if current decreases slowly).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Max Rate at which Torque Tiltback will release from the desired angle back to 0 while accelerating.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_TORQUETILT_OFF_SPEED</cDefine>
             <editorDecimalsDouble>1</editorDecimalsDouble>
             <editorScale>1</editorScale>
@@ -2028,6 +2028,50 @@ p, li { white-space: pre-wrap; }
             <suffix> °/s</suffix>
             <vTx>7</vTx>
         </torquetilt_off_speed>
+        <torquetilt_on_speed_downhill>
+            <longName>Max Tiltback Speed Downhill</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Max Rate at which Torque Tiltback will tilt to the desired angle while braking.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_TORQUETILT_ON_SPEED_DOWNHILL</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>100</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>2</stepDouble>
+            <valDouble>12</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> °/s</suffix>
+            <vTx>7</vTx>
+        </torquetilt_on_speed_downhill>
+        <torquetilt_off_speed_downhill>
+            <longName>Max Tiltback Release Speed Downhill</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Max Rate at which Torque Tiltback will release from the desired angle back to 0 while braking.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_TORQUETILT_OFF_SPEED_DOWNHILL</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>100</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>2</stepDouble>
+            <valDouble>10</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> °/s</suffix>
+            <vTx>7</vTx>
+        </torquetilt_off_speed_downhill>
         <torquetilt_strength>
             <longName>Strength</longName>
             <type>1</type>
@@ -2233,7 +2277,7 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Max Rate at which ATR will tilt to the desired angle.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Max Rate at which ATR will tilt to the desired angle on uphills.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_ATR_ON_SPEED</cDefine>
             <editorDecimalsDouble>1</editorDecimalsDouble>
             <editorScale>1</editorScale>
@@ -2255,7 +2299,7 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Max Rate at which ATR will release from the desired angle back to 0.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Max Rate at which ATR will release from the desired angle back to 0 on uphills.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_ATR_OFF_SPEED</cDefine>
             <editorDecimalsDouble>1</editorDecimalsDouble>
             <editorScale>1</editorScale>
@@ -2269,6 +2313,50 @@ p, li { white-space: pre-wrap; }
             <suffix> °/s</suffix>
             <vTx>7</vTx>
         </atr_off_speed>
+        <atr_on_speed_downhill>
+            <longName>Max Tiltback Speed Downhill</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Max Rate at which ATR will tilt to the desired angle on downhills.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_ATR_ON_SPEED_DOWNHILL</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>100</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>2</stepDouble>
+            <valDouble>12</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> °/s</suffix>
+            <vTx>7</vTx>
+        </atr_on_speed_downhill>
+        <atr_off_speed_downhill>
+            <longName>Max Tiltback Release Speed Downhill</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Max Rate at which ATR will release from the desired angle back to 0 on downhills.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_ATR_OFF_SPEED_DOWNHILL</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>100</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>2</stepDouble>
+            <valDouble>10</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> °/s</suffix>
+            <vTx>7</vTx>
+        </atr_off_speed_downhill>
         <atr_response_boost>
             <longName>Tiltback Response Boost</longName>
             <type>1</type>
@@ -4327,6 +4415,8 @@ p, li { white-space: pre-wrap; }
         <ser>torquetilt_angle_limit</ser>
         <ser>torquetilt_on_speed</ser>
         <ser>torquetilt_off_speed</ser>
+        <ser>torquetilt_on_speed_downhill</ser>
+        <ser>torquetilt_off_speed_downhill</ser>
         <ser>torquetilt_strength</ser>
         <ser>torquetilt_strength_regen</ser>
         <ser>turntilt_strength</ser>
@@ -4345,6 +4435,8 @@ p, li { white-space: pre-wrap; }
         <ser>atr_angle_limit</ser>
         <ser>atr_on_speed</ser>
         <ser>atr_off_speed</ser>
+        <ser>atr_on_speed_downhill</ser>
+        <ser>atr_off_speed_downhill</ser>
         <ser>atr_response_boost</ser>
         <ser>atr_transition_boost</ser>
         <ser>atr_filter</ser>
@@ -4473,6 +4565,8 @@ p, li { white-space: pre-wrap; }
                     <param>torque_tilt.filter.off_ease_in_strength</param>
                     <param>torquetilt_on_speed</param>
                     <param>torquetilt_off_speed</param>
+                    <param>torquetilt_on_speed_downhill</param>
+                    <param>torquetilt_off_speed_downhill</param>
                     <param>::sep::Turn Tiltback</param>
                     <param>turntilt_strength</param>
                     <param>turntilt_angle_limit</param>
@@ -4504,6 +4598,8 @@ p, li { white-space: pre-wrap; }
                     <param>atr_angle_limit</param>
                     <param>atr_on_speed</param>
                     <param>atr_off_speed</param>
+                    <param>atr_on_speed_downhill</param>
+                    <param>atr_off_speed_downhill</param>
                     <param>atr_response_boost</param>
                     <param>atr_transition_boost</param>
                     <param>::sep::Advanced</param>
