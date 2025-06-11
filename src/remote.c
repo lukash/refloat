@@ -28,6 +28,9 @@ void remote_init(Remote *remote) {
 void remote_reset(Remote *remote) {
     remote->setpoint = 0;
     remote->ramped_step_size = 0;
+
+    smooth_target_reset(&remote->smooth_target, 0.0f);
+    ema_filter_reset(&remote->ema_target, 0.0f, 0.0f);
 }
 
 void remote_configure(Remote *remote, const RefloatConfig *config) {
