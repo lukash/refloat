@@ -1,0 +1,7 @@
+services:
+  app:
+    image: vesc-package-builder:latest
+    container_name: vesc_package_builder
+    tty: true
+    volumes:
+      - /home/[username]/vesc:/home/vesc
