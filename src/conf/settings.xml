@@ -281,6 +281,24 @@ p, li { white-space: pre-wrap; }
             <enumNames>3rd Order EMA</enumNames>
             <enumNames>Nico's</enumNames>
         </target_filter.tt_type>
+        <target_filter.turn_type>
+            <longName>Filter Type (config on ATR tab)</longName>
+            <type>4</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The Target Filter to use for Turn Tilt.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The particular filter's configuration is taken from the ATR tab. See description of ATR -&amp;gt; Filter Type for more info on the available filters.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_TARGET_FILTER_TURN_TYPE</cDefine>
+            <valInt>1</valInt>
+            <enumNames>None</enumNames>
+            <enumNames>3-Stage</enumNames>
+            <enumNames>3rd Order EMA</enumNames>
+            <enumNames>Nico's</enumNames>
+        </target_filter.turn_type>
         <target_filter.it_type>
             <longName>Filter Type (config on ATR tab)</longName>
             <type>4</type>
@@ -3883,6 +3901,7 @@ p, li { white-space: pre-wrap; }
         <ser>kp2_brake</ser>
         <ser>target_filter.type</ser>
         <ser>target_filter.tt_type</ser>
+        <ser>target_filter.turn_type</ser>
         <ser>target_filter.it_type</ser>
         <ser>target_filter.alpha</ser>
         <ser>target_filter.in_alpha_away</ser>
@@ -4088,6 +4107,7 @@ p, li { white-space: pre-wrap; }
                     <param>turntilt_strength</param>
                     <param>turntilt_angle_limit</param>
                     <param>turntilt_start_erpm</param>
+                    <param>target_filter.turn_type</param>
                     <param>turntilt_speed</param>
                     <param>turntilt_erpm_boost</param>
                     <param>turntilt_erpm_boost_end</param>

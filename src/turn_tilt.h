@@ -24,6 +24,7 @@
 
 typedef struct {
     float step_size;
+    float ramped_step_size;
     float boost_per_erpm;
 
     float last_yaw_angle;
@@ -34,6 +35,9 @@ typedef struct {
 
     float target;
     float setpoint;
+
+    SmoothTarget smooth_target;
+    EMAFilter ema_target;
 } TurnTilt;
 
 void turn_tilt_reset(TurnTilt *tt);

@@ -29,12 +29,27 @@ void turn_tilt_reset(TurnTilt *tt) {
 
     tt->target = 0;
     tt->setpoint = 0;
+    tt->ramped_step_size = 0;
+
+    smooth_target_reset(&tt->smooth_target, 0.0f);
+    ema_filter_reset(&tt->ema_target, 0.0f, 0.0f);
 }
 
 void turn_tilt_configure(TurnTilt *tt, const RefloatConfig *config) {
     tt->step_size = config->turntilt_speed / config->hertz;
     tt->boost_per_erpm =
         (float) config->turntilt_erpm_boost / 100.0 / config->turntilt_erpm_boost_end;
+
+    smooth_target_configure(
+        &tt->smooth_target,
+        &config->target_filter,
+        config->turntilt_speed,
+        config->turntilt_speed,
+        config->hertz
+    );
+    ema_filter_configure(
+        &tt->ema_target, &config->target_filter, config->turntilt_speed, config->turntilt_speed
+    );
 }
 
 void turn_tilt_aggregate(TurnTilt *tt, const IMU *imu) {
@@ -145,6 +160,15 @@ void turn_tilt_update(
         }
     }
 
-    // Move towards target limited by max speed
-    rate_limitf(&tt->setpoint, tt->target, tt->step_size);
+    if (config->target_filter.turn_type == SFT_NONE) {
+        rate_limitf(&tt->setpoint, tt->target, tt->step_size);
+    } else if (config->target_filter.turn_type == SFT_EMA3) {
+        ema_filter_update(&tt->ema_target, tt->target, 1.0f / config->hertz);
+        tt->setpoint = tt->ema_target.value;
+    } else if (config->target_filter.turn_type == SFT_THREE_STAGE) {
+        smooth_target_update(&tt->smooth_target, tt->target);
+        tt->setpoint = tt->smooth_target.value;
+    } else {
+        smooth_rampf(&tt->setpoint, &tt->ramped_step_size, tt->target, tt->step_size, 0.04, 1.5);
+    }
 }
