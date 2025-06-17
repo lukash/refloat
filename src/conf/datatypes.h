@@ -192,6 +192,7 @@ typedef enum {
 typedef struct {
     TargetFilterType type;
     TargetFilterType tt_type;
+    TargetFilterType turn_type;
     TargetFilterType it_type;
     float alpha;
     float in_alpha_away;
