@@ -173,6 +173,7 @@ typedef struct {
 
 typedef struct {
     CfgHapticTone duty;
+    CfgHapticTone board_speed;
     CfgHapticTone error;
     CfgHapticTone vibrate;
     float min_strength;
@@ -218,6 +219,9 @@ typedef struct {
     float tiltback_lv_angle;
     float tiltback_lv_speed;
     float tiltback_lv;
+    float tiltback_board_speed;
+    float tiltback_board_speed_angle;
+    float tiltback_board_speed_speed;
     float tiltback_return_speed;
     float tiltback_constant;
     uint16_t tiltback_constant_erpm;
