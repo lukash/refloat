@@ -51,10 +51,12 @@ void smooth_target_update(SmoothTarget *st, float target) {
     }
 
     float speed_limit;
-    if (sign(st->step) == sign(st->value)) {
-        speed_limit = st->on_speed;
-    } else {
+    if ((st->value * target >= 0) && (fabsf(st->value) > fabsf(target))) {
+        // Moving towards smaller angle of same sign or zero
         speed_limit = st->off_speed;
+    } else {
+        // Moving towards larger angle of same sign or crossing zero
+        speed_limit = st->on_speed;
     }
 
     st->value += sign(st->step) * min(fabsf(st->step), speed_limit);

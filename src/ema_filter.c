@@ -51,10 +51,12 @@ void ema_filter_update(EMAFilter *filter, float target, float dt) {
     filter->speed += dt * filter->accel;
 
     uint16_t speed_limit;
-    if (sign(filter->speed) == sign(filter->value)) {
-        speed_limit = filter->on_speed;
-    } else {
+    if ((filter->value * target >= 0) && (fabsf(filter->value) > fabsf(target))) {
+        // Moving towards smaller angle of same sign or zero
         speed_limit = filter->off_speed;
+    } else {
+        // Moving towards larger angle of same sign or crossing zero
+        speed_limit = filter->on_speed;
     }
     filter->value += dt * sign(filter->speed) * min(fabsf(filter->speed), speed_limit);
 }
