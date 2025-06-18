@@ -69,10 +69,11 @@ static float calculate_torque_tilt_target(
         sign(motor->filt_current);
 
     float step_size = 0;
-    if ((tt->setpoint - tt->target > 0 && tt->target > 0) ||
-        (tt->setpoint - tt->target < 0 && tt->target < 0)) {
+    if ((tt->setpoint * tt->target >= 0) && (fabsf(tt->setpoint) > fabsf(tt->target))) {
+        // Moving towards smaller angle of same sign or zero
         step_size = tt->off_step_size;
     } else {
+        // Moving towards larger angle of same sign or crossing zero
         step_size = tt->on_step_size;
     }
 
