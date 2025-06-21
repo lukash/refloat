@@ -1737,12 +1737,8 @@ static void cmd_flywheel_toggle(Data *d, unsigned char *cfg, int len) {
         d->tiltback_duty_step_size = d->float_conf.tiltback_duty_speed / d->float_conf.hertz;
         d->tiltback_return_step_size = d->float_conf.tiltback_return_speed / d->float_conf.hertz;
 
-        // Limit speed of wheel and limit amps
-        VESC_IF->set_cfg_float(CFG_PARAM_l_min_erpm + 100, -6000);
-        VESC_IF->set_cfg_float(CFG_PARAM_l_max_erpm + 100, 6000);
+        // Limit amps
         d->motor.current_max = d->motor.current_min = 40;
-
-        // d->flywheel_allow_abort = cfg[5];
 
         // Disable I-term and all tune modifiers and tilts
         d->float_conf.ki = 0;
