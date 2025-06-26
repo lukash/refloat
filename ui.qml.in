@@ -463,6 +463,9 @@ Item {
                 "is_beeper_enabled",
                 "tiltback_hv",
                 "tiltback_lv",
+                "tiltback_board_speed_angle",
+                "tiltback_board_speed_speed",
+                "tiltback_board_speed",
             ];
 
             return !name.startsWith("haptic.") && !name.startsWith("hardware.") && !tuneBlacklist.includes(name);
@@ -1324,6 +1327,7 @@ Item {
         readonly property int sat_Centering: 1
         readonly property int sat_ReverseStop: 2
         readonly property int sat_Duty: 6
+        readonly property int sat_BoardSpeed: 7
         readonly property int sat_HighVoltage: 10
         readonly property int sat_LowVoltage: 11
         readonly property int sat_Temperature: 12
@@ -1338,6 +1342,7 @@ Item {
             [sat_Centering, "centering"],
             [sat_ReverseStop, "reverse stop"],
             [sat_Duty, "pushback: duty"],
+            [sat_BoardSpeed, "pushback: speed"],
             [sat_HighVoltage, "pushback: high voltage"],
             [sat_LowVoltage, "pushback: low voltage"],
             [sat_Temperature, "pushback: temperature"],
@@ -1390,6 +1395,7 @@ Item {
             [8, "Low Battery"],
             [9, "Board Idle"],
             [10, "Other"],
+            [11, "Board Speed"],
         ])
 
         property int beepReason: 0

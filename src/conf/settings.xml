@@ -733,6 +733,74 @@ p, li { white-space: pre-wrap; }
             <suffix> V</suffix>
             <vTx>7</vTx>
         </tiltback_lv>
+        <tiltback_board_speed_angle>
+            <longName>Angle</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Desired setpoint angle for Board Speed Pushback.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_TILTBACK_BOARD_SPEED_ANGLE</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>30</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>1</stepDouble>
+            <valDouble>5</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> °</suffix>
+            <vTx>7</vTx>
+        </tiltback_board_speed_angle>
+        <tiltback_board_speed_speed>
+            <longName>Speed</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Rate at which nose is tilted back when exceeding Wheel Speed limit (fast pushback can be dangerous!).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_TILTBACK_BOARD_SPEED_SPEED</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>30</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.5</stepDouble>
+            <valDouble>3</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> °/s</suffix>
+            <vTx>7</vTx>
+        </tiltback_board_speed_speed>
+        <tiltback_board_speed>
+            <longName>Board Speed Limit</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Set a Board Speed limit to trigger pushback (Pushback raises the nose of the board, informing you to slow down).&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;*Note: Can be disabled by setting to 0.0 km/h, which is default&lt;/span&gt;&lt;/p&gt;</description>
+            <cDefine>CFG_DFLT_TILTBACK_BOARD_SPEED</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>100</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>1.0</stepDouble>
+            <valDouble>0.0</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix> km/h</suffix>
+            <vTx>7</vTx>
+        </tiltback_board_speed>
         <tiltback_return_speed>
             <longName>Return To Level Speed</longName>
             <type>1</type>
@@ -911,6 +979,54 @@ p, li { white-space: pre-wrap; }
             <suffix> V</suffix>
             <vTx>7</vTx>
         </haptic.duty.strength>
+        <haptic.board_speed.frequency>
+            <longName>Board Speed Audible Frequency</longName>
+            <type>2</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Audible frequency of the Board Speed haptic feedback.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;(generated by foc_play_tone of the 6.05 firmware)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_HAPTIC_BOARD_SPEED_FREQUENCY</cDefine>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxInt>1000</maxInt>
+            <minInt>300</minInt>
+            <showDisplay>0</showDisplay>
+            <stepInt>20</stepInt>
+            <valInt>395</valInt>
+            <suffix> Hz</suffix>
+            <vTx>3</vTx>
+        </haptic.board_speed.frequency>
+        <haptic.board_speed.strength>
+            <longName>Board Speed Audible Strength</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Maximum strength of the audible Board Speed haptic feedback, in Volts&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Actual strength is determined by strength scaling, which depends on speed. This value is the maximum strength, which will be reached at your configured Maximum Strength Speed.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Set to 0.0 to disable the audible frequency for haptic alerts.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_HAPTIC_BOARD_SPEED_STRENGTH</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>12</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.5</stepDouble>
+            <valDouble>3</valDouble>
+            <vTxDoubleScale>10</vTxDoubleScale>
+            <suffix> V</suffix>
+            <vTx>7</vTx>
+        </haptic.board_speed.strength>
         <haptic.error.frequency>
             <longName>Error Audible Frequency</longName>
             <type>2</type>
@@ -3717,6 +3833,9 @@ p, li { white-space: pre-wrap; }
         <ser>tiltback_lv_angle</ser>
         <ser>tiltback_lv_speed</ser>
         <ser>tiltback_lv</ser>
+        <ser>tiltback_board_speed_angle</ser>
+        <ser>tiltback_board_speed_speed</ser>
+        <ser>tiltback_board_speed</ser>
         <ser>tiltback_return_speed</ser>
         <ser>tiltback_constant</ser>
         <ser>tiltback_constant_erpm</ser>
@@ -3831,6 +3950,8 @@ p, li { white-space: pre-wrap; }
         <ser>disabled</ser>
         <ser>haptic.duty.frequency</ser>
         <ser>haptic.duty.strength</ser>
+        <ser>haptic.board_speed.frequency</ser>
+        <ser>haptic.board_speed.strength</ser>
         <ser>haptic.error.frequency</ser>
         <ser>haptic.error.strength</ser>
         <ser>haptic.vibrate.frequency</ser>
@@ -3974,6 +4095,10 @@ p, li { white-space: pre-wrap; }
                     <param>::sep::Low Voltage Alert Pushback</param>
                     <param>tiltback_lv_angle</param>
                     <param>tiltback_lv_speed</param>
+                    <param>::sep::Board Speed Alert Pushback</param>
+                    <param>tiltback_board_speed</param>
+                    <param>tiltback_board_speed_angle</param>
+                    <param>tiltback_board_speed_speed</param>
                 </subgroupParams>
             </subgroup>
             <subgroup>
@@ -3982,6 +4107,8 @@ p, li { white-space: pre-wrap; }
                     <param>::sep::Audible Feedback (firmware 6.05+)</param>
                     <param>haptic.duty.frequency</param>
                     <param>haptic.duty.strength</param>
+                    <param>haptic.board_speed.frequency</param>
+                    <param>haptic.board_speed.strength</param>
                     <param>haptic.error.frequency</param>
                     <param>haptic.error.strength</param>
                     <param>::sep::Vibration Feedback</param>

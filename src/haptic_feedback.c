@@ -62,6 +62,8 @@ static HapticFeedbackType haptic_feedback_get_type(
     case SAT_PB_LOW_VOLTAGE:
     case SAT_PB_HIGH_VOLTAGE:
         return HAPTIC_FEEDBACK_ERROR_VOLTAGE;
+    case SAT_PB_BOARD_SPEED:
+        return HAPTIC_FEEDBACK_BOARD_SPEED;
     default:
         break;
     }
@@ -83,6 +85,8 @@ static uint8_t get_beats(HapticFeedbackType type) {
         return 2;
     case HAPTIC_FEEDBACK_DUTY_CONTINUOUS:
         return 0;
+    case HAPTIC_FEEDBACK_BOARD_SPEED:
+        return 3;
     case HAPTIC_FEEDBACK_ERROR_TEMPERATURE:
         return 6;
     case HAPTIC_FEEDBACK_ERROR_VOLTAGE:
@@ -99,6 +103,8 @@ static const CfgHapticTone *get_haptic_tone(const HapticFeedback *hf) {
     case HAPTIC_FEEDBACK_DUTY:
     case HAPTIC_FEEDBACK_DUTY_CONTINUOUS:
         return &hf->cfg->duty;
+    case HAPTIC_FEEDBACK_BOARD_SPEED:
+        return &hf->cfg->board_speed;
     case HAPTIC_FEEDBACK_ERROR_TEMPERATURE:
     case HAPTIC_FEEDBACK_ERROR_VOLTAGE:
         return &hf->cfg->error;

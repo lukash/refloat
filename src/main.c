@@ -67,7 +67,8 @@ typedef enum {
     BEEP_SENSORS = 7,
     BEEP_LOWBATT = 8,
     BEEP_IDLE = 9,
-    BEEP_ERROR = 10
+    BEEP_ERROR = 10,
+    BEEP_BOARD_SPEED = 11
 } BeepReason;
 
 static const FootpadSensorState flywheel_konami_sequence[] = {
@@ -178,6 +179,8 @@ static void configure(Data *d) {
     d->tiltback_duty_step_size = d->float_conf.tiltback_duty_speed / d->float_conf.hertz;
     d->tiltback_hv_step_size = d->float_conf.tiltback_hv_speed / d->float_conf.hertz;
     d->tiltback_lv_step_size = d->float_conf.tiltback_lv_speed / d->float_conf.hertz;
+    d->tiltback_board_speed_step_size =
+        d->float_conf.tiltback_board_speed_speed / d->float_conf.hertz;
     d->tiltback_return_step_size = d->float_conf.tiltback_return_speed / d->float_conf.hertz;
 
     // Feature: Soft Start
@@ -306,6 +309,8 @@ static float get_setpoint_adjustment_step_size(Data *d) {
         return d->tiltback_hv_step_size;
     case (SAT_PB_LOW_VOLTAGE):
         return d->tiltback_lv_step_size;
+    case (SAT_PB_BOARD_SPEED):
+        return d->tiltback_board_speed_step_size;
     default:
         return 0;
     }
@@ -644,6 +649,11 @@ static void calculate_setpoint_target(Data *d) {
             d->state.sat = SAT_NONE;
             d->setpoint_target = 0;
         }
+    } else if (d->float_conf.tiltback_board_speed > 0.0 &&
+               d->motor.speed > d->float_conf.tiltback_board_speed) {
+        d->beep_reason = BEEP_BOARD_SPEED;
+        d->setpoint_target = d->float_conf.tiltback_board_speed_angle;
+        d->state.sat = SAT_PB_BOARD_SPEED;
     } else {
         // Normal running
         d->state.sat = SAT_NONE;
