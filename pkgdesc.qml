@@ -9,7 +9,7 @@ Item {
     property string pkgOutput: "refloat.vescpkg"
 
     function isCompatible (fwRxParams) {
-        if (fwRxParams.hwTypeStr() != "vesc") {
+        if (fwRxParams.hwTypeStr().toLowerCase() != "vesc") {
             return false;
         }
 
