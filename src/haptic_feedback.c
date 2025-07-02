@@ -61,6 +61,7 @@ static HapticFeedbackType haptic_feedback_get_type(
         return HAPTIC_FEEDBACK_ERROR_TEMPERATURE;
     case SAT_PB_LOW_VOLTAGE:
     case SAT_PB_HIGH_VOLTAGE:
+    case SAT_PB_ALERT:
         return HAPTIC_FEEDBACK_ERROR_VOLTAGE;
     default:
         break;
