@@ -19,6 +19,7 @@
 #pragma once
 
 #include "conf/datatypes.h"
+#include "time.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -47,6 +48,6 @@ typedef struct {
 
 void bms_init(BMS *bms);
 
-void bms_update(BMS *bms, const CfgBMS *cfg);
+void bms_update(BMS *bms, const CfgBMS *cfg, const Time *time);
 
 bool bms_is_fault(const BMS *bms, BMSFaultCode fault_code);

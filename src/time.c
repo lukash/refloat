@@ -27,6 +27,7 @@ static inline void time_now(Time *t) {
 
 void time_init(Time *t) {
     time_now(t);
+    t->start_timer = t->now;
     t->engage_timer = t->now;
     // Workaround: After startup (assume the time is very close to 0), we don't
     // want anything to be thinking we have just disengaged. Set disengage time

@@ -34,15 +34,18 @@ static inline void set_fault(uint32_t *fault_mask, BMSFaultCode fault_code) {
     *fault_mask |= 1u << (fault_code - 1);
 }
 
-void bms_update(BMS *bms, const CfgBMS *cfg) {
+void bms_update(BMS *bms, const CfgBMS *cfg, const Time *time) {
     if (!cfg->enabled) {
         bms->fault_mask = BMSF_NONE;
         return;
     }
 
     uint32_t fault_mask = BMSF_NONE;
+    const float timeout = 2.0f;
 
-    if (bms->msg_age > 2.0f) {
+    // Before the first BMS update occurs right after startup, msg_age has its
+    // init value. We need to wait the `timeout` time before issuing errors.
+    if (bms->msg_age > timeout && time_elapsed(time, start, timeout)) {
         set_fault(&fault_mask, BMSF_CONNECTION);
         bms->fault_mask = fault_mask;
         return;
