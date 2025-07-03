@@ -25,6 +25,7 @@ typedef uint32_t time_t;
 
 typedef struct {
     time_t now;
+    time_t start_timer;
     time_t engage_timer;
     time_t disengage_timer;
     time_t idle_timer;
