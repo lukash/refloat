@@ -56,15 +56,18 @@ void bms_update(BMS *bms, const CfgBMS *cfg) {
         set_fault(&fault_mask, BMSF_CELL_OVER_VOLTAGE);
     }
 
-    if (bms->cell_lt < cfg->cell_lt_threshold) {
-        set_fault(&fault_mask, BMSF_CELL_UNDER_TEMP);
+    // Setting high temp threshold to 0 disables both high and low temp checking
+    if (cfg->cell_ht_threshold > 0) {
+        if (bms->cell_ht > cfg->cell_ht_threshold) {
+            set_fault(&fault_mask, BMSF_CELL_OVER_TEMP);
+        }
+
+        if (bms->cell_lt < cfg->cell_lt_threshold) {
+            set_fault(&fault_mask, BMSF_CELL_UNDER_TEMP);
+        }
     }
 
-    if (bms->cell_ht > cfg->cell_ht_threshold) {
-        set_fault(&fault_mask, BMSF_CELL_OVER_TEMP);
-    }
-
-    if (bms->bms_ht > cfg->bms_ht_threshold) {
+    if (cfg->bms_ht_threshold > 0 && bms->bms_ht > cfg->bms_ht_threshold) {
         set_fault(&fault_mask, BMSF_OVER_TEMP);
     }
 
