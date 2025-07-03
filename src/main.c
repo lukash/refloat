@@ -809,7 +809,7 @@ static void refloat_thd(void *arg) {
             &d->haptic_feedback, &d->motor_control, &d->state, &d->motor, &d->time
         );
 
-        bms_update(&d->bms, &d->float_conf.bms);
+        bms_update(&d->bms, &d->float_conf.bms, &d->time);
 
         // Control Loop State Logic
         switch (d->state.state) {
