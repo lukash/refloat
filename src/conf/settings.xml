@@ -1132,6 +1132,28 @@ p, li { white-space: pre-wrap; }
             <suffix> V</suffix>
             <vTx>7</vTx>
         </bms.cell_balance_threshold>
+        <bms.cell_ht_threshold>
+            <longName>Cell High Temp Threshold</longName>
+            <type>2</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;High temp threshold per cell to trigger a safety alert.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Set to 0 to disable &lt;/span&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;both High and Low Cell Temperature&lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt; alert.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_BMS_CELL_HT_THRESHOLD</cDefine>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxInt>60</maxInt>
+            <minInt>0</minInt>
+            <showDisplay>0</showDisplay>
+            <stepInt>5</stepInt>
+            <valInt>45</valInt>
+            <suffix> °C</suffix>
+            <vTx>2</vTx>
+        </bms.cell_ht_threshold>
         <bms.cell_lt_threshold>
             <longName>Cell Low Temp Threshold</longName>
             <type>2</type>
@@ -1154,26 +1176,6 @@ p, li { white-space: pre-wrap; }
             <suffix> °C</suffix>
             <vTx>2</vTx>
         </bms.cell_lt_threshold>
-        <bms.cell_ht_threshold>
-            <longName>Cell High Temp Threshold</longName>
-            <type>2</type>
-            <transmittable>1</transmittable>
-            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;High temp threshold per cell to trigger a safety alert.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
-            <cDefine>CFG_DFLT_BMS_CELL_HT_THRESHOLD</cDefine>
-            <editorScale>1</editorScale>
-            <editAsPercentage>0</editAsPercentage>
-            <maxInt>60</maxInt>
-            <minInt>20</minInt>
-            <showDisplay>0</showDisplay>
-            <stepInt>5</stepInt>
-            <valInt>45</valInt>
-            <suffix> °C</suffix>
-            <vTx>2</vTx>
-        </bms.cell_ht_threshold>
         <bms.bms_ht_threshold>
             <longName>BMS High Temp Threshold</longName>
             <type>2</type>
@@ -1184,12 +1186,14 @@ p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;High temp threshold for the BMS temperature to trigger a safety alert.&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Set to 0 to disable this alert.&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Note: Requires VESC firmware version 6.06+ and a recent enough BMS firmware.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_BMS_BMS_HT_THRESHOLD</cDefine>
             <editorScale>1</editorScale>
             <editAsPercentage>0</editAsPercentage>
             <maxInt>80</maxInt>
-            <minInt>20</minInt>
+            <minInt>0</minInt>
             <showDisplay>0</showDisplay>
             <stepInt>5</stepInt>
             <valInt>60</valInt>
@@ -4185,8 +4189,8 @@ p, li { white-space: pre-wrap; }
         <ser>bms.cell_lv_threshold</ser>
         <ser>bms.cell_hv_threshold</ser>
         <ser>bms.cell_balance_threshold</ser>
-        <ser>bms.cell_lt_threshold</ser>
         <ser>bms.cell_ht_threshold</ser>
+        <ser>bms.cell_lt_threshold</ser>
         <ser>bms.bms_ht_threshold</ser>
         <ser>meta.is_default</ser>
     </SerOrder>
@@ -4455,8 +4459,8 @@ p, li { white-space: pre-wrap; }
                     <param>bms.cell_lv_threshold</param>
                     <param>bms.cell_hv_threshold</param>
                     <param>bms.cell_balance_threshold</param>
-                    <param>bms.cell_lt_threshold</param>
                     <param>bms.cell_ht_threshold</param>
+                    <param>bms.cell_lt_threshold</param>
                     <param>bms.bms_ht_threshold</param>
                 </subgroupParams>
             </subgroup>
