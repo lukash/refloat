@@ -212,6 +212,7 @@ typedef struct {
     float tiltback_duty_angle;
     float tiltback_duty_speed;
     float tiltback_duty;
+    uint8_t tiltback_speed;
     float tiltback_hv_angle;
     float tiltback_hv_speed;
     float tiltback_hv;
