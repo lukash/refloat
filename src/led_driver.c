@@ -30,7 +30,6 @@
 #define TIM_PERIOD ((168000000 / 2 / WS2812_CLK_HZ) - 1)
 #define WS2812_ZERO (((uint32_t) TIM_PERIOD) * 0.3)
 #define WS2812_ONE (((uint32_t) TIM_PERIOD) * 0.7)
-#define BITBUFFER_PAD 1000
 
 typedef struct {
     uint8_t pin_nr;
@@ -90,6 +89,10 @@ static void disable_dma_stream(DMA_Stream_TypeDef *dma_stream) {
     dma_stream->CR &= ~DMA_SxCR_EN;
 }
 
+static void enable_dma_stream(DMA_Stream_TypeDef *dma_stream) {
+    dma_stream->CR |= DMA_SxCR_EN;
+}
+
 // Only DMA_Stream0 and DMA_Stream3 supported as of now.
 static void init_dma_stream(
     DMA_Stream_TypeDef *dma_stream, uint16_t *buf, uint32_t buf_len, uint32_t ccr_address
@@ -110,7 +113,7 @@ static void init_dma_stream(
     }
 
     dma_stream->CR = DMA_Channel_2 | DMA_DIR_MemoryToPeripheral | DMA_MemoryInc_Enable |
-        DMA_PeripheralDataSize_HalfWord | DMA_MemoryDataSize_HalfWord | DMA_Mode_Circular |
+        DMA_PeripheralDataSize_HalfWord | DMA_MemoryDataSize_HalfWord | DMA_Mode_Normal |
         DMA_Priority_High | DMA_MemoryBurst_Single | DMA_PeripheralBurst_Single;
 
     dma_stream->FCR = 0x00000020 | DMA_FIFOThreshold_Full;
@@ -119,8 +122,19 @@ static void init_dma_stream(
     dma_stream->NDTR = buf_len;
     dma_stream->PAR = ccr_address;
 
-    // enable the stream
-    dma_stream->CR |= DMA_SxCR_EN;
+    enable_dma_stream(dma_stream);
+}
+
+static void reset_dma_stream_transfer_complete(DMA_Stream_TypeDef *dma_stream) {
+    if (dma_stream == DMA1_Stream0) {
+        DMA1->LIFCR |= DMA_LIFCR_CTCIF0;
+    } else if (dma_stream == DMA1_Stream3) {
+        DMA1->LIFCR |= DMA_LIFCR_CTCIF3;
+    }
+}
+
+static void disable_tim4_dma(uint16_t dma_source) {
+    TIM4->DIER &= ~dma_source;
 }
 
 static void enable_tim4_dma(uint16_t dma_source) {
@@ -181,9 +195,8 @@ bool led_driver_setup(LedDriver *driver, LedPin pin, const LedStrip **led_strips
         driver->bitbuffer_length += color_order_bits(strip->color_order) * strip->length;
     }
 
-    uint32_t padding_offset = driver->bitbuffer_length;
-
-    driver->bitbuffer_length += BITBUFFER_PAD;
+    // An extra array item to set the output to 0 PWM
+    ++driver->bitbuffer_length;
     driver->bitbuffer = VESC_IF->malloc(sizeof(uint16_t) * driver->bitbuffer_length);
     driver->pin = pin;
 
@@ -198,11 +211,11 @@ bool led_driver_setup(LedDriver *driver, LedPin pin, const LedStrip **led_strips
         }
     }
 
-    for (uint32_t i = 0; i < padding_offset; ++i) {
+    for (uint32_t i = 0; i < driver->bitbuffer_length - 1; ++i) {
         driver->bitbuffer[i] = WS2812_ZERO;
     }
+    driver->bitbuffer[driver->bitbuffer_length - 1] = 0;
 
-    memset(driver->bitbuffer + padding_offset, 0, sizeof(uint16_t) * BITBUFFER_PAD);
     init_hw(pin, driver->bitbuffer, driver->bitbuffer_length);
     return true;
 }
@@ -274,6 +287,13 @@ void led_driver_paint(LedDriver *driver) {
             }
         }
     }
+
+    PinHwConfig cfg = get_pin_hw_config(driver->pin);
+    disable_tim4_dma(cfg.dma_source);
+    disable_dma_stream(cfg.dma_stream);
+    reset_dma_stream_transfer_complete(cfg.dma_stream);
+    enable_dma_stream(cfg.dma_stream);
+    enable_tim4_dma(cfg.dma_source);
 }
 
 void led_driver_destroy(LedDriver *driver) {
