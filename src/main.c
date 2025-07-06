@@ -67,7 +67,8 @@ typedef enum {
     BEEP_SENSORS = 7,
     BEEP_LOWBATT = 8,
     BEEP_IDLE = 9,
-    BEEP_ERROR = 10
+    BEEP_ERROR = 10,
+    BEEP_SPEED = 11
 } BeepReason;
 
 static const FootpadSensorState flywheel_konami_sequence[] = {
@@ -308,6 +309,8 @@ static float get_setpoint_adjustment_step_size(Data *d) {
         return d->tiltback_hv_step_size;
     case (SAT_PB_LOW_VOLTAGE):
         return d->tiltback_lv_step_size;
+    case (SAT_PB_SPEED):
+        return d->tiltback_duty_step_size;
     default:
         return 0;
     }
@@ -645,6 +648,15 @@ static void calculate_setpoint_target(Data *d) {
             d->state.sat = SAT_NONE;
             d->setpoint_target = 0;
         }
+    } else if (d->float_conf.tiltback_speed > 0.0 &&
+               fabsf(d->motor.speed) > d->float_conf.tiltback_speed) {
+        if (d->motor.speed > 0) {
+            d->setpoint_target = d->float_conf.tiltback_duty_angle;
+        } else {
+            d->setpoint_target = -d->float_conf.tiltback_duty_angle;
+        }
+        d->beep_reason = BEEP_SPEED;
+        d->state.sat = SAT_PB_SPEED;
     } else {
         // Normal running
         d->state.sat = SAT_NONE;

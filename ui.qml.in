@@ -463,6 +463,7 @@ Item {
                 "is_beeper_enabled",
                 "tiltback_hv",
                 "tiltback_lv",
+                "tiltback_speed",
             ];
 
             return !name.startsWith("haptic.") && !name.startsWith("hardware.") && !tuneBlacklist.includes(name);
@@ -1323,6 +1324,7 @@ Item {
         readonly property int sat_None: 0
         readonly property int sat_Centering: 1
         readonly property int sat_ReverseStop: 2
+        readonly property int sat_Speed: 5
         readonly property int sat_Duty: 6
         readonly property int sat_HighVoltage: 10
         readonly property int sat_LowVoltage: 11
@@ -1337,6 +1339,7 @@ Item {
             [sat_None, ""],
             [sat_Centering, "centering"],
             [sat_ReverseStop, "reverse stop"],
+            [sat_Speed, "pushback: speed"],
             [sat_Duty, "pushback: duty"],
             [sat_HighVoltage, "pushback: high voltage"],
             [sat_LowVoltage, "pushback: low voltage"],
@@ -1348,7 +1351,7 @@ Item {
         property int setpointAdjustmentClass
         onSetpointAdjustmentTypeChanged: {
             // do these in one function to keep them consistent, order is important to display and fade correctly in pitchPushbackText
-            setpointAdjustmentClass = setpointAdjustmentType >= sat_HighVoltage ? sac_Error : setpointAdjustmentType >= sat_Duty ? sac_Warning : sac_Normal;
+            setpointAdjustmentClass = setpointAdjustmentType >= sat_HighVoltage ? sac_Error : setpointAdjustmentType >= sat_Speed ? sac_Warning : sac_Normal;
             setpointAdjustmentTypeString = setpointAdjustmentTypeToString.get(setpointAdjustmentType) ?? "unknown (%1)".arg(setpointAdjustmentType);
         }
 
@@ -1390,6 +1393,7 @@ Item {
             [8, "Low Battery"],
             [9, "Board Idle"],
             [10, "Other"],
+            [11, "Speed"],
         ])
 
         property int beepReason: 0
