@@ -106,6 +106,8 @@ uint8_t sat_compat(const State *state) {
         return 5;  // TILTBACK_LV
     case SAT_PB_TEMPERATURE:
         return 6;  // TILTBACK_TEMP
+    case SAT_PB_SPEED:
+        return 7;
     }
     return 0;  // CENTERING
 }

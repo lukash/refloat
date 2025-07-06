@@ -55,8 +55,10 @@ static HapticFeedbackType haptic_feedback_get_type(
         if (md->duty_cycle > hf->duty_solid_threshold) {
             return HAPTIC_FEEDBACK_DUTY_CONTINUOUS;
         } else {
-            return HAPTIC_FEEDBACK_DUTY;
+            return HAPTIC_FEEDBACK_DUTY_SPEED;
         }
+    case SAT_PB_SPEED:
+        return HAPTIC_FEEDBACK_DUTY_SPEED;
     case SAT_PB_TEMPERATURE:
         return HAPTIC_FEEDBACK_ERROR_TEMPERATURE;
     case SAT_PB_LOW_VOLTAGE:
@@ -79,7 +81,7 @@ static HapticFeedbackType haptic_feedback_get_type(
 // skipped, giving a certain number of "beeps" followed by a pause.
 static uint8_t get_beats(HapticFeedbackType type) {
     switch (type) {
-    case HAPTIC_FEEDBACK_DUTY:
+    case HAPTIC_FEEDBACK_DUTY_SPEED:
         return 2;
     case HAPTIC_FEEDBACK_DUTY_CONTINUOUS:
         return 0;
@@ -96,7 +98,7 @@ static uint8_t get_beats(HapticFeedbackType type) {
 
 static const CfgHapticTone *get_haptic_tone(const HapticFeedback *hf) {
     switch (hf->type_playing) {
-    case HAPTIC_FEEDBACK_DUTY:
+    case HAPTIC_FEEDBACK_DUTY_SPEED:
     case HAPTIC_FEEDBACK_DUTY_CONTINUOUS:
         return &hf->cfg->duty;
     case HAPTIC_FEEDBACK_ERROR_TEMPERATURE:
