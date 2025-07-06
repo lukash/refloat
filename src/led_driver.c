@@ -32,12 +32,31 @@
 #define WS2812_ONE (((uint32_t) TIM_PERIOD) * 0.7)
 #define BITBUFFER_PAD 1000
 
-static DMA_Stream_TypeDef *get_dma_stream(LedPin pin) {
-    if (pin == LED_PIN_B6) {
-        return DMA1_Stream0;
-    } else {
-        return DMA1_Stream3;
+typedef struct {
+    uint8_t pin_nr;
+    DMA_Stream_TypeDef *dma_stream;
+    uint16_t dma_source;
+    uint32_t ccr_address;
+} PinHwConfig;
+
+static PinHwConfig get_pin_hw_config(LedPin pin) {
+    PinHwConfig cfg;
+    switch (pin) {
+    case LED_PIN_B6:
+        cfg.pin_nr = 6;
+        cfg.dma_stream = DMA1_Stream0;
+        cfg.dma_source = TIM_DMA_CC1;
+        cfg.ccr_address = (uint32_t) &TIM4->CCR1;
+        break;
+    case LED_PIN_B7:
+        cfg.pin_nr = 7;
+        cfg.dma_stream = DMA1_Stream3;
+        cfg.dma_source = TIM_DMA_CC2;
+        cfg.ccr_address = (uint32_t) &TIM4->CCR2;
+        break;
     }
+
+    return cfg;
 }
 
 static void reset_tim4() {
@@ -109,34 +128,21 @@ static void enable_tim4_dma(uint16_t dma_source) {
 }
 
 static void init_hw(LedPin pin, uint16_t *buffer, uint32_t length) {
-    DMA_Stream_TypeDef *dma_stream = get_dma_stream(pin);
-
-    uint8_t pin_nr;
-    uint32_t ccr_address;
-    uint16_t dma_source;
-    if (pin == LED_PIN_B6) {
-        pin_nr = 6;
-        ccr_address = (uint32_t) &TIM4->CCR1;
-        dma_source = TIM_DMA_CC1;
-    } else {
-        pin_nr = 7;
-        ccr_address = (uint32_t) &TIM4->CCR2;
-        dma_source = TIM_DMA_CC2;
-    }
+    PinHwConfig cfg = get_pin_hw_config(pin);
 
     VESC_IF->set_pad_mode(
-        GPIOB, pin_nr, PAL_MODE_ALTERNATE(2) | PAL_STM32_OTYPE_OPENDRAIN | PAL_STM32_OSPEED_MID1
+        GPIOB, cfg.pin_nr, PAL_MODE_ALTERNATE(2) | PAL_STM32_OTYPE_OPENDRAIN | PAL_STM32_OSPEED_MID1
     );
 
     reset_tim4();
-    init_dma_stream(dma_stream, buffer, length, ccr_address);
-    init_tim4(ccr_address == (uint32_t) &TIM4->CCR1);
-    enable_tim4_dma(dma_source);
+    init_dma_stream(cfg.dma_stream, buffer, length, cfg.ccr_address);
+    init_tim4(cfg.ccr_address == (uint32_t) &TIM4->CCR1);
+    enable_tim4_dma(cfg.dma_source);
 }
 
 static void deinit_hw(LedPin pin) {
     reset_tim4();
-    disable_dma_stream(get_dma_stream(pin));
+    disable_dma_stream(get_pin_hw_config(pin).dma_stream);
 }
 
 inline static uint8_t color_order_bits(LedColorOrder order) {
