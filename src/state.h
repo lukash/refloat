@@ -49,6 +49,7 @@ typedef enum {
     SAT_NONE = 0,
     SAT_CENTERING = 1,
     SAT_REVERSESTOP = 2,
+    SAT_PB_SPEED = 5,
     SAT_PB_DUTY = 6,
     SAT_PB_HIGH_VOLTAGE = 10,
     SAT_PB_LOW_VOLTAGE = 11,
