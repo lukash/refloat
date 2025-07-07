@@ -510,14 +510,14 @@ p, li { white-space: pre-wrap; }
             <valInt>0</valInt>
         </fault_reversestop_enabled>
         <tiltback_duty_angle>
-            <longName>Angle</longName>
+            <longName>Pushback Angle</longName>
             <type>1</type>
             <transmittable>1</transmittable>
             <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Desired setpoint angle for Duty Cycle Pushback.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Setpoint angle for Speed and Duty Cycle Pushback.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_TILTBACK_DUTY_ANGLE</cDefine>
             <editorDecimalsDouble>1</editorDecimalsDouble>
             <editorScale>1</editorScale>
@@ -532,14 +532,14 @@ p, li { white-space: pre-wrap; }
             <vTx>7</vTx>
         </tiltback_duty_angle>
         <tiltback_duty_speed>
-            <longName>Speed</longName>
+            <longName>Pushback Speed</longName>
             <type>1</type>
             <transmittable>1</transmittable>
             <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Rate at which nose is tilted back when exceeding Duty Cycle limit (fast pushback can be dangerous!).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Rate at which nose is tilted up during Speed and Duty Cycle Pushback (fast pushback can be dangerous!).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_TILTBACK_DUTY_SPEED</cDefine>
             <editorDecimalsDouble>1</editorDecimalsDouble>
             <editorScale>1</editorScale>
@@ -563,9 +563,9 @@ p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Duty Cycle threshold to trigger a safety pushback (Pushback raises the nose of the board, informing you to slow down).&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;*Note: Can be disabled by setting to 100%&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Set to 100% to disable.&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;*&lt;/span&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;DISCLAIMER&lt;/span&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;: Max Duty Cycle on a VESC is &lt;/span&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;95%&lt;/span&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;, &lt;/span&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;NOT 100%! &lt;/span&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;Reaching 95% Duty Cycle and pushing beyond &lt;/span&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;WILL &lt;/span&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;result in a nosedive. Use this knowledge to leave yourself the headroom you desire.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;*&lt;/span&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;DISCLAIMER&lt;/span&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;: Max Duty Cycle on a VESC is &lt;/span&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;95%&lt;/span&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;, &lt;/span&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;NOT 100%! &lt;/span&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;Reaching 95% Duty Cycle and pushing beyond &lt;/span&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;WILL &lt;/span&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;result in a nosedive.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_TILTBACK_DUTY</cDefine>
             <editorDecimalsDouble>2</editorDecimalsDouble>
             <editorScale>1</editorScale>
@@ -587,21 +587,21 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p align=&quot;justify&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Beep during duty cycle pushback. It is recommended to disable this beep when enabling the surge beep or else it will be impossible to recognize the surge beep.&lt;/p&gt;
+&lt;p align=&quot;justify&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Beep during duty cycle pushback.&lt;/p&gt;
 &lt;p align=&quot;justify&quot; style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p align=&quot;justify&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Warning: beeper may not be easily audible at high speeds!&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_IS_DUTYBEEP_ENABLED</cDefine>
             <valInt>0</valInt>
         </is_dutybeep_enabled>
         <tiltback_hv_angle>
-            <longName>Angle</longName>
+            <longName>Pushback Angle</longName>
             <type>1</type>
             <transmittable>1</transmittable>
             <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Desired setpoint angle for High Voltage Pushback.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Setpoint angle for High Voltage Pushback.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_TILTBACK_HV_ANGLE</cDefine>
             <editorDecimalsDouble>1</editorDecimalsDouble>
             <editorScale>1</editorScale>
@@ -623,7 +623,7 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Rate at which nose is tilted back when exceeding High Voltage limit (fast pushback can be dangerous!).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Rate at which nose is tilted up during High Voltage Pushback (fast pushback can be dangerous!).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_TILTBACK_HV_SPEED</cDefine>
             <editorDecimalsDouble>1</editorDecimalsDouble>
             <editorScale>1</editorScale>
@@ -662,14 +662,14 @@ p, li { white-space: pre-wrap; }
             <vTx>7</vTx>
         </tiltback_hv>
         <tiltback_lv_angle>
-            <longName>Angle</longName>
+            <longName>Pushback Angle</longName>
             <type>1</type>
             <transmittable>1</transmittable>
             <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Desired setpoint angle for Low Voltage Pushback.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Setpoint angle for Low Voltage Pushback.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_TILTBACK_LV_ANGLE</cDefine>
             <editorDecimalsDouble>1</editorDecimalsDouble>
             <editorScale>1</editorScale>
@@ -691,7 +691,7 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Rate at which nose is tilted back when exceeding Low Voltage threshold (fast pushback can be dangerous!).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Rate at which nose is tilted up during Low Voltage Pushback (fast pushback can be dangerous!).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_TILTBACK_LV_SPEED</cDefine>
             <editorDecimalsDouble>1</editorDecimalsDouble>
             <editorScale>1</editorScale>
@@ -743,9 +743,7 @@ p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Speed Threshold to trigger pushback (Pushback raises the nose of the board, informing you to slow down).&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Uses the Angle and Speed settings from Duty Cycle.&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;*Note: Can be disabled by setting to 0.0 km/h, which is default&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Set to 0 to disable.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_TILTBACK_SPEED</cDefine>
             <editorScale>1</editorScale>
             <editAsPercentage>0</editAsPercentage>
@@ -765,7 +763,7 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Speed at which nose is returned back to normal after a pushback condition has been cleared.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Rate at which nose is returned from pushback back to normal.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_TILTBACK_RETURN_SPEED</cDefine>
             <editorDecimalsDouble>1</editorDecimalsDouble>
             <editorScale>1</editorScale>
@@ -888,14 +886,14 @@ p, li { white-space: pre-wrap; }
             <vTx>3</vTx>
         </tiltback_variable_erpm>
         <haptic.duty.frequency>
-            <longName>Duty Cycle Audible Frequency</longName>
+            <longName>Warning Audible Frequency</longName>
             <type>2</type>
             <transmittable>1</transmittable>
             <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Audible frequency of the Duty Cycle haptic feedback. Also used for Current Limit and Speed alert haptic Feedback, if enabled.&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Audible frequency of the Speed and Duty Cycle Alert haptic feedback. Also used for Current Limit haptic feedback, if enabled.&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;(generated by foc_play_tone of the 6.05 firmware)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_HAPTIC_DUTY_FREQUENCY</cDefine>
@@ -910,14 +908,14 @@ p, li { white-space: pre-wrap; }
             <vTx>3</vTx>
         </haptic.duty.frequency>
         <haptic.duty.strength>
-            <longName>Duty Cycle Audible Strength</longName>
+            <longName>Warning Audible Strength</longName>
             <type>1</type>
             <transmittable>1</transmittable>
             <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Maximum strength of the audible Duty Cycle haptic feedback, in Volts. Also used for Current Limit and Speed alert haptic Feedback, if enabled.&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Maximum strength of the audible Speed and Duty Cycle haptic feedback, in Volts. Also used for Current Limit haptic feedback, if enabled.&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Actual strength is determined by strength scaling, which depends on speed. This value is the maximum strength, which will be reached at your configured Maximum Strength Speed.&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
@@ -991,7 +989,7 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Vibrating frequency of both Duty Cycle and Error haptic feedback.&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Vibrating frequency of both Warning and Error haptic feedback.&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Note: When changing this option, the actual frequency will be changing in larger discrete steps, as the configured frequency is being rounded down to the nearest division of Loop Hertz / 2.&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
@@ -3987,14 +3985,12 @@ p, li { white-space: pre-wrap; }
                 <subgroupName>Pushback Alerts</subgroupName>
                 <subgroupParams>
                     <param>::sep::General Config</param>
-                    <param>tiltback_return_speed</param>
-                    <param>::sep::Duty Cycle Alert Pushback</param>
+                    <param>tiltback_speed</param>
                     <param>tiltback_duty</param>
                     <param>tiltback_duty_angle</param>
                     <param>tiltback_duty_speed</param>
+                    <param>tiltback_return_speed</param>
                     <param>is_dutybeep_enabled</param>
-                    <param>::sep::Speed Alert Pushback</param>
-                    <param>tiltback_speed</param>
                     <param>::sep::High Voltage Alert Pushback</param>
                     <param>tiltback_hv_angle</param>
                     <param>tiltback_hv_speed</param>
