@@ -1001,6 +1001,18 @@ Item {
             return createTune("Full Backup", "", config);
         }
 
+        function loadBackup(name) {
+            var backup = tuneStorage.value(name);
+            if (!backup) {
+                return null;
+            }
+            return backup;
+        }
+
+        function saveBackup(name, backup) {
+            tuneStorage.setValue(name, backup);
+        }
+
         function globalBackup() {
             var backup = createBackup();
             if (!backup) {
@@ -1010,10 +1022,11 @@ Item {
         }
 
         function globalRestore() {
-            if (!fullBackup) {
+            var backup = loadBackup("fullBackup");
+            if (!backup) {
                 return;
             }
-            applyConfigDialog.show(fullBackup);
+            applyConfigDialog.show(backup);
         }
 
         function idBackup() {
@@ -1021,12 +1034,12 @@ Item {
             if (!backup) {
                 return;
             }
-            tuneStorage.setValue("backup_" + board.getId(), backup);
+            saveBackup("backup_" + board.getId(), backup);
             idBackupFinished(backup);
         }
 
         function idRestore() {
-            var backup = tuneStorage.value("backup_" + board.getId());
+            var backup = loadBackup("backup_" + board.getId());
             if (!backup) {
                 return;
             }
@@ -1039,12 +1052,12 @@ Item {
                 return;
             }
 
-            tuneStorage.setValue("auto_backup_" + board.getId(), backup);
+            saveBackup("auto_backup_" + board.getId(), backup);
             autoBackupFinished(backup);
         }
 
         function autoRestore() {
-            var backup = tuneStorage.value("auto_backup_" + board.getId());
+            var backup = loadBackup("auto_backup_" + board.getId());
             if (!backup) {
                 return;
             }
@@ -1057,7 +1070,7 @@ Item {
             }
 
             if (packageConfig.isDefault()) {
-                var backup = tuneStorage.value("auto_backup_" + board.getId());
+                var backup = loadBackup("auto_backup_" + board.getId());
                 if (backup) {
                     print("Refloat: Automatic backup restore.");
                     applyConfigDialog.show(backup, true);
@@ -1207,11 +1220,11 @@ Item {
 
         Component.onCompleted: {
             convertFloatQuicksaves();
-            var idBackup = tuneStorage.value("backup_" + board.getId());
+            var idBackup = loadBackup("backup_" + board.getId());
             if (idBackup) {
                 idBackupFinished(idBackup);
             }
-            var autoBackup = tuneStorage.value("auto_backup_" + board.getId());
+            var autoBackup = loadBackup("auto_backup_" + board.getId());
             if (autoBackup) {
                 autoBackupFinished(autoBackup);
             }
