@@ -1081,9 +1081,12 @@ Item {
         }
 
         function loadTune(slot) {
-            var tuneJson = tuneStorage.value(tuneId(slot), "");
-            if (tuneJson) {
-                return JSON.parse(tuneJson);
+            var tune = tuneStorage.value(tuneId(slot));
+            if (tune) {
+                if (typeof tune === "string") {
+                    tune = JSON.parse(tune);
+                }
+                return tune;
             }
             return null;
         }
@@ -1106,7 +1109,11 @@ Item {
 
         function loadTuneArchive() {
             if (tuneStorage.tuneArchive) {
-                return JSON.parse(tuneStorage.tuneArchive);
+                if (typeof tuneStorage.tuneArchive === "string") {
+                    return JSON.parse(tuneStorage.tuneArchive);
+                } else {
+                    return tuneStorage.tuneArchive;
+                }
             }
             return null;
         }
