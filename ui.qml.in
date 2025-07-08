@@ -943,6 +943,14 @@ Item {
             return tunes;
         }
 
+        // Major package versions require a migration, minor don't.
+        // Migration functions should return: [tuneObject, [newMajor, newMinor]]
+        property var migrations: {
+            "1.1": function(tune) {
+                return [tune, [1, 2]];
+            },
+        }
+
         function onUpdate() {
             triggerAutoRestore();
             // force recalculation of dependent variables
@@ -1000,6 +1008,26 @@ Item {
             return true;
         }
 
+        function migrateTune(tune) {
+            var [major, minor] = versionMajorMinor(tune.package.version);
+            // Zero or NaN
+            if (!major) {
+                return tune;
+            }
+
+            var [pMajor, pMinor] = versionMajorMinor(packageVersion);
+
+            while (major < pMajor || (major == pMajor && minor < pMinor)) {
+                var versionKey = [major, minor].join(".");
+                if (migrations.hasOwnProperty(versionKey)) {
+                    [tune, [major, minor]] = migrations[versionKey](tune);
+                } else {
+                    minor++;
+                }
+            }
+            return tune;
+        }
+
         function createBackup() {
             var config = packageConfig.fetchConfig(false);
             if (!config) {
@@ -1013,7 +1041,8 @@ Item {
             if (!backup) {
                 return null;
             }
-            return backup;
+
+            return migrateTune(backup);
         }
 
         function saveBackup(name, backup) {
@@ -1106,7 +1135,7 @@ Item {
                 if (typeof tune === "string") {
                     tune = JSON.parse(tune);
                 }
-                return tune;
+                return migrateTune(tune);
             }
             return null;
         }
