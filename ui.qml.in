@@ -413,34 +413,40 @@ Item {
             writeConfig();
         }
 
-        function paramNameToObject(name) {
-            var obj = {
-                "name": name
-            };
-
+        function getParamValue(name) {
             if (pkgConfig.isParamDouble(name)) {
-                obj.type = "Double";
-                obj.value = pkgConfig.getParamDouble(name);
+                return pkgConfig.getParamDouble(name);
             } else if (pkgConfig.isParamInt(name)) {
-                obj.type = "Int";
-                obj.value = pkgConfig.getParamInt(name);
+                return pkgConfig.getParamInt(name);
             } else if (pkgConfig.isParamEnum(name)) {
-                obj.type = "Enum";
-                obj.value = pkgConfig.getParamEnum(name);
+                return pkgConfig.getParamEnum(name);
             } else if (pkgConfig.isParamBool(name)) {
-                obj.type = "Bool";
-                obj.value = pkgConfig.getParamBool(name);
+                return pkgConfig.getParamBool(name);
             } else if (pkgConfig.isParamQString(name)) {
-                obj.type = "String";
-                obj.value = pkgConfig.getParamQString(name);
+                return pkgConfig.getParamQString(name);
             } else if (pkgConfig.isParamBitfield(name)) {
-                obj.type = "Bitfield";
-                obj.value = pkgConfig.getParamInt(name);
-            } else {
-                return null;
+                return pkgConfig.getParamInt(name);
             }
 
-            return obj;
+            return null;
+        }
+
+        function getParamType(name) {
+            if (pkgConfig.isParamDouble(name)) {
+                return "Double";
+            } else if (pkgConfig.isParamInt(name)) {
+                return "Int";
+            } else if (pkgConfig.isParamEnum(name)) {
+                return "Enum";
+            } else if (pkgConfig.isParamBool(name)) {
+                return "Bool";
+            } else if (pkgConfig.isParamQString(name)) {
+                return "String";
+            } else if (pkgConfig.isParamBitfield(name)) {
+                return "Bitfield";
+            }
+
+            return null;
         }
 
         function getDisplayName(name) {
@@ -481,17 +487,16 @@ Item {
         function fetchConfig(tuneOnly) {
             if (!checkConfig()) return null;
 
-            var settings = [];
+            var settings = {};
             for (let subGroup of pkgConfig.getParamSubgroups("General")) {
                 for (let param of pkgConfig.getParamsFromSubgroup("General", subGroup)) {
                     if (tuneOnly && !paramIsTune(param)) {
                         continue;
                     }
 
-                    var item = paramNameToObject(param);
-
-                    if (item) {
-                        settings.push(item);
+                    var value = getParamValue(param);
+                    if (value !== null) {
+                        settings[param] = getParamValue(param);
                     }
                 }
             }
@@ -516,19 +521,19 @@ Item {
                 return;
             }
 
-            for (let item of config.settings) {
-                if (item.type === "Double") {
-                    pkgConfig.updateParamDouble(item.name, item.value);
-                } else if (item.type === "Int") {
-                    pkgConfig.updateParamInt(item.name, item.value);
-                } else if (item.type === "Bool") {
-                    pkgConfig.updateParamBool(item.name, item.value);
-                } else if (item.type === "Enum") {
-                    pkgConfig.updateParamEnum(item.name, item.value);
-                } else if (item.type === "String") {
-                    pkgConfig.updateParamString(item.name, item.value);
-                } else if (item.type === "Bitfield") {
-                    pkgConfig.updateParamInt(item.name, item.value);
+            for (let [key, value] of Object.entries(config.settings)) {
+                if (pkgConfig.isParamDouble(key)) {
+                    pkgConfig.updateParamDouble(key, value);
+                } else if (pkgConfig.isParamInt(key)) {
+                    pkgConfig.updateParamInt(key, value);
+                } else if (pkgConfig.isParamBool(key)) {
+                    pkgConfig.updateParamBool(key, value);
+                } else if (pkgConfig.isParamEnum(key)) {
+                    pkgConfig.updateParamEnum(key, value);
+                } else if (pkgConfig.isParamQString(key)) {
+                    pkgConfig.updateParamString(key, value);
+                } else if (pkgConfig.isParamBitfield(key)) {
+                    pkgConfig.updateParamInt(key, value);
                 }
             }
 
@@ -536,35 +541,32 @@ Item {
         }
 
         function diffConfig(other) {
-            var typeDiffers = [];
             var differs = [];
             var otherMissing = [];
+            var otherSettings = {};
 
             if (other && other.settings) {
-                var otherSettings = {};
-                for (let item of other.settings) {
-                    otherSettings[item.name] = item;
-                }
+                otherSettings = Object.assign({}, other.settings);
                 if (VescIf.customConfigsLoaded()) {
                     for (let subGroup of pkgConfig.getParamSubgroups("General")) {
                         for (let paramName of pkgConfig.getParamsFromSubgroup("General", subGroup)) {
-                            var param = paramNameToObject(paramName);
-                            if (!param) {
+                            var value = getParamValue(paramName);
+                            if (value === null) {
                                 continue;
                             }
 
                             if (otherSettings.hasOwnProperty(paramName)) {
-                                var otherParam = otherSettings[paramName];
-                                if (param.type !== otherParam.type) {
-                                    param.otherType = otherParam.type;
-                                    typeDiffers.push(param);
-                                } else if (param.value !== otherParam.value) {
-                                    param.otherValue = otherParam.value;
-                                    differs.push(param);
+                                var otherValue = otherSettings[paramName];
+                                if (value !== otherValue) {
+                                    differs.push({
+                                        "name": paramName,
+                                        "value": value,
+                                        "otherValue": otherValue
+                                    });
                                 }
                                 delete otherSettings[paramName];
                             } else {
-                                otherMissing.push(param);
+                                otherMissing.push(paramName);
                             }
                         }
                     }
@@ -573,7 +575,7 @@ Item {
 
             return {
                 "differs": differs,
-                "missing": otherSettings,
+                "missing": Object.values(otherSettings),
                 "otherMissing": otherMissing,
             }
         }
@@ -949,6 +951,36 @@ Item {
 
         property alias fullBackup: tuneStorage.fullBackup
 
+        function convertToOldFormat(tune) {
+            if (Array.isArray(tune.settings)) {
+                return tune;
+            }
+
+            var res = Object.assign({}, tune);
+            res.settings = [];
+            for (let [name, value] of Object.entries(tune.settings)) {
+                res.settings.push({
+                    "name": name,
+                    "value": value,
+                    "type": packageConfig.getParamType(name)
+                });
+            }
+            return res;
+        }
+
+        function convertFromOldFormat(tune) {
+            if (!Array.isArray(tune.settings)) {
+                return tune;
+            }
+
+            var res = Object.assign({}, tune);
+            res.settings = {};
+            for (let item of tune.settings) {
+                res.settings[item.name] = item.value;
+            }
+            return res;
+        }
+
         function tuneId(slot) {
             return "tune_slot_" + slot;
         }
@@ -1032,11 +1064,11 @@ Item {
                 return null;
             }
 
-            return migrateTune(backup);
+            return migrateTune(convertFromOldFormat(backup));
         }
 
         function saveBackup(name, backup) {
-            tuneStorage.setValue(name, backup);
+            tuneStorage.setValue(name, convertToOldFormat(backup));
         }
 
         function globalBackup() {
@@ -1111,8 +1143,7 @@ Item {
 
         function saveTune(slot, tune) {
             var id = tuneId(slot);
-
-            tuneStorage.setValue(id, JSON.stringify(tune));
+            tuneStorage.setValue(id, JSON.stringify(convertToOldFormat(tune)));
 
             tunes[slot] = tune;
             // workaround needed so that the change is written through to the storage
@@ -1125,7 +1156,7 @@ Item {
                 if (typeof tune === "string") {
                     tune = JSON.parse(tune);
                 }
-                return migrateTune(tune);
+                return migrateTune(convertFromOldFormat(tune));
             }
             return null;
         }
@@ -4316,15 +4347,16 @@ Item {
         }
 
         function displayValue(item, value) {
-            if (item.type === "Double" || item.type === "Int") {
+            var type = packageConfig.getParamType(item.name);
+            if (type === "Double" || type === "Int") {
                 return value.toString();
-            } else if (item.type === "Bool") {
+            } else if (type === "Bool") {
                 return value ? "On" : "Off";
-            } else if (item.type === "Enum") {
+            } else if (type === "Enum") {
                 return packageConfig.getEnumNames(item.name)[value];
-            } else if (item.type === "String") {
+            } else if (type === "String") {
                 return value;
-            } else if (item.type === "Bitfield") {
+            } else if (type === "Bitfield") {
                 return "[option set]";
             }
 
