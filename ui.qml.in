@@ -84,6 +84,15 @@ Item {
         return Math.abs(a - b);
     }
 
+    function versionMajorMinor(ver) {
+        var arr = ver.split(".");
+        if (arr.length < 2) {
+            return [0, 0];
+        }
+
+        return [Number(arr[0]), Number(arr[1])];
+    }
+
     function getDarkThemeColor(name) {
         switch (name) {
         case "normalBackground":
@@ -491,9 +500,7 @@ Item {
         }
 
         function versionCompatible(config) {
-            var verArray = config.version.split(".");
-            var major = Number(verArray[0]);
-            var minor = Number(verArray[1]);
+            var [major, minor] = versionMajorMinor(config.version);
             if (major !== tuneManager.formatVersionMajor || minor > tuneManager.formatVersionMinor) {
                 VescIf.emitStatusMessage("Error: Incompatible version: %1".arg(config.version), false);
                 return false;
