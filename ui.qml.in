@@ -879,11 +879,6 @@ Item {
         }
     }
 
-    // Old Float package settings, used to retrieve quicksaves
-    Settings {
-        id: floatSettings
-    }
-
     Settings {
         id: preferences
         category: "preferences"
@@ -922,11 +917,6 @@ Item {
 
             property var tuneArchive
             property var tuneArchiveDownloadDate
-
-            // An array storing Float tune names that have been converted for
-            // each slot. Prevents converting tunes over and over again, until
-            // the name changes for the Float tune.
-            property var floatTunesConverted: Array(6)
 
             property var fullBackup
         }
@@ -1171,40 +1161,6 @@ Item {
             return Qt.formatDateTime(tuneStorage.tuneArchiveDownloadDate);
         }
 
-        function convertFloatQuicksaves() {
-            var namesJson = floatSettings.value("quicksave_names", null);
-            if (namesJson) {
-                var names = JSON.parse(namesJson);
-                for (var slotName in names) {
-                    if (!slotName.startsWith("Float Quicksave ")) {
-                        continue;
-                    }
-
-                    var tuneSettingsJson = floatSettings.value(slotName, null);
-                    if (!tuneSettingsJson) {
-                        continue;
-                    }
-
-                    var slot = Number(slotName.replace("Float Quicksave ", ""));
-                    // skipping if the tune has been converted before
-                    if (tuneStorage.floatTunesConverted[slot - 1] === names[slotName]) {
-                        continue;
-                    }
-
-                    // at this stage mark slot as converted, if target slot is not empty,
-                    // we don't want it converted at the moment it gets emptied
-                    tuneStorage.floatTunesConverted[slot - 1] = names[slotName];
-                    // workaround needed so that the change is written through to the storage
-                    tuneStorage.floatTunesConverted = tuneStorage.floatTunesConverted;
-
-                    if (slotEmpty(slot)) {
-                        var tuneSettings = JSON.parse(tuneSettingsJson);
-                        tuneManager.saveTune(slot, tuneManager.createTune(names[slotName], "", tuneSettings));
-                    }
-                }
-            }
-        }
-
         function parseCsv(csv) {
             var lines = csv.split("\r\n");
             var tuneCount = lines[0].split(",").length - 1;
@@ -1255,7 +1211,6 @@ Item {
         }
 
         Component.onCompleted: {
-            convertFloatQuicksaves();
             var idBackup = loadBackup("backup_" + board.getId());
             if (idBackup) {
                 idBackupFinished(idBackup);
