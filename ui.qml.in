@@ -222,6 +222,11 @@ Item {
             VescIf.storeBleName(VescIf.getLastBleAddr(), name);
             VescIf.storeSettings();
         }
+
+        function getFwVersion() {
+            var params = VescIf.getLastFwRxParams();
+            return [params.major, params.minor];
+        }
     }
 
     Connections {
@@ -939,6 +944,16 @@ Item {
         // Migration functions should return: [tuneObject, [newMajor, newMinor]]
         property var migrations: {
             "1.1": function(tune) {
+                var [fwMajor, fwMinor] = board.getFwVersion();
+                if (fwMajor > 6 || (fwMajor == 6 && fwMinor >= 5) && motorConfig.batteryCells > 0) {
+                    if (tune.settings["tiltback_hv"] > 10) {
+                        tune.settings["tiltback_hv"] /= motorConfig.batteryCells;
+                    }
+                    if (tune.settings["tiltback_lv"] > 10) {
+                        tune.settings["tiltback_lv"] /= motorConfig.batteryCells;
+                    }
+                }
+
                 return [tune, [1, 2]];
             },
         }
