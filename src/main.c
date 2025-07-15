@@ -155,7 +155,12 @@ static void reconfigure(Data *d) {
     d->tiltback_variable_max_erpm =
         fabsf(d->float_conf.tiltback_variable_max / d->tiltback_variable);
 
-    motor_data_configure(&d->motor, d->float_conf.atr_filter / d->float_conf.hertz);
+    motor_data_configure(
+        &d->motor,
+        d->float_conf.atr_filter / d->float_conf.hertz,
+        d->float_conf.tiltback_lv,
+        d->float_conf.tiltback_hv
+    );
     motor_control_configure(&d->motor_control, &d->float_conf);
     balance_filter_configure(&d->balance_filter, &d->float_conf);
     torque_tilt_configure(&d->torque_tilt, &d->float_conf);
@@ -498,7 +503,7 @@ static bool check_faults(Data *d) {
 }
 
 static void calculate_setpoint_target(Data *d) {
-    if (d->motor.batt_voltage < d->float_conf.tiltback_hv) {
+    if (d->motor.batt_voltage < d->motor.hv_threshold) {
         timer_refresh(&d->time, &d->tb_highvoltage_timer);
     }
 
@@ -577,11 +582,11 @@ static void calculate_setpoint_target(Data *d) {
         if (d->state.mode != MODE_FLYWHEEL) {
             d->state.sat = SAT_PB_DUTY;
         }
-    } else if (d->motor.duty_cycle > 0.05 && d->motor.batt_voltage > d->float_conf.tiltback_hv) {
+    } else if (d->motor.duty_cycle > 0.05 && d->motor.batt_voltage > d->motor.hv_threshold) {
         d->beep_reason = BEEP_HV;
         beep_alert(d, 3, false);
         if (timer_older(&d->time, d->tb_highvoltage_timer, 0.5) ||
-            d->motor.batt_voltage > d->float_conf.tiltback_hv + 1) {
+            d->motor.batt_voltage > d->motor.hv_threshold + 1) {
             // 500ms have passed or voltage is another volt higher, time for some tiltback
             if (d->motor.erpm > 0) {
                 d->setpoint_target = d->float_conf.tiltback_hv_angle;
@@ -624,11 +629,11 @@ static void calculate_setpoint_target(Data *d) {
             // The rider has 1 degree Celsius left before we start tilting back
             d->state.sat = SAT_NONE;
         }
-    } else if (d->motor.duty_cycle > 0.05 && d->motor.batt_voltage < d->float_conf.tiltback_lv) {
+    } else if (d->motor.duty_cycle > 0.05 && d->motor.batt_voltage < d->motor.lv_threshold) {
         beep_alert(d, 3, false);
         d->beep_reason = BEEP_LV;
         float abs_motor_current = fabsf(d->motor.dir_current);
-        float vdelta = d->float_conf.tiltback_lv - d->motor.batt_voltage;
+        float vdelta = d->motor.lv_threshold - d->motor.batt_voltage;
         float ratio = vdelta * 20 / abs_motor_current;
         // When to do LV tiltback:
         // a) we're 2V below lv threshold
@@ -770,7 +775,7 @@ static void refloat_thd(void *arg) {
                 d->state.state = STATE_READY;
 
                 // if within 5V of LV tiltback threshold, issue 1 beep for each volt below that
-                float threshold = d->float_conf.tiltback_lv + 5;
+                float threshold = d->motor.lv_threshold + 5;
                 if (d->motor.batt_voltage < threshold) {
                     int beeps = (int) fminf(6, threshold - d->motor.batt_voltage);
                     beep_alert(d, beeps + 1, true);

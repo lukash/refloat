@@ -54,6 +54,8 @@ typedef struct {
     float current_max;
     float battery_current_min;
     float battery_current_max;
+    float lv_threshold;
+    float hv_threshold;
 
     float accel_history[ACCEL_ARRAY_SIZE];
     uint8_t accel_idx;
@@ -64,7 +66,7 @@ typedef struct {
 
 void motor_data_reset(MotorData *m);
 
-void motor_data_configure(MotorData *m, float frequency);
+void motor_data_configure(MotorData *m, float frequency, float lv_threshold, float hv_threshold);
 
 void motor_data_update(MotorData *m);
 

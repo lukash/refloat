@@ -36,7 +36,7 @@ void motor_data_reset(MotorData *m) {
     biquad_reset(&m->current_biquad);
 }
 
-void motor_data_configure(MotorData *m, float frequency) {
+void motor_data_configure(MotorData *m, float frequency, float lv_threshold, float hv_threshold) {
     if (frequency > 0) {
         biquad_configure(&m->current_biquad, BQ_LOWPASS, frequency);
         m->current_filter_enabled = true;
@@ -49,6 +49,19 @@ void motor_data_configure(MotorData *m, float frequency) {
     m->current_max = VESC_IF->get_cfg_float(CFG_PARAM_l_current_max);
     m->battery_current_min = VESC_IF->get_cfg_float(CFG_PARAM_l_in_current_min);
     m->battery_current_max = VESC_IF->get_cfg_float(CFG_PARAM_l_in_current_max);
+
+    uint8_t battery_cells = VESC_IF->get_cfg_int(CFG_PARAM_si_battery_cells);
+    if (battery_cells > 0) {
+        if (lv_threshold < 10) {
+            lv_threshold *= battery_cells;
+        }
+        if (hv_threshold < 10) {
+            hv_threshold *= battery_cells;
+        }
+    }
+
+    m->lv_threshold = lv_threshold;
+    m->hv_threshold = hv_threshold;
 }
 
 void motor_data_update(MotorData *m) {
