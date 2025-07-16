@@ -41,7 +41,7 @@ void bms_update(BMS *bms, const CfgBMS *cfg, const Time *time) {
     }
 
     uint32_t fault_mask = BMSF_NONE;
-    const float timeout = 2.0f;
+    const float timeout = 5.0f;
 
     // Before the first BMS update occurs right after startup, msg_age has its
     // init value. We need to wait the `timeout` time before issuing errors.
