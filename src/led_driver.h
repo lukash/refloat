@@ -34,7 +34,9 @@ typedef struct {
 
 void led_driver_init(LedDriver *driver);
 
-bool led_driver_setup(LedDriver *driver, LedPin pin, const LedStrip **led_strips);
+bool led_driver_setup(
+    LedDriver *driver, LedPin pin, LedPinConfig pin_config, const LedStrip **led_strips
+);
 
 void led_driver_paint(LedDriver *driver);
 

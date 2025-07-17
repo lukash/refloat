@@ -3437,6 +3437,27 @@ p, li { white-space: pre-wrap; }
             <enumNames>PPM/Servo pin</enumNames>
             <enumNames>Dedicated LED pin</enumNames>
         </hardware.leds.pin>
+        <hardware.leds.pin_config>
+            <longName>LED Pin Configuration</longName>
+            <type>4</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The configuration of the LED pin:&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Pullup to 5V: Most controllers with a dedicated LED pin (Little FOCer v4, all Thors), custom solutions on the PPM/Servo pin with an external 1kOhm pullup resistor to 5V&lt;/li&gt;
+&lt;li style=&quot;&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;No Pullup: JetFleet F6 v2, custom solutions with no external pullup&lt;/li&gt;&lt;/ul&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Board restart required for changes to take effect.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Note: The No Pullup option may work for the Pullup to 5V controllers, but the signal will be limited to 3.3V.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_HARDWARE_LEDS_PIN_CONFIG</cDefine>
+            <valInt>0</valInt>
+            <enumNames>Pullup to 5V</enumNames>
+            <enumNames>No Pullup</enumNames>
+        </hardware.leds.pin_config>
         <hardware.leds.status.order>
             <longName>Status LED Strip Order</longName>
             <type>4</type>
@@ -3838,6 +3859,7 @@ p, li { white-space: pre-wrap; }
         <ser>leds.status_idle.speed</ser>
         <ser>hardware.leds.mode</ser>
         <ser>hardware.leds.pin</ser>
+        <ser>hardware.leds.pin_config</ser>
         <ser>hardware.leds.status.order</ser>
         <ser>hardware.leds.status.count</ser>
         <ser>hardware.leds.status.color_order</ser>
@@ -4100,6 +4122,7 @@ p, li { white-space: pre-wrap; }
                     <param>::sep::Leds (changes require reboot)</param>
                     <param>hardware.leds.mode</param>
                     <param>hardware.leds.pin</param>
+                    <param>hardware.leds.pin_config</param>
                     <param>hardware.leds.status.order</param>
                     <param>hardware.leds.status.count</param>
                     <param>hardware.leds.status.color_order</param>

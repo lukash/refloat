@@ -45,6 +45,11 @@ typedef enum {
 } LedPin;
 
 typedef enum {
+    LED_PIN_CFG_PULLUP_TO_5V = 0,
+    LED_PIN_CFG_NO_PULLUP
+} LedPinConfig;
+
+typedef enum {
     LED_COLOR_GRB = 0,
     LED_COLOR_GRBW,
     LED_COLOR_RGB,
@@ -157,6 +162,7 @@ typedef struct {
 typedef struct {
     LedMode mode;
     LedPin pin;
+    LedPinConfig pin_config;
     CfgLedStrip status;
     CfgLedStrip front;
     CfgLedStrip rear;

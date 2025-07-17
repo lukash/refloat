@@ -141,12 +141,13 @@ static void enable_tim4_dma(uint16_t dma_source) {
     TIM4->DIER |= dma_source;
 }
 
-static void init_hw(LedPin pin, uint16_t *buffer, uint32_t length) {
+static void init_hw(LedPin pin, LedPinConfig pin_config, uint16_t *buffer, uint32_t length) {
     PinHwConfig cfg = get_pin_hw_config(pin);
 
-    VESC_IF->set_pad_mode(
-        GPIOB, cfg.pin_nr, PAL_MODE_ALTERNATE(2) | PAL_STM32_OTYPE_OPENDRAIN | PAL_STM32_OSPEED_MID1
-    );
+    uint32_t pin_mode = PAL_MODE_ALTERNATE(2) | PAL_STM32_OSPEED_MID1;
+    pin_mode |= pin_config == LED_PIN_CFG_PULLUP_TO_5V ? PAL_STM32_OTYPE_OPENDRAIN
+                                                       : PAL_STM32_OTYPE_PUSHPULL;
+    VESC_IF->set_pad_mode(GPIOB, cfg.pin_nr, pin_mode);
 
     reset_tim4();
     init_dma_stream(cfg.dma_stream, buffer, length, cfg.ccr_address);
@@ -178,7 +179,9 @@ void led_driver_init(LedDriver *driver) {
     driver->bitbuffer = NULL;
 }
 
-bool led_driver_setup(LedDriver *driver, LedPin pin, const LedStrip **led_strips) {
+bool led_driver_setup(
+    LedDriver *driver, LedPin pin, LedPinConfig pin_config, const LedStrip **led_strips
+) {
     driver->bitbuffer_length = 0;
 
     size_t offsets[3] = {0};
@@ -216,7 +219,7 @@ bool led_driver_setup(LedDriver *driver, LedPin pin, const LedStrip **led_strips
     }
     driver->bitbuffer[driver->bitbuffer_length - 1] = 0;
 
-    init_hw(pin, driver->bitbuffer, driver->bitbuffer_length);
+    init_hw(pin, pin_config, driver->bitbuffer, driver->bitbuffer_length);
     return true;
 }
 

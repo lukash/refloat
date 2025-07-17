@@ -860,7 +860,7 @@ void leds_setup(Leds *leds, CfgHwLeds *hw_cfg, const CfgLeds *cfg, FootpadSensor
     leds_configure(leds, cfg);
 
     if (led_data) {
-        if (led_driver_setup(&leds->led_driver, hw_cfg->pin, strip_array)) {
+        if (led_driver_setup(&leds->led_driver, hw_cfg->pin, hw_cfg->pin_config, strip_array)) {
             leds->led_data = led_data;
         } else {
             VESC_IF->free(led_data);
