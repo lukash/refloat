@@ -36,23 +36,7 @@ void motor_data_reset(MotorData *m) {
     biquad_reset(&m->current_biquad);
 }
 
-void motor_data_configure(MotorData *m, float frequency, float lv_threshold, float hv_threshold) {
-    if (frequency > 0) {
-        biquad_configure(&m->current_biquad, BQ_LOWPASS, frequency);
-        m->current_filter_enabled = true;
-    } else {
-        m->current_filter_enabled = false;
-    }
-
-    // min motor current is a positive value here!
-    m->current_min = fabsf(VESC_IF->get_cfg_float(CFG_PARAM_l_current_min));
-    m->current_max = VESC_IF->get_cfg_float(CFG_PARAM_l_current_max);
-    m->battery_current_min = VESC_IF->get_cfg_float(CFG_PARAM_l_in_current_min);
-    m->battery_current_max = VESC_IF->get_cfg_float(CFG_PARAM_l_in_current_max);
-    m->mosfet_temp_max = VESC_IF->get_cfg_float(CFG_PARAM_l_temp_fet_start) - 3;
-    m->motor_temp_max = VESC_IF->get_cfg_float(CFG_PARAM_l_temp_motor_start) - 3;
-    m->duty_max_with_margin = VESC_IF->get_cfg_float(CFG_PARAM_l_max_duty) - 0.05;
-
+void motor_data_refresh_motor_config(MotorData *m, float lv_threshold, float hv_threshold) {
     uint8_t battery_cells = VESC_IF->get_cfg_int(CFG_PARAM_si_battery_cells);
     if (battery_cells > 0) {
         if (lv_threshold < 10) {
@@ -65,6 +49,24 @@ void motor_data_configure(MotorData *m, float frequency, float lv_threshold, flo
 
     m->lv_threshold = lv_threshold;
     m->hv_threshold = hv_threshold;
+
+    // min motor current is a positive value here!
+    m->current_min = fabsf(VESC_IF->get_cfg_float(CFG_PARAM_l_current_min));
+    m->current_max = VESC_IF->get_cfg_float(CFG_PARAM_l_current_max);
+    m->battery_current_min = VESC_IF->get_cfg_float(CFG_PARAM_l_in_current_min);
+    m->battery_current_max = VESC_IF->get_cfg_float(CFG_PARAM_l_in_current_max);
+    m->mosfet_temp_max = VESC_IF->get_cfg_float(CFG_PARAM_l_temp_fet_start) - 3;
+    m->motor_temp_max = VESC_IF->get_cfg_float(CFG_PARAM_l_temp_motor_start) - 3;
+    m->duty_max_with_margin = VESC_IF->get_cfg_float(CFG_PARAM_l_max_duty) - 0.05;
+}
+
+void motor_data_configure(MotorData *m, float frequency) {
+    if (frequency > 0) {
+        biquad_configure(&m->current_biquad, BQ_LOWPASS, frequency);
+        m->current_filter_enabled = true;
+    } else {
+        m->current_filter_enabled = false;
+    }
 }
 
 void motor_data_update(MotorData *m) {
@@ -77,6 +79,7 @@ void motor_data_update(MotorData *m) {
     // including four divisions. In theory multiplying by a single constant is
     // enough, we just need to calculate the constant (and keep it up to date
     // when motor config changes, there's no way to know, we'll have to poll).
+    // And it's only possible on 6.05+.
     m->speed = VESC_IF->mc_get_speed() * 3.6;
 
     m->current = VESC_IF->mc_get_tot_current_filtered();

@@ -155,12 +155,7 @@ static void reconfigure(Data *d) {
     d->tiltback_variable_max_erpm =
         fabsf(d->float_conf.tiltback_variable_max / d->tiltback_variable);
 
-    motor_data_configure(
-        &d->motor,
-        d->float_conf.atr_filter / d->float_conf.hertz,
-        d->float_conf.tiltback_lv,
-        d->float_conf.tiltback_hv
-    );
+    motor_data_configure(&d->motor, d->float_conf.atr_filter / d->float_conf.hertz);
     motor_control_configure(&d->motor_control, &d->float_conf);
     balance_filter_configure(&d->balance_filter, &d->float_conf);
     torque_tilt_configure(&d->torque_tilt, &d->float_conf);
@@ -1044,6 +1039,8 @@ static void write_cfg_to_eeprom(Data *d) {
 static void aux_thd(void *arg) {
     Data *d = (Data *) arg;
 
+    time_t motor_config_refresh_timer = 0;
+
     while (!VESC_IF->should_terminate()) {
         leds_update(&d->leds, &d->state, d->footpad.state);
 
@@ -1051,6 +1048,13 @@ static void aux_thd(void *arg) {
         if (d->state.state != STATE_RUNNING && VESC_IF->mc_get_odometer() > d->odometer + 200) {
             VESC_IF->store_backup_data();
             d->odometer = VESC_IF->mc_get_odometer();
+        }
+
+        if (timer_older(&d->time, motor_config_refresh_timer, 0.5)) {
+            motor_data_refresh_motor_config(
+                &d->motor, d->float_conf.tiltback_lv, d->float_conf.tiltback_hv
+            );
+            timer_refresh(&d->time, &motor_config_refresh_timer);
         }
 
         VESC_IF->sleep_us(1e6 / LEDS_REFRESH_RATE);
@@ -2234,6 +2238,11 @@ INIT_FUN(lib_info *info) {
         return false;
     }
     data_init(d);
+
+    // Periodically called from the aux thread. Do the first refresh here to avoid races.
+    motor_data_refresh_motor_config(
+        &d->motor, d->float_conf.tiltback_lv, d->float_conf.tiltback_hv
+    );
 
     info->stop_fun = stop;
     info->arg = d;

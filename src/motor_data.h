@@ -50,6 +50,7 @@ typedef struct {
     float mosfet_temp;
     float motor_temp;
 
+    // The following values are periodically updated from the aux thread
     float current_min;
     float current_max;
     float battery_current_min;
@@ -69,7 +70,9 @@ typedef struct {
 
 void motor_data_reset(MotorData *m);
 
-void motor_data_configure(MotorData *m, float frequency, float lv_threshold, float hv_threshold);
+void motor_data_refresh_motor_config(MotorData *m, float lv_threshold, float hv_threshold);
+
+void motor_data_configure(MotorData *m, float frequency);
 
 void motor_data_update(MotorData *m);
 
