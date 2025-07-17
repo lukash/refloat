@@ -873,7 +873,14 @@ static void refloat_thd(void *arg) {
             }
 
             float new_current = d->pid.p + d->pid.i + pitch_based;
-            float current_limit = d->motor.braking ? d->motor.current_min : d->motor.current_max;
+            float current_limit;
+            if (d->state.mode == MODE_HANDTEST) {
+                current_limit = 7;
+            } else if (d->state.mode == MODE_FLYWHEEL) {
+                current_limit = 40;
+            } else {
+                current_limit = d->motor.braking ? d->motor.current_min : d->motor.current_max;
+            }
             if (fabsf(new_current) > current_limit) {
                 new_current = sign(new_current) * current_limit;
             }
@@ -1338,8 +1345,6 @@ static void cmd_handtest(Data *d, unsigned char *cfg) {
 
     d->state.mode = cfg[0] ? MODE_HANDTEST : MODE_NORMAL;
     if (d->state.mode == MODE_HANDTEST) {
-        // temporarily reduce max currents to make hand test safer / gentler
-        d->motor.current_max = d->motor.current_min = 7;
         // Disable I-term and all tune modifiers and tilts
         d->float_conf.ki = 0;
         d->float_conf.kp_brake = 1;
@@ -1467,15 +1472,7 @@ static void cmd_runtime_tune(Data *d, unsigned char *cfg, int len) {
         d->float_conf.braketilt_strength = h1;
         d->float_conf.braketilt_lingering = h2;
 
-        split(cfg[11], &h1, &h2);
-        d->motor.current_max = h1 * 5 + 55;
-        d->motor.current_min = h2 * 5 + 55;
-        if (h1 == 0) {
-            d->motor.current_max = VESC_IF->get_cfg_float(CFG_PARAM_l_current_max);
-        }
-        if (h2 == 0) {
-            d->motor.current_min = fabsf(VESC_IF->get_cfg_float(CFG_PARAM_l_current_min));
-        }
+        // cfg[11] used to be current min and max limits
     }
     if (len >= 16) {
         split(cfg[12], &h1, &h2);
@@ -1760,9 +1757,6 @@ static void cmd_flywheel_toggle(Data *d, unsigned char *cfg, int len) {
         }
         d->tiltback_duty_step_size = d->float_conf.tiltback_duty_speed / d->float_conf.hertz;
         d->tiltback_return_step_size = d->float_conf.tiltback_return_speed / d->float_conf.hertz;
-
-        // Limit amps
-        d->motor.current_max = d->motor.current_min = 40;
 
         // Disable I-term and all tune modifiers and tilts
         d->float_conf.ki = 0;
