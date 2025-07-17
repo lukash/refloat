@@ -81,13 +81,10 @@ typedef struct {
     float tiltback_duty_step_size, tiltback_hv_step_size, tiltback_lv_step_size,
         tiltback_return_step_size;
     float tiltback_variable, tiltback_variable_max_erpm, noseangling_step_size;
-    float mc_max_temp_fet, mc_max_temp_mot;
     bool duty_beeping;
 
     // IMU data for the balancing filter
     BalanceFilterData balance_filter;
-
-    float max_duty_with_margin;
 
     FootpadSensor footpad;
 

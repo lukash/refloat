@@ -49,6 +49,9 @@ void motor_data_configure(MotorData *m, float frequency, float lv_threshold, flo
     m->current_max = VESC_IF->get_cfg_float(CFG_PARAM_l_current_max);
     m->battery_current_min = VESC_IF->get_cfg_float(CFG_PARAM_l_in_current_min);
     m->battery_current_max = VESC_IF->get_cfg_float(CFG_PARAM_l_in_current_max);
+    m->mosfet_temp_max = VESC_IF->get_cfg_float(CFG_PARAM_l_temp_fet_start) - 3;
+    m->motor_temp_max = VESC_IF->get_cfg_float(CFG_PARAM_l_temp_motor_start) - 3;
+    m->duty_max_with_margin = VESC_IF->get_cfg_float(CFG_PARAM_l_max_duty) - 0.05;
 
     uint8_t battery_cells = VESC_IF->get_cfg_int(CFG_PARAM_si_battery_cells);
     if (battery_cells > 0) {

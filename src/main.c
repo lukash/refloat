@@ -201,11 +201,6 @@ static void configure(Data *d) {
         VESC_IF->set_cfg_float(CFG_PARAM_IMU_accel_confidence_decay, 0.1);
     }
 
-    d->mc_max_temp_fet = VESC_IF->get_cfg_float(CFG_PARAM_l_temp_fet_start) - 3;
-    d->mc_max_temp_mot = VESC_IF->get_cfg_float(CFG_PARAM_l_temp_motor_start) - 3;
-
-    d->max_duty_with_margin = VESC_IF->get_cfg_float(CFG_PARAM_l_max_duty) - 0.05;
-
     // Feature: Reverse Stop
     d->reverse_tolerance = 20000;
     d->reverse_stop_step_size = 100.0 / d->float_conf.hertz;
@@ -558,7 +553,7 @@ static void calculate_setpoint_target(Data *d) {
             d->traction_control = false;
         }
         // Remain in wheelslip state for a bit to avoid any overreactions
-        if (d->motor.duty_cycle > d->max_duty_with_margin) {
+        if (d->motor.duty_cycle > d->motor.duty_max_with_margin) {
             timer_refresh(&d->time, &d->wheelslip_timer);
         } else if (timer_older(&d->time, d->wheelslip_timer, 0.2)) {
             if (d->motor.duty_raw < 0.85) {
@@ -599,11 +594,11 @@ static void calculate_setpoint_target(Data *d) {
             // The rider has 500ms to react to the triple-beep, or maybe it was just a short spike
             d->state.sat = SAT_NONE;
         }
-    } else if (d->motor.mosfet_temp > d->mc_max_temp_fet) {
+    } else if (d->motor.mosfet_temp > d->motor.mosfet_temp_max) {
         // Use the angle from Low-Voltage tiltback, but slower speed from High-Voltage tiltback
         beep_alert(d, 3, true);
         d->beep_reason = BEEP_TEMPFET;
-        if (d->motor.mosfet_temp > d->mc_max_temp_fet + 1) {
+        if (d->motor.mosfet_temp > d->motor.mosfet_temp_max + 1) {
             if (d->motor.erpm > 0) {
                 d->setpoint_target = d->float_conf.tiltback_lv_angle;
             } else {
@@ -614,11 +609,11 @@ static void calculate_setpoint_target(Data *d) {
             // The rider has 1 degree Celsius left before we start tilting back
             d->state.sat = SAT_NONE;
         }
-    } else if (d->motor.motor_temp > d->mc_max_temp_mot) {
+    } else if (d->motor.motor_temp > d->motor.motor_temp_max) {
         // Use the angle from Low-Voltage tiltback, but slower speed from High-Voltage tiltback
         beep_alert(d, 3, true);
         d->beep_reason = BEEP_TEMPMOT;
-        if (d->motor.motor_temp > d->mc_max_temp_mot + 1) {
+        if (d->motor.motor_temp > d->motor.motor_temp_max + 1) {
             if (d->motor.erpm > 0) {
                 d->setpoint_target = d->float_conf.tiltback_lv_angle;
             } else {
@@ -666,7 +661,7 @@ static void calculate_setpoint_target(Data *d) {
         d->setpoint_target = 0;
     }
 
-    if (d->state.wheelslip && d->motor.duty_cycle > d->max_duty_with_margin) {
+    if (d->state.wheelslip && d->motor.duty_cycle > d->motor.duty_max_with_margin) {
         d->setpoint_target = 0;
     }
     if (d->state.darkride) {

@@ -54,6 +54,9 @@ typedef struct {
     float current_max;
     float battery_current_min;
     float battery_current_max;
+    float mosfet_temp_max;
+    float motor_temp_max;
+    float duty_max_with_margin;
     float lv_threshold;
     float hv_threshold;
 
