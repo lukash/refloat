@@ -479,6 +479,18 @@ p, li { white-space: pre-wrap; }
             <cDefine>CFG_DFLT_FAULT_MOVING_FAULT_DISABLED</cDefine>
             <valInt>0</valInt>
         </fault_moving_fault_disabled>
+        <enable_quickstop>
+            <longName>Enable Quickstop</longName>
+            <type>5</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Enable disengaging the board immediately by braking hard and lifting the foot off the sensor as the board stops. Requires the board to be angled back more than 14° and the wheel coming to a complete stop.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_FAULT_ENABLE_QUICKSTOP</cDefine>
+            <valInt>1</valInt>
+        </enable_quickstop>
         <fault_darkride_enabled>
             <longName>Enable Darkride</longName>
             <type>5</type>
@@ -3758,6 +3770,7 @@ p, li { white-space: pre-wrap; }
         <ser>fault_adc_half_erpm</ser>
         <ser>fault_is_dual_switch</ser>
         <ser>fault_moving_fault_disabled</ser>
+        <ser>enable_quickstop</ser>
         <ser>fault_darkride_enabled</ser>
         <ser>fault_reversestop_enabled</ser>
         <ser>tiltback_duty_angle</ser>
@@ -4008,6 +4021,7 @@ p, li { white-space: pre-wrap; }
                     <param>fault_adc_half_erpm</param>
                     <param>fault_is_dual_switch</param>
                     <param>fault_moving_fault_disabled</param>
+                    <param>enable_quickstop</param>
                     <param>::sep::Features</param>
                     <param>fault_darkride_enabled</param>
                     <param>fault_reversestop_enabled</param>

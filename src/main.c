@@ -400,8 +400,9 @@ static bool check_faults(Data *d) {
                 }
             }
 
-            if (d->motor.abs_erpm < 200 && fabsf(d->imu.pitch) > 14 &&
-                fabsf(d->remote.setpoint) < 30 && sign(d->imu.pitch) == d->motor.erpm_sign) {
+            if (d->float_conf.enable_quickstop && d->motor.abs_erpm < 200 &&
+                fabsf(d->imu.pitch) > 14 && fabsf(d->remote.setpoint) < 30 &&
+                sign(d->imu.pitch) == d->motor.erpm_sign) {
                 state_stop(&d->state, STOP_QUICKSTOP);
                 return true;
             }

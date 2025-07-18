@@ -214,6 +214,7 @@ typedef struct {
     uint16_t fault_adc_half_erpm;
     bool fault_is_dual_switch;
     bool fault_moving_fault_disabled;
+    bool enable_quickstop;
     bool fault_darkride_enabled;
     bool fault_reversestop_enabled;
     float tiltback_duty_angle;
