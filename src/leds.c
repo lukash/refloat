@@ -827,7 +827,7 @@ void leds_setup(Leds *leds, CfgHwLeds *hw_cfg, const CfgLeds *cfg, FootpadSensor
         log_msg("Both sensors pressed, not initializing LEDs.");
     } else if (leds->front_strip.length + leds->rear_strip.length > LEDS_FRONT_AND_REAR_COUNT_MAX) {
         log_error("Front and rear LED counts exceed maximum.");
-    } else if (hw_cfg->mode == LED_MODE_INTERNAL && led_count > 0) {
+    } else if (hw_cfg->mode & LED_MODE_INTERNAL && led_count > 0) {
         led_data = VESC_IF->malloc(sizeof(uint32_t) * led_count);
         if (!led_data) {
             log_error("Failed to init LED data, out of memory.");

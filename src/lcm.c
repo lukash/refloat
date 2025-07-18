@@ -25,7 +25,7 @@
 #include <math.h>
 
 void lcm_init(LcmData *lcm, CfgHwLeds *hw_cfg) {
-    lcm->enabled = hw_cfg->mode == LED_MODE_EXTERNAL;
+    lcm->enabled = hw_cfg->mode & LED_MODE_EXTERNAL;
     lcm->brightness = 0;
     lcm->brightness_idle = 0;
     lcm->status_brightness = 0;

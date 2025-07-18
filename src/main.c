@@ -1922,7 +1922,7 @@ static void cmd_info(const Data *d, unsigned char *buf, int len) {
 
         // Backwards compatibility for the LED type - external used to be 3
         uint8_t led_type = d->float_conf.hardware.leds.mode;
-        if (led_type == LED_MODE_EXTERNAL) {
+        if (led_type & LED_MODE_EXTERNAL) {
             led_type = 3;
         }
 
@@ -1958,7 +1958,7 @@ static void cmd_info(const Data *d, unsigned char *buf, int len) {
         }
         if (d->float_conf.hardware.leds.mode != LED_MODE_OFF) {
             capabilities |= 1;
-            if (d->float_conf.hardware.leds.mode == LED_MODE_EXTERNAL) {
+            if (d->float_conf.hardware.leds.mode & LED_MODE_EXTERNAL) {
                 capabilities |= 1 << 1;
             }
         }

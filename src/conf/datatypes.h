@@ -35,8 +35,9 @@ typedef enum {
 
 typedef enum {
     LED_MODE_OFF = 0,
-    LED_MODE_INTERNAL,
-    LED_MODE_EXTERNAL,
+    LED_MODE_INTERNAL = 0x1,
+    LED_MODE_EXTERNAL = 0x2,
+    LED_MODE_BOTH = 0x3,
 } LedMode;
 
 typedef enum {
