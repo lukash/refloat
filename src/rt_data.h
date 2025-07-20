@@ -36,6 +36,11 @@
 // the UI).
 
 #define RT_DATA_ITEMS(S, R)                                                                        \
+    R(main_dt)                                                                                     \
+    R(main_frequency)                                                                              \
+    R(main_sleep_ticks)                                                                            \
+    R(imu_dt)                                                                                      \
+    R(imu_frequency)                                                                               \
     S(motor.speed)                                                                                 \
     R(motor.erpm)                                                                                  \
     S(motor.current)                                                                               \

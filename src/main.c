@@ -186,6 +186,7 @@ static void configure(Data *d) {
 
     // Loop time in microseconds
     d->loop_time_us = 1e6 / d->float_conf.hertz;
+    d->main_sleep_ticks = (d->loop_time_us * SYSTEM_TICK_RATE_HZ + 999999) / 1000000;
 
     d->tiltback_duty_step_size = d->float_conf.tiltback_duty_speed / d->float_conf.hertz;
     d->tiltback_hv_step_size = d->float_conf.tiltback_hv_speed / d->float_conf.hertz;
@@ -754,11 +755,16 @@ static void apply_noseangling(Data *d) {
     rate_limitf(&d->noseangling_interpolated, noseangling_target, d->noseangling_step_size);
 }
 
+#define FREQ_ALPHA 0.005f
+
 static void imu_ref_callback(float *acc, float *gyro, float *mag, float dt) {
     unused(mag);
 
     Data *d = (Data *) ARG;
     balance_filter_update(&d->balance_filter, gyro, acc, dt);
+
+    d->imu_dt = dt * 1000.0f;
+    d->imu_frequency += FREQ_ALPHA * (1.0f / dt - d->imu_frequency);
 }
 
 static void refloat_thd(void *arg) {
@@ -775,6 +781,9 @@ static void refloat_thd(void *arg) {
 
         dt = VESC_IF->timer_seconds_elapsed_since(timer_last);
         timer_last = VESC_IF->timer_time_now();
+
+        d->main_dt = dt * 1000.0f;
+        d->main_frequency += FREQ_ALPHA * (1.0f / dt - d->main_frequency);
 
         time_update(&d->time, d->state.state);
 
