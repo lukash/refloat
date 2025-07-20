@@ -36,6 +36,9 @@
 // the UI).
 
 #define RT_DATA_ITEMS(S, R)                                                                        \
+    S(main_frequency.value, "main_frequency")                                                      \
+    R(imu_dt, "imu_dt")                                                                            \
+    R(imu_frequency.value, "imu_frequency")                                                        \
     S(motor.speed, "speed")                                                                        \
     R(motor.erpm, "erpm")                                                                          \
     S(motor.current, "current")                                                                    \
