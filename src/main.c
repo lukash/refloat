@@ -187,6 +187,9 @@ static void configure(Data *d) {
 
     d->main_loop_ticks = SYSTEM_TICK_RATE_HZ / d->float_conf.hertz;
 
+    ema_configure(&d->main_frequency, 1.0f, d->float_conf.hertz);
+    ema_configure(&d->imu_frequency, 1.0f, VESC_IF->get_cfg_int(CFG_PARAM_IMU_sample_rate));
+
     // Backwards compatibility hack:
     // If mahony kp from the firmware internal filter is higher than 1, it's
     // the old setup with it being the main balancing filter. In that case, set
@@ -751,6 +754,9 @@ static void imu_ref_callback(float *acc, float *gyro, float *mag, float dt) {
 
     Data *d = (Data *) ARG;
     balance_filter_update(&d->balance_filter, gyro, acc, dt);
+
+    d->imu_dt = dt * 1000.0f;
+    ema_update(&d->imu_frequency, 1.0f / dt);
 }
 
 static void refloat_thd(void *arg) {
@@ -769,6 +775,9 @@ static void refloat_thd(void *arg) {
 
         dt = VESC_IF->timer_seconds_elapsed_since(loop_timer);
         loop_timer = VESC_IF->timer_time_now();
+
+        d->main_dt = dt * 1000.0f;
+        ema_update(&d->main_frequency, 1.0f / dt);
 
         time_update(&d->time, d->state.state);
 
@@ -1233,6 +1242,11 @@ static void data_init(Data *d) {
         headlights_off_konami_sequence,
         sizeof(headlights_off_konami_sequence)
     );
+
+    ema_init(&d->main_frequency);
+    ema_reset(&d->main_frequency, d->float_conf.hertz);
+    ema_init(&d->imu_frequency);
+    ema_reset(&d->imu_frequency, VESC_IF->get_cfg_int(CFG_PARAM_IMU_sample_rate));
 
     d->odometer = VESC_IF->mc_get_odometer();
 }
