@@ -24,6 +24,7 @@
 #include "brake_tilt.h"
 #include "charging.h"
 #include "data_record.h"
+#include "filters/ema.h"
 #include "footpad_sensor.h"
 #include "haptic_feedback.h"
 #include "imu.h"
@@ -90,6 +91,11 @@ typedef struct {
     bool beeper_enabled;
 
     int32_t main_loop_ticks;
+
+    float main_dt;
+    EMA main_frequency;
+    float imu_dt;
+    EMA imu_frequency;
 
     float startup_pitch_trickmargin, startup_pitch_tolerance;
     float tiltback_variable, tiltback_variable_max_erpm;
