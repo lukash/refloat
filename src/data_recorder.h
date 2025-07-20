@@ -35,7 +35,7 @@ bool data_recorder_has_capability(const DataRecord *dr);
 
 void data_recorder_trigger(DataRecord *dr, bool engage);
 
-void data_recorder_sample(DataRecord *dr, const Data *data);
+void data_recorder_sample(DataRecord *dr, const Data *data, time_t time);
 
 void data_recorder_request(DataRecord *dr, uint8_t *buffer, size_t len);
 

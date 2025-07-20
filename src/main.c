@@ -1059,7 +1059,7 @@ static void refloat_thd(void *arg) {
 
         motor_control_apply(&d->motor_control, d->motor.abs_erpm_smooth, d->state.state, &d->time);
 
-        data_recorder_sample(&d->data_record, d);
+        data_recorder_sample(&d->data_record, d, d->time.now);
 
         VESC_IF->sleep_us(d->loop_time_us);
     }

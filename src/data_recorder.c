@@ -112,7 +112,7 @@ void data_recorder_trigger(DataRecord *dr, bool engage) {
     }
 }
 
-void data_recorder_sample(DataRecord *dr, const Data *d) {
+void data_recorder_sample(DataRecord *dr, const Data *d, time_t time) {
     if (!dr->buffer || !dr->recording) {
         return;
     }
@@ -121,7 +121,7 @@ void data_recorder_sample(DataRecord *dr, const Data *d) {
     flags |= d->state.wheelslip << 1 | (d->state.state == STATE_RUNNING);
 
     Sample p =
-        {.time = d->time.now,
+        {.time = time,
          .flags = flags,
          .values = {
 #define ARRAY_VALUE(id) to_float16(d->id),
