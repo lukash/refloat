@@ -1862,7 +1862,7 @@ static void cmd_realtime_data_ids() {
 }
 
 static void cmd_realtime_data(Data *d) {
-    static const int bufsize = 79;
+    static const int bufsize = 16 + ITEMS_COUNT(RT_DATA_ALL_ITEMS) * 2;
     uint8_t buffer[bufsize];
     int32_t ind = 0;
 
