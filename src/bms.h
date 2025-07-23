@@ -32,7 +32,8 @@ typedef enum {
     BMSF_CELL_UNDER_VOLTAGE = 4,
     BMSF_CELL_OVER_TEMP = 5,
     BMSF_CELL_UNDER_TEMP = 6,
-    BMSF_CELL_BALANCE = 7
+    BMSF_CELL_BALANCE = 7,
+    BMSF_HUMIDITY = 8
 } BMSFaultCode;
 
 typedef struct {
@@ -41,6 +42,7 @@ typedef struct {
     int16_t cell_lt;
     int16_t cell_ht;
     int16_t bms_ht;
+    uint8_t humidity;
     float msg_age;
 
     uint32_t fault_mask;
@@ -48,6 +50,6 @@ typedef struct {
 
 void bms_init(BMS *bms);
 
-void bms_update(BMS *bms, const CfgBMS *cfg, const Time *time);
+void bms_update(BMS *bms, const CfgBMS *cfg, const uint8_t tiltback_humidity, const Time *time);
 
 bool bms_is_fault(const BMS *bms, BMSFaultCode fault_code);

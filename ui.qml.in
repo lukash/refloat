@@ -129,6 +129,7 @@ Item {
                 commands.sendGetRtDataIds();
             } else {
                 commands.sendGetRtData();
+                commands.sendHumidity();
             }
 
             if (moveSlider.value != 0) {
@@ -595,6 +596,7 @@ Item {
         readonly property int c_DATA_RECORD_REQUEST: 41
         readonly property int c_DATA_RECORD_HEADER: 42
         readonly property int c_DATA_RECORD_DATA: 43
+        readonly property int c_HUMIDITY: 51
 
         // IEEE-754 16-bit floating-point format (without infinity and NaNs)
         // Dynamic range: +-131008.0
@@ -651,6 +653,10 @@ Item {
 
         function sendGetRtData() {
             vescCommands.sendCustomAppData(createData(2, c_REALTIME_DATA).buffer);
+        }
+
+        function sendHumidity() {
+            vescCommands.sendCustomAppData(createData(2, c_HUMIDITY).buffer);
         }
 
         function sendGetRtDataIds() {
@@ -865,6 +871,9 @@ Item {
                 recordedPlotData.receiveHeader(dv, ind);
             } else if (msgtype === c_DATA_RECORD_DATA) {
                 recordedPlotData.receiveData(dv, ind);
+            } else if (msgtype === c_HUMIDITY) {
+                state.humidity = dv.getUint8(ind++);
+                state.bmsHumidity = dv.getUint8(ind++);
             }
 
             packageConnectionWatchdog.restart();
@@ -1399,6 +1408,8 @@ Item {
             [15, "BMS: Cell Balance"],
             [16, "BMS: Connection Error"],
             [17, "BMS: BMS Temp"],
+            [18, "BMS: BMS Humidity"],
+            [19, "Controller Humidity"],
         ])
 
         property int beepReason: 0
@@ -1415,6 +1426,9 @@ Item {
 
         property string errorText: ""
         property string errorDescription: ""
+
+        property int humidity: 0
+        property int bmsHumidity: 0
 
         function updateErrorStrings() {
             if (!!vescFault) {
@@ -6282,6 +6296,9 @@ Item {
 
                         Value {id: debugStopReason; label: "Stop Condition"; value: state.stopConditionString}
                         Value {id: debugLastBeepReason; label: "Last Beep Reason"; value: state.beepReasonString}
+                        Value {id: debugHumidity; label: "Controller Humidity"; value: (state.humidity>0 ? state.humidity.toString() + "%" : "")}
+                        Value {id: debugBmsHumidity; label: "BMS Humidity"; value: (state.bmsHumidity>0 ? state.bmsHumidity.toString() + "%" : "")}
+
 
                         Item {
                             width: parent.width
