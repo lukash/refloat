@@ -27,6 +27,7 @@ void bms_init(BMS *bms) {
     bms->cell_ht = 0;
     bms->bms_ht = 0;
     bms->msg_age = 42.0f;
+    bms->humidity = 0;
     bms->fault_mask = BMSF_NONE;
 }
 
@@ -34,7 +35,7 @@ static inline void set_fault(uint32_t *fault_mask, BMSFaultCode fault_code) {
     *fault_mask |= 1u << (fault_code - 1);
 }
 
-void bms_update(BMS *bms, const CfgBMS *cfg, const Time *time) {
+void bms_update(BMS *bms, const CfgBMS *cfg, const uint8_t tiltback_humidity, const Time *time) {
     if (!cfg->enabled) {
         bms->fault_mask = BMSF_NONE;
         return;
@@ -76,6 +77,10 @@ void bms_update(BMS *bms, const CfgBMS *cfg, const Time *time) {
 
     if (fabsf(bms->cell_lv - bms->cell_hv) > cfg->cell_balance_threshold) {
         set_fault(&fault_mask, BMSF_CELL_BALANCE);
+    }
+
+    if (tiltback_humidity > 0 && bms->humidity > 0 && bms->humidity >= tiltback_humidity) {
+        set_fault(&fault_mask, BMSF_HUMIDITY);
     }
 
     bms->fault_mask = fault_mask;

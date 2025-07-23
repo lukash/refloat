@@ -10,6 +10,7 @@
             (var msg-age (get-bms-val 'bms-msg-age))
             (setq temp-max (get-bms-val 'bms-temp-cell-max))
             (setq temp-min temp-max)
+            (var hum (get-bms-val 'bms-hum))
 
             (if v-cell-support {
                 (if (= (get-bms-val 'bms-data-version) 1) {
@@ -30,7 +31,7 @@
                     })
                 })
             })
-            (ext-bms v-min v-max temp-min temp-max temp-fet msg-age)
+            (ext-bms v-min v-max temp-min temp-max temp-fet hum msg-age)
         })
         (sleep 0.2)
     })

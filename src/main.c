@@ -75,7 +75,9 @@ typedef enum {
     BEEP_CELL_HV = 14,
     BEEP_CELL_BALANCE = 15,
     BEEP_BMS_CONNECTION = 16,
-    BEEP_BMS_TEMP_OVER = 17
+    BEEP_BMS_TEMP_OVER = 17,
+    BEEP_BMS_HUMIDITY = 18,
+    BEEP_HUMIDITY = 19
 } BeepReason;
 
 static const FootpadSensorState flywheel_konami_sequence[] = {
@@ -698,6 +700,21 @@ static void calculate_setpoint_target(Data *d) {
             d->state.sat = SAT_NONE;
             d->setpoint_target = 0;
         }
+    } else if (bms_is_fault(&d->bms, BMSF_HUMIDITY) ||
+               (d->humidity > 0 && d->humidity >= d->float_conf.tiltback_humidity)) {
+        // Use the angle from Low-Voltage tiltback, but slower speed from High-Voltage tiltback
+        beep_alert(d, 3, true);
+        if (bms_is_fault(&d->bms, BMSF_HUMIDITY)) {
+            d->beep_reason = BEEP_BMS_HUMIDITY;
+        } else {
+            d->beep_reason = BEEP_HUMIDITY;
+        }
+        if (d->motor.erpm > 0) {
+            d->setpoint_target = d->float_conf.tiltback_lv_angle;
+        } else {
+            d->setpoint_target = -d->float_conf.tiltback_lv_angle;
+        }
+        d->state.sat = SAT_PB_ALERT;
     } else {
         // Normal running
         d->state.sat = SAT_NONE;
@@ -804,7 +821,7 @@ static void refloat_thd(void *arg) {
             &d->haptic_feedback, &d->motor_control, &d->state, &d->motor, &d->time
         );
 
-        bms_update(&d->bms, &d->float_conf.bms, &d->time);
+        bms_update(&d->bms, &d->float_conf.bms, d->float_conf.tiltback_humidity, &d->time);
 
         // Control Loop State Logic
         switch (d->state.state) {
@@ -1147,6 +1164,7 @@ static void data_init(Data *d) {
     read_cfg_from_eeprom(d);
 
     d->odometer = VESC_IF->mc_get_odometer();
+    d->humidity = 0;
 
     balance_filter_init(&d->balance_filter);
     state_init(&d->state);
@@ -1197,6 +1215,7 @@ enum {
     COMMAND_REALTIME_DATA = 31,
     COMMAND_REALTIME_DATA_IDS = 32,
     COMMAND_DATA_RECORD_REQUEST = 41,
+    COMMAND_HUMIDITY = 51,
 
     // commands above 200 are unstable and can change protocol at any time
     COMMAND_LIGHTS_CONTROL = 202,
@@ -1246,6 +1265,21 @@ static void send_realtime_data(Data *d) {
     buffer_append_float32_auto(buffer, d->remote.input, &ind);
 
     SEND_APP_DATA(buffer, bufsize, ind);
+}
+
+static void cmd_humidity(Data *d, uint8_t humidity) {
+    if (humidity) {
+        d->humidity = humidity;
+    } else {
+        static const int bufsize = 4;
+        uint8_t buffer[bufsize];
+        int32_t ind = 0;
+        buffer[ind++] = 101;  // Package ID
+        buffer[ind++] = COMMAND_HUMIDITY;
+        buffer[ind++] = d->humidity;
+        buffer[ind++] = d->bms.humidity;
+        SEND_APP_DATA(buffer, bufsize, ind);
+    }
 }
 
 static void cmd_send_all_data(Data *d, unsigned char mode) {
@@ -2155,6 +2189,14 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
         data_recorder_request(&d->data_record, &buffer[2], len - 2);
         return;
     }
+    case COMMAND_HUMIDITY: {
+        if (len == 3) {
+            cmd_humidity(d, buffer[2]);
+        } else {
+            cmd_humidity(d, 0);
+        }
+        return;
+    }
     default: {
         if (!VESC_IF->app_is_output_disabled()) {
             log_error("Unknown command received: %u", command);
@@ -2181,13 +2223,14 @@ static lbm_value ext_set_fw_version(lbm_value *args, lbm_uint argn) {
 static lbm_value ext_bms(lbm_value *args, lbm_uint argn) {
     Data *d = (Data *) ARG;
 
-    if (argn > 5 && d->float_conf.bms.enabled) {
+    if (argn > 6 && d->float_conf.bms.enabled) {
         d->bms.cell_lv = VESC_IF->lbm_dec_as_float(args[0]);
         d->bms.cell_hv = VESC_IF->lbm_dec_as_float(args[1]);
         d->bms.cell_lt = VESC_IF->lbm_dec_as_i32(args[2]);
         d->bms.cell_ht = VESC_IF->lbm_dec_as_i32(args[3]);
         d->bms.bms_ht = VESC_IF->lbm_dec_as_i32(args[4]);
-        d->bms.msg_age = VESC_IF->lbm_dec_as_float(args[5]);
+        d->bms.humidity = (uint8_t) VESC_IF->lbm_dec_as_float(args[5]);
+        d->bms.msg_age = VESC_IF->lbm_dec_as_float(args[6]);
     }
 
     return d->float_conf.bms.enabled ? VESC_IF->lbm_enc_sym_true : VESC_IF->lbm_enc_sym_nil;

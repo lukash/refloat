@@ -247,6 +247,7 @@ typedef struct {
     float tiltback_lv_angle;
     float tiltback_lv_speed;
     float tiltback_lv;
+    uint8_t tiltback_humidity;
     float tiltback_return_speed;
     float tiltback_constant;
     uint16_t tiltback_constant_erpm;

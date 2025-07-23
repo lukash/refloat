@@ -84,6 +84,7 @@ typedef struct {
     float tiltback_variable, tiltback_variable_max_erpm, noseangling_step_size;
     float mc_max_temp_fet, mc_max_temp_mot;
     bool duty_beeping;
+    uint8_t humidity;
 
     // IMU data for the balancing filter
     BalanceFilterData balance_filter;
