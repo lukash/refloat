@@ -42,6 +42,13 @@ In case the following bits are set in the `mask`, the listed data follow in the 
 | 0      | 2    | `charging_current` | The charging current encoded as [float16](float16.md). |
 | 2      | 2    | `charging_voltage` | The charging voltage encoded as [float16](float16.md). |
 
+**`0x4`: Alerts**
+| Offset | Size | Name                  | Description   |
+|--------|------|-----------------------|---------------|
+| 0      | 4    | `active_alert_mask_1` | Bits 0..31 of the `active_alert_mask`, indicating which [alert_id](alert_id.md)s are active. |
+| 4      | 8    | `active_alert_mask_2` | Bits 32..63 of the `active_alert_mask`, indicating which [alert_id](alert_id.md)s are active. |
+| 8      | 1    | `firmware_fault_code` | In case `ALERT_FW_FAULT` is active, the VESC firmware fault code, otherwise 0. |
+
 #### extra_flags
 
 | 7-5 |                      2 |                       1 |                       0 |

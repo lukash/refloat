@@ -1248,6 +1248,8 @@ enum {
     COMMAND_FLYWHEEL = 22,
     COMMAND_REALTIME_DATA = 31,
     COMMAND_REALTIME_DATA_IDS = 32,
+    COMMAND_ALERTS_LIST = 35,
+    COMMAND_ALERTS_CONTROL = 36,
     COMMAND_DATA_RECORD_REQUEST = 41,
 
     // commands above 200 are unstable and can change protocol at any time
@@ -1892,7 +1894,7 @@ static void cmd_realtime_data_ids() {
 }
 
 static void cmd_realtime_data(Data *d) {
-    static const int bufsize = 16 + ITEMS_COUNT(RT_DATA_ALL_ITEMS) * 2;
+    static const int bufsize = 16 + ITEMS_COUNT(RT_DATA_ALL_ITEMS) * 2 + 9;
     uint8_t buffer[bufsize];
     int32_t ind = 0;
 
@@ -1910,10 +1912,13 @@ static void cmd_realtime_data(Data *d) {
         mask |= 0x2;
     }
 
+    mask |= 0x4;  // Append active alerts mask, always appended from now on
+
     buffer[ind++] = mask;
 
     const DataRecord *rd = &d->data_record;
-    uint8_t extra_flags = rd->autostop << 2 | rd->autostart << 1 | rd->recording;
+    uint8_t extra_flags =
+        d->alert_tracker.fatal_error << 3 | rd->autostop << 2 | rd->autostart << 1 | rd->recording;
     buffer[ind++] = extra_flags;
 
     buffer_append_uint32(buffer, d->time.now, &ind);
@@ -1940,7 +1945,83 @@ static void cmd_realtime_data(Data *d) {
         buffer_append_float16_auto(buffer, d->charging.voltage, &ind);
     }
 
+    buffer_append_uint32(buffer, d->alert_tracker.active_alert_mask, &ind);
+    buffer_append_uint32(buffer, 0, &ind);  // extra 32 bits for more flags if needed
+    buffer[ind++] = d->alert_tracker.fw_fault_code;
+
     SEND_APP_DATA(buffer, bufsize, ind);
+}
+
+static void buffer_append_fault_name(uint8_t *buffer, mc_fault_code code, int32_t *index) {
+    const char *str = VESC_IF->mc_fault_to_string(code);
+    uint32_t length = strlen(str);
+    if (length > 11 && str[0] == 'F') {
+        str += 11;
+    }
+    buffer_append_string_max(buffer, str, index, 50);
+}
+
+static void cmd_alerts_list(const AlertTracker *at, uint8_t *buf, size_t len) {
+    // Note: Accessing the circular buffer from multiple threads is racey.
+    // Needs locking, but locking in the control loop is undesirable. Once
+    // alert checking is outside the control loop thread, locking can be added.
+    time_t since = 0;
+    if (len >= 4) {
+        int32_t ind = 0;
+        since = buffer_get_uint32(buf, &ind);
+    }
+
+    uint8_t buffer[SEND_BUF_MAX_SIZE];
+    int32_t ind = 0;
+
+    buffer[ind++] = 101;  // Package ID
+    buffer[ind++] = COMMAND_ALERTS_LIST;
+
+    buffer_append_uint32(buffer, at->active_alert_mask, &ind);
+    buffer_append_uint32(buffer, 0, &ind);  // extra 32 bits for more flags if needed
+    buffer[ind++] = at->fw_fault_code;
+    if (at->fw_fault_code != FAULT_CODE_NONE) {
+        buffer_append_fault_name(buffer, at->fw_fault_code, &ind);
+    }
+
+    int size_index = ind++;
+    uint8_t size = circular_buffer_size(&at->alert_buffer);
+    uint8_t real_size = 0;
+    for (uint8_t i = 0; i < size; ++i) {
+        AlertRecord alert;
+        circular_buffer_get(&at->alert_buffer, i, &alert);
+
+        if (alert.time > since) {
+            // 7 bytes fixed and at most 50 bytes string with one byte for size
+            if (ind + 7 + 51 > SEND_BUF_MAX_SIZE) {
+                // if we can't fit into the message buffer, we only send what we can
+                break;
+            }
+
+            buffer_append_uint32(buffer, alert.time, &ind);
+            buffer[ind++] = alert.id;
+            buffer[ind++] = alert.active;
+            buffer[ind++] = alert.code;
+            if (alert.code != FAULT_CODE_NONE) {
+                buffer_append_fault_name(buffer, alert.code, &ind);
+            }
+            ++real_size;
+        }
+    }
+
+    buffer[size_index] = real_size;
+
+    SEND_APP_DATA(buffer, SEND_BUF_MAX_SIZE, ind);
+}
+
+static void cmd_alerts_control(AlertTracker *at, uint8_t *buf, size_t len) {
+    if (len < 1) {
+        return;
+    }
+    uint8_t command = buf[0];
+    if (command == 1) {  // clear fatal error
+        alert_tracker_clear_fatal(at);
+    }
 }
 
 static void lights_control_request(CfgLeds *leds, uint8_t *buffer, size_t len, LcmData *lcm) {
@@ -2192,6 +2273,14 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
     }
     case COMMAND_DATA_RECORD_REQUEST: {
         data_recorder_request(&d->data_record, &buffer[2], len - 2);
+        return;
+    }
+    case COMMAND_ALERTS_LIST: {
+        cmd_alerts_list(&d->alert_tracker, &buffer[2], len - 2);
+        return;
+    }
+    case COMMAND_ALERTS_CONTROL: {
+        cmd_alerts_control(&d->alert_tracker, &buffer[2], len - 2);
         return;
     }
     default: {

@@ -155,6 +155,17 @@ void buffer_append_string(uint8_t *buffer, const char *str, int32_t *index) {
     *index = idx;
 }
 
+void buffer_append_string_max(uint8_t *buffer, const char *str, int32_t *index, uint8_t length) {
+    int32_t idx = *index + 1;
+    size_t i = 0;
+    while (i < length && str[i] != '\0') {
+        buffer[idx++] = str[i++];
+    }
+
+    buffer[*index] = i;
+    *index = idx;
+}
+
 void buffer_append_string_fixed(uint8_t *buffer, const char *str, int32_t *index, uint8_t length) {
     int32_t idx = *index;
     size_t i = 0;
