@@ -76,7 +76,8 @@ typedef enum {
     BEEP_CELL_HV = 15,
     BEEP_CELL_BALANCE = 16,
     BEEP_BMS_CONNECTION = 17,
-    BEEP_BMS_TEMP_OVER = 18
+    BEEP_BMS_TEMP_OVER = 18,
+    BEEP_FW_FAULT = 19
 } BeepReason;
 
 static const FootpadSensorState flywheel_konami_sequence[] = {
@@ -810,10 +811,21 @@ static void refloat_thd(void *arg) {
         }
 
         haptic_feedback_update(
-            &d->haptic_feedback, &d->motor_control, &d->state, &d->motor, &d->time
+            &d->haptic_feedback,
+            &d->motor_control,
+            &d->state,
+            &d->motor,
+            &d->alert_tracker,
+            &d->time
         );
 
         bms_update(&d->bms, &d->float_conf.bms, &d->time);
+
+        motor_data_evaluate_alerts(&d->motor, &d->alert_tracker, &d->time);
+        alert_tracker_finalize(&d->alert_tracker, &d->time);
+        if (alert_tracker_is_alert_active(&d->alert_tracker, ALERT_FW_FAULT)) {
+            d->beep_reason = BEEP_FW_FAULT;
+        }
 
         // Control Loop State Logic
         switch (d->state.state) {
@@ -1190,6 +1202,7 @@ static void data_init(Data *d) {
     state_init(&d->state);
     footpad_sensor_init(&d->footpad);
     haptic_feedback_init(&d->haptic_feedback);
+    alert_tracker_init(&d->alert_tracker);
 
     leds_init(&d->leds);
     lcm_init(&d->lcm, &d->float_conf.hardware.leds);

@@ -1460,6 +1460,7 @@ Item {
             [16, "BMS: Cell Balance"],
             [17, "BMS: Connection Error"],
             [18, "BMS: BMS Temp"],
+            [19, "Firmware Fault"],
         ])
 
         property int beepReason: 0

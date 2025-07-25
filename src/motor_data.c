@@ -145,6 +145,15 @@ void motor_data_update(MotorData *m) {
     m->motor_temp = VESC_IF->mc_temp_motor_filtered();
 }
 
+void motor_data_evaluate_alerts(const MotorData *m, AlertTracker *at, const Time *time) {
+    unused(m);
+
+    mc_fault_code fault_code = VESC_IF->mc_get_fault();
+    if (fault_code != FAULT_CODE_NONE) {
+        alert_tracker_add(at, time, ALERT_FW_FAULT, fault_code);
+    }
+}
+
 float motor_data_get_current_saturation(const MotorData *m) {
     float motor_saturation =
         fabsf(m->filt_current) / (m->braking ? m->current_min : m->current_max);

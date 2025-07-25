@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "alert_tracker.h"
 #include "biquad.h"
 
 #include <stdbool.h>
@@ -77,5 +78,7 @@ void motor_data_refresh_motor_config(MotorData *m, float lv_threshold, float hv_
 void motor_data_configure(MotorData *m, float frequency);
 
 void motor_data_update(MotorData *m);
+
+void motor_data_evaluate_alerts(const MotorData *m, AlertTracker *at, const Time *time);
 
 float motor_data_get_current_saturation(const MotorData *m);

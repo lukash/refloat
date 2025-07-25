@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "alert_tracker.h"
 #include "atr.h"
 #include "bms.h"
 #include "booster.h"
@@ -68,6 +69,7 @@ typedef struct {
     State state;
     FootpadSensor footpad;
     HapticFeedback haptic_feedback;
+    AlertTracker alert_tracker;
 
     Leds leds;
     LcmData lcm;
