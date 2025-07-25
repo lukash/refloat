@@ -20,46 +20,8 @@
 #include "utils.h"
 #include "vesc_c_if.h"
 
-static void circular_buffer_reset(DataRecord *dr) {
-    dr->head = 0;
-    dr->tail = 0;
-    dr->empty = true;
-}
-
-static inline void increment(const DataRecord *buffer, size_t *i) {
-    ++(*i);
-    if (*i >= buffer->size) {
-        *i -= buffer->size;
-    }
-}
-
-static void circular_buffer_push(DataRecord *buffer, const Sample *sample) {
-    buffer->buffer[buffer->head] = *sample;
-
-    if (!buffer->empty && buffer->head == buffer->tail) {
-        increment(buffer, &buffer->tail);
-    }
-    increment(buffer, &buffer->head);
-
-    buffer->empty = false;
-}
-
-static void circular_buffer_iterate(
-    const DataRecord *buffer, void (*cb)(const Sample *sample, void *data), void *data
-) {
-    if (buffer->empty) {
-        return;
-    }
-
-    size_t i = buffer->tail;
-    do {
-        cb(&buffer->buffer[i], data);
-        increment(buffer, &i);
-    } while (i != buffer->head);
-}
-
 static void start_recording(DataRecord *dr) {
-    circular_buffer_reset(dr);
+    circular_buffer_clear(&dr->buffer);
     dr->recording = true;
 }
 
@@ -74,34 +36,32 @@ typedef struct {
 } DataBufferInfo;
 
 void data_recorder_init(DataRecord *dr) {
-    // fetch information about the data buffer, it's stored at the end of the
-    // VESC interface memory area
-    DataBufferInfo *buffer_info = (DataBufferInfo *) ((uint8_t *) VESC_IF + 2036);
-    if (buffer_info->magic == 0xcafe1111) {
-        size_t size = buffer_info->length;
-        size_t sample_nr = size / sizeof(Sample);
-        log_msg("Data Record buffer size: %uB (%u samples)", size, sample_nr);
-        dr->buffer = (Sample *) buffer_info->buffer;
-        dr->size = sample_nr;
-    } else {
-        dr->buffer = 0;
-        dr->size = 0;
-    }
-
-    dr->head = 0;
-    dr->tail = 0;
-    dr->empty = true;
     dr->recording = false;
     dr->autostart = true;
     dr->autostop = true;
+
+    // fetch information about the data buffer, it's stored at the end of the
+    // VESC interface memory area
+    DataBufferInfo *buffer_info = (DataBufferInfo *) ((uint8_t *) VESC_IF + 2036);
+    if (buffer_info->magic != 0xcafe1111) {
+        dr->enabled = false;
+        return;
+    }
+
+    dr->enabled = true;
+    size_t size = buffer_info->length;
+    size_t sample_nr = size / sizeof(Sample);
+    uint8_t *buffer = buffer_info->buffer;
+    circular_buffer_init(&dr->buffer, sizeof(Sample), sample_nr, buffer);
+    log_msg("Data Record buffer size: %uB (%u samples)", size, sample_nr);
 }
 
 bool data_recorder_has_capability(const DataRecord *dr) {
-    return dr->buffer != NULL;
+    return dr->enabled;
 }
 
 void data_recorder_trigger(DataRecord *dr, bool engage) {
-    if (!dr->buffer) {
+    if (!dr->enabled) {
         return;
     }
 
@@ -113,14 +73,14 @@ void data_recorder_trigger(DataRecord *dr, bool engage) {
 }
 
 void data_recorder_sample(DataRecord *dr, const Data *d, time_t time) {
-    if (!dr->buffer || !dr->recording) {
+    if (!dr->enabled || !dr->recording) {
         return;
     }
 
     uint8_t flags = d->state.sat << 4 | d->footpad.state << 2;
     flags |= d->state.wheelslip << 1 | (d->state.state == STATE_RUNNING);
 
-    Sample p =
+    Sample sample =
         {.time = time,
          .flags = flags,
          .values = {
@@ -128,12 +88,13 @@ void data_recorder_sample(DataRecord *dr, const Data *d, time_t time) {
              VISIT_REC(RT_DATA_ALL_ITEMS, ARRAY_VALUE)
 #undef ARRAY_VALUE
          }};
-    circular_buffer_push(dr, &p);
+    circular_buffer_push(&dr->buffer, &sample);
 }
 
-static void send_point_vt_experiment(const Sample *sample, void *data) {
+static void send_point_vt_experiment(const void *item, void *data) {
     unused(data);
 
+    Sample *sample = (Sample *) item;
     for (uint8_t i = 0; i < ITEMS_COUNT_REC(RT_DATA_ALL_ITEMS); ++i) {
         VESC_IF->plot_set_graph(i);
         VESC_IF->plot_send_points(sample->time, sample->values[i]);
@@ -141,7 +102,7 @@ static void send_point_vt_experiment(const Sample *sample, void *data) {
 }
 
 void data_recorder_send_experiment_plot(DataRecord *dr) {
-    if (!dr->buffer) {
+    if (!dr->enabled) {
         return;
     }
 
@@ -151,7 +112,7 @@ void data_recorder_send_experiment_plot(DataRecord *dr) {
     VISIT_REC(RT_DATA_ALL_ITEMS, ADD_GRAPH);
 #undef ADD_GRAPH
 
-    circular_buffer_iterate(dr, &send_point_vt_experiment, 0);
+    circular_buffer_iterate(&dr->buffer, &send_point_vt_experiment, 0);
 }
 
 typedef enum {
@@ -167,15 +128,7 @@ static void send_header(DataRecord *dr) {
     buf[ind++] = 101;  // Package ID
     buf[ind++] = COMMAND_DATA_RECORD_HEADER;
 
-    size_t size = 0;
-    if (!dr->empty) {
-        size = (dr->head - dr->tail) % dr->size;
-        if (size == 0) {
-            size = dr->size;
-        }
-    }
-
-    buffer_append_uint32(buf, size, &ind);
+    buffer_append_uint32(buf, circular_buffer_size(&dr->buffer), &ind);
 
     buf[ind++] = ITEMS_COUNT_REC(RT_DATA_ALL_ITEMS);
 #define ADD_ID(id) buffer_append_string(buf, #id, &ind);
@@ -186,7 +139,7 @@ static void send_header(DataRecord *dr) {
 }
 
 static void send_data(const DataRecord *dr, size_t offset) {
-    if (dr->empty) {
+    if (!dr->enabled || circular_buffer_size(&dr->buffer) == 0) {
         return;
     }
 
@@ -199,29 +152,26 @@ static void send_data(const DataRecord *dr, size_t offset) {
 
     buffer_append_uint32(buf, offset, &ind);
 
-    bool start = true;
-    for (size_t i = (dr->tail + offset) % dr->size; start || i != dr->head; increment(dr, &i)) {
+    Sample sample;
+    while (circular_buffer_get(&dr->buffer, offset++, &sample)) {
+        buffer_append_uint32(buf, sample.time, &ind);
+        buf[ind++] = sample.flags;
+
+        for (size_t i = 0; i < ITEMS_COUNT_REC(RT_DATA_ALL_ITEMS); ++i) {
+            buffer_append_uint16(buf, sample.values[i], &ind);
+        }
+
         // 4 bytes for time, 1 byte for flags, 2 bytes for rest of the values
         if (ind + 4 + 1 + 2 * ITEMS_COUNT_REC(RT_DATA_ALL_ITEMS) > bufsize) {
             break;
         }
-
-        const Sample *sample = &dr->buffer[i];
-        buffer_append_uint32(buf, sample->time, &ind);
-        buf[ind++] = sample->flags;
-
-        for (size_t i = 0; i < ITEMS_COUNT_REC(RT_DATA_ALL_ITEMS); ++i) {
-            buffer_append_uint16(buf, sample->values[i], &ind);
-        }
-
-        start = false;
     }
 
     SEND_APP_DATA(buf, bufsize, ind);
 }
 
 void data_recorder_request(DataRecord *dr, uint8_t *buffer, size_t len) {
-    if (!dr->buffer) {
+    if (!dr->enabled) {
         log_error("Data Record not supported.");
         return;
     }

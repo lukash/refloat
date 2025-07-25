@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "lib/circular_buffer.h"
 #include "rt_data.h"
 #include "time.h"
 
@@ -30,12 +31,9 @@ typedef struct {
 } Sample;
 
 typedef struct {
-    Sample *buffer;
-    size_t size;
-    size_t head;
-    size_t tail;
-    bool empty;
+    bool enabled;
     bool recording;
     bool autostart;
     bool autostop;
+    CircularBuffer buffer;
 } DataRecord;
