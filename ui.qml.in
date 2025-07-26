@@ -606,6 +606,8 @@ Item {
         readonly property int c_FLYWHEEL: 22
         readonly property int c_REALTIME_DATA: 31
         readonly property int c_REALTIME_DATA_IDS: 32
+        readonly property int c_ALERTS_LIST: 35
+        readonly property int c_ALERTS_CONTROL: 36
         readonly property int c_LIGHTS_CONTROL: 202
         readonly property int c_DATA_RECORD_REQUEST: 41
         readonly property int c_DATA_RECORD_HEADER: 42
@@ -693,6 +695,24 @@ Item {
             }
             data.setUint8(2, mask);
             data.setUint8(3, value);
+
+            vescCommands.sendCustomAppData(data.buffer);
+        }
+
+        function sendAlertsList(startTime) {
+            var data = createData(6, c_ALERTS_LIST);
+
+            if (startTime !== undefined && startTime !== null) {
+                data.setUint32(2, startTime);
+            }
+
+            vescCommands.sendCustomAppData(data.buffer);
+        }
+
+        function sendAlertsClearFatal() {
+            var data = createData(3, c_ALERTS_CONTROL);
+
+            data.setUint8(2, 0x1);  // clear the fatal error flag
 
             vescCommands.sendCustomAppData(data.buffer);
         }
@@ -801,6 +821,8 @@ Item {
                 var values = dv.getUint8(ind++);
                 lights.on = values & 0b01;
                 lights.headlightsOn = values & 0b10;
+            } else if (msgtype === c_ALERTS_LIST) {
+                alerts.receiveAlertsList(dv, ind);
             } else if (msgtype === c_REALTIME_DATA) {
                 if (state.commsState !== state.comms_Initialized) {
                     // rt data came because another client app requested them,
@@ -811,6 +833,7 @@ Item {
                 var mask = dv.getUint8(ind++);
                 var hasRuntime = !!(mask & 0x1);
                 var hasCharging = !!(mask & 0x2);
+                var hasAlerts = !!(mask & 0x4);
 
                 var extraFlags = dv.getUint8(ind++);
                 state.extraRecording = extraFlags & 0x1;
@@ -862,6 +885,10 @@ Item {
                 if (hasCharging) {
                     chargingInfo.current = getFloat16(dv, ind); ind += 2;
                     chargingInfo.voltage = getFloat16(dv, ind); ind += 2;
+                }
+
+                if (hasAlerts) {
+                    ind += 9; // unused here
                 }
 
                 var running = +(state.pkgState === state.s_Running);
@@ -1522,6 +1549,114 @@ Item {
                 newData[names[i]] = values[i];
             }
             return newData;
+        }
+    }
+
+    QtObject {
+        id: alerts
+
+        property int activeAlertsMask: 0
+        property int activeAlertHighlight: 0
+        property int activeAlertCount: 0
+        property var activeAlerts: []
+        property int activeFwFaultCode: 0
+        property string activeFwFaultName: ""
+        property var alertsLog: new Map()
+
+        signal alertAdded(int time, var data)
+
+        readonly property int alert_fwFault: 1
+
+        readonly property var alertData: new Map([
+            [0, {
+                "name": "None",
+                "severity": "WARNING",
+            }],
+            [alert_fwFault, {
+                "name": "Fault",
+                "severity": "FATAL",
+            }],
+        ])
+
+        readonly property var severityColors: new Map([
+            ["FATAL", Utility.getAppHexColor("red")],
+            ["ERROR", Utility.getAppHexColor("orange")],
+            ["WARNING", Utility.getAppHexColor("lightText")],
+        ])
+
+        property Timer alertsListPollTimer: Timer {
+            running: state.commsState === state.comms_Initialized
+            repeat: true
+            interval: 500
+            triggeredOnStart: true
+            onTriggered: {
+                commands.sendAlertsList(alerts.alertsLog.keys()[-1]);
+            }
+        }
+
+        function getActiveAlertData(alertId) {
+            if (alertId == alert_fwFault) {
+                var data = Object.assign({}, alertData.get(alertId));
+                data.name = data.name + ": " + activeFwFaultName;
+                return data;
+            } else {
+                return alertData.get(alertId);
+            }
+        }
+
+        function getAlertLogData(alertId, data) {
+            return alertData.get(alertId);
+        }
+
+        function updateActiveAlerts() {
+            if (activeAlertsMask & alert_fwFault) {
+                activeAlertHighlight = alert_fwFault;
+                activeAlertCount = 1;
+                activeAlerts = [
+                    alert_fwFault,
+                ];
+            } else {
+                activeAlertHighlight = 0;
+                activeAlertCount = 0;
+                activeAlerts = [];
+            }
+        }
+
+        function receiveAlertsList(dv, ind) {
+            activeAlertsMask = dv.getUint32(ind); ind += 4;
+            ind += 4;  // skip unused 4 bytes
+            activeFwFaultCode = dv.getUint8(ind++);
+            if (activeFwFaultCode > 0) {
+                [activeFwFaultName, ind] = commands.getString(dv, ind);
+            } else {
+                activeFwFaultName = "";
+            }
+            updateActiveAlerts();
+
+            var count = dv.getUint8(ind++);
+
+            var ids = [];
+            for (var i = 0; i < count; i++) {
+                var time = dv.getUint32(ind); ind += 4;
+                var record = {
+                    "id": dv.getUint8(ind++),
+                    "active": dv.getUint8(ind++) & 0x1,
+                    "code": dv.getUint8(ind++),
+                };
+
+                if (record.code > 0) {
+                    [record.text, ind] = commands.getString(dv, ind);
+                }
+
+                if (!alertsLog.has(time)) {
+                    alertsLog.set(time, record);
+                    alertAdded(time, record);
+                }
+            }
+        }
+
+        function clearFatalError() {
+            commands.sendAlertsClearFatal();
         }
     }
 
@@ -4333,6 +4468,136 @@ Item {
         }
     }
 
+    BaseDialog {
+        id: alertsDialog
+
+        title: "Alerts"
+        standardButtons: Dialog.Close
+
+        function show() {
+            alertsDialogListModel.set(alerts.alertsLog);
+            open();
+        }
+
+        Connections {
+            target: alerts
+
+            function onAlertAdded(time, data) {
+                if (alertsDialog.activeFocus) {
+                    alertsDialogListModel.add(time, data);
+                }
+            }
+        }
+
+        ScrollView {
+            anchors.fill: parent
+            contentWidth: alertsDialog.availableWidth
+            clip: true
+
+            ColumnLayout {
+                anchors.fill: parent
+
+                component ErrHeader : NText {
+                    Layout.fillWidth: true
+                    font.pixelSize: 16
+                    horizontalAlignment: Text.AlignHCenter
+                }
+
+                component ErrText : NText {
+                    Layout.fillWidth: true
+                    font.pixelSize: 12
+                    font.family: "Mono"
+                    color: Utility.getAppHexColor("red")
+                }
+
+                component ErrDesc : NText {
+                    Layout.fillWidth: true
+                    font.pixelSize: 12
+                    horizontalAlignment: Text.AlignHCenter
+                    wrapMode: Text.WordWrap
+                }
+
+                ErrHeader {
+                    id: activeAlertsHeader
+                    width: parent.width
+                    text: "Active Alerts"
+                }
+
+                Column {
+                    Layout.fillWidth: true
+
+                    Repeater {
+                        model: alerts.activeAlerts
+
+                        ErrText {
+                            property var alert: alerts.getActiveAlertData(modelData)
+                            text: alert.name
+                            color: alerts.severityColors.get(alert.severity)
+                        }
+                    }
+                }
+
+                ErrHeader {
+                    text: "Alert Log"
+                }
+
+                Rectangle {
+                    color: Utility.getAppHexColor("darkBackground")
+                    Layout.fillWidth: true
+                    Layout.minimumHeight: 200
+
+                    ListView {
+                        id: alertsDialogList
+                        anchors.fill: parent
+                        anchors.margins: 6
+                        clip: true
+
+                        model: ListModel {
+                            id: alertsDialogListModel
+
+                            function add(time, data) {
+                                var wasAtEnd = alertsDialogList.atYEnd;
+
+                                var model = Object.assign({}, data);
+                                Object.assign(model, alerts.getAlertLogData(data.id));
+                                model.time = time / state.ticksPerSecond;
+                                if (!data.active) {
+                                    model.name = model.name + " ended";
+                                } else {
+                                    if (data.id === alerts.alert_fwFault) {
+                                        model.name = model.name + ": %1 (%2)".arg(model.text).arg(model.code);
+                                    }
+                                }
+                                append(model);
+
+                                if (wasAtEnd) {
+                                    alertsDialogList.positionViewAtEnd();
+                                }
+                            }
+
+                            function set(alertList) {
+                                clear();
+                                for (var [time, data] of alertList.entries()) {
+                                    add(time, data);
+                                }
+                            }
+                        }
+
+                        delegate: NText {
+                            id: alertRecordText
+                            width: alertsDialogList.width
+
+                            font.pixelSize: 12
+                            font.family: "Mono"
+                            wrapMode: Text.WordWrap
+                            text: "%1s: [<font color=\"%2\">%3</font>] <font color=\"%4\">%5</font>".arg(time).arg(alerts.severityColors.get(severity)).arg(severity).arg(active ? Utility.getAppHexColor("lightText") : Utility.getAppHexColor("disabledText")).arg(name)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     component ConfigDiff : ColumnLayout {
         id: configDiff
 
@@ -5821,10 +6086,15 @@ Item {
                     property bool dark: state.darkride
                     property bool blue: state.pkgState == state.s_Running
 
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: alertsDialog.show()
+                    }
+
                     states: [
                         State {
                             name: "specialMode"
-                            when: state.pkgMode != state.m_Normal
+                            when: statusTextMode.visible || statusTextAlert.visible
                             AnchorChanges {target: statusTextState; anchors.top: parent.top; anchors.verticalCenter: undefined;}
                         }
                     ]
@@ -5833,7 +6103,7 @@ Item {
                         id: statusTextState
                         anchors.verticalCenter: parent.verticalCenter
                         width: parent.width
-                        font.pixelSize: (state.pkgStateString.length >= 10 ? 0.42 : 0.55) * unit
+                        font.pixelSize: (statusTextMode.visible && statusTextAlert.visible ? 0.3 : state.pkgStateString.length >= 10 ? 0.42 : 0.55) * unit
                         font.family: "Exan"
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
@@ -5862,16 +6132,15 @@ Item {
 
                     Text {
                         id: statusTextMode
-                        anchors.bottom: parent.bottom
+                        anchors.top: statusTextState.bottom
                         width: parent.width
                         color: state.pkgMode == state.m_Flywheel ? Utility.getAppHexColor("lightAccent") : Utility.getAppHexColor("lightText")
-                        font.pixelSize: fontSizeSmall
+                        font.pixelSize: statusTextAlert.visible ? fontSizeSuperSmall : fontSizeSmall
                         font.family: "Exan"
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                         visible: state.pkgMode != state.m_Normal
                         text: state.pkgModeString
-
                     }
 
                     Glow {
@@ -5882,6 +6151,33 @@ Item {
                         color: statusTextMode.color
                         visible: state.pkgMode != state.m_Normal
                         source: statusTextMode
+                    }
+
+                    Text {
+                        id: statusTextAlert
+
+                        property var alert: alerts.getActiveAlertData(alerts.activeAlertHighlight)
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.top: statusTextMode.visible ? statusTextMode.bottom : statusTextState.bottom
+                        width: parent.width * 1.2
+                        color: alerts.severityColors.get(alert.severity)
+                        font.pixelSize: fontSizeSuperSmall
+                        font.family: "Mono"
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        elide: Text.ElideMiddle
+                        visible: alerts.activeAlertCount > 0
+                        text: alert.name
+                    }
+
+                    Glow {
+                        anchors.fill: statusTextAlert
+                        radius: Math.round(0.12 * unit)
+                        samples: radius * 2 + 1
+                        opacity: 0.3
+                        color: statusTextAlert.color
+                        visible: statusTextAlert.visible
+                        source: statusTextAlert
                     }
                 }
 
