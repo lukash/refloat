@@ -782,10 +782,6 @@ Item {
         }
 
         function onValuesSetupReceived(values, mask) {
-            var fault = values.fault_str;
-            fault = fault.replace("FAULT_CODE_", "");
-            state.vescFault = fault != "NONE" ? fault : "";
-
             batteryBar.value = values.battery_level * 100;
 
             odometer.value = values.odometer * 0.001 * vescConfig.imperialFactor;
@@ -839,6 +835,7 @@ Item {
                 state.extraRecording = extraFlags & 0x1;
                 state.extraRecAutostart = extraFlags & 0x2;
                 state.extraRecAutostop = extraFlags & 0x4;
+                state.fatalError = extraFlags & 0x8;
 
                 var time = dv.getUint32(ind); ind += 4;
 
@@ -1355,10 +1352,6 @@ Item {
         property int pkgState: s_Connecting
         property string pkgStateString: pkgStateToString.get(pkgState) ?? "UNKNOWN (%1)".arg(pkgState)
 
-        onPkgStateChanged: {
-            updateErrorStrings();
-        }
-
         // package mode
         readonly property int m_Normal: 0
         readonly property int m_Handtest: 1
@@ -1494,38 +1487,10 @@ Item {
         property string beepReasonString: beepReasonToString.get(beepReason) ?? "unknown (%1)".arg(beepReason)
 
         property bool pkgStateIsError: ![s_Startup, s_Ready, s_Running, s_Connecting].includes(pkgState)
-        property string vescFault: ""
         property bool configLoadingError: false
+        property bool fatalError: false
 
-        property bool isError: pkgStateIsError || !!vescFault || configLoadingError
-
-        onVescFaultChanged: updateErrorStrings()
-        onConfigLoadingErrorChanged: updateErrorStrings()
-
-        property string errorText: ""
-        property string errorDescription: ""
-
-        function updateErrorStrings() {
-            if (!!vescFault) {
-                errorText = "VESC fault: %1".arg(vescFault);
-                errorDescription = "VESC reported a fault. Be very careful. You should not continue riding before you fix the root cause."
-            } else if (configLoadingError) {
-                errorText = "Error: Refloat Cfg failed to load.";
-                errorDescription = "Reconnecting to the board usually fixes this. If problem persists, try reinstalling the package.";
-            } else if (pkgState == s_Disconnected) {
-                errorText = "";
-                errorDescription = "Package is not responding. May occur temporarily with spotty connection. If board doesn't engage, the package is dead. Restart the board, if problem persists, try reinstalling the package.";
-            } else if (pkgState == s_Disabled) {
-                errorText = "";
-                errorDescription = "Refloat package is disabled. After you're done with board setup, You can re-enable it in Settings > Setup."
-            } else if (![s_Startup, s_Ready, s_Running, s_Connecting].includes(pkgState)) {
-                errorText = "";
-                errorDescription = "Your Refloat package state is unknown. This should never happen.";
-            } else {
-                errorText = "";
-                errorDescription = "";
-            }
-        }
+        property bool isError: pkgStateIsError || configLoadingError || fatalError
 
         property var rtDataIdleItems: []
         property var rtDataRuntimeItems: []
@@ -1558,6 +1523,7 @@ Item {
         property int activeAlertsMask: 0
         property int activeAlertHighlight: 0
         property int activeAlertCount: 0
+        property bool isFatalActive: false
         property var activeAlerts: []
         property int activeFwFaultCode: 0
         property string activeFwFaultName: ""
@@ -1612,12 +1578,14 @@ Item {
             if (activeAlertsMask & alert_fwFault) {
                 activeAlertHighlight = alert_fwFault;
                 activeAlertCount = 1;
+                isFatalActive = true;
                 activeAlerts = [
                     alert_fwFault,
                 ];
             } else {
                 activeAlertHighlight = 0;
                 activeAlertCount = 0;
+                isFatalActive = false;
                 activeAlerts = [];
             }
         }
@@ -4518,9 +4486,54 @@ Item {
                 }
 
                 ErrHeader {
-                    id: activeAlertsHeader
-                    width: parent.width
+                    text: "Package Disabled"
+                    visible: state.pkgState === state.s_Disabled
+                }
+
+                ErrDesc {
+                    text: "Refloat package is disabled. After you're done with board setup, re-enable it."
+                    visible: state.pkgState === state.s_Disabled
+                }
+
+                Button {
+                    Layout.alignment: Qt.AlignHCenter
+
+                    text: "Enable Refloat"
+                    visible: state.pkgState === state.s_Disabled
+
+                    onClicked: {
+                        packageConfig.setDisabled(false);
+                    }
+                }
+
+                ErrHeader {
+                    text: "Connection Errors"
+                    visible: state.configLoadingError || state.pkgState === state.s_Disconnected
+                }
+
+                ErrText {
+                    text: "Refloat Cfg failed to load"
+                    visible: state.configLoadingError
+                }
+
+                ErrDesc {
+                    text: "Reconnecting to the board usually fixes this. If problem persists, try reinstalling the package."
+                    visible: state.configLoadingError
+                }
+
+                ErrText {
+                    text: "Package disconnected"
+                    visible: state.pkgState === state.s_Disconnected
+                }
+
+                ErrDesc {
+                    text: "Package is not responding. May occur temporarily with spotty connection. If board doesn't engage, the package is dead. Restart the board, if problem persists, try reinstalling the package.";
+                    visible: state.pkgState === state.s_Disconnected
+                }
+
+                ErrHeader {
                     text: "Active Alerts"
+                    visible: alerts.activeAlertCount > 0
                 }
 
                 Column {
@@ -4534,6 +4547,29 @@ Item {
                             text: alert.name
                             color: alerts.severityColors.get(alert.severity)
                         }
+                    }
+                }
+
+                ErrHeader {
+                    text: "Fatal Error"
+                    visible: state.fatalError
+                }
+
+                // Fatal Error is so far only used for FW Fault
+                ErrDesc {
+                    text: "VESC reported a fault. Be very careful. You should not continue riding before you fix the root cause. " + (alerts.isFatalActive ? "The Fault is still active, you need to resolve the fault and then clear the error." : "The package will stay in an error state until you clear the error.")
+                    visible: state.fatalError
+                }
+
+                Button {
+                    Layout.alignment: Qt.AlignHCenter
+
+                    text: "Clear Fatal Error"
+                    visible: state.fatalError
+                    enabled: !alerts.isFatalActive
+
+                    onClicked: {
+                        alerts.clearFatalError();
                     }
                 }
 
@@ -6082,10 +6118,6 @@ Item {
                     width: parent.width - 4 * parent.verticalValueItemWidth
                     height: parent.height * 0.83
 
-                    property bool red: state.pkgStateIsError
-                    property bool dark: state.darkride
-                    property bool blue: state.pkgState == state.s_Running
-
                     MouseArea {
                         anchors.fill: parent
                         onClicked: alertsDialog.show()
@@ -6111,17 +6143,22 @@ Item {
                     }
 
                     Glow {
+                        property bool red: state.isError
+                        property bool dark: state.darkride
+                        property bool blue: state.pkgState == state.s_Running
+
                         anchors.fill: statusTextState
-                        radius: Math.round((parent.dark ? 0.2 : 0.12) * unit)
+                        radius: Math.round((dark ? 0.2 : 0.12) * unit)
                         samples: radius * 2 + 1
-                        spread: parent.red ? 0.6 : (parent.dark ? 0.7 : 0.5)
-                        opacity: parent.red || parent.dark || parent.blue ? 0.8 : 0.3
+                        spread: red ? 0.6 : (dark ? 0.7 : 0.5)
+                        opacity: red || dark || blue ? 0.8 : 0.3
+
                         color: {
-                            if (parent.red) {
+                            if (red) {
                                 return Utility.getAppHexColor("red");
-                            } else if (parent.dark) {
+                            } else if (dark) {
                                 return Utility.isDarkMode() ? Utility.getAppHexColor("black") : Utility.getAppHexColor("disabledText");
-                            } else if (parent.blue) {
+                            } else if (blue) {
                                 return Utility.getAppHexColor("lightAccent");
                             } else {
                                 return Utility.getAppHexColor("lightText");
@@ -6196,17 +6233,6 @@ Item {
                     unit: vescConfig.distanceUnit
                 }
             }
-
-            Text {
-                Layout.fillWidth: true
-                property string fault
-
-                color: Utility.getAppHexColor("red")
-                font.pixelSize: fontSizeNormal
-                horizontalAlignment: Text.AlignHCenter
-                visible: state.isError && !state.pkgStateIsError
-                text: state.errorText
-            }
         }
 
         TabBar {
@@ -6214,35 +6240,8 @@ Item {
             clip: true
 
             TabButton {text: "Tunes"}
-
             TabButton {text: "Control"}
-
-            TabButton {
-                id: tabBarDebugButton
-                text: "Data"
-
-                property bool isError: state.isError
-                property bool glowVisible: false
-
-                onIsErrorChanged: {
-                    glowVisible = isError && !checked
-                }
-
-                onToggled: {
-                    glowVisible = false
-                }
-
-                Glow {
-                    anchors.fill: tabBarDebugButton.contentItem
-                    radius: Math.round(0.12 * unit)
-                    samples: radius * 2 + 1
-                    spread: 0.8
-                    opacity: 0.8
-                    visible: parent.glowVisible
-                    color: Utility.getAppHexColor("red")
-                    source: tabBarDebugButton.contentItem
-                }
-            }
+            TabButton {text: "Data"}
 
             background: Rectangle {
                 color: Utility.getAppHexColor("lightBackground");
@@ -6618,25 +6617,6 @@ Item {
                         Item {
                             width: parent.width
                             height: 0.1 * unit
-                        }
-
-                        LText {
-                            width: parent.width
-
-                            font.pixelSize: fontSizeBig
-                            horizontalAlignment: Text.AlignHCenter
-                            visible: state.isError
-                            text: "Error"
-                        }
-
-                        LText {
-                            width: parent.width
-
-                            font.pixelSize: fontSizeNormal
-                            horizontalAlignment: Text.AlignHCenter
-                            visible: state.isError
-                            wrapMode: Text.WordWrap
-                            text: state.errorDescription
                         }
 
                         Value {id: debugStopReason; label: "Stop Condition"; value: state.stopConditionString}
