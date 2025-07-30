@@ -860,8 +860,8 @@ Item {
                 state.rtData = state.newRtData(newRt);
 
                 if (hasCharging) {
-                    chargingInfo.current = dv.getFloat32(ind); ind += 4;
-                    chargingInfo.voltage = dv.getFloat32(ind); ind += 4;
+                    chargingInfo.current = getFloat16(dv, ind); ind += 2;
+                    chargingInfo.voltage = getFloat16(dv, ind); ind += 2;
                 }
 
                 var running = +(state.pkgState === state.s_Running);
