@@ -4630,6 +4630,18 @@ Item {
                         }
                     }
                 }
+
+                ErrText {
+                    text: "Stop Condition: <font color=\"%1\">%2</font>".arg(Utility.getAppHexColor("lightText")).arg(state.stopConditionString)
+                    visible: state.stopConditionString
+                    color: Utility.getAppHexColor("normalText")
+                }
+
+                ErrText {
+                    text: "Last Beep Reason: <font color=\"%1\">%2</font>".arg(Utility.getAppHexColor("lightText")).arg(state.beepReasonString)
+                    visible: state.beepReasonString
+                    color: Utility.getAppHexColor("normalText")
+                }
             }
         }
     }
@@ -6618,9 +6630,6 @@ Item {
                             width: parent.width
                             height: 0.1 * unit
                         }
-
-                        Value {id: debugStopReason; label: "Stop Condition"; value: state.stopConditionString}
-                        Value {id: debugLastBeepReason; label: "Last Beep Reason"; value: state.beepReasonString}
 
                         Item {
                             width: parent.width
