@@ -4487,6 +4487,7 @@ Item {
 
         function show() {
             alertsDialogListModel.set(alerts.alertsLog);
+            activeAlertsItem.visible = alerts.activeAlertCount > 0;
             open();
         }
 
@@ -4496,6 +4497,12 @@ Item {
             function onAlertAdded(alert) {
                 if (alertsDialog.visible) {
                     alertsDialogListModel.add(alert);
+                }
+            }
+
+            function onActiveAlertCountChanged() {
+                if (alerts.activeAlertCount > 0) {
+                    activeAlertsItem.visible = true;
                 }
             }
         }
@@ -4574,22 +4581,45 @@ Item {
                     visible: state.pkgState === state.s_Disconnected
                 }
 
-                ErrHeader {
-                    text: "Active Alerts"
-                    visible: alerts.activeAlertCount > 0
-                }
-
-                Column {
+                Item {
+                    id: activeAlertsItem
                     Layout.fillWidth: true
 
-                    Repeater {
-                        model: alerts.activeAlerts
+                    Column {
+                        id: activeAlertsColumn
+                        width: parent.width
+                        property bool resetHeight: true
 
-                        ErrText {
-                            property var alert: alerts.getActiveAlertData(modelData)
-                            text: alert.name
-                            color: alerts.severityColors.get(alert.severity)
+                        ErrHeader {
+                            width: parent.width
+                            text: "Active Alerts"
                         }
+
+                        Item {
+                            width: parent.width
+                            height: 5
+                        }
+
+                        Repeater {
+                            model: alerts.activeAlerts
+
+                            ErrText {
+                                property var alert: alerts.getActiveAlertData(modelData)
+                                text: alert.name
+                                color: alerts.severityColors.get(alert.severity)
+                            }
+                        }
+
+                        onHeightChanged: {
+                            if (resetHeight || !activeAlertsItem.visible || activeAlertsItem.implicitHeight < height) {
+                                activeAlertsItem.implicitHeight = height;
+                                resetHeight = false;
+                            }
+                        }
+                    }
+
+                    onVisibleChanged: {
+                        activeAlertsColumn.resetHeight = true;
                     }
                 }
 
