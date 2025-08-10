@@ -20,7 +20,7 @@ ADD_TO_CLEAN = $(CONF_GEN_FILES) $(DEPS) conf/conf_general.h
 VESC_C_LIB_PATH = ../vesc_pkg_lib/
 include $(VESC_C_LIB_PATH)rules.mk
 
-CFLAGS += -MMD -flto
+CFLAGS += -MMD -flto -ggdb
 LDFLAGS += -flto
 
 $(REFLOAT_SOURCES): $(CONF_GEN_HEADERS) conf/conf_general.h
