@@ -838,6 +838,7 @@ Item {
                 state.fatalError = extraFlags & 0x8;
 
                 var time = dv.getUint32(ind); ind += 4;
+                state.setTimeReference(time);
 
                 var modeAndState = dv.getUint8(ind++);
                 state.pkgMode = modeAndState >> 4;
@@ -1492,6 +1493,27 @@ Item {
 
         property bool isError: pkgStateIsError || configLoadingError || fatalError
 
+        property var timeReference
+
+        function ticksToMsSinceEpoch(t) {
+            if (timeReference === undefined) {
+                return undefined;
+            }
+
+            return timeReference + t * 1000 / ticksPerSecond;
+        }
+
+        function setTimeReference(t) {
+            var timeRef = ticksToMsSinceEpoch(t);
+            var now = Date.now();
+
+            // if time is in the past, it's either a board reboot or the ticks have overflown
+            // reset the time reference either way
+            if (timeRef === undefined || timeRef < now - 8000) {
+                timeReference = now - t * 1000 / ticksPerSecond;
+            }
+        }
+
         property var rtDataIdleItems: []
         property var rtDataRuntimeItems: []
         property var rtDataAllItems: []
@@ -1528,8 +1550,17 @@ Item {
         property int activeFwFaultCode: 0
         property string activeFwFaultName: ""
         property var alertsLog: new Map()
+        property int lastAlertsLogTicks: 0
 
-        signal alertAdded(int time, var data)
+        signal alertAdded(var alert)
+
+        property Connections connections: Connections {
+            target: state
+
+            function onTimeReferenceChanged() {
+                alerts.lastAlertsLogTicks = 0;
+            }
+        }
 
         readonly property int alert_fwFault: 1
 
@@ -1556,7 +1587,7 @@ Item {
             interval: 500
             triggeredOnStart: true
             onTriggered: {
-                commands.sendAlertsList(alerts.alertsLog.keys()[-1]);
+                commands.sendAlertsList(alerts.lastAlertsLogTicks ? alerts.lastAlertsLogTicks : undefined);
             }
         }
 
@@ -1605,8 +1636,9 @@ Item {
 
             var ids = [];
             for (var i = 0; i < count; i++) {
-                var time = dv.getUint32(ind); ind += 4;
+                var ticks = dv.getUint32(ind); ind += 4;
                 var record = {
+                    "ticks": ticks,
                     "id": dv.getUint8(ind++),
                     "active": dv.getUint8(ind++) & 0x1,
                     "code": dv.getUint8(ind++),
@@ -1616,10 +1648,21 @@ Item {
                     [record.text, ind] = commands.getString(dv, ind);
                 }
 
-                if (!alertsLog.has(time)) {
-                    alertsLog.set(time, record);
-                    alertAdded(time, record);
+                var realTime = state.ticksToMsSinceEpoch(ticks);
+                if (realTime === undefined) {
+                    break;
                 }
+
+                record.time = realTime;
+
+                var key = "%1_%2_%3".arg(ticks).arg(record.id).arg(record.active);
+                if (alertsLog.has(key) && Math.abs(realTime - alertsLog.get(key).time) < 5000) {
+                    continue;
+                }
+
+                alertsLog.set(key, record);
+                lastAlertsLogTicks = ticks;
+                alertAdded(record);
             }
         }
 
@@ -4450,9 +4493,9 @@ Item {
         Connections {
             target: alerts
 
-            function onAlertAdded(time, data) {
-                if (alertsDialog.activeFocus) {
-                    alertsDialogListModel.add(time, data);
+            function onAlertAdded(alert) {
+                if (alertsDialog.visible) {
+                    alertsDialogListModel.add(alert);
                 }
             }
         }
@@ -4591,16 +4634,15 @@ Item {
                         model: ListModel {
                             id: alertsDialogListModel
 
-                            function add(time, data) {
+                            function add(alert) {
                                 var wasAtEnd = alertsDialogList.atYEnd;
 
-                                var model = Object.assign({}, data);
-                                Object.assign(model, alerts.getAlertLogData(data.id));
-                                model.time = time / state.ticksPerSecond;
-                                if (!data.active) {
+                                var model = Object.assign({}, alert);
+                                Object.assign(model, alerts.getAlertLogData(alert.id));
+                                if (!alert.active) {
                                     model.name = model.name + " ended";
                                 } else {
-                                    if (data.id === alerts.alert_fwFault) {
+                                    if (alert.id === alerts.alert_fwFault) {
                                         model.name = model.name + ": %1 (%2)".arg(model.text).arg(model.code);
                                     }
                                 }
@@ -4613,8 +4655,8 @@ Item {
 
                             function set(alertList) {
                                 clear();
-                                for (var [time, data] of alertList.entries()) {
-                                    add(time, data);
+                                for (var alert of alertList.values()) {
+                                    add(alert);
                                 }
                             }
                         }
@@ -4626,7 +4668,7 @@ Item {
                             font.pixelSize: 12
                             font.family: "Mono"
                             wrapMode: Text.WordWrap
-                            text: "%1s: [<font color=\"%2\">%3</font>] <font color=\"%4\">%5</font>".arg(time).arg(alerts.severityColors.get(severity)).arg(severity).arg(active ? Utility.getAppHexColor("lightText") : Utility.getAppHexColor("disabledText")).arg(name)
+                            text: "%1: [<font color=\"%2\">%3</font>] <font color=\"%4\">%5</font>".arg(Qt.formatTime(new Date(time), "hh:mm:ss.zzz")).arg(alerts.severityColors.get(severity)).arg(severity).arg(active ? Utility.getAppHexColor("lightText") : Utility.getAppHexColor("disabledText")).arg(name)
                         }
                     }
                 }
