@@ -61,19 +61,13 @@ The client is responsible to request all the chunks of data by repeatedly callin
 
 **ID**: 42
 
-Response with the metadata for the recorded data. Sends the total number of samples and then a list of string IDs for the values in each sample, same as in [REALTIME_DATA](REALTIME_DATA.md).
+Response with the metadata for the recorded data. Sends the total number of samples and then a list of [string](string.md) IDs for the values in each sample, same as in [REALTIME_DATA](REALTIME_DATA.md).
 
 | Offset | Size | Name                     | Description   |
 |--------|------|--------------------------|---------------|
 | 0      | 4    | `size`                   | Size of the buffer in number of samples. The client is expected to fetch up to this number of samples. |
 | 4      | 1    | `recorded_data_id_count` | Number of the recorded items per sample (sample size). |
-| 5      | ?    | `recorded_data_ids`      | A `string` sequence repeated `recorded_data_id_count` times. |
-
-**`string`**:
-| Offset | Size | Name     | Description   |
-|--------|------|----------|---------------|
-| 0      | 1    | `length` | Length of the string. |
-| 1      | ?    | `string` | `length` number of characters of the string (not null-terminated). |
+| 5      | ?    | `recorded_data_ids`      | A [string](string.md) sequence repeated `recorded_data_id_count` times. |
 
 ## DATA_RECORD_DATA (Response)
 

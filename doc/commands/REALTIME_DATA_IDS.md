@@ -17,12 +17,6 @@ The actual list of IDs that are sent is in [rt_data.h](/src/rt_data.h). See [Rea
 | Offset | Size | Name                             | Description   |
 |--------|------|----------------------------------|---------------|
 | 0      | 1    | `realtime_data_id_count`         | Number of IDs of the `REALTIME_DATA` items which are always sent. |
-| 1      | ?    | `realtime_data_ids`              | A `string` sequence repeated `realtime_data_id_count` times. |
+| 1      | ?    | `realtime_data_ids`              | A [string](string.md) sequence repeated `realtime_data_id_count` times. |
 | ?      | 1    | `realtime_runtime_data_id_count` | Number of IDs of the `REALTIME_DATA` items which are sent only when the package is running. |
-| ?      | ?    | `realtime_runtime_data_ids`      | A `string` sequence repeated `realtime_runtime_data_id_count` times. |
-
-**`string`**:
-| Offset | Size | Name     | Description   |
-|--------|------|----------|---------------|
-| 0      | 1    | `length` | Length of the string. |
-| 1      | ?    | `string` | `length` number of characters of the string (not null-terminated). |
+| ?      | ?    | `realtime_runtime_data_ids`      | A [string](string.md) sequence repeated `realtime_runtime_data_id_count` times. |
