@@ -916,7 +916,6 @@ Item {
         category: "preferences"
 
         property int speedDialMax: vescConfig.useImperial ? 30 : 40
-        property alias swapAdcs: prefSwapAdcs.checked
         property alias showBattVoltage: prefShowBattVoltage.checked
         property alias showBattVoltagePerCell: prefShowBattVoltagePerCell.checked
         property alias battCurrentLog: prefBattCurrentLog.checked
@@ -1390,11 +1389,6 @@ Item {
 
             if (fpState & fs_Right) {
                 rightSensor.on = true;
-            }
-
-            if (preferences.swapAdcs && leftSensor.on !== rightSensor.on) {
-                leftSensor.on = !leftSensor.on;
-                rightSensor.on = !rightSensor.on;
             }
         }
 
@@ -4153,16 +4147,6 @@ Item {
                         }
 
                         RightSwitch {
-                            id: prefSwapAdcs
-                            label: "Swap Footpad Sensor ADCs"
-                        }
-
-                        OptionDescription {
-                            visible: prefSwapAdcs.checked
-                            text: "Note: This swaps only the sensor visualization. You should swap your ADC1/2 physical connection, as this way, for example, your Konamies (sensor tap codes that control the board) will be reversed as well."
-                        }
-
-                        RightSwitch {
                             id: prefShowBattVoltage
                             checked: true
                             label: "Show battery voltage"
@@ -5730,8 +5714,8 @@ Item {
                             width: parent.height
                             height: width
 
-                            property real leftVoltage: preferences.swapAdcs ? state.rtData["footpad.adc2"] : state.rtData["footpad.adc1"]
-                            property real rightVoltage: preferences.swapAdcs ? state.rtData["footpad.adc1"] : state.rtData["footpad.adc2"]
+                            property real leftVoltage: state.rtData["footpad.adc1"]
+                            property real rightVoltage: state.rtData["footpad.adc2"]
 
                             property real canvasWidth: width * 0.85
                             property real scale: canvasWidth / footpadPath.width
