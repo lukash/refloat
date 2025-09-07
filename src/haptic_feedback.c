@@ -29,6 +29,7 @@ void haptic_feedback_init(HapticFeedback *hf) {
     hf->type_playing = HAPTIC_FEEDBACK_NONE;
     hf->tone_timer = 0;
     hf->is_playing = false;
+    hf->can_change_type = true;
 }
 
 void haptic_feedback_configure(HapticFeedback *hf, const RefloatConfig *cfg) {
@@ -141,7 +142,7 @@ void haptic_feedback_update(
 ) {
     HapticFeedbackType type_to_play = haptic_feedback_get_type(hf, state, md, at);
 
-    if (type_to_play != hf->type_playing && timer_older(time, hf->tone_timer, TONE_LENGTH)) {
+    if (type_to_play != hf->type_playing && hf->can_change_type) {
         hf->type_playing = type_to_play;
         timer_refresh(time, &hf->tone_timer);
     }
@@ -151,6 +152,7 @@ void haptic_feedback_update(
         uint8_t beats = get_beats(hf->type_playing);
         if (beats == 0) {
             should_be_playing = true;
+            hf->can_change_type = true;
         } else {
             float period = TONE_LENGTH * beats;
             float tone_time = fmodf(timer_age(time, hf->tone_timer), period);
@@ -158,7 +160,12 @@ void haptic_feedback_update(
             uint8_t off_beat = beats > 2 ? beats - 2 : 0;
 
             should_be_playing = beat % 2 == 0 && (off_beat == 0 || beat != off_beat);
+            // Only allow changing type (another pattern or stop alerting)
+            // if we just finished a period
+            hf->can_change_type = !hf->is_playing && beat == 0;
         }
+    } else {
+        hf->can_change_type = true;
     }
 
     if (hf->is_playing && !should_be_playing) {
