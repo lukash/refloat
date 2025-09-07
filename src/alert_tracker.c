@@ -30,6 +30,8 @@ const AlertProperties *alert_tracker_properties(AlertId alert_id) {
 }
 
 void alert_tracker_init(AlertTracker *at) {
+    at->persistent_fatal_error = true;
+
     at->active_alert_mask = 0;
     at->new_active_alert_mask = 0;
     at->fw_fault_code = FAULT_CODE_NONE;
@@ -38,6 +40,10 @@ void alert_tracker_init(AlertTracker *at) {
     circular_buffer_init(
         &at->alert_buffer, sizeof(AlertRecord), ALERT_TRACKER_SIZE, &at->alert_buffer_array
     );
+}
+
+void alert_tracker_configure(AlertTracker *at, const RefloatConfig *config) {
+    at->persistent_fatal_error = config->persistent_fatal_error;
 }
 
 void alert_tracker_add(AlertTracker *at, const Time *time, uint8_t id, uint8_t code) {
@@ -62,6 +68,7 @@ void alert_tracker_add(AlertTracker *at, const Time *time, uint8_t id, uint8_t c
 
 void alert_tracker_finalize(AlertTracker *at, const Time *time) {
     // Check for alerts that ended and create a record of it
+    bool clear_fatal = !at->persistent_fatal_error;
     for (uint8_t id = 1; id <= ALERT_LAST; ++id) {
         uint32_t mask = alert_id_to_mask(id);
         if (at->active_alert_mask & mask && !(at->new_active_alert_mask & mask)) {
@@ -71,10 +78,16 @@ void alert_tracker_finalize(AlertTracker *at, const Time *time) {
                 at->fw_fault_code = 0;
             }
         }
+
+        if (at->active_alert_mask & mask && alert_tracker_properties(id)->type == ATYPE_FATAL) {
+            clear_fatal = false;
+        }
     }
 
     at->active_alert_mask = at->new_active_alert_mask;
     at->new_active_alert_mask = 0;
+
+    at->fatal_error &= !clear_fatal;
 }
 
 bool alert_tracker_is_alert_active(AlertTracker *at, AlertId alert) {

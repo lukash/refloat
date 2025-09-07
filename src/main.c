@@ -168,6 +168,7 @@ static void reconfigure(Data *d) {
     remote_configure(&d->remote, &d->float_conf);
 
     haptic_feedback_configure(&d->haptic_feedback, &d->float_conf);
+    alert_tracker_configure(&d->alert_tracker, &d->float_conf);
 
     d->startup_step_size = d->float_conf.startup_speed / d->float_conf.hertz;
     d->noseangling_step_size = d->float_conf.noseangling_speed / d->float_conf.hertz;

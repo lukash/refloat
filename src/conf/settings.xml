@@ -797,6 +797,20 @@ p, li { white-space: pre-wrap; }
             <suffix> °/s</suffix>
             <vTx>7</vTx>
         </tiltback_return_speed>
+        <persistent_fatal_error>
+            <longName>Persistent Fatal Error</longName>
+            <type>5</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p align=&quot;justify&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;When enabled, any serious problem (even if only momentary) like a firmware fault will set a Fatal Error state which will need to be cleared via Vesc Tool or power cycling the board.&lt;/p&gt;
+&lt;p align=&quot;justify&quot; style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p align=&quot;justify&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Fatal Error state is signalled via Pushback and Haptic Feedback (four beeps).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_PERSISTENT_FATAL_ERROR</cDefine>
+            <valInt>1</valInt>
+        </persistent_fatal_error>
         <tiltback_constant>
             <longName>Constant Tiltback</longName>
             <type>1</type>
@@ -3933,6 +3947,7 @@ p, li { white-space: pre-wrap; }
         <ser>tiltback_lv</ser>
         <ser>tiltback_speed</ser>
         <ser>tiltback_return_speed</ser>
+        <ser>persistent_fatal_error</ser>
         <ser>tiltback_constant</ser>
         <ser>tiltback_constant_erpm</ser>
         <ser>tiltback_variable</ser>
@@ -4192,6 +4207,7 @@ p, li { white-space: pre-wrap; }
                     <param>tiltback_duty_speed</param>
                     <param>tiltback_return_speed</param>
                     <param>is_dutybeep_enabled</param>
+                    <param>persistent_fatal_error</param>
                     <param>::sep::High Voltage Alert Pushback</param>
                     <param>tiltback_hv_angle</param>
                     <param>tiltback_hv_speed</param>

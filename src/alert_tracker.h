@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "conf/datatypes.h"
 #include "lib/circular_buffer.h"
 #include "time.h"
 
@@ -46,6 +47,8 @@ typedef struct {
 } AlertRecord;
 
 typedef struct {
+    bool persistent_fatal_error;
+
     uint32_t active_alert_mask;
     uint32_t new_active_alert_mask;
     mc_fault_code fw_fault_code;
@@ -57,7 +60,9 @@ typedef struct {
 
 const AlertProperties *alert_tracker_properties(AlertId alert_id);
 
-void alert_tracker_init(AlertTracker *t);
+void alert_tracker_init(AlertTracker *at);
+
+void alert_tracker_configure(AlertTracker *at, const RefloatConfig *config);
 
 void alert_tracker_add(AlertTracker *at, const Time *time, uint8_t id, uint8_t data);
 

@@ -238,6 +238,7 @@ typedef struct {
     float tiltback_lv_speed;
     float tiltback_lv;
     float tiltback_return_speed;
+    bool persistent_fatal_error;
     float tiltback_constant;
     uint16_t tiltback_constant_erpm;
     float tiltback_variable;
