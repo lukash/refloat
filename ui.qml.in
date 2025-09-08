@@ -1238,7 +1238,7 @@ Item {
             var result = [];
             for (var i = 0; i < tuneCount; i++) {
                 // set the version to the current one to always pass the version check
-                result.push({"version": formatVersion, "settings": []});
+                result.push({"version": formatVersion, "settings": {}});
             }
 
             for (var i in lines) {
@@ -1249,30 +1249,29 @@ Item {
                     if (value) {
                         var key = currentLine[0];
                         var name;
-                        var type;
 
                         if (key === "_name") {
                             result[j].name = value;
                             continue;
                         } else if (key.startsWith("double_")) {
                             name = key.substring(7);
-                            type = "Double";
+                            value = parseFloat(value);
                         } else if (key.startsWith("int_")) {
                             name = key.substring(4);
-                            type = "Int";
+                            value = parseInt(value);
                         } else if (key.startsWith("bool_")) {
                             name = key.substring(5);
-                            type = "Bool";
+                            value = !!parseInt(value);
                         } else if (key.startsWith("enum_")) {
                             name = key.substring(5);
-                            type = "Enum";
+                            value = parseInt(value);
                         }
 
-                        result[j].settings.push({
-                            "name": name,
-                            "type": type,
-                            "value": value
-                        });
+                        if (Number.isNaN(value)) {
+                            continue;
+                        }
+
+                        result[j].settings[name] = value;
                     }
                 }
             }
@@ -4400,7 +4399,8 @@ Item {
             open();
 
             var tuneArchive = tuneManager.loadTuneArchive();
-            if (tuneArchive) {
+            // backwards compatibility: Check for the first item settings not being an array (if it is, redownload)
+            if (tuneArchive && tuneArchive.length > 0 && !Array.isArray(tuneArchive[0].settings)) {
                 downloadedTunesModel.setTunes(tuneArchive);
                 tuneArchiveDownloadStatus.text = "Tunes downloaded on %1".arg(tuneManager.getTuneArchiveDate());
             } else {
