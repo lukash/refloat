@@ -1123,7 +1123,7 @@ Item {
             if (!backup) {
                 return;
             }
-            applyConfigDialog.show(backup);
+            applyConfigDialog.show(backup, false, false);
         }
 
         function idBackup() {
@@ -1140,7 +1140,7 @@ Item {
             if (!backup) {
                 return;
             }
-            applyConfigDialog.show(backup);
+            applyConfigDialog.show(backup, false, false);
         }
 
         function autoBackup() {
@@ -1158,7 +1158,7 @@ Item {
             if (!backup) {
                 return;
             }
-            applyConfigDialog.show(backup);
+            applyConfigDialog.show(backup, false, false);
         }
 
         function triggerAutoRestore() {
@@ -1170,7 +1170,7 @@ Item {
                 var backup = loadBackup("auto_backup_" + board.getId());
                 if (backup) {
                     print("Refloat: Automatic backup restore.");
-                    applyConfigDialog.show(backup, true);
+                    applyConfigDialog.show(backup, true, false);
                 } else {
                     print("Refloat: No automatic backup to restore.");
                 }
@@ -4456,7 +4456,7 @@ Item {
                     width: tuneArchiveTunesList.width
                     text: tune.name
                     onClicked: {
-                        applyConfigDialog.show(tune);
+                        applyConfigDialog.show(tune, false, true);
                     }
                 }
             }
@@ -4920,8 +4920,8 @@ Item {
         NText {
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
-            visible: isEmpty && !isTune
-            text: "Current config is the same as this backup."
+            visible: isEmpty
+            text: "There are no differences to your current config."
         }
 
         Item {
@@ -4932,10 +4932,11 @@ Item {
     BaseDialog {
         id: applyConfigDialog
 
-        title: "Restore Config"
+        title: isTune ? "Apply Tune" : "Restore Config"
 
         property var config
         property bool automatic: false
+        property bool isTune: false
 
         property var name: config ? config.name : "(Unknown)"
         property var date: config && config.date ? Qt.formatDateTime(new Date(config.date)) : ""
@@ -4947,11 +4948,13 @@ Item {
             applyConfigDiff.setModel(diff);
         }
 
-        function show(cfg, autoRestore) {
+        function show(cfg, auto, tune) {
             config = cfg;
-            automatic = !!autoRestore;
+            automatic = !!auto;
+            isTune = !!tune;
             applyConfigDiff.reset();
-            if (!applyConfigDiff.isEmpty) {
+            applyConfigDiff.isTune = isTune;
+            if (!applyConfigDiff.isEmpty && !isTune) {
                 standardButton(Dialog.Apply).text = "Restore";
             }
             open();
@@ -5036,7 +5039,7 @@ Item {
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
                 wrapMode: Text.WordWrap
-                visible: !applyConfigDiff.isEmpty
+                visible: !applyConfigDiff.isEmpty && !applyConfigDialog.isTune
                 text: "Restoring this backup will overwrite your current config."
             }
         }
