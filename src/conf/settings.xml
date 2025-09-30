@@ -184,7 +184,7 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Angle P (Braking) = 0.5x,&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;then your brakes will use an Angle P of 10, half the strength of your acceleration Angle P.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_KP_BRAKE</cDefine>
-            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorDecimalsDouble>2</editorDecimalsDouble>
             <editorScale>1</editorScale>
             <editAsPercentage>0</editAsPercentage>
             <maxDouble>3</maxDouble>
@@ -192,7 +192,7 @@ p, li { white-space: pre-wrap; }
             <showDisplay>0</showDisplay>
             <stepDouble>0.1</stepDouble>
             <valDouble>1</valDouble>
-            <vTxDoubleScale>10</vTxDoubleScale>
+            <vTxDoubleScale>100</vTxDoubleScale>
             <suffix>x</suffix>
             <vTx>7</vTx>
         </kp_brake>
@@ -209,7 +209,7 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Rate P (Braking) = 0.5x,&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;then your brakes will use a Rate P of 0.3, half the strength of your acceleration Rate P.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_KP2_BRAKE</cDefine>
-            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorDecimalsDouble>2</editorDecimalsDouble>
             <editorScale>1</editorScale>
             <editAsPercentage>0</editAsPercentage>
             <maxDouble>3</maxDouble>
@@ -217,7 +217,7 @@ p, li { white-space: pre-wrap; }
             <showDisplay>0</showDisplay>
             <stepDouble>0.1</stepDouble>
             <valDouble>1</valDouble>
-            <vTxDoubleScale>10</vTxDoubleScale>
+            <vTxDoubleScale>100</vTxDoubleScale>
             <suffix>x</suffix>
             <vTx>7</vTx>
         </kp2_brake>
