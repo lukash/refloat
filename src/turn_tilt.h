@@ -24,6 +24,7 @@
 
 typedef struct {
     float step_size;
+    float ramped_step_size;
     float boost_per_erpm;
 
     float last_yaw_angle;
