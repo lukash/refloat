@@ -34,6 +34,7 @@ void turn_tilt_reset(TurnTilt *tt) {
     tt->abs_yaw_change = 0.0f;
     tt->yaw_aggregate = 0.0f;
 
+    tt->ramped_step_size = 0.0f;
     tt->target = 0.0f;
     tt->setpoint = 0.0f;
 }
@@ -152,6 +153,6 @@ void turn_tilt_update(
         }
     }
 
-    // Move towards target limited by max speed
-    rate_limitf(&tt->setpoint, tt->target, tt->step_size);
+    // Smoothen changes in tilt angle by ramping the step size
+    smooth_rampf(&tt->setpoint, &tt->ramped_step_size, tt->target, tt->step_size, 0.04, 1.5);
 }

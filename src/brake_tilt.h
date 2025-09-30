@@ -25,6 +25,7 @@
 typedef struct {
     float factor;
     float target;
+    float ramped_step_size;
     float setpoint;
 } BrakeTilt;
 
