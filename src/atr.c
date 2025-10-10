@@ -133,60 +133,40 @@ void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config) {
     // We want to react quickly to changes, but we don't want to overreact to glitches in
     // acceleration data or trigger oscillations...
     float atr_step_size = 0;
-    const float TT_BOOST_MARGIN = 2;
-    if (forward) {
-        if (atr->setpoint < 0) {
-            // downhill
-            if (atr->setpoint < atr->target) {
-                // to avoid oscillations we go down slower than we go up
-                atr_step_size = atr->off_step_size;
-                if (atr->target > 0 && atr->target - atr->setpoint > TT_BOOST_MARGIN &&
-                    motor->abs_erpm > 2000) {
-                    // boost the speed if tilt target has reversed (and if there's a significant
-                    // margin)
-                    atr_step_size = atr->off_step_size * config->atr_transition_boost;
-                }
-            } else {
-                // ATR is increasing
-                atr_step_size = atr->on_step_size * response_boost;
-            }
-        } else {
-            // uphill or other heavy resistance (grass, mud, etc)
-            if (atr->target > -3 && atr->setpoint > atr->target) {
-                // ATR winding down (current ATR is bigger than the target)
-                // normal wind down case: to avoid oscillations we go down slower than we go up
-                atr_step_size = atr->off_step_size;
-            } else {
-                // standard case of increasing ATR
-                atr_step_size = atr->on_step_size * response_boost;
-            }
-        }
+
+    float atr_tb_step_size = atr->off_step_size * config->atr_transition_boost;
+    float atr_on_step_size = atr->on_step_size * response_boost;
+
+    const float TT_BOOST_UPHILL_MARGIN = 2;
+    const float TT_BOOST_DOWNHILL_THRESHOLD = 3;
+
+    // Winding Down: Setpoint is moving toward 0
+    bool is_winding_down = (atr->setpoint < 0 && atr->setpoint < atr->target) ||
+        (atr->setpoint > 0 && atr->setpoint > atr->target);
+
+    bool should_transition_boost;
+    if (atr->target * atr->setpoint >= 0) {
+        // If Target and Setpoint are of same sign or 0, we are not transitioning
+        should_transition_boost = false;
+    } else if (forward ? (atr->setpoint < 0 && atr->target > 0)
+                       : (atr->setpoint > 0 && atr->target < 0)) {
+        // Transitioning Downhill to Uphill: check margin between target and setpoint,
+        // with a minimum ERPM threshold
+        should_transition_boost = (fabsf(atr->target - atr->setpoint) > TT_BOOST_UPHILL_MARGIN) &&
+            (motor->abs_erpm > 2000);
     } else {
-        if (atr->setpoint > 0) {
-            // downhill
-            if (atr->setpoint > atr->target) {
-                // to avoid oscillations we go down slower than we go up
-                atr_step_size = atr->off_step_size;
-                if (atr->target < 0 && atr->setpoint - atr->target > TT_BOOST_MARGIN &&
-                    motor->abs_erpm > 2000) {
-                    // boost the speed if tilt target has reversed (and if there's a significant
-                    // margin)
-                    atr_step_size = atr->off_step_size * config->atr_transition_boost;
-                }
-            } else {
-                // ATR is increasing
-                atr_step_size = atr->on_step_size * response_boost;
-            }
-        } else {
-            // uphill or other heavy resistance (grass, mud, etc)
-            if (atr->target < 3 && atr->setpoint < atr->target) {
-                // normal wind down case: to avoid oscillations we go down slower than we go up
-                atr_step_size = atr->off_step_size;
-            } else {
-                // standard case of increasing torquetilt
-                atr_step_size = atr->on_step_size * response_boost;
-            }
-        }
+        // Transitioning Uphill to Downhill: check target magnitude (stricter condition);
+        // Instead of transition boost, use on_step_size (typically faster than off_step_size)
+        should_transition_boost = false;
+        is_winding_down = fabsf(atr->target) < TT_BOOST_DOWNHILL_THRESHOLD;
+    }
+
+    if (is_winding_down) {
+        // ATR is decreasing (boost if transitioning to strong Uphill ATR)
+        atr_step_size = should_transition_boost ? atr_tb_step_size : atr->off_step_size;
+    } else {
+        // ATR is increasing (or transitioning quickly from Uphill to Downhill ATR)
+        atr_step_size = atr_on_step_size;
     }
 
     if (motor->abs_erpm < 500) {
