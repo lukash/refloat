@@ -26,7 +26,7 @@ void imu_init(IMU *imu) {
     imu->balance_pitch = 0.0f;
     imu->roll = 0.0f;
     imu->yaw = 0.0f;
-    imu->gyro_y = 0.0f;
+    imu->pitch_rate = 0.0f;
 
     imu->flywheel_pitch_offset = 0.0f;
     imu->flywheel_roll_offset = 0.0f;
@@ -48,7 +48,7 @@ void imu_update(IMU *imu, const BalanceFilterData *bf, const State *state) {
 
     // Rotated to diminish influence of Yaw Change on Gyro Y when board is rolled
     // (Estimates Pitch Rate solely due to rider input, without influence from board turning)
-    imu->gyro_y = cos_roll * cos_roll * gyro[1] + sin_roll * cos_roll * gyro[2];
+    imu->pitch_rate = cos_roll * cos_roll * gyro[1] + sin_roll * cos_roll * gyro[2];
 
     if (state->mode == MODE_FLYWHEEL) {
         imu->pitch = imu->flywheel_pitch_offset - imu->pitch;
