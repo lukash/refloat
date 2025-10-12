@@ -41,6 +41,9 @@ void imu_update(IMU *imu, const BalanceFilterData *bf, const State *state) {
     float gyro[3];
     VESC_IF->imu_get_gyro(gyro);
     imu->pitch_rate = gyro[1];
+    if (state->darkride) {
+        imu->pitch_rate = -imu->pitch_rate;
+    }
 
     if (state->mode == MODE_FLYWHEEL) {
         imu->pitch = imu->flywheel_pitch_offset - imu->pitch;

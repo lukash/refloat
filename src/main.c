@@ -862,6 +862,10 @@ static void refloat_thd(void *arg) {
                 new_current = sign(new_current) * current_limit;
             }
 
+            if (d->state.darkride) {
+                new_current = -new_current;
+            }
+
             if (d->traction_control) {
                 // freewheel while traction loss is detected
                 d->balance_current = 0;
