@@ -49,6 +49,9 @@ void imu_update(IMU *imu, const BalanceFilterData *bf, const State *state) {
     // Rotated to diminish influence of Yaw Change on Gyro Y when board is rolled
     // (Estimates Pitch Rate solely due to rider input, without influence from board turning)
     imu->pitch_rate = cos_roll * cos_roll * gyro[1] + sin_roll * cos_roll * gyro[2];
+    if (state->darkride) {
+        imu->pitch_rate = -imu->pitch_rate;
+    }
 
     if (state->mode == MODE_FLYWHEEL) {
         imu->pitch = imu->flywheel_pitch_offset - imu->pitch;
