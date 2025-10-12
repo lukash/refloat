@@ -77,7 +77,7 @@ void pid_update(
 
     pid->p *= config->kp * (pid->p > 0 ? pid->kp_accel_scale : pid->kp_brake_scale);
 
-    pid->rate_p = -imu->gyro_y * config->kp2;
+    pid->rate_p = -imu->pitch_rate * config->kp2;
     pid->rate_p *= pid->rate_p > 0 ? pid->kp2_accel_scale : pid->kp2_brake_scale;
 }
 
