@@ -25,7 +25,7 @@ typedef struct {
     float balance_pitch;
     float roll;
     float yaw;
-    float gyro_y;
+    float pitch_rate;
 
     float flywheel_pitch_offset;
     float flywheel_roll_offset;
