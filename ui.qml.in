@@ -5848,10 +5848,22 @@ Item {
                             width: parent.height
                             height: width
 
-                            property real value: state.rtData["imu.roll"]
+                            property real newValue: state.rtData["imu.roll"]
+                            property real preValue: newValue
+                            onNewValueChanged: {
+                                if (Math.abs(newValue - preValue) > 180) {
+                                    rollEasingBehavior.enabled = false;
+                                    value += newValue > 0 ? 360 : -360;
+                                    rollEasingBehavior.enabled = true;
+                                }
+                                value = newValue;
+                                preValue = newValue;
+                            }
+                            property real value: newValue
                             onValueChanged: rollCanvas.requestPaint();
 
                             Behavior on value {
+                                id: rollEasingBehavior
                                 NumberAnimation {
                                     easing.type: Easing.OutCirc
                                     duration: 100
