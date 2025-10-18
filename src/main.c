@@ -1135,6 +1135,10 @@ static void write_cfg_to_eeprom(Data *d) {
 static void aux_thd(void *arg) {
     Data *d = (Data *) arg;
 
+    if (VESC_IF->thread_set_priority) {
+        VESC_IF->thread_set_priority(-1);
+    }
+
     time_t motor_config_refresh_timer = 0;
 
     while (!VESC_IF->should_terminate()) {
