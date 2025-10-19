@@ -18,8 +18,6 @@
 
 #include "led_driver.h"
 
-#include "st_types.h"
-
 #include "utils.h"
 
 #include "vesc_c_if.h"
@@ -31,133 +29,141 @@
 #define WS2812_ZERO (((uint32_t) TIM_PERIOD) * 0.3)
 #define WS2812_ONE (((uint32_t) TIM_PERIOD) * 0.7)
 
-typedef struct {
-    uint8_t pin_nr;
-    DMA_Stream_TypeDef *dma_stream;
-    uint16_t dma_source;
-    uint32_t ccr_address;
-} PinHwConfig;
-
-static PinHwConfig get_pin_hw_config(LedPin pin) {
-    PinHwConfig cfg;
-    switch (pin) {
-    case LED_PIN_B6:
-        cfg.pin_nr = 6;
-        cfg.dma_stream = DMA1_Stream0;
-        cfg.dma_source = TIM_DMA_CC1;
-        cfg.ccr_address = (uint32_t) &TIM4->CCR1;
-        break;
-    case LED_PIN_B7:
-        cfg.pin_nr = 7;
-        cfg.dma_stream = DMA1_Stream3;
-        cfg.dma_source = TIM_DMA_CC2;
-        cfg.ccr_address = (uint32_t) &TIM4->CCR2;
-        break;
+static const PinHwConfig pin_hw_configs[] = {
+    {
+        .pin_port = GPIOB,
+        .pin_nr = 6,
+        .timer = TIM4,
+        .ccr_address = (uint32_t) &TIM4->CCR1,
+        .rcc_apb1_periph = RCC_APB1Periph_TIM4,
+        .timer_ccmr = &TIM4->CCMR1,
+        .timer_ccmr_shift = 0,
+        .timer_ccer_shift = 0,
+        .dma_stream = DMA1_Stream0,
+        .dma_channel = DMA_Channel_2,
+        .dma_if_shift = 0,
+        .dma_source = TIM_DMA_CC1,
+    },
+    {
+        .pin_port = GPIOB,
+        .pin_nr = 7,
+        .timer = TIM4,
+        .ccr_address = (uint32_t) &TIM4->CCR2,
+        .rcc_apb1_periph = RCC_APB1Periph_TIM4,
+        .timer_ccmr = &TIM4->CCMR1,
+        .timer_ccmr_shift = 8,
+        .timer_ccer_shift = 4,
+        .dma_stream = DMA1_Stream3,
+        .dma_channel = DMA_Channel_2,
+        .dma_if_shift = 22,
+        .dma_source = TIM_DMA_CC2,
+    },
+    {
+        .pin_port = GPIOC,
+        .pin_nr = 9,
+        .timer = TIM3,
+        .ccr_address = (uint32_t) &TIM3->CCR4,
+        .rcc_apb1_periph = RCC_APB1Periph_TIM3,
+        .timer_ccmr = &TIM3->CCMR2,
+        .timer_ccmr_shift = 8,
+        .timer_ccer_shift = 12,
+        .dma_stream = DMA1_Stream2,
+        .dma_channel = DMA_Channel_5,
+        .dma_if_shift = 16,
+        .dma_source = TIM_DMA_CC4,
     }
+};
 
-    return cfg;
+static void reset_timer(const PinHwConfig *pin_hw_cfg) {
+    RCC->APB1RSTR |= pin_hw_cfg->rcc_apb1_periph;
+    RCC->APB1RSTR &= ~pin_hw_cfg->rcc_apb1_periph;
 }
 
-static void reset_tim4() {
-    RCC->APB1RSTR |= RCC_APB1Periph_TIM4;
-    RCC->APB1RSTR &= ~RCC_APB1Periph_TIM4;
+static void init_timer(const PinHwConfig *pin_hw_cfg) {
+    // enable the Low Speed APB (APB1) peripheral clock
+    // see: RCC_APB1PeriphClockCmd()
+    RCC->APB1ENR |= pin_hw_cfg->rcc_apb1_periph;
+
+    // init timer registers
+    // see: TIM_TimeBaseInit()
+    pin_hw_cfg->timer->CR1 |= TIM_CounterMode_Up;
+    pin_hw_cfg->timer->ARR = TIM_PERIOD;
+
+    // see: TIM_OC<N>Init() and TIM_OC<N>PreloadConfig()
+    *pin_hw_cfg->timer_ccmr |= TIM_OCMode_PWM1 << pin_hw_cfg->timer_ccmr_shift;
+    pin_hw_cfg->timer->CCER |= (TIM_OCPolarity_High | TIM_OutputState_Enable)
+        << pin_hw_cfg->timer_ccer_shift;
+    *pin_hw_cfg->timer_ccmr |= TIM_OCPreload_Enable << pin_hw_cfg->timer_ccmr_shift;
+
+    // enable timer peripheral Preload register on ARR and enable the timer
+    // see: RCC_APB1PeriphClockCmd()
+    pin_hw_cfg->timer->CR1 |= TIM_CR1_ARPE | TIM_CR1_CEN;
 }
 
-static void init_tim4(bool ccr1) {
-    // enable the Low Speed APB (APB1) peripheral clock for TIM4
-    RCC->APB1ENR |= RCC_APB1Periph_TIM4;
-
-    // init TIM4 registers
-    TIM4->CR1 |= TIM_CounterMode_Up;
-    TIM4->ARR = TIM_PERIOD;
-
-    if (ccr1) {
-        TIM4->CCMR1 |= TIM_OCMode_PWM1;
-        TIM4->CCER |= TIM_OCPolarity_High | TIM_OutputState_Enable;
-        TIM4->CCMR1 |= TIM_OCPreload_Enable;
-    } else {
-        TIM4->CCMR1 |= TIM_OCMode_PWM1 << 8;
-        TIM4->CCER |= TIM_OCPolarity_High << 4 | TIM_OutputState_Enable << 4;
-        TIM4->CCMR1 |= TIM_OCPreload_Enable << 8;
-    }
-
-    // enable TIM4 peripheral Preload register on ARR and enable TIM4
-    TIM4->CR1 |= TIM_CR1_ARPE | TIM_CR1_CEN;
+static void disable_dma_stream(const PinHwConfig *pin_hw_cfg) {
+    pin_hw_cfg->dma_stream->CR &= ~DMA_SxCR_EN;
 }
 
-static void disable_dma_stream(DMA_Stream_TypeDef *dma_stream) {
-    dma_stream->CR &= ~DMA_SxCR_EN;
+static void enable_dma_stream(const PinHwConfig *pin_hw_cfg) {
+    pin_hw_cfg->dma_stream->CR |= DMA_SxCR_EN;
 }
 
-static void enable_dma_stream(DMA_Stream_TypeDef *dma_stream) {
-    dma_stream->CR |= DMA_SxCR_EN;
-}
-
-// Only DMA_Stream0 and DMA_Stream3 supported as of now.
-static void init_dma_stream(
-    DMA_Stream_TypeDef *dma_stream, uint16_t *buf, uint32_t buf_len, uint32_t ccr_address
-) {
+static void init_dma_stream(const PinHwConfig *pin_hw_cfg, uint16_t *buf, uint32_t buf_len) {
     // enable the AHB1 peripheral clock for DMA1
+    // see: RCC_AHB1PeriphClockCmd()
     RCC->AHB1ENR |= RCC_AHB1Periph_DMA1;
 
-    disable_dma_stream(dma_stream);
+    // see: DMA_Init()
+    disable_dma_stream(pin_hw_cfg);
 
-    dma_stream->M1AR = 0;
+    pin_hw_cfg->dma_stream->M1AR = 0;
 
     const uint32_t dma_stream0_it_mask =
         DMA_LISR_FEIF0 | DMA_LISR_DMEIF0 | DMA_LISR_TEIF0 | DMA_LISR_HTIF0 | DMA_LISR_TCIF0;
-    if (dma_stream == DMA1_Stream0) {
-        DMA1->LIFCR = dma_stream0_it_mask;
-    } else {
-        DMA1->LIFCR = dma_stream0_it_mask << 22;
-    }
+    DMA1->LIFCR = dma_stream0_it_mask << pin_hw_cfg->dma_if_shift;
 
-    dma_stream->CR = DMA_Channel_2 | DMA_DIR_MemoryToPeripheral | DMA_MemoryInc_Enable |
-        DMA_PeripheralDataSize_HalfWord | DMA_MemoryDataSize_HalfWord | DMA_Mode_Normal |
-        DMA_Priority_High | DMA_MemoryBurst_Single | DMA_PeripheralBurst_Single;
+    pin_hw_cfg->dma_stream->CR = pin_hw_cfg->dma_channel | DMA_DIR_MemoryToPeripheral |
+        DMA_MemoryInc_Enable | DMA_PeripheralDataSize_HalfWord | DMA_MemoryDataSize_HalfWord |
+        DMA_Mode_Normal | DMA_Priority_High | DMA_MemoryBurst_Single | DMA_PeripheralBurst_Single;
 
-    dma_stream->FCR = 0x00000020 | DMA_FIFOThreshold_Full;
+    pin_hw_cfg->dma_stream->FCR = 0x00000020 | DMA_FIFOThreshold_Full;
 
-    dma_stream->M0AR = (uint32_t) buf;
-    dma_stream->NDTR = buf_len;
-    dma_stream->PAR = ccr_address;
+    pin_hw_cfg->dma_stream->M0AR = (uint32_t) buf;
+    pin_hw_cfg->dma_stream->NDTR = buf_len;
+    pin_hw_cfg->dma_stream->PAR = pin_hw_cfg->ccr_address;
 
-    enable_dma_stream(dma_stream);
+    enable_dma_stream(pin_hw_cfg);
 }
 
-static void reset_dma_stream_transfer_complete(DMA_Stream_TypeDef *dma_stream) {
-    if (dma_stream == DMA1_Stream0) {
-        DMA1->LIFCR |= DMA_LIFCR_CTCIF0;
-    } else if (dma_stream == DMA1_Stream3) {
-        DMA1->LIFCR |= DMA_LIFCR_CTCIF3;
-    }
+static void reset_dma_stream_transfer_complete(const PinHwConfig *pin_hw_cfg) {
+    DMA1->LIFCR |= DMA_LIFCR_CTCIF0 << pin_hw_cfg->dma_if_shift;
 }
 
-static void disable_tim4_dma(uint16_t dma_source) {
-    TIM4->DIER &= ~dma_source;
+static void disable_timer_dma(const PinHwConfig *pin_hw_cfg) {
+    pin_hw_cfg->timer->DIER &= ~pin_hw_cfg->dma_source;
 }
 
-static void enable_tim4_dma(uint16_t dma_source) {
-    TIM4->DIER |= dma_source;
+static void enable_timer_dma(const PinHwConfig *pin_hw_cfg) {
+    pin_hw_cfg->timer->DIER |= pin_hw_cfg->dma_source;
 }
 
-static void init_hw(LedPin pin, LedPinConfig pin_config, uint16_t *buffer, uint32_t length) {
-    PinHwConfig cfg = get_pin_hw_config(pin);
-
+static void init_hw(
+    const PinHwConfig *cfg, LedPinConfig pin_config, uint16_t *buffer, uint32_t length
+) {
     uint32_t pin_mode = PAL_MODE_ALTERNATE(2) | PAL_STM32_OSPEED_MID1;
     pin_mode |= pin_config == LED_PIN_CFG_PULLUP_TO_5V ? PAL_STM32_OTYPE_OPENDRAIN
                                                        : PAL_STM32_OTYPE_PUSHPULL;
-    VESC_IF->set_pad_mode(GPIOB, cfg.pin_nr, pin_mode);
+    VESC_IF->set_pad_mode(cfg->pin_port, cfg->pin_nr, pin_mode);
 
-    reset_tim4();
-    init_dma_stream(cfg.dma_stream, buffer, length, cfg.ccr_address);
-    init_tim4(cfg.ccr_address == (uint32_t) &TIM4->CCR1);
-    enable_tim4_dma(cfg.dma_source);
+    reset_timer(cfg);
+    init_dma_stream(cfg, buffer, length);
+    init_timer(cfg);
+    enable_timer_dma(cfg);
 }
 
-static void deinit_hw(LedPin pin) {
-    reset_tim4();
-    disable_dma_stream(get_pin_hw_config(pin).dma_stream);
+static void deinit_hw(const PinHwConfig *cfg) {
+    reset_timer(cfg);
+    disable_dma_stream(cfg);
 }
 
 inline static uint8_t color_order_bits(LedColorOrder order) {
@@ -182,6 +188,12 @@ void led_driver_init(LedDriver *driver) {
 bool led_driver_setup(
     LedDriver *driver, LedPin pin, LedPinConfig pin_config, const LedStrip **led_strips
 ) {
+    if (pin > LED_PIN_LAST) {
+        log_error("Invalid LED pin configured: %u", pin);
+        return false;
+    }
+    driver->pin_hw_config = &pin_hw_configs[pin];
+
     driver->bitbuffer_length = 0;
 
     size_t offsets[3] = {0};
@@ -219,7 +231,7 @@ bool led_driver_setup(
     }
     driver->bitbuffer[driver->bitbuffer_length - 1] = 0;
 
-    init_hw(pin, pin_config, driver->bitbuffer, driver->bitbuffer_length);
+    init_hw(driver->pin_hw_config, pin_config, driver->bitbuffer, driver->bitbuffer_length);
     return true;
 }
 
@@ -291,18 +303,18 @@ void led_driver_paint(LedDriver *driver) {
         }
     }
 
-    PinHwConfig cfg = get_pin_hw_config(driver->pin);
-    disable_tim4_dma(cfg.dma_source);
-    disable_dma_stream(cfg.dma_stream);
-    reset_dma_stream_transfer_complete(cfg.dma_stream);
-    enable_dma_stream(cfg.dma_stream);
-    enable_tim4_dma(cfg.dma_source);
+    const PinHwConfig *cfg = driver->pin_hw_config;
+    disable_timer_dma(cfg);
+    disable_dma_stream(cfg);
+    reset_dma_stream_transfer_complete(cfg);
+    enable_dma_stream(cfg);
+    enable_timer_dma(cfg);
 }
 
 void led_driver_destroy(LedDriver *driver) {
     if (driver->bitbuffer) {
         // only touch the timer/DMA if we inited it - something else could be using it
-        deinit_hw(driver->pin);
+        deinit_hw(driver->pin_hw_config);
 
         VESC_IF->free(driver->bitbuffer);
         driver->bitbuffer = NULL;
