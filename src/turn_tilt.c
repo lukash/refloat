@@ -73,14 +73,7 @@ void turn_tilt_aggregate(TurnTilt *tt, const IMU *imu) {
     }
 }
 
-void turn_tilt_update(
-    TurnTilt *tt,
-    const MotorData *md,
-    const ATR *atr,
-    float balance_pitch,
-    float noseangling,
-    const RefloatConfig *config
-) {
+void turn_tilt_update(TurnTilt *tt, const MotorData *md, const RefloatConfig *config) {
     if (config->turntilt_strength == 0) {
         return;
     }
@@ -126,30 +119,6 @@ void turn_tilt_update(
             tt->target = 0;
         } else {
             tt->target *= md->erpm_sign;
-        }
-
-        // ATR interference: Reduce target during moments of high torque response
-        float atr_min = 2;
-        float atr_max = 5;
-        if (sign(atr->target) != sign(tt->target)) {
-            // further reduced turntilt during moderate to steep downhills
-            atr_min = 1;
-            atr_max = 4;
-        }
-        if (fabsf(atr->target) > atr_min) {
-            // Start scaling turntilt when ATR>2, down to 0 turntilt for ATR > 5 degrees
-            float atr_scaling = (atr_max - fabsf(atr->target)) / (atr_max - atr_min);
-            if (atr_scaling < 0) {
-                atr_scaling = 0;
-                // during heavy torque response clear the yaw aggregate too
-                tt->yaw_aggregate = 0;
-            }
-            tt->target *= atr_scaling;
-        }
-        if (fabsf(balance_pitch - noseangling) > 4) {
-            // no setpoint changes during heavy acceleration or braking
-            tt->target = 0;
-            tt->yaw_aggregate = 0;
         }
     }
 
