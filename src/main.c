@@ -887,14 +887,7 @@ static void refloat_thd(void *arg) {
                     brake_tilt_winddown(&d->brake_tilt);
                 } else {
                     apply_noseangling(d);
-                    turn_tilt_update(
-                        &d->turn_tilt,
-                        &d->motor,
-                        &d->atr,
-                        d->imu.balance_pitch,
-                        d->noseangling_interpolated,
-                        &d->float_conf
-                    );
+                    turn_tilt_update(&d->turn_tilt, &d->motor, &d->float_conf);
 
                     torque_tilt_update(&d->torque_tilt, &d->motor, &d->float_conf);
                     atr_update(&d->atr, &d->motor, &d->float_conf);
