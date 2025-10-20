@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include "atr.h"
 #include "conf/datatypes.h"
 #include "imu.h"
 #include "motor_data.h"
@@ -45,11 +44,4 @@ void turn_tilt_configure(TurnTilt *tt, const RefloatConfig *config);
 
 void turn_tilt_aggregate(TurnTilt *tt, const IMU *imu);
 
-void turn_tilt_update(
-    TurnTilt *tt,
-    const MotorData *md,
-    const ATR *atr,
-    float balance_pitch,
-    float noseangling,
-    const RefloatConfig *config
-);
+void turn_tilt_update(TurnTilt *tt, const MotorData *md, const RefloatConfig *config);

@@ -888,14 +888,7 @@ static void refloat_thd(void *arg) {
                     apply_noseangling(d);
                     d->setpoint += d->noseangling_interpolated;
 
-                    turn_tilt_update(
-                        &d->turn_tilt,
-                        &d->motor,
-                        &d->atr,
-                        d->imu.balance_pitch,
-                        d->noseangling_interpolated,
-                        &d->float_conf
-                    );
+                    turn_tilt_update(&d->turn_tilt, &d->motor, &d->float_conf);
                     d->setpoint += d->turn_tilt.setpoint;
 
                     torque_tilt_update(&d->torque_tilt, &d->motor, &d->float_conf);
