@@ -1576,8 +1576,12 @@ static void cmd_runtime_tune(Data *d, unsigned char *cfg, int len) {
 
         split(cfg[7], &h1, &h2);
         d->float_conf.atr_angle_limit = h1 + 5;
-        d->float_conf.atr_on_speed = (h2 & 0x3) + 3;
-        d->float_conf.atr_off_speed = (h2 >> 2) + 2;
+        if (h2 > 0) {
+            // kept for compatibility reasons
+            // wider ranges can be set with byte[18]
+            d->float_conf.atr_on_speed = (h2 & 0x3) + 3;
+            d->float_conf.atr_off_speed = (h2 >> 2) + 2;
+        }
 
         split(cfg[8], &h1, &h2);
         d->float_conf.atr_response_boost = ((float) h1) / 10 + 1;
@@ -1614,7 +1618,12 @@ static void cmd_runtime_tune(Data *d, unsigned char *cfg, int len) {
         split(cfg[15], &h1, &h2);
         float onspd = h1;
         float offspd = h2;
-        d->float_conf.torquetilt_on_speed = onspd / 2;
+        if (len >= 19) {
+            // use message length to identify apps that support the newer protocol
+            d->float_conf.torquetilt_on_speed = onspd + 3;
+        } else {
+            d->float_conf.torquetilt_on_speed = onspd / 2;
+        }
         d->float_conf.torquetilt_off_speed = offspd + 3;
     }
     if (len >= 17) {
@@ -1622,6 +1631,20 @@ static void cmd_runtime_tune(Data *d, unsigned char *cfg, int len) {
         d->float_conf.kp_brake = ((float) h1 + 1) / 10;
         d->float_conf.kp2_brake = ((float) h2) / 10;
         beep_alert(d, 1, 1);
+    }
+    if (len >= 19) {
+        split(cfg[17], &h1, &h2);
+        if (h1 > 0) {
+            d->float_conf.mahony_kp_roll = ((float) h1) / 10 + 1.0;
+        }
+        if (h2 > 0) {
+            d->float_conf.turntilt_start_angle = h2;
+        }
+        split(cfg[18], &h1, &h2);
+        if ((h1 > 0) && (h2 > 0)) {
+            d->float_conf.atr_on_speed = h1 * 2;
+            d->float_conf.atr_off_speed = h2 * 2;
+        }
     }
 
     reconfigure(d);
