@@ -881,13 +881,12 @@ static void refloat_thd(void *arg) {
                 // in case of wheelslip, don't change torque tilts, instead slightly decrease each
                 // cycle
                 if (d->state.wheelslip) {
+                    turn_tilt_winddown(&d->turn_tilt);
                     torque_tilt_winddown(&d->torque_tilt);
                     atr_winddown(&d->atr);
                     brake_tilt_winddown(&d->brake_tilt);
                 } else {
                     apply_noseangling(d);
-                    d->setpoint += d->noseangling_interpolated;
-
                     turn_tilt_update(
                         &d->turn_tilt,
                         &d->motor,
@@ -896,7 +895,6 @@ static void refloat_thd(void *arg) {
                         d->noseangling_interpolated,
                         &d->float_conf
                     );
-                    d->setpoint += d->turn_tilt.setpoint;
 
                     torque_tilt_update(&d->torque_tilt, &d->motor, &d->float_conf);
                     atr_update(&d->atr, &d->motor, &d->float_conf);
@@ -908,6 +906,9 @@ static void refloat_thd(void *arg) {
                         d->setpoint - d->imu.balance_pitch
                     );
                 }
+
+                d->setpoint += d->noseangling_interpolated;
+                d->setpoint += d->turn_tilt.setpoint;
 
                 // aggregated torque tilts:
                 // if signs match between torque tilt and ATR + brake tilt, use the more significant
