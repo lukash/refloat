@@ -53,3 +53,5 @@ void turn_tilt_update(
     float noseangling,
     const RefloatConfig *config
 );
+
+void turn_tilt_winddown(TurnTilt *tt);
