@@ -18,7 +18,7 @@
 #include "haptic_feedback.h"
 
 #include "conf/datatypes.h"
-#include "utils.h"
+#include "lib/utils.h"
 #include "vesc_c_if.h"
 
 #include <math.h>

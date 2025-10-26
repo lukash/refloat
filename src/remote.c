@@ -17,7 +17,7 @@
 
 #include "remote.h"
 
-#include "utils.h"
+#include "lib/utils.h"
 
 void remote_init(Remote *remote) {
     remote->input = 0;

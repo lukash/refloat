@@ -20,7 +20,7 @@
 #include "vesc_c_if.h"
 
 #include "conf/buffer.h"
-#include "utils.h"
+#include "lib/utils.h"
 
 #include <math.h>
 
