@@ -18,7 +18,7 @@
 
 #include "torque_tilt.h"
 
-#include "utils.h"
+#include "lib/utils.h"
 
 #include <math.h>
 
