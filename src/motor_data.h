@@ -65,7 +65,6 @@ typedef struct {
     float accel_history[ACCEL_ARRAY_SIZE];
     uint8_t accel_idx;
 
-    bool current_filter_enabled;
     Biquad current_biquad;
 } MotorData;
 
@@ -75,7 +74,7 @@ void motor_data_reset(MotorData *m);
 
 void motor_data_refresh_motor_config(MotorData *m, float lv_threshold, float hv_threshold);
 
-void motor_data_configure(MotorData *m, float frequency);
+void motor_data_configure(MotorData *m, float current_cutoff_freq, float frequency);
 
 void motor_data_update(MotorData *m);
 
