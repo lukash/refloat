@@ -55,8 +55,6 @@ void motor_data_init(MotorData *m) {
     m->lv_threshold = 0.0f;
     m->hv_threshold = 0.0f;
 
-    m->current_filter_enabled = false;
-
     motor_data_reset(m);
 }
 
@@ -96,13 +94,12 @@ void motor_data_refresh_motor_config(MotorData *m, float lv_threshold, float hv_
     m->duty_max_with_margin = VESC_IF->get_cfg_float(CFG_PARAM_l_max_duty) - 0.05;
 }
 
-void motor_data_configure(MotorData *m, float frequency) {
-    if (frequency > 0) {
-        biquad_configure(&m->current_biquad, BQ_LOWPASS, frequency);
-        m->current_filter_enabled = true;
-    } else {
-        m->current_filter_enabled = false;
+void motor_data_configure(MotorData *m, float current_cutoff_freq, float frequency) {
+    // setting cutoff freq to 0 used to turn off the filtering
+    if (current_cutoff_freq < 1) {
+        current_cutoff_freq = 20;
     }
+    biquad_configure(&m->current_biquad, BQ_LOWPASS, current_cutoff_freq / frequency);
 }
 
 void motor_data_update(MotorData *m) {
@@ -132,11 +129,7 @@ void motor_data_update(MotorData *m) {
     m->accel_history[m->accel_idx] = current_acceleration;
     m->accel_idx = (m->accel_idx + 1) % ACCEL_ARRAY_SIZE;
 
-    if (m->current_filter_enabled) {
-        m->filt_current = biquad_process(&m->current_biquad, m->dir_current);
-    } else {
-        m->filt_current = m->dir_current;
-    }
+    m->filt_current = biquad_process(&m->current_biquad, m->dir_current);
 
     m->batt_current += 0.01f * (VESC_IF->mc_get_tot_current_in_filtered() - m->batt_current);
     m->batt_voltage = VESC_IF->mc_get_input_voltage_filtered();
