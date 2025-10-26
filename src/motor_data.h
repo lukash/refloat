@@ -36,7 +36,7 @@ typedef struct {
 
     float current;  //  "regular" motor current (positive = accelerating, negative = braking)
     float dir_current;  // directional current (sign represents direction of torque generation)
-    float filt_current;  // filtered directional current
+    Biquad filt_current;  // filtered directional current
     bool braking;
 
     float duty_cycle;
@@ -64,8 +64,6 @@ typedef struct {
 
     float accel_history[ACCEL_ARRAY_SIZE];
     uint8_t accel_idx;
-
-    Biquad current_biquad;
 } MotorData;
 
 void motor_data_init(MotorData *m);
