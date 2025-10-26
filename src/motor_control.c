@@ -18,7 +18,7 @@
 #include "motor_control.h"
 
 #include "conf/datatypes.h"
-#include "utils.h"
+#include "lib/utils.h"
 #include "vesc_c_if.h"
 
 void motor_control_init(MotorControl *mc) {
