@@ -17,7 +17,7 @@
 
 #include "data_recorder.h"
 #include "conf/buffer.h"
-#include "utils.h"
+#include "lib/utils.h"
 #include "vesc_c_if.h"
 
 static void start_recording(DataRecord *dr) {
