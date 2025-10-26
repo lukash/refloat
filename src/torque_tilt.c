@@ -51,10 +51,11 @@ void torque_tilt_update(
     // directionality back.
     float target =
         fminf(
-            fmaxf((fabsf(motor->filt_current) - config->torquetilt_start_current), 0) * strength,
+            fmaxf((fabsf(motor->filt_current.value) - config->torquetilt_start_current), 0) *
+                strength,
             config->torquetilt_angle_limit
         ) *
-        sign(motor->filt_current);
+        sign(motor->filt_current.value);
 
     float step_size = 0;
     if (tt->setpoint * target < 0) {

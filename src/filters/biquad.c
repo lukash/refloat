@@ -20,19 +20,22 @@
 
 #include <math.h>
 
-float biquad_process(Biquad *biquad, float in) {
-    float out = in * biquad->a0 + biquad->z1;
-    biquad->z1 = in * biquad->a1 + biquad->z2 - biquad->b1 * out;
-    biquad->z2 = in * biquad->a2 - biquad->b2 * out;
-    return out;
+void biquad_init(Biquad *biquad) {
+    biquad->a0 = 0.0f;
+    biquad->a1 = 0.0f;
+    biquad->a2 = 0.0f;
+    biquad->b1 = 0.0f;
+    biquad->b2 = 0.0f;
+
+    biquad_reset(biquad);
 }
 
-void biquad_configure(Biquad *biquad, BiquadType type, float frequency) {
-    float K = tanf(M_PI * frequency);
-    float Q = 0.707;  // maximum sharpness (0.5 = maximum smoothness)
-    float norm = 1 / (1 + K / Q + K * K);
+void biquad_configure(Biquad *biquad, BiquadType type, float cutoff_freq, float update_freq) {
+    float k = tanf(M_PI * cutoff_freq / update_freq);
+    float q = 0.707;  // maximum sharpness (0.5 = maximum smoothness)
+    float norm = 1 / (1 + k / q + k * k);
     if (type == BQ_LOWPASS) {
-        biquad->a0 = K * K * norm;
+        biquad->a0 = k * k * norm;
         biquad->a1 = 2 * biquad->a0;
         biquad->a2 = biquad->a0;
     } else if (type == BQ_HIGHPASS) {
@@ -40,11 +43,18 @@ void biquad_configure(Biquad *biquad, BiquadType type, float frequency) {
         biquad->a1 = -2 * biquad->a0;
         biquad->a2 = biquad->a0;
     }
-    biquad->b1 = 2 * (K * K - 1) * norm;
-    biquad->b2 = (1 - K / Q + K * K) * norm;
+    biquad->b1 = 2 * (k * k - 1) * norm;
+    biquad->b2 = (1 - k / q + k * k) * norm;
 }
 
 void biquad_reset(Biquad *biquad) {
-    biquad->z1 = 0;
-    biquad->z2 = 0;
+    biquad->z1 = 0.0f;
+    biquad->z2 = 0.0f;
+    biquad->value = 0.0f;
+}
+
+void biquad_update(Biquad *biquad, float target) {
+    biquad->value = target * biquad->a0 + biquad->z1;
+    biquad->z1 = target * biquad->a1 + biquad->z2 - biquad->b1 * biquad->value;
+    biquad->z2 = target * biquad->a2 - biquad->b2 * biquad->value;
 }

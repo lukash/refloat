@@ -1299,7 +1299,7 @@ static void send_realtime_data(Data *d) {
 
     // DEBUG
     buffer_append_float32_auto(buffer, d->imu.pitch, &ind);
-    buffer_append_float32_auto(buffer, d->motor.filt_current, &ind);
+    buffer_append_float32_auto(buffer, d->motor.filt_current.value, &ind);
     buffer_append_float32_auto(buffer, d->atr.accel_diff, &ind);
     if (d->state.charging) {
         buffer_append_float32_auto(buffer, d->charging.current, &ind);

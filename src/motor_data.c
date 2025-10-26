@@ -34,7 +34,7 @@ void motor_data_init(MotorData *m) {
 
     m->current = 0.0f;
     m->dir_current = 0.0f;
-    m->filt_current = 0.0f;
+    biquad_init(&m->filt_current);
     m->braking = false;
 
     m->duty_raw = 0.0f;
@@ -67,7 +67,7 @@ void motor_data_reset(MotorData *m) {
         m->accel_history[i] = 0;
     }
 
-    biquad_reset(&m->current_biquad);
+    biquad_reset(&m->filt_current);
 }
 
 void motor_data_refresh_motor_config(MotorData *m, float lv_threshold, float hv_threshold) {
@@ -99,7 +99,7 @@ void motor_data_configure(MotorData *m, float current_cutoff_freq, float frequen
     if (current_cutoff_freq < 1) {
         current_cutoff_freq = 20;
     }
-    biquad_configure(&m->current_biquad, BQ_LOWPASS, current_cutoff_freq / frequency);
+    biquad_configure(&m->filt_current, BQ_LOWPASS, current_cutoff_freq, frequency);
 }
 
 void motor_data_update(MotorData *m) {
@@ -129,7 +129,7 @@ void motor_data_update(MotorData *m) {
     m->accel_history[m->accel_idx] = current_acceleration;
     m->accel_idx = (m->accel_idx + 1) % ACCEL_ARRAY_SIZE;
 
-    m->filt_current = biquad_process(&m->current_biquad, m->dir_current);
+    biquad_update(&m->filt_current, m->dir_current);
 
     m->batt_current += 0.01f * (VESC_IF->mc_get_tot_current_in_filtered() - m->batt_current);
     m->batt_voltage = VESC_IF->mc_get_input_voltage_filtered();
@@ -149,7 +149,7 @@ void motor_data_evaluate_alerts(const MotorData *m, AlertTracker *at, const Time
 
 float motor_data_get_current_saturation(const MotorData *m) {
     float motor_saturation =
-        fabsf(m->filt_current) / (m->braking ? m->current_min : m->current_max);
+        fabsf(m->filt_current.value) / (m->braking ? m->current_min : m->current_max);
     float battery_saturation =
         m->batt_current / (m->batt_current < 0 ? m->battery_current_min : m->battery_current_max);
 
