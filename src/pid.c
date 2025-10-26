@@ -17,7 +17,7 @@
 
 #include "pid.h"
 
-#include "utils.h"
+#include "lib/utils.h"
 
 #include "vesc_c_if.h"
 

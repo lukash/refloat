@@ -33,6 +33,7 @@
 #include "imu.h"
 #include "lcm.h"
 #include "leds.h"
+#include "lib/utils.h"
 #include "motor_control.h"
 #include "motor_data.h"
 #include "pid.h"
@@ -42,7 +43,6 @@
 #include "time.h"
 #include "torque_tilt.h"
 #include "turn_tilt.h"
-#include "utils.h"
 
 #include "conf/buffer.h"
 #include "conf/conf_general.h"
