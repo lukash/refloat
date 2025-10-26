@@ -18,7 +18,7 @@
 #pragma once
 
 #include "alert_tracker.h"
-#include "biquad.h"
+#include "filters/biquad.h"
 
 #include <stdbool.h>
 #include <stdint.h>
