@@ -21,6 +21,7 @@
 typedef struct {
     float a0, a1, a2, b1, b2;
     float z1, z2;
+    float value;
 } Biquad;
 
 typedef enum {
@@ -28,8 +29,10 @@ typedef enum {
     BQ_HIGHPASS
 } BiquadType;
 
-float biquad_process(Biquad *biquad, float in);
+void biquad_init(Biquad *biquad);
 
-void biquad_configure(Biquad *biquad, BiquadType type, float frequency);
+void biquad_configure(Biquad *biquad, BiquadType type, float cutoff_freq, float update_freq);
 
 void biquad_reset(Biquad *biquad);
+
+void biquad_update(Biquad *biquad, float target);

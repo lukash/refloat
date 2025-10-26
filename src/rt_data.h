@@ -40,7 +40,7 @@
     R(motor.erpm, "erpm")                                                                          \
     S(motor.current, "current")                                                                    \
     R(motor.dir_current, "dir_current")                                                            \
-    S(motor.filt_current, "filt_current")                                                          \
+    S(motor.filt_current.value, "filt_current")                                                    \
     R(motor.duty_cycle, "duty_cycle")                                                              \
     R(motor.batt_voltage, "batt_voltage")                                                          \
     S(motor.batt_current, "batt_current")                                                          \
