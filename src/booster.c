@@ -22,11 +22,16 @@
 #include <math.h>
 
 void booster_init(Booster *b) {
+    ema_init(&b->current);
     booster_reset(b);
 }
 
 void booster_reset(Booster *b) {
-    b->current = 0.0f;
+    ema_reset(&b->current, 0.0f);
+}
+
+void booster_configure(Booster *b, float frequency) {
+    ema_configure(&b->current, 1.0f, frequency);
 }
 
 void booster_update(
@@ -71,6 +76,5 @@ void booster_update(
         current = 0;
     }
 
-    // No harsh changes in booster current (effective delay <= 100ms)
-    b->current = 0.01 * current + 0.99 * b->current;
+    ema_update(&b->current, current);
 }
