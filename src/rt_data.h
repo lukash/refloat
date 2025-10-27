@@ -71,7 +71,7 @@
     R(balance_current, "balance_current")                                                          \
     S(atr.accel_diff, "atr.accel_diff")                                                            \
     S(atr.speed_boost, "atr.speed_boost")                                                          \
-    S(booster.current, "booster.current")
+    S(booster.current.value, "booster.current")
 
 #define RT_DATA_ALL_ITEMS(S, R) RT_DATA_ITEMS(S, R) RT_DATA_RUNTIME_ITEMS(S, R)
 
