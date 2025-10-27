@@ -18,15 +18,18 @@
 #pragma once
 
 #include "conf/datatypes.h"
+#include "filters/ema.h"
 #include "motor_data.h"
 
 typedef struct {
-    float current;
+    EMA current;
 } Booster;
 
 void booster_init(Booster *b);
 
 void booster_reset(Booster *b);
+
+void booster_configure(Booster *b, float frequency);
 
 void booster_update(
     Booster *b, const MotorData *md, const RefloatConfig *config, float proportional
