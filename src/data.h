@@ -26,6 +26,7 @@
 #include "data_record.h"
 #include "filters/ema.h"
 #include "footpad_sensor.h"
+#include "frequency_tracker.h"
 #include "haptic_feedback.h"
 #include "imu.h"
 #include "konami.h"
@@ -92,10 +93,8 @@ typedef struct {
 
     int32_t main_loop_ticks;
 
-    float main_dt;
-    EMA main_frequency;
-    float imu_dt;
-    EMA imu_frequency;
+    FrequencyTracker main_t;
+    FrequencyTracker imu_t;
 
     float startup_pitch_trickmargin, startup_pitch_tolerance;
     float tiltback_variable, tiltback_variable_max_erpm;

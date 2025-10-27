@@ -155,15 +155,41 @@ void beep_on(Data *d, bool force) {
     }
 }
 
+// Reconfigures all components dependent on the main loop frequency.
+static void main_freq_update_reconfigure(float frequency) {
+    Data *d = (Data *) ARG;
+
+    motor_data_configure(&d->motor, d->float_conf.atr_filter, frequency);
+    pid_configure(&d->pid, frequency);
+    motor_control_configure(&d->motor_control, &d->float_conf, frequency);
+
+    atr_configure(&d->atr, &d->float_conf, frequency);
+
+    log_msg(
+        "Main freq reconfgure old: %dHz new: %dHz",
+        (int32_t) d->main_t.filter_frequency,
+        (int32_t) frequency
+    );
+}
+
+// Reconfigures all components dependent on the IMU loop frequency.
+static void imu_freq_update_reconfigure(float frequency) {
+    Data *d = (Data *) ARG;
+
+    log_msg(
+        "IMU freq reconfgure old: %dHz new: %dHz",
+        (int32_t) d->imu_t.filter_frequency,
+        (int32_t) frequency
+    );
+}
+
 static void reconfigure(Data *d) {
     balance_filter_configure(&d->balance_filter, &d->float_conf);
 
-    motor_data_configure(&d->motor, d->float_conf.atr_filter, d->float_conf.hertz);
-    pid_configure(&d->pid, d->float_conf.hertz);
-    motor_control_configure(&d->motor_control, &d->float_conf, d->float_conf.hertz);
+    main_freq_update_reconfigure(d->main_t.filter_frequency);
+    imu_freq_update_reconfigure(d->imu_t.filter_frequency);
 
     torque_tilt_configure(&d->torque_tilt, &d->float_conf);
-    atr_configure(&d->atr, &d->float_conf, d->float_conf.hertz);
     brake_tilt_configure(&d->brake_tilt, &d->float_conf);
     turn_tilt_configure(&d->turn_tilt, &d->float_conf);
     remote_configure(&d->remote, &d->float_conf);
@@ -186,9 +212,6 @@ static void configure(Data *d) {
     lcm_configure(&d->lcm, &d->float_conf.leds);
 
     d->main_loop_ticks = SYSTEM_TICK_RATE_HZ / d->float_conf.hertz;
-
-    ema_configure(&d->main_frequency, 1.0f, d->float_conf.hertz);
-    ema_configure(&d->imu_frequency, 1.0f, VESC_IF->get_cfg_int(CFG_PARAM_IMU_sample_rate));
 
     // Backwards compatibility hack:
     // If mahony kp from the firmware internal filter is higher than 1, it's
@@ -756,8 +779,7 @@ static void imu_ref_callback(float *acc, float *gyro, float *mag, float dt) {
     Data *d = (Data *) ARG;
     balance_filter_update(&d->balance_filter, gyro, acc, dt);
 
-    d->imu_dt = dt * 1000.0f;
-    ema_update(&d->imu_frequency, 1.0f / dt);
+    frequency_tracker_update(&d->imu_t, dt);
 }
 
 static void refloat_thd(void *arg) {
@@ -777,8 +799,7 @@ static void refloat_thd(void *arg) {
         dt = VESC_IF->timer_seconds_elapsed_since(loop_timer);
         loop_timer = VESC_IF->timer_time_now();
 
-        d->main_dt = dt * 1000.0f;
-        ema_update(&d->main_frequency, 1.0f / dt);
+        frequency_tracker_update(&d->main_t, dt);
 
         time_update(&d->time, d->state.state);
 
@@ -1152,10 +1173,15 @@ static void aux_thd(void *arg) {
     time_t motor_config_refresh_timer = 0;
 
     while (!VESC_IF->should_terminate()) {
+        bool running = d->state.state == STATE_RUNNING;
+
+        frequency_tracker_check(&d->main_t, running, &d->time, &main_freq_update_reconfigure);
+        frequency_tracker_check(&d->imu_t, running, &d->time, &imu_freq_update_reconfigure);
+
         leds_update(&d->leds, &d->state, d->footpad.state);
 
         // store odometer if we've gone more than 200m
-        if (d->state.state != STATE_RUNNING && VESC_IF->mc_get_odometer() > d->odometer + 200) {
+        if (!running && VESC_IF->mc_get_odometer() > d->odometer + 200) {
             VESC_IF->store_backup_data();
             d->odometer = VESC_IF->mc_get_odometer();
         }
@@ -1207,9 +1233,13 @@ static void data_init(Data *d) {
 
     read_cfg_from_eeprom(d);
 
+    time_init(&d->time);
+
+    frequency_tracker_init(&d->main_t, d->float_conf.hertz, &d->time);
+    frequency_tracker_init(&d->imu_t, VESC_IF->get_cfg_int(CFG_PARAM_IMU_sample_rate), &d->time);
+
     balance_filter_init(&d->balance_filter);
 
-    time_init(&d->time);
     motor_data_init(&d->motor);
     imu_init(&d->imu);
     pid_init(&d->pid);
@@ -1245,11 +1275,6 @@ static void data_init(Data *d) {
         headlights_off_konami_sequence,
         sizeof(headlights_off_konami_sequence)
     );
-
-    ema_init(&d->main_frequency);
-    ema_reset(&d->main_frequency, d->float_conf.hertz);
-    ema_init(&d->imu_frequency);
-    ema_reset(&d->imu_frequency, VESC_IF->get_cfg_int(CFG_PARAM_IMU_sample_rate));
 
     d->odometer = VESC_IF->mc_get_odometer();
 }
@@ -2439,15 +2464,15 @@ INIT_FUN(lib_info *info) {
         log_error("Out of memory, startup failed.");
         return false;
     }
+    // Set the arg before calling anything, without it `Data *d = (Data *) ARG;` doesn't work
+    info->arg = d;
     data_init(d);
+    info->stop_fun = stop;
 
     // Periodically called from the aux thread. Do the first refresh here to avoid races.
     motor_data_refresh_motor_config(
         &d->motor, d->float_conf.tiltback_lv, d->float_conf.tiltback_hv
     );
-
-    info->stop_fun = stop;
-    info->arg = d;
 
     if ((d->float_conf.is_beeper_enabled) ||
         (d->float_conf.inputtilt_remote_type != INPUTTILT_PPM)) {
