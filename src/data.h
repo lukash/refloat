@@ -100,7 +100,7 @@ typedef struct {
     float tiltback_variable, tiltback_variable_max_erpm;
     bool duty_beeping;
 
-    float balance_current;
+    EMA balance_current;
 
     float setpoint, setpoint_target, setpoint_target_interpolated;
     float noseangling_interpolated;

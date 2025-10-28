@@ -166,6 +166,8 @@ static void main_freq_update_reconfigure(float frequency) {
     atr_configure(&d->atr, &d->float_conf, frequency);
     booster_configure(&d->booster, frequency);
 
+    ema_configure(&d->balance_current, 25.0f, frequency);
+
     log_msg(
         "Main freq reconfgure old: %dHz new: %dHz",
         (int32_t) d->main_t.filter_frequency,
@@ -260,7 +262,7 @@ static void reset_runtime_vars(Data *d) {
     remote_reset(&d->remote);
     booster_reset(&d->booster);
 
-    d->balance_current = 0;
+    ema_reset(&d->balance_current, 0.0f);
 
     // Set values for startup
     d->setpoint = d->imu.balance_pitch;
@@ -808,12 +810,12 @@ static void pid_control(Data *d, float dt) {
 
     if (d->traction_control) {
         // freewheel while traction loss is detected
-        d->balance_current = 0;
+        ema_reset(&d->balance_current, 0.0f);
     } else {
-        d->balance_current = d->balance_current * 0.8 + new_current * 0.2;
+        ema_update(&d->balance_current, new_current);
     }
 
-    motor_control_request_current(&d->motor_control, d->balance_current);
+    motor_control_request_current(&d->motor_control, d->balance_current.value);
 }
 
 static void imu_ref_callback(float *acc, float *gyro, float *mag, float dt) {
@@ -1281,6 +1283,8 @@ static void data_init(Data *d) {
         sizeof(headlights_off_konami_sequence)
     );
 
+    ema_init(&d->balance_current);
+
     d->odometer = VESC_IF->mc_get_odometer();
 
     configure(d);
@@ -1324,7 +1328,7 @@ static void send_realtime_data(Data *d) {
     buffer[ind++] = COMMAND_GET_RTDATA;
 
     // RT Data
-    buffer_append_float32_auto(buffer, d->balance_current, &ind);
+    buffer_append_float32_auto(buffer, d->balance_current.value, &ind);
     buffer_append_float32_auto(buffer, d->imu.balance_pitch, &ind);
     buffer_append_float32_auto(buffer, d->imu.roll, &ind);
 
@@ -1378,7 +1382,7 @@ static void cmd_send_all_data(Data *d, unsigned char mode) {
         buffer[ind++] = mode;
 
         // RT Data
-        buffer_append_float16(buffer, d->balance_current, 10, &ind);
+        buffer_append_float16(buffer, d->balance_current.value, 10, &ind);
         buffer_append_float16(buffer, d->imu.balance_pitch, 10, &ind);
         buffer_append_float16(buffer, d->imu.roll, 10, &ind);
 
