@@ -202,6 +202,12 @@ typedef struct {
 } CfgBMS;
 
 typedef struct {
+    float alpha;
+    float in_alpha_away;
+    float in_alpha_back;
+} CfgTargetFilter;
+
+typedef struct {
     bool is_default;
 } CfgMeta;
 
