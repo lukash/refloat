@@ -162,7 +162,7 @@ static void reconfigure(Data *d) {
     motor_control_configure(&d->motor_control, &d->float_conf, d->float_conf.hertz);
 
     torque_tilt_configure(&d->torque_tilt, &d->float_conf);
-    atr_configure(&d->atr, &d->float_conf);
+    atr_configure(&d->atr, &d->float_conf, d->float_conf.hertz);
     brake_tilt_configure(&d->brake_tilt, &d->float_conf);
     turn_tilt_configure(&d->turn_tilt, &d->float_conf);
     remote_configure(&d->remote, &d->float_conf);

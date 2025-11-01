@@ -29,6 +29,10 @@ typedef struct {
     float accel_diff;
     float speed_boost;
 
+    float ad_alpha1;
+    float ad_alpha2;
+    float ad_alpha3;
+
     float target;
     float ramped_step_size;
     float setpoint;
@@ -38,7 +42,7 @@ void atr_init(ATR *atr);
 
 void atr_reset(ATR *atr);
 
-void atr_configure(ATR *atr, const RefloatConfig *config);
+void atr_configure(ATR *atr, const RefloatConfig *config, float frequency);
 
 void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config, float dt);
 

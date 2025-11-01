@@ -26,6 +26,10 @@ void atr_init(ATR *atr) {
     atr->on_speed = 0.0f;
     atr->off_speed = 0.0f;
     atr->speed_boost_mult = 0.0f;
+    atr->ad_alpha1 = 0.0f;
+    atr->ad_alpha2 = 0.0f;
+    atr->ad_alpha3 = 0.0f;
+
     atr_reset(atr);
 }
 
@@ -38,7 +42,7 @@ void atr_reset(ATR *atr) {
     atr->setpoint = 0.0f;
 }
 
-void atr_configure(ATR *atr, const RefloatConfig *config) {
+void atr_configure(ATR *atr, const RefloatConfig *config, float frequency) {
     atr->on_speed = config->atr_on_speed;
     atr->off_speed = config->atr_off_speed;
 
@@ -48,6 +52,10 @@ void atr_configure(ATR *atr, const RefloatConfig *config) {
         // most +6000 for 100% speed boost
         atr->speed_boost_mult = 1.0f / ((fabsf(config->atr_speed_boost) - 0.4f) * 5000 + 3000.0f);
     }
+
+    atr->ad_alpha3 = ema_calculate_alpha(10.0f, frequency);
+    atr->ad_alpha2 = ema_calculate_alpha(6.0f, frequency);
+    atr->ad_alpha1 = ema_calculate_alpha(1.0f, frequency);
 }
 
 void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config, float dt) {
@@ -80,12 +88,14 @@ void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config, f
     }
 
     float new_accel_diff = expected_acc - measured_acc;
-    if (motor->abs_erpm > 2000) {
-        atr->accel_diff = 0.9f * atr->accel_diff + 0.1f * new_accel_diff;
-    } else if (motor->abs_erpm > 1000) {
-        atr->accel_diff = 0.95f * atr->accel_diff + 0.05f * new_accel_diff;
-    } else if (motor->abs_erpm > 250) {
-        atr->accel_diff = 0.98f * atr->accel_diff + 0.02f * new_accel_diff;
+    if (motor->abs_erpm > 250) {
+        float alpha = atr->ad_alpha3;
+        if (motor->abs_erpm > 2000) {
+            alpha = atr->ad_alpha1;
+        } else if (motor->abs_erpm > 1000) {
+            alpha = atr->ad_alpha2;
+        }
+        atr->accel_diff += alpha * (new_accel_diff - atr->accel_diff);
     } else {
         atr->accel_diff = 0;
     }
