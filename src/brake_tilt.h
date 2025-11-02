@@ -25,23 +25,17 @@
 typedef struct {
     float factor;
     float target;
-    float ramped_step_size;
-    float setpoint;
+    SmoothSetpoint setpoint;
 } BrakeTilt;
 
 void brake_tilt_init(BrakeTilt *bt);
 
 void brake_tilt_reset(BrakeTilt *bt);
 
-void brake_tilt_configure(BrakeTilt *bt, const RefloatConfig *config);
+void brake_tilt_configure(BrakeTilt *bt, const RefloatConfig *config, float frequency);
 
 void brake_tilt_update(
-    BrakeTilt *bt,
-    const MotorData *motor,
-    const ATR *atr,
-    const RefloatConfig *config,
-    float balance_offset,
-    float dt
+    BrakeTilt *bt, const MotorData *motor, const ATR *atr, float balance_offset, float dt
 );
 
 void brake_tilt_winddown(BrakeTilt *bt);

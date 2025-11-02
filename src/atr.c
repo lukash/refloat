@@ -23,12 +23,12 @@
 #include <math.h>
 
 void atr_init(ATR *atr) {
-    atr->on_speed = 0.0f;
-    atr->off_speed = 0.0f;
     atr->speed_boost_mult = 0.0f;
     atr->ad_alpha1 = 0.0f;
     atr->ad_alpha2 = 0.0f;
     atr->ad_alpha3 = 0.0f;
+
+    smooth_setpoint_init(&atr->setpoint);
 
     atr_reset(atr);
 }
@@ -38,14 +38,10 @@ void atr_reset(ATR *atr) {
     atr->speed_boost = 0.0f;
 
     atr->target = 0.0f;
-    atr->ramped_step_size = 0.0f;
-    atr->setpoint = 0.0f;
+    smooth_setpoint_reset(&atr->setpoint, 0.0f);
 }
 
 void atr_configure(ATR *atr, const RefloatConfig *config, float frequency) {
-    atr->on_speed = config->atr_on_speed;
-    atr->off_speed = config->atr_off_speed;
-
     atr->speed_boost_mult = 1.0f / 3000.0f;
     if (fabsf(config->atr_speed_boost) > 0.4f) {
         // above 0.4 we add 500erpm for each extra 10% of speed boost, so at
@@ -56,6 +52,18 @@ void atr_configure(ATR *atr, const RefloatConfig *config, float frequency) {
     atr->ad_alpha3 = ema_calculate_alpha(10.0f, frequency);
     atr->ad_alpha2 = ema_calculate_alpha(6.0f, frequency);
     atr->ad_alpha1 = ema_calculate_alpha(1.0f, frequency);
+
+    smooth_setpoint_configure_strengths(
+        &atr->setpoint,
+        config->atr.filter.strength,
+        config->atr.filter.on_ease_in_strength,
+        config->atr.filter.off_ease_in_strength,
+        config->atr_on_speed,
+        config->atr_off_speed,
+        config->atr_on_speed,
+        config->atr_off_speed,
+        frequency
+    );
 }
 
 void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config, float dt) {
@@ -126,85 +134,10 @@ void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config, f
     atr->target = fminf(atr->target, config->atr_angle_limit);
     atr->target = fmaxf(atr->target, -config->atr_angle_limit);
 
-    float response_boost = 1;
-    if (motor->abs_erpm > 2500) {
-        response_boost = config->atr_response_boost;
-    }
-    if (motor->abs_erpm > 6000) {
-        response_boost *= config->atr_response_boost;
-    }
-
-    // Key to keeping the board level and consistent is to determine the appropriate step size!
-    // We want to react quickly to changes, but we don't want to overreact to glitches in
-    // acceleration data or trigger oscillations...
-    float atr_step_size = 0;
-    const float TT_BOOST_MARGIN = 2;
-    if (motor->forward) {
-        if (atr->setpoint < 0) {
-            // downhill
-            if (atr->setpoint < atr->target) {
-                // to avoid oscillations we go down slower than we go up
-                atr_step_size = atr->off_speed;
-                if (atr->target > 0 && atr->target - atr->setpoint > TT_BOOST_MARGIN &&
-                    motor->abs_erpm > 2000) {
-                    // boost the speed if tilt target has reversed (and if there's a significant
-                    // margin)
-                    atr_step_size = atr->off_speed * config->atr_transition_boost;
-                }
-            } else {
-                // ATR is increasing
-                atr_step_size = atr->on_speed * response_boost;
-            }
-        } else {
-            // uphill or other heavy resistance (grass, mud, etc)
-            if (atr->target > -3 && atr->setpoint > atr->target) {
-                // ATR winding down (current ATR is bigger than the target)
-                // normal wind down case: to avoid oscillations we go down slower than we go up
-                atr_step_size = atr->off_speed;
-            } else {
-                // standard case of increasing ATR
-                atr_step_size = atr->on_speed * response_boost;
-            }
-        }
-    } else {
-        if (atr->setpoint > 0) {
-            // downhill
-            if (atr->setpoint > atr->target) {
-                // to avoid oscillations we go down slower than we go up
-                atr_step_size = atr->off_speed;
-                if (atr->target < 0 && atr->setpoint - atr->target > TT_BOOST_MARGIN &&
-                    motor->abs_erpm > 2000) {
-                    // boost the speed if tilt target has reversed (and if there's a significant
-                    // margin)
-                    atr_step_size = atr->off_speed * config->atr_transition_boost;
-                }
-            } else {
-                // ATR is increasing
-                atr_step_size = atr->on_speed * response_boost;
-            }
-        } else {
-            // uphill or other heavy resistance (grass, mud, etc)
-            if (atr->target < 3 && atr->setpoint < atr->target) {
-                // normal wind down case: to avoid oscillations we go down slower than we go up
-                atr_step_size = atr->off_speed;
-            } else {
-                // standard case of increasing torquetilt
-                atr_step_size = atr->on_speed * response_boost;
-            }
-        }
-    }
-
-    if (motor->abs_erpm < 500) {
-        atr_step_size /= 2;
-    }
-
-    atr_step_size *= dt;
-
-    // Smoothen changes in tilt angle by ramping the step size
-    smooth_rampf(&atr->setpoint, &atr->ramped_step_size, atr->target, atr_step_size, 0.05, 1.5);
+    smooth_setpoint_update(&atr->setpoint, atr->target, dt, motor->forward);
 }
 
 void atr_winddown(ATR *atr) {
-    atr->setpoint *= 0.995;
+    // atr->setpoint *= 0.995;
     atr->target *= 0.99;
 }
