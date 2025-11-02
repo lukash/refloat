@@ -25,6 +25,10 @@ float ema_calculate_alpha(float cutoff_freq, float update_freq) {
     return omega - 0.5f * omega * omega;
 }
 
+float ema_calculate_alpha_time_constant(float time_constant, float update_freq) {
+    return ema_calculate_alpha(1 / (2.0f * M_PI * time_constant), update_freq);
+}
+
 void ema_init(EMA *ema) {
     ema->alpha = 0.0f;
 
