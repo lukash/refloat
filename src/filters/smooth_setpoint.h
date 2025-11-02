@@ -1,4 +1,4 @@
-// Copyright 2025 Lukas Hrazky
+// Copyright 2024 Lukas Hrazky
 //
 // This file is part of the Refloat VESC package.
 //
@@ -17,23 +17,37 @@
 
 #pragma once
 
-/** Exponential Moving Average
- */
+#include <stdbool.h>
+
 typedef struct {
+    float on_speed_up;
+    float off_speed_up;
+    float on_speed_down;
+    float off_speed_down;
+
     float alpha;
+    float on_speed_alpha;
+    float off_speed_alpha;
+
+    float v1;
+    float step;
     float value;
-} EMA;
+} SmoothSetpoint;
 
-float ema_calculate_alpha(float cutoff_freq, float update_freq);
+void smooth_setpoint_init(SmoothSetpoint *st);
 
-float ema_calculate_alpha_time_constant(float time_constant, float update_freq);
+void smooth_setpoint_configure(
+    SmoothSetpoint *st,
+    float time_constant,
+    float on_speed_time_constant,
+    float off_speed_time_constant,
+    float on_speed_up,
+    float off_speed_up,
+    float on_speed_down,
+    float off_speed_down,
+    float frequency
+);
 
-void ema_init(EMA *ema);
+void smooth_setpoint_reset(SmoothSetpoint *st);
 
-void ema_configure(EMA *ema, float cutoff_freq, float update_freq);
-
-void ema_reset(EMA *ema, float value);
-
-inline void ema_update(EMA *ema, float target) {
-    ema->value += ema->alpha * (target - ema->value);
-}
+void smooth_setpoint_update(SmoothSetpoint *st, float target, float dt, bool forward);
