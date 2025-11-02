@@ -63,11 +63,11 @@
 
 #define RT_DATA_RUNTIME_ITEMS(S, R)                                                                \
     R(setpoint, "setpoint")                                                                        \
-    R(atr.setpoint, "atr.setpoint")                                                                \
-    S(brake_tilt.setpoint, "brake_tilt.setpoint")                                                  \
-    R(torque_tilt.setpoint, "torque_tilt.setpoint")                                                \
-    S(turn_tilt.setpoint, "turn_tilt.setpoint")                                                    \
-    S(remote.setpoint, "remote.setpoint")                                                          \
+    R(atr.setpoint.value, "atr.setpoint")                                                          \
+    S(brake_tilt.setpoint.value, "brake_tilt.setpoint")                                            \
+    R(torque_tilt.setpoint.value, "torque_tilt.setpoint")                                          \
+    S(turn_tilt.setpoint.value, "turn_tilt.setpoint")                                              \
+    S(remote.setpoint.value, "remote.setpoint")                                                    \
     R(balance_current.value, "balance_current")                                                    \
     S(atr.accel_diff, "atr.accel_diff")                                                            \
     S(atr.speed_boost, "atr.speed_boost")                                                          \

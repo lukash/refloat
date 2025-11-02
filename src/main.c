@@ -163,8 +163,11 @@ static void main_freq_update_reconfigure(float frequency) {
     pid_configure(&d->pid, frequency);
     motor_control_configure(&d->motor_control, &d->float_conf, frequency);
 
+    torque_tilt_configure(&d->torque_tilt, &d->float_conf, frequency);
     atr_configure(&d->atr, &d->float_conf, frequency);
+    brake_tilt_configure(&d->brake_tilt, &d->float_conf, frequency);
     turn_tilt_configure(&d->turn_tilt, &d->float_conf, frequency);
+    remote_configure(&d->remote, &d->float_conf, frequency);
     booster_configure(&d->booster, frequency);
 
     ema_configure(&d->balance_current, 25.0f, frequency);
@@ -192,10 +195,6 @@ static void reconfigure(Data *d) {
 
     main_freq_update_reconfigure(d->main_t.filter_frequency);
     imu_freq_update_reconfigure(d->imu_t.filter_frequency);
-
-    torque_tilt_configure(&d->torque_tilt, &d->float_conf);
-    brake_tilt_configure(&d->brake_tilt, &d->float_conf);
-    remote_configure(&d->remote, &d->float_conf);
 
     haptic_feedback_configure(&d->haptic_feedback, &d->float_conf);
     alert_tracker_configure(&d->alert_tracker, &d->float_conf);
@@ -434,7 +433,7 @@ static bool check_faults(Data *d) {
             }
 
             if (d->float_conf.enable_quickstop && d->motor.abs_erpm < 200 &&
-                fabsf(d->imu.pitch) > 14 && fabsf(d->remote.setpoint) < 30 &&
+                fabsf(d->imu.pitch) > 14 && fabsf(d->remote.setpoint.value) < 30 &&
                 sign(d->imu.pitch) == d->motor.erpm_sign) {
                 state_stop(&d->state, STOP_QUICKSTOP);
                 return true;
@@ -514,7 +513,7 @@ static bool check_faults(Data *d) {
     }
 
     // Check pitch angle
-    if (fabsf(d->imu.pitch) > d->float_conf.fault_pitch && fabsf(d->remote.setpoint) < 30) {
+    if (fabsf(d->imu.pitch) > d->float_conf.fault_pitch && fabsf(d->remote.setpoint.value) < 30) {
         if (timer_older_ms(&d->time, d->fault_angle_pitch_timer, d->float_conf.fault_delay_pitch)) {
             state_stop(&d->state, STOP_PITCH);
             return true;
@@ -780,7 +779,7 @@ static void apply_noseangling(Data *d, float dt) {
 static void pid_control(Data *d, float dt) {
     pid_update(&d->pid, d->setpoint, &d->motor, &d->imu, &d->float_conf, dt);
 
-    float booster_proportional = d->setpoint - d->brake_tilt.setpoint - d->imu.pitch;
+    float booster_proportional = d->setpoint - d->brake_tilt.setpoint.value - d->imu.pitch;
     booster_update(&d->booster, &d->motor, &d->float_conf, booster_proportional);
 
     // Rate P and Booster are pitch-based (as opposed to balance pitch based)
@@ -950,7 +949,7 @@ static void refloat_thd(void *arg) {
             d->setpoint = d->setpoint_target_interpolated;
 
             remote_update(&d->remote, &d->state, &d->float_conf, dt);
-            d->setpoint += d->remote.setpoint;
+            d->setpoint += d->remote.setpoint.value;
 
             if (!d->state.darkride) {
                 // in case of wheelslip, don't change torque tilts, instead slightly decrease each
@@ -967,27 +966,22 @@ static void refloat_thd(void *arg) {
                     torque_tilt_update(&d->torque_tilt, &d->motor, &d->float_conf, dt);
                     atr_update(&d->atr, &d->motor, &d->float_conf, dt);
                     brake_tilt_update(
-                        &d->brake_tilt,
-                        &d->motor,
-                        &d->atr,
-                        &d->float_conf,
-                        d->setpoint - d->imu.balance_pitch,
-                        dt
+                        &d->brake_tilt, &d->motor, &d->atr, d->setpoint - d->imu.balance_pitch, dt
                     );
                 }
 
                 d->setpoint += d->noseangling_interpolated;
-                d->setpoint += d->turn_tilt.setpoint;
+                d->setpoint += d->turn_tilt.setpoint.value;
 
                 // aggregated torque tilts:
                 // if signs match between torque tilt and ATR + brake tilt, use the more significant
                 // one if signs do not match, they are simply added together
-                float ab_offset = d->atr.setpoint + d->brake_tilt.setpoint;
-                if (sign(ab_offset) == sign(d->torque_tilt.setpoint)) {
-                    d->setpoint +=
-                        sign(ab_offset) * fmaxf(fabsf(ab_offset), fabsf(d->torque_tilt.setpoint));
+                float ab_offset = d->atr.setpoint.value + d->brake_tilt.setpoint.value;
+                if (sign(ab_offset) == sign(d->torque_tilt.setpoint.value)) {
+                    d->setpoint += sign(ab_offset) *
+                        fmaxf(fabsf(ab_offset), fabsf(d->torque_tilt.setpoint.value));
                 } else {
-                    d->setpoint += ab_offset + d->torque_tilt.setpoint;
+                    d->setpoint += ab_offset + d->torque_tilt.setpoint.value;
                 }
             }
 
@@ -1344,11 +1338,11 @@ static void send_realtime_data(Data *d) {
 
     // Setpoints
     buffer_append_float32_auto(buffer, d->setpoint, &ind);
-    buffer_append_float32_auto(buffer, d->atr.setpoint, &ind);
-    buffer_append_float32_auto(buffer, d->brake_tilt.setpoint, &ind);
-    buffer_append_float32_auto(buffer, d->torque_tilt.setpoint, &ind);
-    buffer_append_float32_auto(buffer, d->turn_tilt.setpoint, &ind);
-    buffer_append_float32_auto(buffer, d->remote.setpoint, &ind);
+    buffer_append_float32_auto(buffer, d->atr.setpoint.value, &ind);
+    buffer_append_float32_auto(buffer, d->brake_tilt.setpoint.value, &ind);
+    buffer_append_float32_auto(buffer, d->torque_tilt.setpoint.value, &ind);
+    buffer_append_float32_auto(buffer, d->turn_tilt.setpoint.value, &ind);
+    buffer_append_float32_auto(buffer, d->remote.setpoint.value, &ind);
 
     // DEBUG
     buffer_append_float32_auto(buffer, d->imu.pitch, &ind);
@@ -1402,11 +1396,11 @@ static void cmd_send_all_data(Data *d, unsigned char mode) {
 
         // Setpoints (can be positive or negative)
         buffer[ind++] = d->setpoint * 5 + 128;
-        buffer[ind++] = d->atr.setpoint * 5 + 128;
-        buffer[ind++] = d->brake_tilt.setpoint * 5 + 128;
-        buffer[ind++] = d->torque_tilt.setpoint * 5 + 128;
-        buffer[ind++] = d->turn_tilt.setpoint * 5 + 128;
-        buffer[ind++] = d->remote.setpoint * 5 + 128;
+        buffer[ind++] = d->atr.setpoint.value * 5 + 128;
+        buffer[ind++] = d->brake_tilt.setpoint.value * 5 + 128;
+        buffer[ind++] = d->torque_tilt.setpoint.value * 5 + 128;
+        buffer[ind++] = d->turn_tilt.setpoint.value * 5 + 128;
+        buffer[ind++] = d->remote.setpoint.value * 5 + 128;
 
         buffer_append_float16(buffer, d->imu.pitch, 10, &ind);
         buffer[ind++] = d->booster.current.value + 128;

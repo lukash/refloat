@@ -22,9 +22,10 @@
 #include <math.h>
 
 void turn_tilt_init(TurnTilt *tt) {
-    tt->speed = 0.0f;
     tt->boost_per_erpm = 0.0f;
     ema_init(&tt->yaw_change);
+    smooth_setpoint_init(&tt->setpoint);
+
     turn_tilt_reset(tt);
 }
 
@@ -33,16 +34,27 @@ void turn_tilt_reset(TurnTilt *tt) {
     ema_reset(&tt->yaw_change, 0.0f);
     tt->yaw_aggregate = 0.0f;
 
-    tt->ramped_step_size = 0.0f;
     tt->target = 0.0f;
-    tt->setpoint = 0.0f;
+    smooth_setpoint_reset(&tt->setpoint, 0.0f);
 }
 
 void turn_tilt_configure(TurnTilt *tt, const RefloatConfig *config, float frequency) {
-    tt->speed = config->turntilt_speed;
     ema_configure(&tt->yaw_change, 25.0f, frequency);
+
     tt->boost_per_erpm =
         (float) config->turntilt_erpm_boost / 100.0 / config->turntilt_erpm_boost_end;
+
+    smooth_setpoint_configure_strengths(
+        &tt->setpoint,
+        config->turn_tilt.filter.strength,
+        config->turn_tilt.filter.on_ease_in_strength,
+        config->turn_tilt.filter.off_ease_in_strength,
+        config->turntilt_speed,
+        config->turntilt_speed,
+        config->turntilt_speed,
+        config->turntilt_speed,
+        frequency
+    );
 }
 
 void turn_tilt_aggregate(TurnTilt *tt, const IMU *imu, float dt) {
@@ -115,10 +127,9 @@ void turn_tilt_update(TurnTilt *tt, const MotorData *md, const RefloatConfig *co
         }
     }
 
-    // Smoothen changes in tilt angle by ramping the step size
-    smooth_rampf(&tt->setpoint, &tt->ramped_step_size, tt->target, tt->speed * dt, 0.04, 1.5);
+    smooth_setpoint_update(&tt->setpoint, tt->target, dt, true);
 }
 
 void turn_tilt_winddown(TurnTilt *tt) {
-    tt->setpoint *= 0.995;
+    // tt->setpoint *= 0.995;
 }

@@ -19,11 +19,10 @@
 #pragma once
 
 #include "conf/datatypes.h"
+#include "filters/smooth_setpoint.h"
 #include "motor_data.h"
 
 typedef struct {
-    float on_speed;
-    float off_speed;
     float speed_boost_mult;
 
     float accel_diff;
@@ -34,8 +33,8 @@ typedef struct {
     float ad_alpha3;
 
     float target;
-    float ramped_step_size;
-    float setpoint;
+
+    SmoothSetpoint setpoint;
 } ATR;
 
 void atr_init(ATR *atr);

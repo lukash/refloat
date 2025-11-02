@@ -23,19 +23,27 @@
 #include <math.h>
 
 void torque_tilt_init(TorqueTilt *tt) {
-    tt->on_speed = 0.0f;
-    tt->off_speed = 0.0f;
+    smooth_setpoint_init(&tt->setpoint);
+
     torque_tilt_reset(tt);
 }
 
 void torque_tilt_reset(TorqueTilt *tt) {
-    tt->ramped_step_size = 0.0f;
-    tt->setpoint = 0.0f;
+    smooth_setpoint_reset(&tt->setpoint, 0.0f);
 }
 
-void torque_tilt_configure(TorqueTilt *tt, const RefloatConfig *config) {
-    tt->on_speed = config->torquetilt_on_speed;
-    tt->off_speed = config->torquetilt_off_speed;
+void torque_tilt_configure(TorqueTilt *tt, const RefloatConfig *config, float frequency) {
+    smooth_setpoint_configure_strengths(
+        &tt->setpoint,
+        config->torque_tilt.filter.strength,
+        config->torque_tilt.filter.on_ease_in_strength,
+        config->torque_tilt.filter.off_ease_in_strength,
+        config->torquetilt_on_speed,
+        config->torquetilt_off_speed,
+        config->torquetilt_on_speed,
+        config->torquetilt_off_speed,
+        frequency
+    );
 }
 
 void torque_tilt_update(
@@ -57,27 +65,9 @@ void torque_tilt_update(
         ) *
         sign(motor->filt_current.value);
 
-    float step_size = 0;
-    if (tt->setpoint * target < 0) {
-        // Moving towards opposite sign (crossing zero);
-        // Use the faster tilt speed until 0 is reached
-        step_size = fmaxf(tt->off_speed, tt->on_speed) * dt;
-    } else if (fabsf(tt->setpoint) > fabsf(target)) {
-        // Moving towards smaller angle of same sign or zero
-        step_size = tt->off_speed * dt;
-    } else {
-        // Moving towards larger angle of same sign
-        step_size = tt->on_speed * dt;
-    }
-
-    if (motor->abs_erpm < 500) {
-        step_size /= 2;
-    }
-
-    // Smoothen changes in tilt angle by ramping the step size
-    smooth_rampf(&tt->setpoint, &tt->ramped_step_size, target, step_size, 0.04, 1.5);
+    smooth_setpoint_update(&tt->setpoint, target, dt, motor->forward);
 }
 
 void torque_tilt_winddown(TorqueTilt *tt) {
-    tt->setpoint *= 0.995;
+    // tt->setpoint *= 0.995;
 }

@@ -24,31 +24,41 @@
 
 void brake_tilt_init(BrakeTilt *bt) {
     bt->factor = 0.0f;
+    smooth_setpoint_init(&bt->setpoint);
+
     brake_tilt_reset(bt);
 }
 
 void brake_tilt_reset(BrakeTilt *bt) {
-    bt->ramped_step_size = 0.0f;
     bt->target = 0.0f;
-    bt->setpoint = 0.0f;
+    smooth_setpoint_reset(&bt->setpoint, 0.0f);
 }
 
-void brake_tilt_configure(BrakeTilt *bt, const RefloatConfig *config) {
+void brake_tilt_configure(BrakeTilt *bt, const RefloatConfig *config, float frequency) {
     if (config->braketilt_strength == 0) {
         bt->factor = 0;
     } else {
         // incorporate negative sign into braketilt factor instead of adding it each balance loop
         bt->factor = -(0.5f + (20 - config->braketilt_strength) / 5.0f);
     }
+
+    float off_speed = config->atr_off_speed / max(config->braketilt_lingering, 1);
+
+    smooth_setpoint_configure_strengths(
+        &bt->setpoint,
+        config->atr.filter.strength,
+        config->atr.filter.on_ease_in_strength,
+        config->atr.filter.off_ease_in_strength,
+        config->atr_on_speed,
+        off_speed,
+        config->atr_on_speed,
+        off_speed,
+        frequency
+    );
 }
 
 void brake_tilt_update(
-    BrakeTilt *bt,
-    const MotorData *motor,
-    const ATR *atr,
-    const RefloatConfig *config,
-    float balance_offset,
-    float dt
+    BrakeTilt *bt, const MotorData *motor, const ATR *atr, float balance_offset, float dt
 ) {
     // braking also should cause setpoint change lift, causing a delayed lingering nose lift
     if (bt->factor < 0 && motor->braking && motor->abs_erpm > 2000) {
@@ -72,22 +82,10 @@ void brake_tilt_update(
         bt->target = 0;
     }
 
-    float braketilt_step_size = atr->off_speed * dt / max(config->braketilt_lingering, 1);
-    if (fabsf(bt->target) > fabsf(bt->setpoint)) {
-        braketilt_step_size = atr->on_speed * dt * 1.5;
-    } else if (motor->abs_erpm < 800) {
-        braketilt_step_size = atr->on_speed * dt;
-    }
-
-    if (motor->abs_erpm < 500) {
-        braketilt_step_size /= 2;
-    }
-
-    // Smoothen changes in tilt angle by ramping the step size
-    smooth_rampf(&bt->setpoint, &bt->ramped_step_size, bt->target, braketilt_step_size, 0.05, 1.5);
+    smooth_setpoint_update(&bt->setpoint, bt->target, dt, motor->forward);
 }
 
 void brake_tilt_winddown(BrakeTilt *bt) {
-    bt->setpoint *= 0.995;
+    // bt->setpoint *= 0.995;
     bt->target *= 0.99;
 }

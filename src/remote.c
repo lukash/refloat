@@ -21,17 +21,27 @@
 
 void remote_init(Remote *remote) {
     remote->input = 0;
-    remote->ramped_step_size = 0;
-    remote->setpoint = 0;
+    smooth_setpoint_init(&remote->setpoint);
+
+    remote_reset(remote);
 }
 
 void remote_reset(Remote *remote) {
-    remote->setpoint = 0;
-    remote->ramped_step_size = 0;
+    smooth_setpoint_reset(&remote->setpoint, 0.0f);
 }
 
-void remote_configure(Remote *remote, const RefloatConfig *config) {
-    remote->speed = config->inputtilt_speed;
+void remote_configure(Remote *remote, const RefloatConfig *config, float frequency) {
+    smooth_setpoint_configure(
+        &remote->setpoint,
+        config->remote.filter.strength,
+        config->remote.filter.on_ease_in_strength,
+        config->remote.filter.off_ease_in_strength,
+        config->inputtilt_speed,
+        config->inputtilt_speed,
+        config->inputtilt_speed,
+        config->inputtilt_speed,
+        frequency
+    );
 }
 
 void remote_input(Remote *remote, const RefloatConfig *config) {
@@ -79,30 +89,6 @@ void remote_update(Remote *remote, const State *state, const RefloatConfig *conf
         target = -target;
     }
 
-    float target_diff = target - remote->setpoint;
-
-    // Smoothen changes in tilt angle by ramping the step size
-    const float smoothing_factor = 0.02;
-
-    // Within X degrees of Target Angle, start ramping down step size
-    if (fabsf(target_diff) < 2.0f) {
-        // Target step size is reduced the closer to center you are (needed for smoothly
-        // transitioning away from center)
-        remote->ramped_step_size = smoothing_factor * remote->speed * dt * target_diff / 2 +
-            (1 - smoothing_factor) * remote->ramped_step_size;
-        // Linearly ramped down step size is provided as minimum to prevent overshoot
-        float centering_step_size =
-            fminf(fabsf(remote->ramped_step_size), fabsf(target_diff / 2) * remote->speed * dt) *
-            sign(target_diff);
-        if (fabsf(target_diff) < fabsf(centering_step_size)) {
-            remote->setpoint = target;
-        } else {
-            remote->setpoint += centering_step_size;
-        }
-    } else {
-        // Ramp up step size until the configured tilt speed is reached
-        remote->ramped_step_size = smoothing_factor * remote->speed * dt * sign(target_diff) +
-            (1 - smoothing_factor) * remote->ramped_step_size;
-        remote->setpoint += remote->ramped_step_size;
-    }
+    // The `forward` argument doesn't matter, as up and down speeds are the same
+    smooth_setpoint_update(&remote->setpoint, target, dt, true);
 }
