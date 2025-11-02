@@ -40,6 +40,7 @@ typedef struct {
     float dir_current;  // directional current (sign represents direction of torque generation)
     Biquad filt_current;  // filtered directional current
     bool braking;
+    bool forward;
 
     float duty_raw;
     EMA duty_cycle;

@@ -82,11 +82,6 @@ void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config, f
         expected_acc += torque_sign * (abs_torque - 25) / accel_factor2;
     }
 
-    bool forward = motor->erpm > 0;
-    if (motor->abs_erpm < 250 && abs_torque > 30) {
-        forward = (expected_acc > 0);
-    }
-
     float new_accel_diff = expected_acc - measured_acc;
     if (motor->abs_erpm > 250) {
         float alpha = atr->ad_alpha3;
@@ -104,8 +99,8 @@ void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config, f
     // -------------+------+-------
     //         forward | up   | down
     //        !forward | down | up
-    float atr_strength =
-        forward == (atr->accel_diff > 0) ? config->atr_strength_up : config->atr_strength_down;
+    float atr_strength = motor->forward == (atr->accel_diff > 0) ? config->atr_strength_up
+                                                                 : config->atr_strength_down;
 
     // from 3000 to 6000..9000 erpm gradually crank up the torque response
     if (motor->abs_erpm > 3000 && !motor->braking) {
@@ -144,7 +139,7 @@ void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config, f
     // acceleration data or trigger oscillations...
     float atr_step_size = 0;
     const float TT_BOOST_MARGIN = 2;
-    if (forward) {
+    if (motor->forward) {
         if (atr->setpoint < 0) {
             // downhill
             if (atr->setpoint < atr->target) {
