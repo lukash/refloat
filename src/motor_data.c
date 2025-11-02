@@ -36,6 +36,7 @@ void motor_data_init(MotorData *m) {
     m->dir_current = 0.0f;
     biquad_init(&m->filt_current);
     m->braking = false;
+    m->forward = true;
 
     m->duty_raw = 0.0f;
     ema_init(&m->duty_cycle);
@@ -132,6 +133,11 @@ void motor_data_update(MotorData *m, float dt) {
     m->last_erpm = m->erpm;
 
     biquad_update(&m->filt_current, m->dir_current);
+    if (m->abs_erpm > 250 || m->filt_current.value < 30.0f) {
+        m->forward = m->erpm >= 0.0f;
+    } else {
+        m->forward = m->filt_current.value >= 0.0f;
+    }
 
     ema_update(&m->batt_current, VESC_IF->mc_get_tot_current_in_filtered());
     m->batt_voltage = VESC_IF->mc_get_input_voltage_filtered();
