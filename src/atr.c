@@ -137,12 +137,11 @@ void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config) {
     float atr_tb_step_size = atr->off_step_size * config->atr_transition_boost;
     float atr_on_step_size = atr->on_step_size * response_boost;
 
+    // When Transition Boost condition is met, use the highest allowed step size
+    float atr_transition_step_size = fmaxf(atr_tb_step_size, atr_on_step_size);
+
     const float TT_BOOST_UPHILL_MARGIN = 2;
     const float TT_BOOST_DOWNHILL_THRESHOLD = 3;
-
-    // Winding Down: Setpoint is moving toward 0
-    bool is_winding_down = (atr->setpoint < 0 && atr->setpoint < atr->target) ||
-        (atr->setpoint > 0 && atr->setpoint > atr->target);
 
     bool should_transition_boost;
     if (atr->target * atr->setpoint >= 0) {
@@ -150,22 +149,22 @@ void atr_update(ATR *atr, const MotorData *motor, const RefloatConfig *config) {
         should_transition_boost = false;
     } else if (forward ? (atr->setpoint < 0 && atr->target > 0)
                        : (atr->setpoint > 0 && atr->target < 0)) {
-        // Transitioning Downhill to Uphill: check margin between target and setpoint,
-        // with a minimum ERPM threshold
-        should_transition_boost = (fabsf(atr->target - atr->setpoint) > TT_BOOST_UPHILL_MARGIN) &&
-            (motor->abs_erpm > 2000);
+        // Transitioning Downhill to Uphill: check margin between target and setpoint
+        should_transition_boost = fabsf(atr->target - atr->setpoint) >= TT_BOOST_UPHILL_MARGIN;
     } else {
-        // Transitioning Uphill to Downhill: check target magnitude (stricter condition);
-        // Instead of transition boost, use on_step_size (typically faster than off_step_size)
-        should_transition_boost = false;
-        is_winding_down = fabsf(atr->target) < TT_BOOST_DOWNHILL_THRESHOLD;
+        // Transitioning Uphill to Downhill: check target magnitude (stricter condition)
+        should_transition_boost = fabsf(atr->target) >= TT_BOOST_DOWNHILL_THRESHOLD;
     }
 
+    // Winding Down: Setpoint is moving toward 0
+    bool is_winding_down = (atr->setpoint < 0 && atr->setpoint < atr->target) ||
+        (atr->setpoint > 0 && atr->setpoint > atr->target);
+
     if (is_winding_down) {
-        // ATR is decreasing (boost if transitioning to strong Uphill ATR)
-        atr_step_size = should_transition_boost ? atr_tb_step_size : atr->off_step_size;
+        // ATR is decreasing (boost if transitioning to strong ATR of opposite sign)
+        atr_step_size = should_transition_boost ? atr_transition_step_size : atr->off_step_size;
     } else {
-        // ATR is increasing (or transitioning quickly from Uphill to Downhill ATR)
+        // ATR is increasing
         atr_step_size = atr_on_step_size;
     }
 
