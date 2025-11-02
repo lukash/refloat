@@ -18,22 +18,19 @@
 #pragma once
 
 #include "conf/datatypes.h"
+#include "filters/smooth_setpoint.h"
 #include "state.h"
 
 typedef struct {
-    float speed;
-
     float input;
-    float ramped_step_size;
-
-    float setpoint;
+    SmoothSetpoint setpoint;
 } Remote;
 
 void remote_init(Remote *remote);
 
 void remote_reset(Remote *remote);
 
-void remote_configure(Remote *remote, const RefloatConfig *config);
+void remote_configure(Remote *remote, const RefloatConfig *config, float frequency);
 
 void remote_input(Remote *remote, const RefloatConfig *config);
 

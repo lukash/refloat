@@ -192,6 +192,28 @@ typedef struct {
 } CfgHapticFeedback;
 
 typedef struct {
+    float time_constant;
+    float on_speed_time_constant;
+    float off_speed_time_constant;
+} CfgSetpointFilter;
+
+typedef struct {
+    CfgSetpointFilter filter;
+} CfgTorqueTilt;
+
+typedef struct {
+    CfgSetpointFilter filter;
+} CfgATR;
+
+typedef struct {
+    CfgSetpointFilter filter;
+} CfgTurnTilt;
+
+typedef struct {
+    CfgSetpointFilter filter;
+} CfgRemote;
+
+typedef struct {
     bool enabled;
     float cell_lv_threshold;
     float cell_hv_threshold;
@@ -302,6 +324,11 @@ typedef struct {
     bool is_beeper_enabled;
     bool is_dutybeep_enabled;
     bool is_footbeep_enabled;
+
+    CfgTorqueTilt torque_tilt;
+    CfgATR atr;
+    CfgTurnTilt turn_tilt;
+    CfgRemote remote;
 
     CfgHapticFeedback haptic;
     CfgBMS bms;
