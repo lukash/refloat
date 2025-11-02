@@ -18,12 +18,11 @@
 #pragma once
 
 #include "conf/datatypes.h"
+#include "filters/smooth_setpoint.h"
 #include "imu.h"
 #include "motor_data.h"
 
 typedef struct {
-    float speed;
-    float ramped_step_size;
     float boost_per_erpm;
 
     float last_yaw_angle;
@@ -31,7 +30,7 @@ typedef struct {
     float yaw_aggregate;
 
     float target;
-    float setpoint;
+    SmoothSetpoint setpoint;
 } TurnTilt;
 
 void turn_tilt_init(TurnTilt *tt);

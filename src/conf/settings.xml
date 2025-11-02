@@ -221,6 +221,86 @@ p, li { white-space: pre-wrap; }
             <suffix>x</suffix>
             <vTx>7</vTx>
         </kp2_brake>
+        <atr.filter.time_constant>
+            <longName>Smoothing Time Constant</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;ATR smoothing filter time constant. Defined as time needed for the ATR setpoint to move two thirds towards its new target value. Determines overall ATR smoothness. Setting this low will make ATR responsive, but might make it feel jerky. Setting this high will make ATR smooth, but less responsive.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The transition into a more extreme setpoint (higher for nose-up, lower for nose-down) can be further smoothed by &lt;span style=&quot; font-style:italic;&quot;&gt;Smoothing On Speed Time Constant&lt;/span&gt;.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The transition back towards 0° setpoint can be further smoothed by &lt;span style=&quot; font-style:italic;&quot;&gt;Smoothing Off Speed Time Constant&lt;/span&gt;.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;How to tune:&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;1. Start with the default values for all three Smoothing config options and default or faster Tiltback speeds.&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;2. Then change this option up and down first and get a feel for how it impacts the overall smoothness. To get a feel for the next two values, set this to something that feels rather snappy.&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;3. Lower &lt;span style=&quot; font-style:italic;&quot;&gt;Smoothing On Speed Time Constant&lt;/span&gt; all the way down. Now ride up a steep hill, you should feel the board snap quickly into a high ATR setpoint, but when you reach the top, the way it goes down should remain unchanged. Then set &lt;span style=&quot; font-style:italic;&quot;&gt;Smoothing On Speed Time Constant&lt;/span&gt; to a high number and repeat the ride up. The rise of the nose should be much more mellow.&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;4. Repeat the process with &lt;span style=&quot; font-style:italic;&quot;&gt;Smoothing Off Speed Time Constant&lt;/span&gt;. You should feel the same effects, but applied to the transition at the top of the hill when the setpoint returns to level. The rest of the shaping is, again, unchanged.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_ATR_FILTER_TIME_CONSTANT</cDefine>
+            <editorDecimalsDouble>2</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>5</maxDouble>
+            <minDouble>0.01</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.1</stepDouble>
+            <valDouble>0.3</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix> s</suffix>
+            <vTx>7</vTx>
+        </atr.filter.time_constant>
+        <atr.filter.on_speed_time_constant>
+            <longName>Smoothing On Speed Time Constant</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;ATR smoothing on speed time constant for transitioning into a more extreme (higher for nose-up, lower for nose-down) setpoint. Defined as time needed for the &lt;span style=&quot; font-style:italic;&quot;&gt;speed&lt;/span&gt; of the setpoint change to reach two thirds of its new target value when transitioning into a more extreme ATR setpoint. Smoother means less responsive.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Practically (given your Tiltback speeds and the base Smoothing Time Constant are set to fairly responsive values), setting this very low and riding into an uphill, the board will snap fast into a high setpoint, while setting this to a high value will make the board go into a high setpoint slowly. The speed at which the board will go back to 0° setpoint when you reach the top of the hill will be unaffected. On a downhill it also applies to the initial transition into the negative setpoint.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_ATR_FILTER_ON_SPEED_TIME_CONSTANT</cDefine>
+            <editorDecimalsDouble>3</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>1</maxDouble>
+            <minDouble>0.01</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.1</stepDouble>
+            <valDouble>0.4</valDouble>
+            <vTxDoubleScale>10000</vTxDoubleScale>
+            <suffix> s</suffix>
+            <vTx>7</vTx>
+        </atr.filter.on_speed_time_constant>
+        <atr.filter.off_speed_time_constant>
+            <longName>Smoothing Off Speed Time Constant</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;ATR smoothing off speed time constant for transitioning back to 0° setpoint. Defined as time needed for the &lt;span style=&quot; font-style:italic;&quot;&gt;speed&lt;/span&gt; of the setpoint change to reach two thirds of its new target value. Smoother means less responsive.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Practically (given your Tiltback speeds and the base Smoothing Time Constant are set to fairly responsive values), setting this very low and riding uphill, when you reach the top the board will snap down to 0° setpoint fairly fast. Setting this to a high value will make the board go back to 0° setpoint at the top of the uphill mellow and slow. The speed at which the board will rise to a high setpoint at the start of the uphill will remain unaffected. On a downhill, it also applies to the return transition at the end.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_ATR_FILTER_OFF_SPEED_TIME_CONSTANT</cDefine>
+            <editorDecimalsDouble>3</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>1</maxDouble>
+            <minDouble>0.01</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.1</stepDouble>
+            <valDouble>0.05</valDouble>
+            <vTxDoubleScale>10000</vTxDoubleScale>
+            <suffix> s</suffix>
+            <vTx>7</vTx>
+        </atr.filter.off_speed_time_constant>
         <hertz>
             <longName>Loop Hertz</longName>
             <type>2</type>
@@ -2252,6 +2332,222 @@ p, li { white-space: pre-wrap; }
             <suffix> Hz</suffix>
             <vTx>7</vTx>
         </atr_filter>
+        <torque_tilt.filter.time_constant>
+            <longName>Smoothing Time Constant</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Torque Tilt smoothing filter time constant. Defined as time needed for the Torque Tilt setpoint to move two thirds towards its new target value. Determines overall Torque Tilt smoothness. Setting this low will make Torque Tilt responsive, but might make it feel jerky. Setting this high will make Torque Tilt smooth, but less responsive.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The transition into a more extreme setpoint (higher for nose-up, lower for nose-down) can be further smoothed by &lt;span style=&quot; font-style:italic;&quot;&gt;Smoothing On Speed Time Constant&lt;/span&gt;.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The transition back towards 0° setpoint can be further smoothed by &lt;span style=&quot; font-style:italic;&quot;&gt;Smoothing Off Speed Time Constant&lt;/span&gt;.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Check the ATR Smoothing Time Constant help text for a guide on how to tune the smoothing.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_TORQUE_TILT_FILTER_TIME_CONSTANT</cDefine>
+            <editorDecimalsDouble>2</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>5</maxDouble>
+            <minDouble>0.01</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.1</stepDouble>
+            <valDouble>0.3</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix> s</suffix>
+            <vTx>7</vTx>
+        </torque_tilt.filter.time_constant>
+        <torque_tilt.filter.on_speed_time_constant>
+            <longName>Smoothing On Speed Time Constant</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Torque Tilt smoothing on speed time constant for transitioning into a more extreme (higher for nose-up, lower for nose-down) setpoint. Defined as time needed for the &lt;span style=&quot; font-style:italic;&quot;&gt;speed&lt;/span&gt; of the setpoint change to reach two thirds of its new target value when transitioning into a more extreme Torque Tilt setpoint. Smoother means less responsive.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_TORQUE_TILT_FILTER_ON_SPEED_TIME_CONSTANT</cDefine>
+            <editorDecimalsDouble>3</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>1</maxDouble>
+            <minDouble>0.01</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.1</stepDouble>
+            <valDouble>0.4</valDouble>
+            <vTxDoubleScale>10000</vTxDoubleScale>
+            <suffix> s</suffix>
+            <vTx>7</vTx>
+        </torque_tilt.filter.on_speed_time_constant>
+        <torque_tilt.filter.off_speed_time_constant>
+            <longName>Smoothing Off Speed Time Constant</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Torque Tilt smoothing off speed time constant for transitioning back to 0° setpoint. Defined as time needed for the &lt;span style=&quot; font-style:italic;&quot;&gt;speed&lt;/span&gt; of the setpoint change to reach two thirds of its new target value. Smoother means less responsive.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_TORQUE_TILT_FILTER_OFF_SPEED_TIME_CONSTANT</cDefine>
+            <editorDecimalsDouble>3</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>1</maxDouble>
+            <minDouble>0.01</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.1</stepDouble>
+            <valDouble>0.05</valDouble>
+            <vTxDoubleScale>10000</vTxDoubleScale>
+            <suffix> s</suffix>
+            <vTx>7</vTx>
+        </torque_tilt.filter.off_speed_time_constant>
+        <turn_tilt.filter.time_constant>
+            <longName>Smoothing</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Turn Tilt smoothing filter time constant. Defined as time needed for the Turn Tilt setpoint to move two thirds towards its new target value. Determines overall Turn Tilt smoothness. Setting this low will make Turn Tilt responsive, but might make it feel jerky. Setting this high will make Turn Tilt smooth, but less responsive.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The transition into a more extreme setpoint (higher for nose-up, lower for nose-down) can be further smoothed by &lt;span style=&quot; font-style:italic;&quot;&gt;Smoothing On Speed Time Constant&lt;/span&gt;.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The transition back towards 0° setpoint can be further smoothed by &lt;span style=&quot; font-style:italic;&quot;&gt;Smoothing Off Speed Time Constant&lt;/span&gt;.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Check the ATR Smoothing Time Constant help text for a guide on how to tune the smoothing.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_TURN_TILT_FILTER_TIME_CONSTANT</cDefine>
+            <editorDecimalsDouble>2</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>5</maxDouble>
+            <minDouble>0.01</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.1</stepDouble>
+            <valDouble>0.3</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix> s</suffix>
+            <vTx>7</vTx>
+        </turn_tilt.filter.time_constant>
+        <turn_tilt.filter.on_speed_time_constant>
+            <longName>Smoothing On Speed Time Constant</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Turn Tilt smoothing on speed time constant for transitioning into a more extreme (higher for nose-up, lower for nose-down) setpoint. Defined as time needed for the &lt;span style=&quot; font-style:italic;&quot;&gt;speed&lt;/span&gt; of the setpoint change to reach two thirds of its new target value when transitioning into a more extreme Turn Tilt setpoint. Smoother means less responsive.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_TURN_TILT_FILTER_ON_SPEED_TIME_CONSTANT</cDefine>
+            <editorDecimalsDouble>3</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>1</maxDouble>
+            <minDouble>0.01</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.1</stepDouble>
+            <valDouble>0.4</valDouble>
+            <vTxDoubleScale>10000</vTxDoubleScale>
+            <suffix> s</suffix>
+            <vTx>7</vTx>
+        </turn_tilt.filter.on_speed_time_constant>
+        <turn_tilt.filter.off_speed_time_constant>
+            <longName>Smoothing Off Speed Time Constant</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Turn Tilt smoothing off speed time constant for transitioning back to 0° setpoint. Defined as time needed for the &lt;span style=&quot; font-style:italic;&quot;&gt;speed&lt;/span&gt; of the setpoint change to reach two thirds of its new target value. Smoother means less responsive.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_TURN_TILT_FILTER_OFF_SPEED_TIME_CONSTANT</cDefine>
+            <editorDecimalsDouble>3</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>1</maxDouble>
+            <minDouble>0.01</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.1</stepDouble>
+            <valDouble>0.05</valDouble>
+            <vTxDoubleScale>10000</vTxDoubleScale>
+            <suffix> s</suffix>
+            <vTx>7</vTx>
+        </turn_tilt.filter.off_speed_time_constant>
+        <remote.filter.time_constant>
+            <longName>Smoothing Time Constant</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Remote smoothing filter time constant. Defined as time needed for the Remote setpoint to move two thirds towards its new target value. Determines overall Remote smoothness. Setting this low will make Remote responsive, but might make it feel jerky. Setting this high will make Remote smooth, but less responsive.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The transition into a more extreme setpoint (higher for nose-up, lower for nose-down) can be further smoothed by &lt;span style=&quot; font-style:italic;&quot;&gt;Smoothing On Speed Time Constant&lt;/span&gt;.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The transition back towards 0° setpoint can be further smoothed by &lt;span style=&quot; font-style:italic;&quot;&gt;Smoothing Off Speed Time Constant&lt;/span&gt;.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Check the ATR Smoothing Time Constant help text for a guide on how to tune the smoothing.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_REMOTE_FILTER_TIME_CONSTANT</cDefine>
+            <editorDecimalsDouble>2</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>5</maxDouble>
+            <minDouble>0.01</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.1</stepDouble>
+            <valDouble>0.15</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix> s</suffix>
+            <vTx>7</vTx>
+        </remote.filter.time_constant>
+        <remote.filter.on_speed_time_constant>
+            <longName>Smoothing On Speed Time Constant</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Remote smoothing on speed time constant for transitioning into a more extreme (higher for nose-up, lower for nose-down) setpoint. Defined as time needed for the &lt;span style=&quot; font-style:italic;&quot;&gt;speed&lt;/span&gt; of the setpoint change to reach two thirds of its new target value when transitioning into a more extreme Remote setpoint. Smoother means less responsive.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_REMOTE_FILTER_ON_SPEED_TIME_CONSTANT</cDefine>
+            <editorDecimalsDouble>3</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>1</maxDouble>
+            <minDouble>0.01</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.1</stepDouble>
+            <valDouble>0.03</valDouble>
+            <vTxDoubleScale>10000</vTxDoubleScale>
+            <suffix> s</suffix>
+            <vTx>7</vTx>
+        </remote.filter.on_speed_time_constant>
+        <remote.filter.off_speed_time_constant>
+            <longName>Smoothing Off Speed Time Constant</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Remote smoothing off speed time constant for transitioning back to 0° setpoint. Defined as time needed for the &lt;span style=&quot; font-style:italic;&quot;&gt;speed&lt;/span&gt; of the setpoint change to reach two thirds of its new target value. Smoother means less responsive.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_REMOTE_FILTER_OFF_SPEED_TIME_CONSTANT</cDefine>
+            <editorDecimalsDouble>3</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>1</maxDouble>
+            <minDouble>0.01</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.1</stepDouble>
+            <valDouble>0.03</valDouble>
+            <vTxDoubleScale>10000</vTxDoubleScale>
+            <suffix> s</suffix>
+            <vTx>7</vTx>
+        </remote.filter.off_speed_time_constant>
         <atr_amps_accel_ratio>
             <longName>Amps to Acceleration Ratio</longName>
             <type>1</type>
@@ -3916,6 +4212,18 @@ p, li { white-space: pre-wrap; }
         <ser>mahony_kp_roll</ser>
         <ser>kp_brake</ser>
         <ser>kp2_brake</ser>
+        <ser>atr.filter.time_constant</ser>
+        <ser>atr.filter.on_speed_time_constant</ser>
+        <ser>atr.filter.off_speed_time_constant</ser>
+        <ser>torque_tilt.filter.time_constant</ser>
+        <ser>torque_tilt.filter.on_speed_time_constant</ser>
+        <ser>torque_tilt.filter.off_speed_time_constant</ser>
+        <ser>turn_tilt.filter.time_constant</ser>
+        <ser>turn_tilt.filter.on_speed_time_constant</ser>
+        <ser>turn_tilt.filter.off_speed_time_constant</ser>
+        <ser>remote.filter.time_constant</ser>
+        <ser>remote.filter.on_speed_time_constant</ser>
+        <ser>remote.filter.off_speed_time_constant</ser>
         <ser>hertz</ser>
         <ser>fault_pitch</ser>
         <ser>fault_roll</ser>
@@ -4119,6 +4427,9 @@ p, li { white-space: pre-wrap; }
                     <param>torquetilt_strength_regen</param>
                     <param>torquetilt_start_current</param>
                     <param>torquetilt_angle_limit</param>
+                    <param>torque_tilt.filter.time_constant</param>
+                    <param>torque_tilt.filter.on_speed_time_constant</param>
+                    <param>torque_tilt.filter.off_speed_time_constant</param>
                     <param>torquetilt_on_speed</param>
                     <param>torquetilt_off_speed</param>
                     <param>::sep::Turn Tiltback</param>
@@ -4130,6 +4441,9 @@ p, li { white-space: pre-wrap; }
                     <param>turntilt_erpm_boost_end</param>
                     <param>turntilt_yaw_aggregate</param>
                     <param>turntilt_start_angle</param>
+                    <param>turn_tilt.filter.time_constant</param>
+                    <param>turn_tilt.filter.on_speed_time_constant</param>
+                    <param>turn_tilt.filter.off_speed_time_constant</param>
                 </subgroupParams>
             </subgroup>
             <subgroup>
@@ -4141,6 +4455,10 @@ p, li { white-space: pre-wrap; }
                     <param>atr_threshold_up</param>
                     <param>atr_threshold_down</param>
                     <param>atr_speed_boost</param>
+                    <param>::sep::Filtering</param>
+                    <param>atr.filter.time_constant</param>
+                    <param>atr.filter.on_speed_time_constant</param>
+                    <param>atr.filter.off_speed_time_constant</param>
                     <param>::sep::Nose Angling</param>
                     <param>atr_angle_limit</param>
                     <param>atr_on_speed</param>
@@ -4239,6 +4557,9 @@ p, li { white-space: pre-wrap; }
                     <param>inputtilt_remote_type</param>
                     <param>inputtilt_angle_limit</param>
                     <param>inputtilt_speed</param>
+                    <param>remote.filter.time_constant</param>
+                    <param>remote.filter.on_speed_time_constant</param>
+                    <param>remote.filter.off_speed_time_constant</param>
                     <param>inputtilt_invert_throttle</param>
                     <param>inputtilt_deadband</param>
                     <param>::sep::Remote Throttle</param>
