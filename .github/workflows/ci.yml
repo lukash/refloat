@@ -15,7 +15,7 @@ jobs:
       - uses: cachix/install-nix-action@v25
       - uses: rrbutani/use-nix-shell-action@v1
         with:
-          flakes: nixpkgs#clang-tools_18, nixpkgs#lefthook
+          flakes: nixpkgs#llvmPackages_18.clang-tools, nixpkgs#lefthook
 
       - name: Run clang-format
         id: clang-format
