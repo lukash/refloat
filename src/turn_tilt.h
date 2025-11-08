@@ -27,8 +27,7 @@ typedef struct {
     float boost_per_erpm;
 
     float last_yaw_angle;
-    float yaw_change;
-    float abs_yaw_change;
+    EMA yaw_change;
     float yaw_aggregate;
 
     float target;
@@ -39,9 +38,9 @@ void turn_tilt_init(TurnTilt *tt);
 
 void turn_tilt_reset(TurnTilt *tt);
 
-void turn_tilt_configure(TurnTilt *tt, const RefloatConfig *config);
+void turn_tilt_configure(TurnTilt *tt, const RefloatConfig *config, float frequency);
 
-void turn_tilt_aggregate(TurnTilt *tt, const IMU *imu);
+void turn_tilt_aggregate(TurnTilt *tt, const IMU *imu, float dt);
 
 void turn_tilt_update(TurnTilt *tt, const MotorData *md, const RefloatConfig *config, float dt);
 

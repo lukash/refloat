@@ -164,6 +164,7 @@ static void main_freq_update_reconfigure(float frequency) {
     motor_control_configure(&d->motor_control, &d->float_conf, frequency);
 
     atr_configure(&d->atr, &d->float_conf, frequency);
+    turn_tilt_configure(&d->turn_tilt, &d->float_conf, frequency);
     booster_configure(&d->booster, frequency);
 
     ema_configure(&d->balance_current, 25.0f, frequency);
@@ -194,7 +195,6 @@ static void reconfigure(Data *d) {
 
     torque_tilt_configure(&d->torque_tilt, &d->float_conf);
     brake_tilt_configure(&d->brake_tilt, &d->float_conf);
-    turn_tilt_configure(&d->turn_tilt, &d->float_conf);
     remote_configure(&d->remote, &d->float_conf);
 
     haptic_feedback_configure(&d->haptic_feedback, &d->float_conf);
@@ -870,7 +870,7 @@ static void refloat_thd(void *arg) {
 
         remote_input(&d->remote, &d->float_conf);
 
-        turn_tilt_aggregate(&d->turn_tilt, &d->imu);
+        turn_tilt_aggregate(&d->turn_tilt, &d->imu, dt);
 
         footpad_sensor_update(&d->footpad, &d->float_conf);
 
