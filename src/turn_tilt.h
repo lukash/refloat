@@ -27,7 +27,6 @@ typedef struct {
     float boost_per_erpm;
 
     float last_yaw_angle;
-    float last_yaw_change;
     float yaw_change;
     float abs_yaw_change;
     float yaw_aggregate;
