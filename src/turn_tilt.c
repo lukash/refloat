@@ -29,7 +29,6 @@ void turn_tilt_init(TurnTilt *tt) {
 
 void turn_tilt_reset(TurnTilt *tt) {
     tt->last_yaw_angle = 0.0f;
-    tt->last_yaw_change = 0.0f;
     tt->yaw_change = 0.0f;
     tt->abs_yaw_change = 0.0f;
     tt->yaw_aggregate = 0.0f;
@@ -47,15 +46,12 @@ void turn_tilt_configure(TurnTilt *tt, const RefloatConfig *config) {
 
 void turn_tilt_aggregate(TurnTilt *tt, const IMU *imu) {
     float new_change = imu->yaw - tt->last_yaw_angle;
-    bool unchanged = false;
-
-    // exact 0's only happen when the IMU is not updating between loops,
-    // yaw flips signs at 180, ignore those changes
-    if (new_change == 0 || fabsf(new_change) > 100) {
-        new_change = tt->last_yaw_change;
-        unchanged = true;
+    if (new_change < -180.0f) {
+        new_change += 360.0f;
+    } else if (new_change > 180.0f) {
+        new_change -= 360.0f;
     }
-    tt->last_yaw_change = new_change;
+
     tt->last_yaw_angle = imu->yaw;
 
     // limit change to avoid overreactions at low speed
@@ -68,7 +64,7 @@ void turn_tilt_aggregate(TurnTilt *tt, const IMU *imu) {
 
     tt->abs_yaw_change = fabsf(tt->yaw_change);
     // don't count tiny yaw changes towards aggregate
-    if (tt->abs_yaw_change > 0.04 && !unchanged) {
+    if (tt->abs_yaw_change > 0.04) {
         tt->yaw_aggregate += tt->yaw_change;
     }
 }
