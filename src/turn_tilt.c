@@ -24,13 +24,13 @@
 void turn_tilt_init(TurnTilt *tt) {
     tt->speed = 0.0f;
     tt->boost_per_erpm = 0.0f;
+    ema_init(&tt->yaw_change);
     turn_tilt_reset(tt);
 }
 
 void turn_tilt_reset(TurnTilt *tt) {
     tt->last_yaw_angle = 0.0f;
-    tt->yaw_change = 0.0f;
-    tt->abs_yaw_change = 0.0f;
+    ema_reset(&tt->yaw_change, 0.0f);
     tt->yaw_aggregate = 0.0f;
 
     tt->ramped_step_size = 0.0f;
@@ -38,13 +38,14 @@ void turn_tilt_reset(TurnTilt *tt) {
     tt->setpoint = 0.0f;
 }
 
-void turn_tilt_configure(TurnTilt *tt, const RefloatConfig *config) {
+void turn_tilt_configure(TurnTilt *tt, const RefloatConfig *config, float frequency) {
     tt->speed = config->turntilt_speed;
+    ema_configure(&tt->yaw_change, 25.0f, frequency);
     tt->boost_per_erpm =
         (float) config->turntilt_erpm_boost / 100.0 / config->turntilt_erpm_boost_end;
 }
 
-void turn_tilt_aggregate(TurnTilt *tt, const IMU *imu) {
+void turn_tilt_aggregate(TurnTilt *tt, const IMU *imu, float dt) {
     float new_change = imu->yaw - tt->last_yaw_angle;
     if (new_change < -180.0f) {
         new_change += 360.0f;
@@ -55,17 +56,16 @@ void turn_tilt_aggregate(TurnTilt *tt, const IMU *imu) {
     tt->last_yaw_angle = imu->yaw;
 
     // limit change to avoid overreactions at low speed
-    tt->yaw_change = 0.8 * tt->yaw_change + 0.2 * clampf(new_change, -0.10, 0.10);
+    ema_update(&tt->yaw_change, clampf(new_change / dt, -72.0f, 72.0f));
 
     // clear the aggregate yaw whenever we change direction
-    if (sign(tt->yaw_change) != sign(tt->yaw_aggregate)) {
+    if (sign(tt->yaw_change.value) != sign(tt->yaw_aggregate)) {
         tt->yaw_aggregate = 0;
     }
 
-    tt->abs_yaw_change = fabsf(tt->yaw_change);
     // don't count tiny yaw changes towards aggregate
-    if (tt->abs_yaw_change > 0.04) {
-        tt->yaw_aggregate += tt->yaw_change;
+    if (fabsf(tt->yaw_change.value) > 30.0f) {
+        tt->yaw_aggregate += new_change;
     }
 }
 
@@ -74,16 +74,17 @@ void turn_tilt_update(TurnTilt *tt, const MotorData *md, const RefloatConfig *co
         return;
     }
 
+    float abs_yaw_change = fabsf(tt->yaw_change.value);
     float abs_yaw_aggregate = fabsf(tt->yaw_aggregate);
 
     // Minimum threshold based on
     // a) minimum degrees per second (yaw/turn increment)
     // b) minimum yaw aggregate (to filter out wiggling on uneven road)
-    if (abs_yaw_aggregate < config->turntilt_start_angle || tt->abs_yaw_change < 0.04) {
+    if (abs_yaw_aggregate < config->turntilt_start_angle || abs_yaw_change < 30.0f) {
         tt->target = 0;
     } else {
         // Calculate desired angle
-        tt->target = tt->abs_yaw_change * config->turntilt_strength;
+        tt->target = abs_yaw_change * LOOP_HERTZ_COMPAT_RECIP * config->turntilt_strength;
 
         // Apply speed scaling
         float boost;
@@ -103,12 +104,8 @@ void turn_tilt_update(TurnTilt *tt, const MotorData *md, const RefloatConfig *co
         boost = fminf(boost, 2);
         tt->target *= boost;
 
-        // Limit angle to max angle
-        if (tt->target > 0) {
-            tt->target = fminf(tt->target, config->turntilt_angle_limit);
-        } else {
-            tt->target = fmaxf(tt->target, -config->turntilt_angle_limit);
-        }
+        tt->target =
+            clampf(tt->target, -config->turntilt_angle_limit, config->turntilt_angle_limit);
 
         // Disable below erpm threshold otherwise add directionality
         if (md->abs_erpm < config->turntilt_start_erpm) {
