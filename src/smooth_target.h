@@ -1,4 +1,4 @@
-// Copyright 2025 Lukas Hrazky
+// Copyright 2024 Lukas Hrazky
 //
 // This file is part of the Refloat VESC package.
 //
@@ -18,25 +18,21 @@
 #pragma once
 
 #include "conf/datatypes.h"
-#include "smooth_target.h"
-#include "state.h"
 
 typedef struct {
-    float step_size;
+    CfgTargetFilter cfg;
+    float on_speed;
+    float off_speed;
 
-    float input;
-    float ramped_step_size;
-    SmoothTarget smooth_target;
+    float v1;
+    float step;
+    float value;
+} SmoothTarget;
 
-    float setpoint;
-} Remote;
+void smooth_target_configure(
+    SmoothTarget *st, const CfgTargetFilter *cfg, float on_speed, float off_speed, float hertz
+);
 
-void remote_init(Remote *remote);
+void smooth_target_reset(SmoothTarget *st, float value);
 
-void remote_reset(Remote *remote);
-
-void remote_configure(Remote *remote, const RefloatConfig *config);
-
-void remote_input(Remote *remote, const RefloatConfig *config);
-
-void remote_update(Remote *remote, const State *state, const RefloatConfig *config, float dt);
+void smooth_target_update(SmoothTarget *st, float target);
