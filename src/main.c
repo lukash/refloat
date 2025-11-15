@@ -2441,7 +2441,7 @@ INIT_FUN(lib_info *info) {
         return false;
     }
 
-    d->aux_thread = VESC_IF->spawn(aux_thd, 1024, "Refloat Aux", d);
+    d->aux_thread = VESC_IF->spawn(aux_thd, 1536, "Refloat Aux", d);
     if (!d->aux_thread) {
         log_error("Failed to spawn Refloat Auxiliary thread.");
         VESC_IF->request_terminate(d->main_thread);
