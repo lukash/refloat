@@ -1237,7 +1237,13 @@ static void data_init(Data *d) {
     time_init(&d->time);
 
     frequency_tracker_init(&d->main_t, d->float_conf.hertz, &d->time);
-    frequency_tracker_init(&d->imu_t, VESC_IF->get_cfg_int(CFG_PARAM_IMU_sample_rate), &d->time);
+    int imu_sample_rate = VESC_IF->get_cfg_int(CFG_PARAM_IMU_sample_rate);
+    if (imu_sample_rate == 0) {
+        // 6.02 doesn't provide IMU frequency; use a random number between 416
+        // and 833 and let the frequency auto-adjust fix it
+        imu_sample_rate = 620;
+    }
+    frequency_tracker_init(&d->imu_t, imu_sample_rate, &d->time);
 
     balance_filter_init(&d->balance_filter);
 
