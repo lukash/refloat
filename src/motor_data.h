@@ -35,6 +35,7 @@ typedef struct {
     EMA abs_erpm_smooth;
 
     float speed;
+    float distance;
 
     float current;  //  "regular" motor current (positive = accelerating, negative = braking)
     float dir_current;  // directional current (sign represents direction of torque generation)
