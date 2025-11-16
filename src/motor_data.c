@@ -31,6 +31,7 @@ void motor_data_init(MotorData *m) {
     ema_init(&m->abs_erpm_smooth);
 
     m->speed = 0.0f;
+    m->distance = 0.0f;
 
     m->current = 0.0f;
     m->dir_current = 0.0f;
@@ -121,6 +122,7 @@ void motor_data_update(MotorData *m, float dt) {
     // when motor config changes, there's no way to know, we'll have to poll).
     // And it's only possible on 6.05+.
     m->speed = VESC_IF->mc_get_speed() * 3.6;
+    m->distance = VESC_IF->mc_get_distance();
 
     m->current = VESC_IF->mc_get_tot_current_filtered();
     m->dir_current = VESC_IF->mc_get_tot_current_directional_filtered();
