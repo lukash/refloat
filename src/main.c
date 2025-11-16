@@ -159,7 +159,6 @@ static void main_freq_update_reconfigure(float frequency) {
     Data *d = (Data *) ARG;
 
     motor_data_configure(&d->motor, d->float_conf.atr_filter, frequency);
-    pid_configure(&d->pid, frequency);
     motor_control_configure(&d->motor_control, &d->float_conf, frequency);
 
     torque_tilt_configure(&d->torque_tilt, &d->float_conf, frequency);
@@ -167,9 +166,6 @@ static void main_freq_update_reconfigure(float frequency) {
     brake_tilt_configure(&d->brake_tilt, &d->float_conf, frequency);
     turn_tilt_configure(&d->turn_tilt, &d->float_conf, frequency);
     remote_configure(&d->remote, &d->float_conf, frequency);
-    booster_configure(&d->booster, frequency);
-
-    ema_configure(&d->balance_current, 25.0f, frequency);
 
     reverse_stop_configure(&d->reverse_stop, frequency);
 
@@ -183,6 +179,10 @@ static void main_freq_update_reconfigure(float frequency) {
 // Reconfigures all components dependent on the IMU loop frequency.
 static void imu_freq_update_reconfigure(float frequency) {
     Data *d = (Data *) ARG;
+
+    pid_configure(&d->pid, frequency);
+    booster_configure(&d->booster, frequency);
+    ema_configure(&d->balance_current, 25.0f, frequency);
 
     log_msg(
         "IMU freq reconfgure old: %dHz new: %dHz",
@@ -781,11 +781,25 @@ static void pid_control(Data *d, float dt) {
 
 static void imu_ref_callback(float *acc, float *gyro, float *mag, float dt) {
     unused(mag);
-
     Data *d = (Data *) ARG;
+
+    time_t time = vesc_system_time_ticks();
+
     balance_filter_update(&d->balance_filter, gyro, acc, dt);
 
     frequency_tracker_update(&d->imu_t, dt);
+
+    imu_update(&d->imu, &d->balance_filter, &d->state);
+
+    if (d->state.state == STATE_RUNNING) {
+        pid_control(d, dt);
+    }
+
+    motor_control_apply(
+        &d->motor_control, d->motor.abs_erpm_smooth.value, d->state.state, &d->time
+    );
+
+    data_recorder_sample(&d->data_record, d, time);
 }
 
 static void refloat_thd(void *arg) {
@@ -806,8 +820,6 @@ static void refloat_thd(void *arg) {
         frequency_tracker_update(&d->main_t, dt);
 
         time_update(&d->time, d->state.state);
-
-        imu_update(&d->imu, &d->balance_filter, &d->state);
 
         beeper_update(d);
 
@@ -955,8 +967,6 @@ static void refloat_thd(void *arg) {
                 }
             }
 
-            pid_control(d, dt);
-
             break;
         case (STATE_READY):
             if (d->state.mode == MODE_FLYWHEEL) {
@@ -1076,15 +1086,9 @@ static void refloat_thd(void *arg) {
             break;
         }
 
-        motor_control_apply(
-            &d->motor_control, d->motor.abs_erpm_smooth.value, d->state.state, &d->time
-        );
-
         int32_t ticks =
             lrintf(VESC_IF->timer_seconds_elapsed_since(loop_timer) * SYSTEM_TICK_RATE_HZ);
         sleep_ticks = max(d->main_loop_ticks - ticks, 1);
-
-        data_recorder_sample(&d->data_record, d, d->time.now);
     }
 }
 
