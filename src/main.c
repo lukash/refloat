@@ -97,7 +97,6 @@ static void cmd_flywheel_toggle(Data *d, unsigned char *cfg, int len);
 
 const VESC_PIN beeper_pin = VESC_PIN_PPM;
 
-#define REVSTOP_ERPM_INCR 0.00008
 #define EXT_BEEPER_ON() VESC_IF->io_write(beeper_pin, 1)
 #define EXT_BEEPER_OFF() VESC_IF->io_write(beeper_pin, 0)
 
@@ -172,6 +171,8 @@ static void main_freq_update_reconfigure(float frequency) {
 
     ema_configure(&d->balance_current, 25.0f, frequency);
 
+    reverse_stop_configure(&d->reverse_stop, frequency);
+
     log_msg(
         "Main freq reconfgure old: %dHz new: %dHz",
         (int32_t) d->main_t.filter_frequency,
@@ -228,9 +229,6 @@ static void configure(Data *d) {
         VESC_IF->set_cfg_float(CFG_PARAM_IMU_accel_confidence_decay, 0.1);
     }
 
-    // Feature: Reverse Stop
-    d->reverse_tolerance = 20000;
-
     // Speed above which to warn users about an impending full switch fault
     d->switch_warn_beep_erpm = d->float_conf.is_footbeep_enabled ? 2000 : 100000;
 
@@ -260,6 +258,7 @@ static void reset_runtime_vars(Data *d) {
     turn_tilt_reset(&d->turn_tilt);
     remote_reset(&d->remote);
     booster_reset(&d->booster);
+    reverse_stop_reset(&d->reverse_stop, d->motor.distance);
 
     ema_reset(&d->balance_current, 0.0f);
 
@@ -442,33 +441,16 @@ static bool check_faults(Data *d) {
             timer_refresh(&d->time, &d->fault_switch_timer);
         }
 
-        // Feature: Reverse-Stop
         if (d->state.sat == SAT_REVERSESTOP) {
-            //  Taking your foot off entirely while reversing? Ignore delays
+            // ignore delays if sensor is completely disengaged while reversing
             if (d->footpad.state == FS_NONE) {
                 state_stop(&d->state, STOP_SWITCH_FULL);
                 return true;
             }
-            if (fabsf(d->imu.pitch) > 18) {
+
+            if (reverse_stop_stop(&d->reverse_stop, &d->time)) {
                 state_stop(&d->state, STOP_REVERSE_STOP);
                 return true;
-            }
-            // Above 10 degrees for a full second? Switch it off
-            if (fabsf(d->imu.pitch) > 10 && timer_older(&d->time, d->reverse_timer, 1)) {
-                state_stop(&d->state, STOP_REVERSE_STOP);
-                return true;
-            }
-            // Above 5 degrees for 2 seconds? Switch it off
-            if (fabsf(d->imu.pitch) > 5 && timer_older(&d->time, d->reverse_timer, 2)) {
-                state_stop(&d->state, STOP_REVERSE_STOP);
-                return true;
-            }
-            if (fabsf(d->reverse_total_erpm) > d->reverse_tolerance * 10) {
-                state_stop(&d->state, STOP_REVERSE_STOP);
-                return true;
-            }
-            if (fabsf(d->imu.pitch) < 5) {
-                timer_refresh(&d->time, &d->reverse_timer);
             }
         }
 
@@ -536,34 +518,15 @@ static void calculate_setpoint_target(Data *d) {
             d->state.sat = SAT_NONE;
         }
     } else if (d->state.sat == SAT_REVERSESTOP) {
-        // accumalete erpms:
-        d->reverse_total_erpm += d->motor.erpm;
-        if (fabsf(d->reverse_total_erpm) > d->reverse_tolerance) {
-            // tilt down by 10 degrees after exceeding aggregate erpm
-            d->setpoint_target =
-                (fabsf(d->reverse_total_erpm) - d->reverse_tolerance) * REVSTOP_ERPM_INCR;
+        if (reverse_stop_active(&d->reverse_stop)) {
+            d->setpoint_target = reverse_stop_setpoint(&d->reverse_stop);
         } else {
-            if (fabsf(d->reverse_total_erpm) <= d->reverse_tolerance * 0.5) {
-                if (d->motor.erpm >= 0) {
-                    d->state.sat = SAT_NONE;
-                    d->reverse_total_erpm = 0;
-                    d->setpoint_target = 0;
-                }
-            }
+            d->state.sat = SAT_NONE;
         }
-    } else if (d->float_conf.fault_reversestop_enabled && d->motor.erpm < -200 &&
+    } else if (d->float_conf.fault_reversestop_enabled && reverse_stop_active(&d->reverse_stop) &&
                !d->state.darkride) {
-        // Detecting reverse stop takes priority over any error condition SAT
-        if (d->state.sat >= SAT_PB_HIGH_VOLTAGE) {
-            // If this happens while in Error-Tiltback (LV/HV/TEMP) then we need to
-            // take the already existing setpoint into account
-            d->reverse_total_erpm =
-                -(d->reverse_tolerance + d->setpoint_target_interpolated / REVSTOP_ERPM_INCR);
-        } else {
-            d->reverse_total_erpm = 0;
-        }
+        d->setpoint_target = reverse_stop_setpoint(&d->reverse_stop);
         d->state.sat = SAT_REVERSESTOP;
-        timer_refresh(&d->time, &d->reverse_timer);
     } else if (d->state.mode != MODE_FLYWHEEL &&
                // not normal, either wheelslip or wheel getting stuck
                fabsf(d->motor.acceleration.value) > 10000 &&
@@ -924,6 +887,14 @@ static void refloat_thd(void *arg) {
             break;
 
         case (STATE_RUNNING):
+            reverse_stop_update(
+                &d->reverse_stop,
+                d->motor.distance,
+                d->setpoint_target_interpolated,
+                &d->time,
+                d->float_conf.fault_reversestop_enabled
+            );
+
             // Check for faults
             if (check_faults(d)) {
                 if (d->state.stop_condition == STOP_SWITCH_FULL && !d->state.darkride) {
@@ -1263,6 +1234,7 @@ static void data_init(Data *d) {
     footpad_sensor_init(&d->footpad);
     haptic_feedback_init(&d->haptic_feedback);
     alert_tracker_init(&d->alert_tracker);
+    reverse_stop_init(&d->reverse_stop);
 
     leds_init(&d->leds);
     lcm_init(&d->lcm, &d->float_conf.hardware.leds);
