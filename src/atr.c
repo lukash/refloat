@@ -130,9 +130,7 @@ static void calculate_atr_target(ATR *atr, const MotorData *motor, const Refloat
         new_atr_target -= sign(new_atr_target) * atr_threshold;
     }
 
-    atr->target = atr->target * 0.95 + 0.05 * new_atr_target;
-    atr->target = fminf(atr->target, config->atr_angle_limit);
-    atr->target = fmaxf(atr->target, -config->atr_angle_limit);
+    atr->target = clampf(new_atr_target, -config->atr_angle_limit, config->atr_angle_limit);
 }
 
 void atr_update(
