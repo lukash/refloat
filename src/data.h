@@ -36,6 +36,7 @@
 #include "motor_data.h"
 #include "pid.h"
 #include "remote.h"
+#include "reverse_stop.h"
 #include "state.h"
 #include "time.h"
 #include "torque_tilt.h"
@@ -72,6 +73,7 @@ typedef struct {
     FootpadSensor footpad;
     HapticFeedback haptic_feedback;
     AlertTracker alert_tracker;
+    ReverseStop reverse_stop;
 
     Leds leds;
     LcmData lcm;
@@ -120,10 +122,6 @@ typedef struct {
 
     // Feature: Flywheel
     bool flywheel_abort;
-
-    // Feature: Reverse Stop
-    float reverse_tolerance, reverse_total_erpm;
-    time_t reverse_timer;
 
     // Feature: Soft Start
     float softstart_pid_limit;
