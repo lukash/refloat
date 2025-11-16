@@ -138,9 +138,7 @@ void atr_update(
         new_atr_target -= sign(new_atr_target) * atr_threshold;
     }
 
-    atr->target = atr->target * 0.95 + 0.05 * new_atr_target;
-    atr->target = fminf(atr->target, config->atr_angle_limit);
-    atr->target = fmaxf(atr->target, -config->atr_angle_limit);
+    atr->target = clampf(new_atr_target, -config->atr_angle_limit, config->atr_angle_limit);
 
     smooth_setpoint_update(&atr->setpoint, atr->target, motor->forward, dt);
 }
