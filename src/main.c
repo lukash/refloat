@@ -186,8 +186,7 @@ static void configure(Data *d) {
 
     lcm_configure(&d->lcm, &d->float_conf.leds);
 
-    // Loop time in microseconds
-    d->loop_time_us = 1e6 / d->float_conf.hertz;
+    d->main_loop_ticks = SYSTEM_TICK_RATE_HZ / d->float_conf.hertz;
 
     d->tiltback_duty_step_size = d->float_conf.tiltback_duty_speed / d->float_conf.hertz;
     d->tiltback_hv_step_size = d->float_conf.tiltback_hv_speed / d->float_conf.hertz;
@@ -768,12 +767,14 @@ static void refloat_thd(void *arg) {
 
     configure(d);
 
+    uint32_t sleep_ticks = d->main_loop_ticks;
+
     uint32_t loop_timer = VESC_IF->timer_time_now();
     float dt = 0.0f;
 
     while (!VESC_IF->should_terminate()) {
         // sleep first to have a correct dt on the first iteration
-        VESC_IF->sleep_us(d->loop_time_us);
+        VESC_IF->sleep_us(sleep_ticks * 1000000 / SYSTEM_TICK_RATE_HZ);
 
         dt = VESC_IF->timer_seconds_elapsed_since(loop_timer);
         loop_timer = VESC_IF->timer_time_now();
@@ -1082,6 +1083,10 @@ static void refloat_thd(void *arg) {
         }
 
         motor_control_apply(&d->motor_control, d->motor.abs_erpm_smooth, d->state.state, &d->time);
+
+        int32_t ticks =
+            lrintf(VESC_IF->timer_seconds_elapsed_since(loop_timer) * SYSTEM_TICK_RATE_HZ);
+        sleep_ticks = max(d->main_loop_ticks - ticks, 1);
 
         data_recorder_sample(&d->data_record, d, d->time.now);
     }
