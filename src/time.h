@@ -31,6 +31,12 @@ typedef struct {
     time_t idle_timer;
 } Time;
 
+/**
+ * A wrapper for VESC_IF->system_time_ticks() with a fallback to
+ * VESC_IF->system_time() on 6.02.
+ */
+systime_t vesc_system_time_ticks();
+
 void time_init(Time *t);
 
 void time_update(Time *t, RunState state);
