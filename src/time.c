@@ -17,16 +17,16 @@
 
 #include "time.h"
 
-static inline void time_now(Time *t) {
+systime_t vesc_system_time_ticks() {
     if (VESC_IF->system_time_ticks) {
-        t->now = VESC_IF->system_time_ticks();
+        return VESC_IF->system_time_ticks();
     } else {
-        t->now = VESC_IF->system_time() * SYSTEM_TICK_RATE_HZ;
+        return VESC_IF->system_time() * SYSTEM_TICK_RATE_HZ;
     }
 }
 
 void time_init(Time *t) {
-    time_now(t);
+    t->now = vesc_system_time_ticks();
     t->start_timer = t->now;
     t->engage_timer = t->now;
     // Workaround: After startup (assume the time is very close to 0), we don't
@@ -37,7 +37,7 @@ void time_init(Time *t) {
 }
 
 void time_update(Time *t, RunState state) {
-    time_now(t);
+    t->now = vesc_system_time_ticks();
     if (state == STATE_RUNNING) {
         t->disengage_timer = t->now;
         time_refresh_idle(t);
