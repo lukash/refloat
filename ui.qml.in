@@ -3648,6 +3648,109 @@ Item {
         }
     }
 
+    component StatusText : Item {
+        property var globState
+
+        MouseArea {
+            anchors.fill: parent
+            onClicked: alertsDialog.show()
+        }
+
+        states: [
+            State {
+                name: "specialMode"
+                when: statusTextMode.visible || statusTextAlert.visible
+                AnchorChanges {target: statusTextState; anchors.top: parent.top; anchors.verticalCenter: undefined;}
+            }
+        ]
+
+        LText {
+            id: statusTextState
+            anchors.verticalCenter: parent.verticalCenter
+            width: parent.width
+            font.pixelSize: (statusTextMode.visible && statusTextAlert.visible ? 0.3 : globState.pkgStateString.length >= 10 ? 0.42 : 0.55) * unit
+            font.family: "Exan"
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            text: globState.pkgStateString
+        }
+
+        Glow {
+            property bool red: globState.isError
+            property bool dark: globState.darkride
+            property bool blue: globState.pkgState == globState.s_Running
+
+            anchors.fill: statusTextState
+            radius: Math.round((dark ? 0.2 : 0.12) * unit)
+            samples: radius * 2 + 1
+            spread: red ? 0.6 : (dark ? 0.7 : 0.5)
+            opacity: red || dark || blue ? 0.8 : 0.3
+
+            color: {
+                if (red) {
+                    return Utility.getAppHexColor("red");
+                } else if (dark) {
+                    return Utility.isDarkMode() ? Utility.getAppHexColor("black") : Utility.getAppHexColor("disabledText");
+                } else if (blue) {
+                    return Utility.getAppHexColor("lightAccent");
+                } else {
+                    return Utility.getAppHexColor("lightText");
+                }
+            }
+            source: statusTextState
+        }
+
+        Text {
+            id: statusTextMode
+            anchors.top: statusTextState.bottom
+            width: parent.width
+            color: globState.pkgMode == globState.m_Flywheel ? Utility.getAppHexColor("lightAccent") : Utility.getAppHexColor("lightText")
+            font.pixelSize: statusTextAlert.visible ? fontSizeSuperSmall : fontSizeSmall
+            font.family: "Exan"
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            visible: globState.pkgMode != globState.m_Normal
+            text: globState.pkgModeString
+        }
+
+        Glow {
+            anchors.fill: statusTextMode
+            radius: Math.round(0.12 * unit)
+            samples: radius * 2 + 1
+            opacity: 0.3
+            color: statusTextMode.color
+            visible: globState.pkgMode != globState.m_Normal
+            source: statusTextMode
+        }
+
+        Text {
+            id: statusTextAlert
+
+            property var alert: alerts.getActiveAlertData(alerts.activeAlertHighlight)
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: statusTextMode.visible ? statusTextMode.bottom : statusTextState.bottom
+            width: parent.width * 1.2
+            color: alerts.severityColors.get(alert.severity)
+            font.pixelSize: fontSizeSuperSmall
+            font.family: "Mono"
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            elide: Text.ElideMiddle
+            visible: alerts.activeAlertCount > 0
+            text: alert.name
+        }
+
+        Glow {
+            anchors.fill: statusTextAlert
+            radius: Math.round(0.12 * unit)
+            samples: radius * 2 + 1
+            opacity: 0.3
+            color: statusTextAlert.color
+            visible: statusTextAlert.visible
+            source: statusTextAlert
+        }
+    }
+
     function locateButton(comp, name) {
         for (var i = 0; i < comp.children.length; i++) {
             var child = comp.children[i];
@@ -6194,111 +6297,13 @@ Item {
                     value: state.rtData["motor.mosfet_temp"]
                 }
 
-                Item {
+                StatusText {
                     id: statusText
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.horizontalCenter: parent.horizontalCenter
                     width: parent.width - 4 * parent.verticalValueItemWidth
                     height: parent.height * 0.83
-
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: alertsDialog.show()
-                    }
-
-                    states: [
-                        State {
-                            name: "specialMode"
-                            when: statusTextMode.visible || statusTextAlert.visible
-                            AnchorChanges {target: statusTextState; anchors.top: parent.top; anchors.verticalCenter: undefined;}
-                        }
-                    ]
-
-                    LText {
-                        id: statusTextState
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: parent.width
-                        font.pixelSize: (statusTextMode.visible && statusTextAlert.visible ? 0.3 : state.pkgStateString.length >= 10 ? 0.42 : 0.55) * unit
-                        font.family: "Exan"
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        text: state.pkgStateString
-                    }
-
-                    Glow {
-                        property bool red: state.isError
-                        property bool dark: state.darkride
-                        property bool blue: state.pkgState == state.s_Running
-
-                        anchors.fill: statusTextState
-                        radius: Math.round((dark ? 0.2 : 0.12) * unit)
-                        samples: radius * 2 + 1
-                        spread: red ? 0.6 : (dark ? 0.7 : 0.5)
-                        opacity: red || dark || blue ? 0.8 : 0.3
-
-                        color: {
-                            if (red) {
-                                return Utility.getAppHexColor("red");
-                            } else if (dark) {
-                                return Utility.isDarkMode() ? Utility.getAppHexColor("black") : Utility.getAppHexColor("disabledText");
-                            } else if (blue) {
-                                return Utility.getAppHexColor("lightAccent");
-                            } else {
-                                return Utility.getAppHexColor("lightText");
-                            }
-                        }
-                        source: statusTextState
-                    }
-
-                    Text {
-                        id: statusTextMode
-                        anchors.top: statusTextState.bottom
-                        width: parent.width
-                        color: state.pkgMode == state.m_Flywheel ? Utility.getAppHexColor("lightAccent") : Utility.getAppHexColor("lightText")
-                        font.pixelSize: statusTextAlert.visible ? fontSizeSuperSmall : fontSizeSmall
-                        font.family: "Exan"
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        visible: state.pkgMode != state.m_Normal
-                        text: state.pkgModeString
-                    }
-
-                    Glow {
-                        anchors.fill: statusTextMode
-                        radius: Math.round(0.12 * unit)
-                        samples: radius * 2 + 1
-                        opacity: 0.3
-                        color: statusTextMode.color
-                        visible: state.pkgMode != state.m_Normal
-                        source: statusTextMode
-                    }
-
-                    Text {
-                        id: statusTextAlert
-
-                        property var alert: alerts.getActiveAlertData(alerts.activeAlertHighlight)
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        anchors.top: statusTextMode.visible ? statusTextMode.bottom : statusTextState.bottom
-                        width: parent.width * 1.2
-                        color: alerts.severityColors.get(alert.severity)
-                        font.pixelSize: fontSizeSuperSmall
-                        font.family: "Mono"
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        elide: Text.ElideMiddle
-                        visible: alerts.activeAlertCount > 0
-                        text: alert.name
-                    }
-
-                    Glow {
-                        anchors.fill: statusTextAlert
-                        radius: Math.round(0.12 * unit)
-                        samples: radius * 2 + 1
-                        opacity: 0.3
-                        color: statusTextAlert.color
-                        visible: statusTextAlert.visible
-                        source: statusTextAlert
-                    }
+                    globState: state
                 }
 
                 VerticalValue {
