@@ -927,6 +927,142 @@ Item {
         property alias showWelcomeDialog: prefShowWelcomeDialog.checked
     }
 
+    component UIHint : Item {
+        id: hint
+        property var target
+        property real targetX
+        property real targetY
+        property real targetWidth
+        property real targetHeight
+
+        property Settings settings
+        property string settingName
+        property bool shown
+
+        function updateTarget() {
+            if (target !== null) {
+                var p = mapFromItem(target, 0, 0);
+                targetX = p.x;
+                targetY = p.y;
+            }
+        }
+
+        onTargetChanged: {
+            targetWidth = target.width;
+            targetHeight = target.height;
+            updateTarget();
+        }
+
+        Connections {
+            target: hint.target
+
+            function onXChanged() {
+                hint.updateTarget();
+            }
+
+            function onYChanged() {
+                hint.updateTarget();
+            }
+
+            function onWidthChanged() {
+                hint.targetWidth = target.width;
+                hint.updateTarget();
+            }
+
+            function onHeightChanged() {
+                hint.targetHeight = target.height;
+                hint.updateTarget();
+            }
+        }
+
+        Component.onCompleted: {
+            shown = settings[settingName];
+        }
+
+        onShownChanged: {
+            settings[settingName] = shown;
+        }
+
+        MouseArea {
+            z: 10
+            anchors.fill: parent
+        }
+    }
+
+    component UIHintText : NText {
+        anchors.margins: 50
+        width: parent.width - 50
+        font.pointSize: 15
+        horizontalAlignment: TextInput.AlignHCenter
+        wrapMode: Text.WordWrap
+    }
+
+    component UIHintFrame : Rectangle {
+        anchors.fill: parent
+        anchors.margins: -5
+        color: "transparent"
+        border.color: Utility.getAppHexColor("lightAccent")
+        border.width: 1
+        radius: 8
+        opacity: 0.7
+    }
+
+    // Workaround for `state` getting resolved to all kinds of different things in different contexts
+    property var gState: state
+    Component {
+        id: statusTextComp
+
+        UIHint {
+            target: statusText
+
+            StatusText {
+                id: statusTextSubject
+                x: parent.targetX
+                y: parent.targetY
+                width: parent.targetWidth
+                height: parent.targetHeight
+                globState: gState
+
+                UIHintFrame {}
+            }
+
+            UIHintText {
+                anchors.horizontalCenter: statusTextSubject.horizontalCenter
+                anchors.bottom: statusTextSubject.top
+                text: "Tap the state text to show more board state details like Stop Condition, Last Beep Reason, errors and faults."
+            }
+        }
+    }
+
+    QtObject {
+        id: uiHints
+
+        property Settings uiHintsSettings: Settings {
+            id: uiHintsSettings
+            category: "uiHints"
+
+            property bool statusText
+        }
+
+        readonly property var hints: new Map([
+            ["statusText", statusTextComp],
+        ])
+
+        function fill(container) {
+            for (let [key, value] of hints) {
+                if (!uiHintsSettings[key]) {
+                    value.createObject(container, {settings: uiHintsSettings, settingName: key});
+                }
+            }
+        }
+
+        function reset(container) {
+            for (let key of hints.keys()) {
+                uiHintsSettings[key] = false;
+            }
+        }
+    }
+
     Connections {
         id: tuneManager
         target: packageConfig
@@ -4330,6 +4466,18 @@ Item {
                             checked: true
                             label: "Show Welcome dialog"
                         }
+
+                        Button {
+                            Layout.alignment: Qt.AlignHCenter
+
+                            text: "Show Tips && Tricks"
+
+                            onClicked: {
+                                uiHints.reset();
+                                uiHintsRect.fill();
+                                settingsDialog.close();
+                            }
+                        }
                     }
                 }
             }
@@ -5210,6 +5358,96 @@ Item {
                     }
                 }
             }
+        }
+    }
+
+    Rectangle {
+        id: uiHintsRect
+        anchors.fill: parent
+        z: 90
+        visible: uiHintsSwipe.count > 0
+
+        color: "#CC000000"
+
+        SwipeView {
+            id: uiHintsSwipe
+            anchors.fill: parent
+            clip: true
+
+            property bool seenAll
+
+            onCurrentIndexChanged: {
+                if (currentIndex > 0) {
+                    itemAt(currentIndex - 1).shown = true;
+                }
+
+                if (currentIndex == count - 1) {
+                    seenAll = true;
+                }
+            }
+
+            function clear() {
+                for (let i = count - 1; i >= 0; i--) {
+                    takeItem(i);
+                }
+            }
+
+            function markAllShown() {
+                for (let i = 0; i < count; i++) {
+                    itemAt(i).shown = true;
+                }
+            }
+        }
+
+        NText {
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: parent.top
+            anchors.margins: 20
+            font.pixelSize: 24
+            text: "Tips & Tricks"
+        }
+
+        PageIndicator {
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottom: uiHintsClose.top
+            anchors.bottomMargin: 10
+
+            currentIndex: uiHintsSwipe.currentIndex
+            count: uiHintsSwipe.count
+        }
+
+        Button {
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 20
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.horizontalCenterOffset: -parent.width * 0.25
+            visible: !uiHintsSwipe.seenAll
+            text: "Skip now"
+            onClicked: {
+                uiHintsSwipe.clear();
+            }
+        }
+
+        Button {
+            id: uiHintsClose
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 20
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.horizontalCenterOffset: uiHintsSwipe.seenAll ? 0 : parent.width * 0.25
+            text: uiHintsSwipe.seenAll ? "Close" : "Don't show again"
+            onClicked: {
+                uiHintsSwipe.markAllShown();
+                uiHintsSwipe.clear();
+            }
+        }
+
+        function fill() {
+            uiHints.fill(uiHintsSwipe);
+            uiHintsSwipe.seenAll = uiHintsSwipe.currentIndex == uiHintsSwipe.count - 1;
+        }
+
+        Component.onCompleted: {
+            fill();
         }
     }
 
