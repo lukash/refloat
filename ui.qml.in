@@ -1006,6 +1006,15 @@ Item {
         opacity: 0.7
     }
 
+    component UIHintUnderline : Rectangle {
+        anchors.left: parent.left
+        anchors.top: parent.top
+        width: unit * 0.8
+        height: 3
+        color: Utility.getAppHexColor("lightAccent")
+        opacity: 0.7
+    }
+
     // Workaround for `state` getting resolved to all kinds of different things in different contexts
     property var gState: state
     Component {
@@ -1033,6 +1042,94 @@ Item {
         }
     }
 
+    Component {
+        id: plotComp
+
+        UIHint {
+            target: rtPlot
+
+            property int stage: settingName === "plotCursor" ? 0 : settingName === "drGeneral" ? 1 : settingName === "drStartStop" ? 2 : 3
+
+            Plot {
+                id: subject
+                x: parent.targetX
+                y: parent.targetY
+                width: parent.targetWidth
+                height: parent.targetHeight
+
+                showRecordDownload: gState.capDataRecord
+                dotsEnabled: false
+
+                plotData: PlotData {
+                    id: pd
+                    seriesMetaData: plotSeriesMetaData
+                }
+
+                Component.onCompleted: {
+                    pd.init(["motor.current"], 1);
+                    subject.init(1);
+                    pd.addSample([0, 0,0,0,0, 10], 0);
+                    pd.addSample([2,0,0,0,0, 22], 1);
+                    pd.addSample([4,0,0,0,0, 15], 2);
+                    pd.addSample([9,0,0,0,0, 30], 3);
+                    pd.makeReady();
+                    if (stage === 0) {
+                        subject.spawnCursor(4);
+                    }
+                }
+
+                UIHintFrame {}
+
+                UIHintUnderline {
+                    anchors.topMargin: unit
+                    anchors.leftMargin: unit
+                    width: unit * 1.7
+                    visible: stage === 1
+                }
+
+                UIHintUnderline {
+                    anchors.topMargin: unit
+                    anchors.leftMargin: 1.9 * unit
+                    visible: stage === 2
+                }
+
+                UIHintUnderline {
+                    anchors.topMargin: unit
+                    anchors.leftMargin: unit
+                    visible: stage === 3
+                }
+            }
+
+            UIHintText {
+                anchors.horizontalCenter: subject.horizontalCenter
+                anchors.bottom: subject.top
+                text: "View a plot of realtime data (log) from the package on the Data tab.\n\nLong press anywhere in the plot area to spawn a cursor.\n\nYou can dismiss the cursor by a swipe up gesture on it."
+                visible: stage === 0
+            }
+
+            UIHintText {
+                anchors.horizontalCenter: subject.horizontalCenter
+                anchors.bottom: subject.top
+                text: "Congratulations, you have the Data Record firmware installed. You are now part of the secret Data Recording society.\n\nYour board has the ability to store a short detailed data \"log\" by itself, you don't need to be connected.\n\nIt's controlled by these two buttons."
+                visible: stage === 1
+            }
+
+            UIHintText {
+                anchors.horizontalCenter: subject.horizontalCenter
+                anchors.bottom: subject.top
+                text: "This button indicates whether the board is recording. You can use it to start and stop the recording manually.\n\nThe board automatically starts recording when engaged and stops recording on disengage. You can disable the autostart and autostop functionality by long-pressing the button.\n\nIf you nosedive, check the recording before engaging again!"
+                visible: stage == 2
+            }
+
+            UIHintText {
+                anchors.horizontalCenter: subject.horizontalCenter
+                anchors.bottom: subject.top
+                text: "You can download the stored data using this button. It automatically stops recording. Do not start it while you're downloading, or you'll corrupt your data."
+                visible: stage == 3
+            }
+        }
+    }
+
     QtObject {
         id: uiHints
 
@@ -1041,16 +1138,42 @@ Item {
             category: "uiHints"
 
             property bool statusText
+            property bool plotCursor
+
+            property bool drGeneral
+            property bool drStartStop
+            property bool drDownload
         }
 
         readonly property var hints: new Map([
             ["statusText", statusTextComp],
+            ["plotCursor", plotComp],
+        ])
+
+        readonly property var dataRecordHints: new Map([
+            ["drGeneral", plotComp],
+            ["drStartStop", plotComp],
+            ["drDownload", plotComp],
         ])
 
         function fill(container) {
             for (let [key, value] of hints) {
                 if (!uiHintsSettings[key]) {
+                    if (key == "plotCursor") {
+                        bottomStackTabs.currentIndex = 2;
+                    }
                     value.createObject(container, {settings: uiHintsSettings, settingName: key});
+                }
+            }
+        }
+
+        function fillDataRecord(container) {
+            if (state.capDataRecord) {
+                for (let [key, value] of dataRecordHints) {
+                    if (!uiHintsSettings[key]) {
+                        bottomStackTabs.currentIndex = 2;
+                        value.createObject(container, {settings: uiHintsSettings, settingName: key});
+                    }
                 }
             }
         }
@@ -1058,6 +1181,12 @@ Item {
         function reset(container) {
             for (let key of hints.keys()) {
                 uiHintsSettings[key] = false;
+            }
+
+            if (state.capDataRecord) {
+                for (let key of dataRecordHints.keys()) {
+                    uiHintsSettings[key] = false;
+                }
             }
         }
     }
@@ -4478,7 +4607,7 @@ Item {
 
                             onClicked: {
                                 uiHints.reset();
-                                uiHintsRect.fill();
+                                uiHintsRect.fill(true);
                                 settingsDialog.close();
                             }
                         }
@@ -5445,13 +5574,30 @@ Item {
             }
         }
 
-        function fill() {
+        function fill(doDataRecord=false) {
             uiHints.fill(uiHintsSwipe);
+            if (doDataRecord) {
+                uiHints.fillDataRecord(uiHintsSwipe);
+            }
+
+            uiHintsSwipe.seenAll = uiHintsSwipe.currentIndex == uiHintsSwipe.count - 1;
+        }
+
+        function fillDataRecord() {
+            uiHints.fillDataRecord(uiHintsSwipe);
             uiHintsSwipe.seenAll = uiHintsSwipe.currentIndex == uiHintsSwipe.count - 1;
         }
 
         Component.onCompleted: {
             fill();
+        }
+
+        Connections {
+            target: state
+
+            function onCommsInitialized() {
+                uiHintsRect.fillDataRecord();
+            }
         }
     }
 
@@ -6566,6 +6712,7 @@ Item {
         }
 
         TabBar {
+            id: bottomStackTabs
             Layout.fillWidth: true
             clip: true
 
