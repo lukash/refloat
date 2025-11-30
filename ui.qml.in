@@ -2816,7 +2816,6 @@ Item {
             MouseArea {
                 id: plotMouse
                 anchors.fill: parent
-                propagateComposedEvents: true
                 preventStealing: true
 
                 property real initialX
