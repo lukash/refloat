@@ -2568,6 +2568,7 @@ Item {
 
         property bool showRecordDownload: false
         property int maxWindowMinutes
+        property bool dotsEnabled: true
 
         function init(ticksPerSec) {
             ticksPerSecond = ticksPerSec;
@@ -3531,6 +3532,7 @@ Item {
                     var pos = position;
                     var win = window;
                     var xLen = xLength;
+                    var dotsEnbld = plot.dotsEnabled;
 
                     // calculate start and end indices according to window
                     var start = 0;
@@ -3680,7 +3682,7 @@ Item {
                             }
 
                             if (!minMaxMode) {
-                                if (origX - lastX > halfASecondPixels) {
+                                if (dotsEnbld && origX - lastX > halfASecondPixels) {
                                     ctx.moveTo(x, y);
                                 } else {
                                     ctx.lineTo(x, y);
@@ -3692,7 +3694,7 @@ Item {
                                 justOutOfMinMax = false;
                             }
 
-                            if (i > start && origX >= 0 && (paintDots || x - lastSampleX > dotDistThreshold || origX - lastSampleX > halfASecondPixels)) {
+                            if (dotsEnbld && i > start && origX >= 0 && (paintDots || x - lastSampleX > dotDistThreshold || origX - lastSampleX > halfASecondPixels)) {
                                 ctx.stroke();
                                 ctx.beginPath();
                                 if (!drawnLastDot && lastX >= 0) {
