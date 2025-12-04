@@ -922,7 +922,6 @@ Item {
         property int tempWarningOffset: 10
         property alias tuneSlotCount: prefTuneSlotCount.value
         property alias showTuneDiffCount: prefShowTuneDiffCount.checked
-        property alias showRTPlotByDefault: prefShowRTPlotByDefault.checked
         property int plotMaxWindowMinutes: 30
         property alias showWelcomeDialog: prefShowWelcomeDialog.checked
     }
@@ -4443,12 +4442,6 @@ Item {
                             label: "Show changed options count on tunes"
                         }
 
-                        RightSwitch {
-                            id: prefShowRTPlotByDefault
-                            checked: false
-                            label: "Show RT plot on Data tab by default"
-                        }
-
                         IntTextField {
                             label: "Realtime plot maximum window"
                             valueUnit: "minutes"
@@ -6884,6 +6877,7 @@ Item {
                     width: 0.8 * unit
                     height: 0.8 * unit
                     z: 1
+                    value: true
 
                     trueIconPath: Path {
                         PathSvg {path: "M 6 13 L 31 13 M 6 21 L 21 21 M 6 29 L 21 29 M 6 37 L 21 37 M 29 21 L 44 21 M 29 29 L 44 29 M 29 37 L 44 37"}
@@ -6891,10 +6885,6 @@ Item {
 
                     falseIconPath: Path {
                         PathSvg {path: "M 10 12 L 10 38 L 42 38 M 10 30 L 22 22 L 32 28 L 39 18"}
-                    }
-
-                    Component.onCompleted: {
-                        value = preferences.showRTPlotByDefault;
                     }
                 }
 
