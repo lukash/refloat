@@ -2464,7 +2464,7 @@ Item {
         modal: true
         focus: true
         closePolicy: Popup.CloseOnEscape
-        parent: ApplicationWindow.overlay
+        parent: mainItem
 
         Overlay.modal: Rectangle {
             color: "#AA000000"
@@ -4749,6 +4749,7 @@ Item {
 
     BaseDialog {
         id: newPackageVersionDialog
+        parent: ApplicationWindow.overlay
 
         title: "New Package Version"
         standardButtons: Dialog.Ok | Dialog.Abort
@@ -5473,6 +5474,7 @@ Item {
 
     BaseDialog {
         id: applyConfigDialog
+        parent: ApplicationWindow.overlay
 
         title: isTune ? "Apply Tune" : "Restore Config"
 
