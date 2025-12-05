@@ -2581,6 +2581,14 @@ Item {
             plotCanvas.reset();
         }
 
+        function spawnCursor(cursorPos) {
+            plotCanvas.spawnCursor(cursorPos);
+        }
+
+        function hideCursor() {
+            plotCanvas.fadeCursor();
+        }
+
         onVisibleChanged: {
             if (!visible) {
                 menu.visible = false;
@@ -2880,7 +2888,7 @@ Item {
                     var d = initialX - x(mouse);
                     if (holdCursor) {
                         if (moveCursor) {
-                            plotCanvas.spawnCursor(x(mouse));
+                            plotCanvas.spawnCursorCoord(x(mouse));
                         } else {
                             var yd = initialY - mouse.y;
                             var dist = Math.sqrt(yd * yd + d * d);
@@ -2919,7 +2927,7 @@ Item {
                     if (!moving && (dist2d(mouse) < snap || !holdCursor)) {
                         holdCursor = true;
                         moveCursor = true;
-                        plotCanvas.spawnCursor(x(mouse));
+                        plotCanvas.spawnCursorCoord(x(mouse));
                     }
                 }
             }
@@ -3268,9 +3276,11 @@ Item {
                     return true;
                 }
 
-                function spawnCursor(x) {
-                    var cursorPos = toPlotPos(position, x);
+                function spawnCursorCoord(x) {
+                    spawnCursor(toPlotPos(position, x));
+                }
 
+                function spawnCursor(cursorPos) {
                     if (!isCursorPosValid(cursorPos)) {
                         return;
                     }
@@ -3306,7 +3316,7 @@ Item {
                     return toCanvasPos(pos);
                 }
 
-                function fadeCursor(a) {
+                function fadeCursor(a=0) {
                     a = a * a * a;
                     if (a <= 0.05) {
                         cursor = null;
