@@ -25,6 +25,8 @@ typedef struct {
     float on_step_size;
     float off_step_size;
     float speed_boost_mult;
+    float tt_boost_uphill_margin;
+    float tt_boost_downhill_threshold;
 
     float accel_diff;
     float speed_boost;
