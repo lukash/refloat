@@ -634,12 +634,12 @@ Item {
         readonly property int c_INFO: 0
         readonly property int c_RC_MOVE: 7
         readonly property int c_HANDTEST: 13
+        readonly property int c_LIGHTS_CONTROL: 20
         readonly property int c_FLYWHEEL: 22
         readonly property int c_REALTIME_DATA: 31
         readonly property int c_REALTIME_DATA_IDS: 32
         readonly property int c_ALERTS_LIST: 35
         readonly property int c_ALERTS_CONTROL: 36
-        readonly property int c_LIGHTS_CONTROL: 202
         readonly property int c_DATA_RECORD_REQUEST: 41
         readonly property int c_DATA_RECORD_HEADER: 42
         readonly property int c_DATA_RECORD_DATA: 43
@@ -706,7 +706,7 @@ Item {
         }
 
         function sendLightsControl(on, headlightsOn) {
-            var data = createData(4, c_LIGHTS_CONTROL);
+            var data = createData(7, c_LIGHTS_CONTROL);
 
             var mask = 0;
             var value = 0;
@@ -724,8 +724,8 @@ Item {
                     value |= 0b10;
                 }
             }
-            data.setUint8(2, mask);
-            data.setUint8(3, value);
+            data.setUint32(2, mask);
+            data.setUint8(6, value);
 
             vescCommands.sendCustomAppData(data.buffer);
         }

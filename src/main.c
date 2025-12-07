@@ -1252,6 +1252,7 @@ enum {
     COMMAND_LOCK = 12,
     COMMAND_HANDTEST = 13,
     COMMAND_TUNE_TILT = 14,
+    COMMAND_LIGHTS_CONTROL = 20,
     COMMAND_FLYWHEEL = 22,
     COMMAND_REALTIME_DATA = 31,
     COMMAND_REALTIME_DATA_IDS = 32,
@@ -1260,7 +1261,6 @@ enum {
     COMMAND_DATA_RECORD_REQUEST = 41,
 
     // commands above 200 are unstable and can change protocol at any time
-    COMMAND_LIGHTS_CONTROL = 202,
 } Commands;
 
 static void send_realtime_data(Data *d) {
@@ -2032,14 +2032,16 @@ static void cmd_alerts_control(AlertTracker *at, uint8_t *buf, size_t len) {
 }
 
 static void lights_control_request(CfgLeds *leds, uint8_t *buffer, size_t len, LcmData *lcm) {
-    if (len < 2) {
+    if (len < 5) {
         return;
     }
 
-    uint8_t mask = buffer[0];
-    uint8_t value = buffer[1];
+    int32_t ind = 0;
+    uint32_t mask = buffer_get_uint32(buffer, &ind);
 
-    if (mask != 0) {
+    if ((mask & 0xff) != 0) {
+        uint8_t value = buffer[ind++];
+
         if (mask & 0x1) {
             leds->on = value & 0x1;
         }
