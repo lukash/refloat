@@ -51,7 +51,7 @@ In case the following bits are set in the `mask`, the listed data follow in the 
 
 #### extra_flags
 
-| 7-5 |                      2 |                       1 |                       0 |
+| 7-3 |                      2 |                       1 |                       0 |
 |-----|------------------------|-------------------------|-------------------------|
 |   0 | `data_record_autostop` | `data_record_autostart` | `data_record_recording` |
 
