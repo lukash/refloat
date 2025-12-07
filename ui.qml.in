@@ -4772,7 +4772,7 @@ Item {
             font.pointSize: 12
             horizontalAlignment: Text.AlignHCenter
             wrapMode: TextEdit.WordWrap
-            text: "New {{PACKAGE_NAME}} package version available: %1\n\nIt's recommended you update it in the Package Store.".arg(newPackageVersionDialog.version)
+            text: "New {{PACKAGE_NAME}} package version available: %1\n\nIt's recommended you update it in the Package Store.\n\nYour package configuration will be migrated automatically, no extra steps needed unless mentioned in package description. Having a manual XML or Start Page \"Backup Configs\" backup is still recommended.".arg(newPackageVersionDialog.version)
         }
     }
 
