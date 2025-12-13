@@ -1880,7 +1880,7 @@ static void cmd_realtime_data_ids() {
     buffer[ind++] = 101;  // Package ID
     buffer[ind++] = COMMAND_REALTIME_DATA_IDS;
 
-#define ADD_ID(id) buffer_append_string(buffer, #id, &ind);
+#define ADD_ID(target, id) buffer_append_string(buffer, id, &ind);
     // Send string ids of the realtime data items. The format is:
     // IDS_COUNT (1B)
     // [
@@ -1939,7 +1939,7 @@ static void cmd_realtime_data(Data *d) {
 
     buffer[ind++] = d->beep_reason;
 
-#define WRITE_VALUE(id) buffer_append_float16_auto(buffer, d->id, &ind);
+#define WRITE_VALUE(target, id) buffer_append_float16_auto(buffer, d->target, &ind);
     VISIT(RT_DATA_ITEMS, WRITE_VALUE);
 
     if (d->state.state == STATE_RUNNING) {
