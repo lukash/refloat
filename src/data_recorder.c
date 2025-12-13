@@ -84,7 +84,7 @@ void data_recorder_sample(DataRecord *dr, const Data *d, time_t time) {
         {.time = time,
          .flags = flags,
          .values = {
-#define ARRAY_VALUE(id) to_float16(d->id),
+#define ARRAY_VALUE(target, id) to_float16(d->target),
              VISIT_REC(RT_DATA_ALL_ITEMS, ARRAY_VALUE)
 #undef ARRAY_VALUE
          }};
@@ -108,7 +108,7 @@ void data_recorder_send_experiment_plot(DataRecord *dr) {
 
     VESC_IF->plot_init("t", "v");
 
-#define ADD_GRAPH(id) VESC_IF->plot_add_graph(#id);
+#define ADD_GRAPH(target, id) VESC_IF->plot_add_graph(id);
     VISIT_REC(RT_DATA_ALL_ITEMS, ADD_GRAPH);
 #undef ADD_GRAPH
 
@@ -131,7 +131,7 @@ static void send_header(DataRecord *dr) {
     buffer_append_uint32(buf, circular_buffer_size(&dr->buffer), &ind);
 
     buf[ind++] = ITEMS_COUNT_REC(RT_DATA_ALL_ITEMS);
-#define ADD_ID(id) buffer_append_string(buf, #id, &ind);
+#define ADD_ID(target, id) buffer_append_string(buf, id, &ind);
     VISIT_REC(RT_DATA_ALL_ITEMS, ADD_ID);
 #undef ADD_ID
 
