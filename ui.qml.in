@@ -1179,7 +1179,7 @@ Item {
                 }
 
                 Component.onCompleted: {
-                    pd.init(["motor.current"], 1);
+                    pd.init(["current"], 1);
                     subject.init(1);
                     pd.addSample([0, 0,0,0,0, 10], 0);
                     pd.addSample([2,0,0,0,0, 22], 1);
@@ -2113,14 +2113,14 @@ Item {
     // "#788554",
     // "#734828"
     property var plotSeriesMetaData: [
-        ["motor.erpm", {"name": "ERPM", "color": "#469138", "visible": true}],
-        ["motor.duty_cycle", {"name": "Duty Cycle", "color": "#e3ac34", "visible": true}],
-        ["motor.current", {"name": "Motor Current", "color": "#e33421", "visible": true}],
-        ["motor.dir_current", {"name": "Directional Current", "color": "#cc686b", "visible": false}],
-        ["motor.filt_current", {"name": "Filtered Current", "color": "#734828", "visible": false}],
+        ["erpm", {"name": "ERPM", "color": "#469138", "visible": true}],
+        ["duty_cycle", {"name": "Duty Cycle", "color": "#e3ac34", "visible": true}],
+        ["current", {"name": "Motor Current", "color": "#e33421", "visible": true}],
+        ["dir_current", {"name": "Directional Current", "color": "#cc686b", "visible": false}],
+        ["filt_current", {"name": "Filtered Current", "color": "#734828", "visible": false}],
 
-        ["imu.pitch", {"name": "Pitch", "color": "#b1b277", "visible": true}],
-        ["imu.balance_pitch", {"name": "Balance Pitch", "color": "#53b3bf", "visible": true}],
+        ["pitch", {"name": "Pitch", "color": "#b1b277", "visible": true}],
+        ["balance_pitch", {"name": "Balance Pitch", "color": "#53b3bf", "visible": true}],
 
         ["torque_tilt.setpoint", {"name": "Torque Tilt Setpoint", "color": "#df4a98", "visible": true}],
         ["atr.setpoint", {"name": "ATR Setpoint", "color": "#7640d6", "visible": true}],
@@ -2129,14 +2129,14 @@ Item {
         ["remote.setpoint", {"name": "Remote Setpoint", "color": "#803a4d", "visible": false}],
         ["setpoint", {"name": "Setpoint", "color": "#e57e20", "visible": true}],
 
-        ["motor.speed", {"name": "Speed", "color": "#3f9469", "visible": false}],
-        ["motor.batt_voltage", {"name": "Battery Voltage", "color": "#6e6ee0", "visible": false}],
-        ["motor.batt_current", {"name": "Battery Current", "color": "#cf44cd", "visible": false}],
-        ["motor.mosfet_temp", {"name": "Controller Temp", "color": "#ddae68", "visible": false}],
-        ["motor.motor_temp", {"name": "Motor Temp", "color": "#88bb93", "visible": false}],
-        ["imu.roll", {"name": "Roll", "color": "#c68f7e", "visible": false}],
-        ["footpad.adc1", {"name": "ADC1 Voltage", "color": "#69aad7", "visible": false}],
-        ["footpad.adc2", {"name": "ADC2 Voltage", "color": "#4a8772", "visible": false}],
+        ["speed", {"name": "Speed", "color": "#3f9469", "visible": false}],
+        ["batt_voltage", {"name": "Battery Voltage", "color": "#6e6ee0", "visible": false}],
+        ["batt_current", {"name": "Battery Current", "color": "#cf44cd", "visible": false}],
+        ["mosfet_temp", {"name": "Controller Temp", "color": "#ddae68", "visible": false}],
+        ["motor_temp", {"name": "Motor Temp", "color": "#88bb93", "visible": false}],
+        ["roll", {"name": "Roll", "color": "#c68f7e", "visible": false}],
+        ["adc1", {"name": "ADC1 Voltage", "color": "#69aad7", "visible": false}],
+        ["adc2", {"name": "ADC2 Voltage", "color": "#4a8772", "visible": false}],
         ["balance_current", {"name": "Balance Current", "color": "#36738b", "visible": false}],
         ["booster.current", {"name": "Booster Current", "color": "#8f2f26", "visible": false}],
         ["atr.accel_diff", {"name": "ATR Accel Diff", "color": "#4f5984", "visible": false}],
@@ -5908,7 +5908,7 @@ Item {
 
                 color: Utility.getAppHexColor("lightBackground")
 
-                property real voltage: state.rtData["motor.batt_voltage"]
+                property real voltage: state.rtData["batt_voltage"]
                 property int value: 0
 
                 Behavior on voltage {
@@ -6096,8 +6096,8 @@ Item {
                             valueFontSize: width * 0.18
                             lineWidth: 0.25 * unit
 
-                            value: Math.abs(state.rtData["motor.speed"]) * vescConfig.imperialFactor
-                            property int erpm: Math.abs(state.rtData["motor.erpm"])
+                            value: Math.abs(state.rtData["speed"]) * vescConfig.imperialFactor
+                            property int erpm: Math.abs(state.rtData["erpm"])
 
                             Behavior on erpm {
                                 NumberAnimation {
@@ -6190,7 +6190,7 @@ Item {
                             width: parent.height
                             height: width
 
-                            value: state.rtData["motor.current"]
+                            value: state.rtData["current"]
 
                             allowNegative: true
                             minValue: motorConfig.currentMin;
@@ -6216,7 +6216,7 @@ Item {
                             width: parent.height
                             height: width
 
-                            value: state.rtData["motor.duty_cycle"] * 100
+                            value: state.rtData["duty_cycle"] * 100
 
                             maxValue: 100
                             warnThresholdAbs: 80
@@ -6258,7 +6258,7 @@ Item {
                     Item {
                         id: batteryCurrent
 
-                        property var value: state.rtData["motor.batt_current"]
+                        property var value: state.rtData["batt_current"]
                         property var minValue: preferences.battCurrentLog ? -Math.log(-motorConfig.inCurrentMin + 1) : motorConfig.inCurrentMin
                         property var maxValue: preferences.battCurrentLog ? Math.log(motorConfig.inCurrentMax + 1) : motorConfig.inCurrentMax
 
@@ -6368,8 +6368,8 @@ Item {
                             width: parent.height
                             height: width
 
-                            property real leftVoltage: state.rtData["footpad.adc1"]
-                            property real rightVoltage: state.rtData["footpad.adc2"]
+                            property real leftVoltage: state.rtData["adc1"]
+                            property real rightVoltage: state.rtData["adc2"]
 
                             property real canvasWidth: width * 0.85
                             property real scale: canvasWidth / footpadPath.width
@@ -6499,7 +6499,7 @@ Item {
                             width: parent.height
                             height: width
 
-                            property real newValue: state.rtData["imu.roll"]
+                            property real newValue: state.rtData["roll"]
                             property real preValue: newValue
                             onNewValueChanged: {
                                 if (Math.abs(newValue - preValue) > 180) {
@@ -6572,8 +6572,8 @@ Item {
 
                         property real textWidth: 1.4 * unit
 
-                        property real pitchValue: state.rtData["imu.pitch"]
-                        property real balancePitchValue: state.rtData["imu.balance_pitch"]
+                        property real pitchValue: state.rtData["pitch"]
+                        property real balancePitchValue: state.rtData["balance_pitch"]
                         property real setpointValue: state.rtData["setpoint"]
 
                         property real runtimeOpacity: 0
@@ -6834,7 +6834,7 @@ Item {
                     labelText: "motor"
                     unit: "°C"
                     warningThreshold: motorConfig.tempMotorStart - preferences.tempWarningOffset
-                    value: state.rtData["motor.motor_temp"]
+                    value: state.rtData["motor_temp"]
                 }
 
                 VerticalValue {
@@ -6842,7 +6842,7 @@ Item {
                     labelText: "controller"
                     unit: "°C"
                     warningThreshold: motorConfig.tempFetStart - preferences.tempWarningOffset
-                    value: state.rtData["motor.mosfet_temp"]
+                    value: state.rtData["mosfet_temp"]
                 }
 
                 StatusText {
@@ -7267,7 +7267,7 @@ Item {
                                 clip: true
 
                                 Value {label: "Requested current"; unit: "A"; value: toFixed2Zero(state.rtData["balance_current"]);}
-                                Value {label: "Filtered current"; unit: "A"; value: toFixed2Zero(state.rtData["motor.filt_current"]);}
+                                Value {label: "Filtered current"; unit: "A"; value: toFixed2Zero(state.rtData["filt_current"]);}
                                 Value {label: "ATR Accel. diff."; value: toFixed2Zero(state.rtData["atr.accel_diff"]);}
                                 Value {label: "ATR Speed Boost"; unit: "%"; value: round(state.rtData["atr.speed_boost"] * 100);}
                                 Value {label: "Booster current"; unit: "A"; value: toFixed2Zero(state.rtData["booster.current"]);}
