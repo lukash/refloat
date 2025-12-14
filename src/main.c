@@ -1573,8 +1573,8 @@ static void cmd_runtime_tune(Data *d, unsigned char *cfg, int len) {
         if (h2 > 0) {
             // kept for compatibility reasons
             // wider ranges can be set with byte[18]
-            d->float_conf.atr_on_speed = (h2 & 0x3) + 3;
-            d->float_conf.atr_off_speed = (h2 >> 2) + 2;
+            d->float_conf.atr.filter.on_speed_limit = (h2 & 0x3) + 3;
+            d->float_conf.atr.filter.off_speed_limit = (h2 >> 2) + 2;
         }
 
         split(cfg[8], &h1, &h2);
@@ -1614,11 +1614,11 @@ static void cmd_runtime_tune(Data *d, unsigned char *cfg, int len) {
         float offspd = h2;
         if (len >= 19) {
             // use message length to identify apps that support the newer protocol
-            d->float_conf.torquetilt_on_speed = onspd + 3;
+            d->float_conf.torque_tilt.filter.on_speed_limit = onspd + 3;
         } else {
-            d->float_conf.torquetilt_on_speed = onspd / 2;
+            d->float_conf.torque_tilt.filter.on_speed_limit = onspd / 2;
         }
-        d->float_conf.torquetilt_off_speed = offspd + 3;
+        d->float_conf.torque_tilt.filter.off_speed_limit = offspd + 3;
     }
     if (len >= 17) {
         split(cfg[16], &h1, &h2);
@@ -1636,8 +1636,8 @@ static void cmd_runtime_tune(Data *d, unsigned char *cfg, int len) {
         }
         split(cfg[18], &h1, &h2);
         if ((h1 > 0) && (h2 > 0)) {
-            d->float_conf.atr_on_speed = h1 * 2;
-            d->float_conf.atr_off_speed = h2 * 2;
+            d->float_conf.atr.filter.on_speed_limit = h1 * 2;
+            d->float_conf.atr.filter.off_speed_limit = h2 * 2;
         }
     }
 
@@ -1672,8 +1672,8 @@ static void cmd_tune_defaults(Data *d) {
     d->float_conf.atr_threshold_down = CFG_DFLT_ATR_THRESHOLD_DOWN;
     d->float_conf.atr_speed_boost = CFG_DFLT_ATR_SPEED_BOOST;
     d->float_conf.atr_angle_limit = CFG_DFLT_ATR_ANGLE_LIMIT;
-    d->float_conf.atr_on_speed = CFG_DFLT_ATR_ON_SPEED;
-    d->float_conf.atr_off_speed = CFG_DFLT_ATR_OFF_SPEED;
+    d->float_conf.atr.filter.on_speed_limit = CFG_DFLT_ATR_FILTER_ON_SPEED_LIMIT;
+    d->float_conf.atr.filter.off_speed_limit = CFG_DFLT_ATR_FILTER_OFF_SPEED_LIMIT;
     d->float_conf.atr_response_boost = CFG_DFLT_ATR_RESPONSE_BOOST;
     d->float_conf.atr_transition_boost = CFG_DFLT_ATR_TRANSITION_BOOST;
     d->float_conf.atr_filter = CFG_DFLT_ATR_FILTER;

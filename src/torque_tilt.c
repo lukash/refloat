@@ -38,10 +38,10 @@ void torque_tilt_configure(TorqueTilt *tt, const RefloatConfig *config, float fr
         config->torque_tilt.filter.time_constant,
         config->torque_tilt.filter.on_speed_time_constant,
         config->torque_tilt.filter.off_speed_time_constant,
-        config->torquetilt_on_speed,
-        config->torquetilt_off_speed,
-        config->torquetilt_on_speed,
-        config->torquetilt_off_speed,
+        config->torque_tilt.filter.on_speed_limit,
+        config->torque_tilt.filter.off_speed_limit,
+        config->torque_tilt.filter.on_speed_limit,
+        config->torque_tilt.filter.off_speed_limit,
         frequency
     );
 }
