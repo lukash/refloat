@@ -195,6 +195,8 @@ typedef struct {
     float time_constant;
     float on_speed_time_constant;
     float off_speed_time_constant;
+    float on_speed_limit;
+    float off_speed_limit;
 } CfgSetpointFilter;
 
 typedef struct {
@@ -296,8 +298,6 @@ typedef struct {
     float brkbooster_current;
     float torquetilt_start_current;
     float torquetilt_angle_limit;
-    float torquetilt_on_speed;
-    float torquetilt_off_speed;
     float torquetilt_strength;
     float torquetilt_strength_regen;
     float atr_strength_up;
@@ -306,8 +306,6 @@ typedef struct {
     float atr_threshold_down;
     float atr_speed_boost;
     float atr_angle_limit;
-    float atr_on_speed;
-    float atr_off_speed;
     float atr_response_boost;
     float atr_transition_boost;
     float atr_filter;

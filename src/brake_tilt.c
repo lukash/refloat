@@ -42,16 +42,16 @@ void brake_tilt_configure(BrakeTilt *bt, const RefloatConfig *config, float freq
         bt->factor = -(0.5f + (20 - config->braketilt_strength) / 5.0f);
     }
 
-    float off_speed = config->atr_off_speed / max(config->braketilt_lingering, 1);
+    float off_speed = config->atr.filter.off_speed_limit / max(config->braketilt_lingering, 1);
 
     smooth_setpoint_configure(
         &bt->setpoint,
         config->atr.filter.time_constant,
         config->atr.filter.on_speed_time_constant,
         config->atr.filter.off_speed_time_constant,
-        config->atr_on_speed,
+        config->atr.filter.on_speed_limit,
         off_speed,
-        config->atr_on_speed,
+        config->atr.filter.on_speed_limit,
         off_speed,
         frequency
     );
