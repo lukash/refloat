@@ -73,17 +73,12 @@ clang-format -i src/*.{h,c}
 But, it's better to use git hooks.
 
 ## Git Hooks
-Refloat uses `lefthook` for managing git hooks. Again, you need to install this dependency in your development environment. Then run this to install the commit hook in the repo:
+Refloat uses `pre-commit` for managing git hooks. Again, you need to install this dependency in your development environment. Then run this to install the commit hook in the repo:
 ```sh
-lefthook install
+pre-commit install
 ```
 
-After this, `lefthook` will automatically run clang-format on every commit you make and check your formatting.
-
-To auto-fix all formatting of all files in your working tree, run:
-```sh
-lefthook run clang-format-fix
-```
+After this, `pre-commit` will automatically run clang-format on every commit you make, check and automatically fix your formatting.
 
 ## Naming Conventions
 - Type names are in `PascalCase`.

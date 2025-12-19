@@ -15,11 +15,11 @@ jobs:
       - uses: cachix/install-nix-action@v25
       - uses: rrbutani/use-nix-shell-action@v1
         with:
-          flakes: nixpkgs#llvmPackages_18.clang-tools, nixpkgs#lefthook
+          flakes: nixpkgs#llvmPackages_18.clang-tools, nixpkgs#pre-commit
 
       - name: Run clang-format
         id: clang-format
-        run: lefthook run clang-format-check
+        run: pre-commit run --all-files --show-diff-on-failure --color always
 
       - name: Build Package
         if: success() || (failure() && steps.clang-format.conclusion == 'failure')
