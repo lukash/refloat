@@ -1451,7 +1451,7 @@ p, li { white-space: pre-wrap; }
             <editorDecimalsDouble>0</editorDecimalsDouble>
             <editorScale>100</editorScale>
             <editAsPercentage>0</editAsPercentage>
-            <maxDouble>1</maxDouble>
+            <maxDouble>0.5</maxDouble>
             <minDouble>0</minDouble>
             <showDisplay>0</showDisplay>
             <stepDouble>1</stepDouble>
