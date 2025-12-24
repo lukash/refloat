@@ -1448,9 +1448,9 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;For example, a Deadband of 10% will only begin adjusting setpoint once the throttle reaches a value of +/- 10%. From there, it will scale as if 10% throttle was the center point (0%).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_INPUTTILT_DEADBAND</cDefine>
-            <editorDecimalsDouble>2</editorDecimalsDouble>
-            <editorScale>1</editorScale>
-            <editAsPercentage>1</editAsPercentage>
+            <editorDecimalsDouble>0</editorDecimalsDouble>
+            <editorScale>100</editorScale>
+            <editAsPercentage>0</editAsPercentage>
             <maxDouble>1</maxDouble>
             <minDouble>0</minDouble>
             <showDisplay>0</showDisplay>
