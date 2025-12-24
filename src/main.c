@@ -175,6 +175,7 @@ static void reconfigure(Data *d) {
     d->startup_pitch_trickmargin = d->float_conf.startup_dirtylandings_enabled ? 10 : 0;
     d->tiltback_variable =
         d->float_conf.tiltback_variable / 1000 * sign(d->float_conf.tiltback_variable_max);
+    // TODO handle division by zero
     d->tiltback_variable_max_erpm =
         fabsf(d->float_conf.tiltback_variable_max / d->tiltback_variable);
 
