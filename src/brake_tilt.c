@@ -71,7 +71,7 @@ void brake_tilt_update(
         bt->target = 0;
     }
 
-    float braketilt_step_size = atr->off_step_size / config->braketilt_lingering;
+    float braketilt_step_size = atr->off_step_size / max(config->braketilt_lingering, 1);
     if (fabsf(bt->target) > fabsf(bt->setpoint)) {
         braketilt_step_size = atr->on_step_size * 1.5;
     } else if (motor->abs_erpm < 800) {
