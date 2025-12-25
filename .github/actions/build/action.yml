@@ -15,7 +15,7 @@ runs:
         authToken: '${{ inputs.cache-auth-token }}'
     - uses: rrbutani/use-nix-shell-action@v1
       with:
-        flakes: nixpkgs/nixos-24.11#gcc-arm-embedded-7, nixpkgs#gnumake, github:lukash/vesc_tool-flake/release_6_06
+        flakes: nixpkgs/nixos-24.11#gcc-arm-embedded-13, nixpkgs#gnumake, github:lukash/vesc_tool-flake/release_6_06
 
     - name: Build
       shell: bash
