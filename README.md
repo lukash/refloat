@@ -30,6 +30,10 @@ If you don't have `vesc_tool` in your `$PATH` (but you have, for example, a down
 ```sh
 make VESC_TOOL=/path/to/vesc_tool
 ```
+For macOS, the path to VESC Tool when installed using the official installer is as follows:
+```sh
+make VESC_TOOL="/Applications/VESC Tool.app/Contents/MacOS/VESC Tool"
+```
 
 ## Documentation
 [Development Documentation](doc/index.md)
