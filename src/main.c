@@ -103,6 +103,7 @@ const VESC_PIN beeper_pin = VESC_PIN_PPM;
 
 void beeper_init() {
     VESC_IF->io_set_mode(beeper_pin, VESC_PIN_MODE_OUTPUT);
+    VESC_IF->io_write(beeper_pin, 0);
 }
 
 void beeper_update(Data *d) {
@@ -1232,6 +1233,10 @@ static void data_init(Data *d) {
     );
 
     d->odometer = VESC_IF->mc_get_odometer();
+
+    d->beep_num_left = 0;
+    d->beep_duration = 0;
+    d->beep_countdown = 0;
 }
 
 // See also:
