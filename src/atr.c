@@ -58,7 +58,7 @@ void atr_configure(ATR *atr, const RefloatConfig *config, float frequency) {
         config->atr.filter.time_constant,
         config->atr.filter.on_speed_time_constant,
         config->atr.filter.off_speed_time_constant,
-        0.2f,
+        config->atr.wheelslip_winddown_time_constant,
         config->atr_on_speed,
         config->atr_off_speed,
         config->atr_on_speed_downhill,

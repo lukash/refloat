@@ -301,6 +301,30 @@ p, li { white-space: pre-wrap; }
             <suffix> s</suffix>
             <vTx>7</vTx>
         </atr.filter.off_speed_time_constant>
+        <atr.wheelslip_winddown_time_constant>
+            <longName>Wheelslip Winddown Time Constant</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;An amount of time it takes for the ATR setpoint target to be reduced to approximately one third of its starting value during a wheelslip.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Refloat v1.2 and below used a value of approximately 0.14s.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_ATR_WHEELSLIP_WINDDOWN_TIME_CONSTANT</cDefine>
+            <editorDecimalsDouble>2</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>5</maxDouble>
+            <minDouble>0.01</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.1</stepDouble>
+            <valDouble>0.2</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix> s</suffix>
+            <vTx>7</vTx>
+        </atr.wheelslip_winddown_time_constant>
         <hertz>
             <longName>Loop Hertz</longName>
             <type>2</type>
@@ -4308,6 +4332,7 @@ p, li { white-space: pre-wrap; }
         <ser>atr.filter.time_constant</ser>
         <ser>atr.filter.on_speed_time_constant</ser>
         <ser>atr.filter.off_speed_time_constant</ser>
+        <ser>atr.wheelslip_winddown_time_constant</ser>
         <ser>torque_tilt.filter.time_constant</ser>
         <ser>torque_tilt.filter.on_speed_time_constant</ser>
         <ser>torque_tilt.filter.off_speed_time_constant</ser>
@@ -4558,6 +4583,7 @@ p, li { white-space: pre-wrap; }
                     <param>atr.filter.time_constant</param>
                     <param>atr.filter.on_speed_time_constant</param>
                     <param>atr.filter.off_speed_time_constant</param>
+                    <param>atr.wheelslip_winddown_time_constant</param>
                     <param>::sep::Nose Angling</param>
                     <param>atr_angle_limit</param>
                     <param>atr_on_speed</param>
