@@ -203,6 +203,7 @@ typedef struct {
 
 typedef struct {
     CfgSetpointFilter filter;
+    float wheelslip_winddown_time_constant;
 } CfgATR;
 
 typedef struct {
