@@ -58,14 +58,15 @@ void pid_update(
 ) {
     float error = setpoint - imu->balance_pitch;
 
-    pid->p = error * config->kp;
+    pid->p = error * config->kp * TORQUE_CONSTANT_COMPAT;
 
-    pid->i = pid->i + error * config->ki * LOOP_HERTZ_COMPAT * dt;
-    if (config->ki_limit > 0 && fabsf(pid->i) > config->ki_limit) {
-        pid->i = config->ki_limit * sign(pid->i);
+    pid->i = pid->i + error * config->ki * TORQUE_CONSTANT_COMPAT * LOOP_HERTZ_COMPAT * dt;
+    float ki_limit = config->ki_limit * TORQUE_CONSTANT_COMPAT;
+    if (ki_limit > 0 && fabsf(pid->i) > ki_limit) {
+        pid->i = ki_limit * sign(pid->i);
     }
 
-    pid->rate_p = -imu->pitch_rate * config->kp2;
+    pid->rate_p = -imu->pitch_rate * config->kp2 * TORQUE_CONSTANT_COMPAT;
 
     // brake scale coefficient smoothing
     if (md->erpm < -500) {
