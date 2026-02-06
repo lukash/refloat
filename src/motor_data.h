@@ -40,6 +40,7 @@ typedef struct {
     float current;  //  "regular" motor current (positive = accelerating, negative = braking)
     float dir_current;  // directional current (sign represents direction of torque generation)
     Biquad filt_current;  // filtered directional current
+    float torque;
     bool braking;
     bool forward;
 
@@ -66,6 +67,7 @@ typedef struct {
     float duty_max_with_margin;
     float lv_threshold;
     float hv_threshold;
+    float speed_constant;  // a.k.a. Kv, inverse of Kt, the torque constant
 } MotorData;
 
 void motor_data_init(MotorData *m);
@@ -83,3 +85,5 @@ void motor_data_update(MotorData *m, float dt);
 void motor_data_evaluate_alerts(const MotorData *m, AlertTracker *at, const Time *time);
 
 float motor_data_get_current_saturation(const MotorData *m);
+
+float motor_data_torque_to_current(const MotorData *m, float torque);
