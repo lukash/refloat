@@ -36,6 +36,7 @@ void motor_data_init(MotorData *m) {
     m->current = 0.0f;
     m->dir_current = 0.0f;
     biquad_init(&m->filt_current);
+    m->torque = 0.0f;
     m->braking = false;
     m->forward = true;
 
@@ -58,6 +59,7 @@ void motor_data_init(MotorData *m) {
     m->duty_max_with_margin = 0.0f;
     m->lv_threshold = 0.0f;
     m->hv_threshold = 0.0f;
+    m->speed_constant = 0.0f;
 
     motor_data_reset(m);
 }
@@ -94,6 +96,15 @@ void motor_data_refresh_motor_config(MotorData *m, float lv_threshold, float hv_
     m->mosfet_temp_max = VESC_IF->get_cfg_float(CFG_PARAM_l_temp_fet_start) - 3;
     m->motor_temp_max = VESC_IF->get_cfg_float(CFG_PARAM_l_temp_motor_start) - 3;
     m->duty_max_with_margin = VESC_IF->get_cfg_float(CFG_PARAM_l_max_duty) - 0.05;
+
+    // On firmware < 6.06 flux linkage is not exposed on the interface, 0 is returned
+    float flux_linkage = VESC_IF->get_cfg_float(CFG_PARAM_foc_motor_flux_linkage);
+    uint32_t motor_poles = VESC_IF->get_cfg_int(CFG_PARAM_si_motor_poles);
+    if (flux_linkage > 0.001f && motor_poles > 0) {
+        m->speed_constant = 1 / (1.5f * 0.5 * motor_poles * flux_linkage);
+    } else {
+        m->speed_constant = 1 / TORQUE_CONSTANT_COMPAT;
+    }
 }
 
 void motor_data_configure(MotorData *m, float current_cutoff_freq, float frequency) {
@@ -135,10 +146,11 @@ void motor_data_update(MotorData *m, float dt) {
     m->last_erpm = m->erpm;
 
     biquad_update(&m->filt_current, m->dir_current);
-    if (m->abs_erpm > 250 || m->filt_current.value < 30.0f) {
+    m->torque = m->filt_current.value / m->speed_constant;
+    if (m->abs_erpm > 250 || m->torque < 18.0f) {
         m->forward = m->erpm >= 0.0f;
     } else {
-        m->forward = m->filt_current.value >= 0.0f;
+        m->forward = m->torque >= 0.0f;
     }
 
     ema_update(&m->batt_current, VESC_IF->mc_get_tot_current_in_filtered());
@@ -164,4 +176,8 @@ float motor_data_get_current_saturation(const MotorData *m) {
         (m->batt_current.value < 0 ? m->battery_current_min : m->battery_current_max);
 
     return max(motor_saturation, battery_saturation);
+}
+
+float motor_data_torque_to_current(const MotorData *m, float torque) {
+    return torque * m->speed_constant;
 }
