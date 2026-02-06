@@ -56,12 +56,16 @@ void pid_update(
     const RefloatConfig *config,
     float dt
 ) {
-    pid->p = setpoint - imu->balance_pitch;
-    pid->i = pid->i + pid->p * config->ki * LOOP_HERTZ_COMPAT * dt;
+    float error = setpoint - imu->balance_pitch;
 
+    pid->p = error * config->kp;
+
+    pid->i = pid->i + error * config->ki * LOOP_HERTZ_COMPAT * dt;
     if (config->ki_limit > 0 && fabsf(pid->i) > config->ki_limit) {
         pid->i = config->ki_limit * sign(pid->i);
     }
+
+    pid->rate_p = -imu->pitch_rate * config->kp2;
 
     // brake scale coefficient smoothing
     if (md->erpm < -500) {
@@ -80,8 +84,6 @@ void pid_update(
         ema_update(&pid->rate_p_bwd_scale, 1.0f);
     }
 
-    pid->p *= config->kp * (pid->p > 0 ? pid->p_fwd_scale.value : pid->p_bwd_scale.value);
-
-    pid->rate_p = -imu->pitch_rate * config->kp2;
+    pid->p *= pid->p > 0 ? pid->p_fwd_scale.value : pid->p_bwd_scale.value;
     pid->rate_p *= pid->rate_p > 0 ? pid->rate_p_fwd_scale.value : pid->rate_p_bwd_scale.value;
 }
