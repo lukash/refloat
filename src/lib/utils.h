@@ -34,6 +34,9 @@
 #define LOOP_HERTZ_COMPAT 720.0f
 #define LOOP_HERTZ_COMPAT_RECIP (1.0f / LOOP_HERTZ_COMPAT)
 
+// 1.5 * pole_pairs * flux_linkage
+#define TORQUE_CONSTANT_COMPAT (1.5f * 15 * 0.027f)
+
 #define unused(x) (void) (x)
 
 #if defined(__GNUC__) && __GNUC__ < 9
