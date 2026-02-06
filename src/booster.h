@@ -22,7 +22,7 @@
 #include "motor_data.h"
 
 typedef struct {
-    EMA current;
+    EMA torque;
 } Booster;
 
 void booster_init(Booster *b);
