@@ -748,13 +748,14 @@ static void pid_control(Data *d, float dt) {
 
     // Rate P and Booster are pitch-based (as opposed to balance pitch based)
     // They require to be filtered in, otherwise they'd cause a jerk
-    float pitch_based = d->pid.rate_p + d->booster.current.value;
+    float pitch_based =
+        motor_data_torque_to_current(&d->motor, d->pid.rate_p + d->booster.torque.value);
     if (d->softstart_pid_limit < d->motor.current_max) {
         pitch_based = fminf(fabs(pitch_based), d->softstart_pid_limit) * sign(pitch_based);
         d->softstart_pid_limit += 100.0f * dt;
     }
 
-    float new_current = d->pid.p + d->pid.i + pitch_based;
+    float new_current = motor_data_torque_to_current(&d->motor, d->pid.p + d->pid.i) + pitch_based;
     float current_limit;
     if (d->state.mode == MODE_HANDTEST) {
         current_limit = 7;
@@ -1339,7 +1340,7 @@ static void send_realtime_data(Data *d) {
         buffer_append_float32_auto(buffer, d->charging.current, &ind);
         buffer_append_float32_auto(buffer, d->charging.voltage, &ind);
     } else {
-        buffer_append_float32_auto(buffer, d->booster.current.value, &ind);
+        buffer_append_float32_auto(buffer, d->booster.torque.value, &ind);
         buffer_append_float32_auto(buffer, d->motor.dir_current, &ind);
     }
     buffer_append_float32_auto(buffer, d->remote.input, &ind);
@@ -1390,7 +1391,7 @@ static void cmd_send_all_data(Data *d, unsigned char mode) {
         buffer[ind++] = d->remote.setpoint.value * 5 + 128;
 
         buffer_append_float16(buffer, d->imu.pitch, 10, &ind);
-        buffer[ind++] = d->booster.current.value + 128;
+        buffer[ind++] = d->booster.torque.value + 128;
 
         // Now send motor stuff:
         buffer_append_float16(buffer, d->motor.batt_voltage, 10, &ind);

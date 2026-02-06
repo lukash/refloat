@@ -2138,7 +2138,7 @@ Item {
         ["adc1", {"name": "ADC1 Voltage", "color": "#69aad7", "visible": false}],
         ["adc2", {"name": "ADC2 Voltage", "color": "#4a8772", "visible": false}],
         ["balance_current", {"name": "Balance Current", "color": "#36738b", "visible": false}],
-        ["booster.current", {"name": "Booster Current", "color": "#8f2f26", "visible": false}],
+        ["booster.torque", {"name": "Booster Torque", "color": "#8f2f26", "visible": false}],
         ["atr.accel_diff", {"name": "ATR Accel Diff", "color": "#4f5984", "visible": false}],
         ["atr.speed_boost", {"name": "ATR Speed Boost", "color": "#34633c", "visible": false}],
         ["remote.input", {"name": "Remote Throttle", "color": "#525023", "visible": false}],
@@ -7270,7 +7270,7 @@ Item {
                                 Value {label: "Filtered current"; unit: "A"; value: toFixed2Zero(state.rtData["filt_current"]);}
                                 Value {label: "ATR Accel. diff."; value: toFixed2Zero(state.rtData["atr.accel_diff"]);}
                                 Value {label: "ATR Speed Boost"; unit: "%"; value: round(state.rtData["atr.speed_boost"] * 100);}
-                                Value {label: "Booster current"; unit: "A"; value: toFixed2Zero(state.rtData["booster.current"]);}
+                                Value {label: "Booster torque"; unit: "A"; value: toFixed2Zero(state.rtData["booster.torque"]);}
                                 Value {label: "Remote input"; unit: "%"; value: round(state.rtData["remote.input"] * 100);}
                             }
 

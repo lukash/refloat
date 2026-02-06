@@ -68,11 +68,12 @@ void atr_configure(ATR *atr, const RefloatConfig *config, float frequency) {
 }
 
 static void calculate_atr_target(ATR *atr, const MotorData *motor, const RefloatConfig *config) {
-    float abs_torque = fabsf(motor->filt_current.value);
-    float torque_offset = 8;  // hard-code to 8A for now (shouldn't really be changed much anyways)
+    float abs_torque = fabsf(motor->torque);
+    float torque_offset = 8 * TORQUE_CONSTANT_COMPAT;  // hard-code to 8A
     float atr_threshold = motor->braking ? config->atr_threshold_down : config->atr_threshold_up;
     float accel_factor =
-        motor->braking ? config->atr_amps_decel_ratio : config->atr_amps_accel_ratio;
+        (motor->braking ? config->atr_amps_decel_ratio : config->atr_amps_accel_ratio) *
+        TORQUE_CONSTANT_COMPAT;
     float accel_factor2 = accel_factor * 1.3;
 
     // compare measured acceleration to expected acceleration
@@ -82,11 +83,10 @@ static void calculate_atr_target(ATR *atr, const MotorData *motor, const Refloat
     // balance/maintain speed)
     float expected_acc;
     if (abs_torque < 25) {
-        expected_acc =
-            (motor->filt_current.value - motor->erpm_sign * torque_offset) / accel_factor;
+        expected_acc = (motor->torque - motor->erpm_sign * torque_offset) / accel_factor;
     } else {
         // primitive linear approximation of non-linear torque-accel relationship
-        int torque_sign = sign(motor->filt_current.value);
+        int torque_sign = sign(motor->torque);
         expected_acc = (torque_sign * 25 - motor->erpm_sign * torque_offset) / accel_factor;
         expected_acc += torque_sign * (abs_torque - 25) / accel_factor2;
     }
