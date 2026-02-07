@@ -50,76 +50,8 @@ In case the following bits are set in the `mask`, the listed data follow in the 
 
 #### extra_flags
 
-| 7-3 |                      2 |                       1 |                       0 |
-|-----|------------------------|-------------------------|-------------------------|
-|   0 | `data_record_autostop` | `data_record_autostart` | `data_record_recording` |
-
-The `data_record_*` flags represent data recording internal state, see [DATA_RECORD](DATA_RECORD.md).
+See [extra_flags](REALTIME_DATA.md#extra_flags) in the REALTIME_DATA command.
 
 #### state_flags
 
-The state flags are encoded as a 32-bit unsigned integer with the following bit layout:
-
-| Bits  | Name             | Description |
-|-------|------------------|-------------|
-| 31-30 | (reserved)       | Reserved, always 0. |
-| 29-28 | `package_mode`   | The mode of the package. |
-| 27-26 | (reserved)       | Reserved, always 0. |
-| 25-24 | `package_state`  | The state of the package. |
-| 23-22 | `footpad_state`  | The footpad sensor state. |
-| 21    | `charging`       | Whether the board is charging. |
-| 20    | `fatal_error`    | Fatal error occurred (as of now only a firmware fault can cause this). |
-| 19-18 | (reserved)       | Reserved, always 0. |
-| 17    | `darkride`       | Whether darkride is active. |
-| 16    | `wheelslip`      | Whether wheelslip is detected. |
-| 15-12 | `sat`            | Setpoint Adjustment Type. |
-| 11-8  | `stop_condition` | The stop condition. |
-| 7-0   | `beep_reason`    | The last beep reason. |
-
-**`package_mode`**:
-- `0: NORMAL`
-- `1: HANDTEST`
-- `2: FLYWHEEL`
-
-**`package_state`**:
-- `0: DISABLED`
-- `1: STARTUP`
-- `2: READY`
-- `3: RUNNING`
-
-**`footpad_state`**:
-- `0: NONE`
-- `1: LEFT`
-- `2: RIGHT`
-- `3: BOTH`
-
-**`sat` (setpoint adjustment type)**:
-- `0: NONE`
-- `1: CENTERING`
-- `2: REVERSESTOP`
-- `6: PB_DUTY`
-- `10: PB_HIGH_VOLTAGE`
-- `11: PB_LOW_VOLTAGE`
-- `12: PB_TEMPERATURE`
-
-**`stop_condition`**:
-- `0: NONE`
-- `1: PITCH`
-- `2: ROLL`
-- `3: SWITCH_HALF`
-- `4: SWITCH_FULL`
-- `5: REVERSE_STOP`
-- `6: QUICKSTOP`
-
-**`beep_reason`**:
-- `0: NONE`
-- `1: LOW_VOLTAGE`
-- `2: HIGH_VOLTAGE`
-- `3: TEMP_MOSFET`
-- `4: TEMP_MOTOR`
-- `5: CURRENT`
-- `6: DUTY`
-- `7: SENSORS`
-- `8: LOW_BATTERY`
-- `9: IDLE`
-- `10: ERROR`
+See [state_flags](REALTIME_DATA.md#state_flags) in the REALTIME_DATA command.

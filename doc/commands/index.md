@@ -28,6 +28,7 @@ In the commands' documentation, the first two bytes with `package_interface_id` 
 - [DATA_RECORD](DATA_RECORD.md)
 - [ALERTS_LIST](ALERTS_LIST.md)
 - [ALERTS_CONTROL](ALERTS_CONTROL.md)
+- [REALTIME_DATA](REALTIME_DATA.md)
 
 ### Internal Package Commands
 
