@@ -175,14 +175,16 @@ void haptic_feedback_update(
     } else if (should_be_playing) {
         const CfgHapticTone *tone = get_haptic_tone(hf);
         if (tone->strength > 0.0f) {
-            foc_play_tone(0, tone->frequency, tone->strength * strength_scale(hf, md->speed));
+            foc_play_tone(
+                0, tone->frequency, tone->strength * strength_scale(hf, fabsf(md->speed))
+            );
         }
 
         if (hf->cfg->vibrate.strength > 0.0f) {
             motor_control_play_tone(
                 mc,
                 hf->cfg->vibrate.frequency,
-                hf->cfg->vibrate.strength * strength_scale(hf, md->speed)
+                hf->cfg->vibrate.strength * strength_scale(hf, fabsf(md->speed))
             );
         }
 
