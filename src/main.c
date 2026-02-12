@@ -1933,6 +1933,23 @@ static void cmd_realtime_data_ids() {
     SEND_APP_DATA(buffer, bufsize, ind);
 }
 
+static uint8_t encode_extra_flags(const AlertTracker *at, const DataRecord *dr) {
+    return at->fatal_error << 3 | dr->autostop << 2 | dr->autostart << 1 | dr->recording;
+}
+
+static uint32_t encode_state_flags(
+    const State *state, const FootpadSensor *footpad, uint8_t beep_reason
+) {
+    uint32_t res = 0;
+    res |= state->mode << 28 | state->state << 24;
+    res |= footpad->state << 22 | state->charging << 21 | state->darkride << 17 |
+        state->wheelslip << 16;
+    res |= state->sat << 12 | state->stop_condition << 8;
+    res |= beep_reason;
+
+    return res;
+}
+
 static void cmd_realtime_data(Data *d) {
     static const int bufsize = 16 + ITEMS_COUNT(RT_DATA_ALL_ITEMS) * 2 + 9;
     uint8_t buffer[bufsize];
@@ -1956,21 +1973,11 @@ static void cmd_realtime_data(Data *d) {
 
     buffer[ind++] = mask;
 
-    const DataRecord *rd = &d->data_record;
-    uint8_t extra_flags =
-        d->alert_tracker.fatal_error << 3 | rd->autostop << 2 | rd->autostart << 1 | rd->recording;
-    buffer[ind++] = extra_flags;
+    buffer[ind++] = encode_extra_flags(&d->alert_tracker, &d->data_record);
 
     buffer_append_uint32(buffer, d->time.now, &ind);
 
-    buffer[ind++] = d->state.mode << 4 | d->state.state;
-
-    uint8_t flags = d->state.charging << 5 | d->state.darkride << 1 | d->state.wheelslip;
-    buffer[ind++] = d->footpad.state << 6 | flags;
-
-    buffer[ind++] = d->state.sat << 4 | d->state.stop_condition;
-
-    buffer[ind++] = d->beep_reason;
+    buffer_append_uint32(buffer, encode_state_flags(&d->state, &d->footpad, d->beep_reason), &ind);
 
 #define WRITE_VALUE(target, id) buffer_append_float16_auto(buffer, d->target, &ind);
     VISIT(RT_DATA_ITEMS, WRITE_VALUE);
