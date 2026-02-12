@@ -68,7 +68,8 @@ The state flags are encoded as a 32-bit unsigned integer with the following bit 
 | 25-24 | `package_state`  | The state of the package. |
 | 23-22 | `footpad_state`  | The footpad sensor state. |
 | 21    | `charging`       | Whether the board is charging. |
-| 20-18 | (reserved)       | Reserved, always 0. |
+| 20    | `fatal_error`    | Fatal error occurred (as of now only a firmware fault can cause this). |
+| 19-18 | (reserved)       | Reserved, always 0. |
 | 17    | `darkride`       | Whether darkride is active. |
 | 16    | `wheelslip`      | Whether wheelslip is detected. |
 | 15-12 | `sat`            | Setpoint Adjustment Type. |

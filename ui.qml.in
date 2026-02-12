@@ -866,7 +866,6 @@ Item {
                 state.extraRecording = extraFlags & 0x1;
                 state.extraRecAutostart = extraFlags & 0x2;
                 state.extraRecAutostop = extraFlags & 0x4;
-                state.fatalError = extraFlags & 0x8;
 
                 var time = dv.getUint32(ind); ind += 4;
                 state.setTimeReference(time);
@@ -882,6 +881,7 @@ Item {
                 state.wheelslip = wheelslip;
                 state.darkride = flags & 0b000010;
                 state.charging = flags & 0b100000;
+                state.fatalError = flags & 0b010000;
 
                 var sat = (stateFlags >> 12) & 0xF;
                 state.setpointAdjustmentType = sat;
