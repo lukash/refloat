@@ -871,25 +871,23 @@ Item {
                 var time = dv.getUint32(ind); ind += 4;
                 state.setTimeReference(time);
 
-                var modeAndState = dv.getUint8(ind++);
-                state.pkgMode = modeAndState >> 4;
-                var pkgState = modeAndState & 0xF;
-                state.pkgState = pkgState;
+                var stateFlags = dv.getUint32(ind); ind += 4;
+                state.pkgMode = (stateFlags >> 28) & 0b11;
+                state.pkgState = (stateFlags >> 24) & 0b11;
 
-                var sensorAndFlags = dv.getUint8(ind++);
-                var fpState = sensorAndFlags >> 6;
+                var fpState = (stateFlags >> 22) & 0b11;
                 state.fpState = fpState;
-                var wheelslip = sensorAndFlags & 0b00000001;
+                var flags = (stateFlags >> 16) & 0b111111;
+                var wheelslip = flags & 0b000001;
                 state.wheelslip = wheelslip;
-                state.darkride = sensorAndFlags & 0b00000010;
-                state.charging = sensorAndFlags & 0b00100000;
+                state.darkride = flags & 0b000010;
+                state.charging = flags & 0b100000;
 
-                var setpointAndStop = dv.getUint8(ind++);
-                var sat = setpointAndStop >> 4;
+                var sat = (stateFlags >> 12) & 0xF;
                 state.setpointAdjustmentType = sat;
-                state.stopCondition = setpointAndStop & 0xF;
+                state.stopCondition = (stateFlags >> 8) & 0xF;
 
-                state.beepReason = dv.getUint8(ind++);
+                state.beepReason = stateFlags & 0xFF;
 
                 var rtDataIdleIts = state.rtDataIdleItems;
                 var rtDataAllIts = state.rtDataAllItems;

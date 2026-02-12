@@ -19,12 +19,9 @@ The actual list of values sent is in [rt_data.h](/src/rt_data.h). See also [Real
 | Offset | Size | Name                  | Description   |
 |--------|------|-----------------------|---------------|
 | 0      | 1    | `mask`                | Mask which specifies which data are included in the response:<br> `0x1`: Runtime data<br> `0x2`: Charging data |
-| 1      | 1    | `extra_flags`         | Extra flags for various internal package state values. |
+| 1      | 1    | `extra_flags`         | Special internal package flags. |
 | 2      | 4    | `time`                | Timestamp of the data in ticks, as `uint32`. To convert to seconds, use `tick_rate` from the [INFO](INFO.md) command. |
-| 6      | 1    | `state_and_mode`      | The state and mode of the package. |
-| 7      | 1    | `flags_and_footpad`   | The state flags and footpad state. |
-| 8      | 1    | `stop_cond_and_sat`   | The stop condition and SAT (Setpoint Adjustment Type). |
-| 9      | 1    | `alert_reason`        | The last alert reason. |
+| 6      | 4    | `state_flags`         | State flags for the internal package state. |
 | 10     | N    | `realtime_data`       | The realtime data as a sequence of [float16](float16.md)-encoded numbers. |
 
 #### Mask
@@ -57,11 +54,29 @@ In case the following bits are set in the `mask`, the listed data follow in the 
 
 The `data_record_*` flags represent data recording internal state, see [DATA_RECORD](DATA_RECORD.md).
 
-#### state_and_mode
+#### state_flags
 
-| 7-6 |            5-4 | 3-2 |             1-0 |
-|-----|----------------|-----|-----------------|
-|   0 | `package_mode` |   0 | `package_state` |
+The state flags are encoded as a 32-bit unsigned integer with the following bit layout:
+
+| Bits  | Name             | Description |
+|-------|------------------|-------------|
+| 31-30 | (reserved)       | Reserved, always 0. |
+| 29-28 | `package_mode`   | The mode of the package. |
+| 27-26 | (reserved)       | Reserved, always 0. |
+| 25-24 | `package_state`  | The state of the package. |
+| 23-22 | `footpad_state`  | The footpad sensor state. |
+| 21    | `charging`       | Whether the board is charging. |
+| 20-18 | (reserved)       | Reserved, always 0. |
+| 17    | `darkride`       | Whether darkride is active. |
+| 16    | `wheelslip`      | Whether wheelslip is detected. |
+| 15-12 | `sat`            | Setpoint Adjustment Type. |
+| 11-8  | `stop_condition` | The stop condition. |
+| 7-0   | `beep_reason`    | The last beep reason. |
+
+**`package_mode`**:
+- `0: NORMAL`
+- `1: HANDTEST`
+- `2: FLYWHEEL`
 
 **`package_state`**:
 - `0: DISABLED`
@@ -69,37 +84,11 @@ The `data_record_*` flags represent data recording internal state, see [DATA_REC
 - `2: READY`
 - `3: RUNNING`
 
-**`package_mode`**:
-- `0: NORMAL`
-- `1: HANDTEST`
-- `2: FLYWHEEL`
-
-#### flags_and_footpad
-
-|             7-6 |          5 | 3-2 |          1 |           0 |
-|-----------------|------------|-----|------------|-------------|
-| `footpad_state` | `charging` |   0 | `darkride` | `wheelslip` |
-
 **`footpad_state`**:
 - `0: NONE`
 - `1: LEFT`
 - `2: RIGHT`
 - `3: BOTH`
-
-#### stop_cond_and_sat
-
-|   7-4 |              3-0 |
-|-------|------------------|
-| `sat` | `stop_condition` |
-
-**`stop_condition`**:
-- `0: NONE`
-- `1: PITCH`
-- `2: ROLL`
-- `3: SWITCH_HALF`
-- `4: SWITCH_FULL`
-- `5: REVERSE_STOP`
-- `6: QUICKSTOP`
 
 **`sat` (setpoint adjustment type)**:
 - `0: NONE`
@@ -110,8 +99,16 @@ The `data_record_*` flags represent data recording internal state, see [DATA_REC
 - `11: PB_LOW_VOLTAGE`
 - `12: PB_TEMPERATURE`
 
-#### alert_reason
+**`stop_condition`**:
+- `0: NONE`
+- `1: PITCH`
+- `2: ROLL`
+- `3: SWITCH_HALF`
+- `4: SWITCH_FULL`
+- `5: REVERSE_STOP`
+- `6: QUICKSTOP`
 
+**`beep_reason`**:
 - `0: NONE`
 - `1: LOW_VOLTAGE`
 - `2: HIGH_VOLTAGE`
