@@ -1291,8 +1291,8 @@ enum {
     COMMAND_TUNE_TILT = 14,
     COMMAND_LIGHTS_CONTROL = 20,
     COMMAND_FLYWHEEL = 22,
-    COMMAND_REALTIME_DATA = 31,
-    COMMAND_REALTIME_DATA_IDS = 32,
+    COMMAND_REALTIME_DATA_INTERNAL = 31,
+    COMMAND_REALTIME_DATA_INTERNAL_IDS = 32,
     COMMAND_ALERTS_LIST = 35,
     COMMAND_ALERTS_CONTROL = 36,
     COMMAND_DATA_RECORD_REQUEST = 41,
@@ -1905,13 +1905,13 @@ void flywheel_stop(Data *d) {
     configure(d);
 }
 
-static void cmd_realtime_data_ids() {
+static void cmd_realtime_data_internal_ids() {
     static const int bufsize = 2 + 2 + ITEMS_IDS_SIZE(RT_DATA_ALL_ITEMS);
     uint8_t buffer[bufsize];
     int32_t ind = 0;
 
     buffer[ind++] = 101;  // Package ID
-    buffer[ind++] = COMMAND_REALTIME_DATA_IDS;
+    buffer[ind++] = COMMAND_REALTIME_DATA_INTERNAL_IDS;
 
 #define ADD_ID(target, id) buffer_append_string(buffer, id, &ind);
     // Send string ids of the realtime data items. The format is:
@@ -1950,13 +1950,13 @@ static uint32_t encode_state_flags(
     return res;
 }
 
-static void cmd_realtime_data(Data *d) {
+static void cmd_realtime_data_internal(Data *d) {
     static const int bufsize = 16 + ITEMS_COUNT(RT_DATA_ALL_ITEMS) * 2 + 9;
     uint8_t buffer[bufsize];
     int32_t ind = 0;
 
     buffer[ind++] = 101;  // Package ID
-    buffer[ind++] = COMMAND_REALTIME_DATA;
+    buffer[ind++] = COMMAND_REALTIME_DATA_INTERNAL;
 
     // mask indicates what groups of data are sent, to prevent sending data
     // that are not useful in a given state
@@ -2307,12 +2307,12 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
         charging_state_request(&d->charging, &buffer[2], len - 2, &d->state);
         return;
     }
-    case COMMAND_REALTIME_DATA: {
-        cmd_realtime_data(d);
+    case COMMAND_REALTIME_DATA_INTERNAL: {
+        cmd_realtime_data_internal(d);
         return;
     }
-    case COMMAND_REALTIME_DATA_IDS: {
-        cmd_realtime_data_ids();
+    case COMMAND_REALTIME_DATA_INTERNAL_IDS: {
+        cmd_realtime_data_internal_ids();
         return;
     }
     case COMMAND_LIGHTS_CONTROL: {

@@ -25,8 +25,13 @@ In the commands' documentation, the first two bytes with `package_interface_id` 
 
 - [INFO](INFO.md)
 - [LIGHTS_CONTROL](LIGHTS_CONTROL.md)
-- [REALTIME_DATA](REALTIME_DATA.md)
-- [REALTIME_DATA_IDS](REALTIME_DATA_IDS.md)
 - [DATA_RECORD](DATA_RECORD.md)
 - [ALERTS_LIST](ALERTS_LIST.md)
 - [ALERTS_CONTROL](ALERTS_CONTROL.md)
+
+### Internal Package Commands
+
+These commands are internal to the package and compatibility of their interfaces is not guaranteed.
+
+- [REALTIME_DATA_INTERNAL](REALTIME_DATA_INTERNAL.md)
+- [REALTIME_DATA_INTERNAL_IDS](REALTIME_DATA_INTERNAL_IDS.md)
