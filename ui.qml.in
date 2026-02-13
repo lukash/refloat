@@ -636,8 +636,8 @@ Item {
         readonly property int c_HANDTEST: 13
         readonly property int c_LIGHTS_CONTROL: 20
         readonly property int c_FLYWHEEL: 22
-        readonly property int c_REALTIME_DATA: 31
-        readonly property int c_REALTIME_DATA_IDS: 32
+        readonly property int c_REALTIME_DATA_INTERNAL: 31
+        readonly property int c_REALTIME_DATA_INTERNAL_IDS: 32
         readonly property int c_ALERTS_LIST: 35
         readonly property int c_ALERTS_CONTROL: 36
         readonly property int c_DATA_RECORD_REQUEST: 41
@@ -698,11 +698,11 @@ Item {
         }
 
         function sendGetRtData() {
-            vescCommands.sendCustomAppData(createData(2, c_REALTIME_DATA).buffer);
+            vescCommands.sendCustomAppData(createData(2, c_REALTIME_DATA_INTERNAL).buffer);
         }
 
         function sendGetRtDataIds() {
-            vescCommands.sendCustomAppData(createData(2, c_REALTIME_DATA_IDS).buffer);
+            vescCommands.sendCustomAppData(createData(2, c_REALTIME_DATA_INTERNAL_IDS).buffer);
         }
 
         function sendLightsControl(on, headlightsOn) {
@@ -850,7 +850,7 @@ Item {
                 lights.headlightsOn = values & 0b10;
             } else if (msgtype === c_ALERTS_LIST) {
                 alerts.receiveAlertsList(dv, ind);
-            } else if (msgtype === c_REALTIME_DATA) {
+            } else if (msgtype === c_REALTIME_DATA_INTERNAL) {
                 if (state.commsState !== state.comms_Initialized) {
                     // rt data came because another client app requested them,
                     // ignore until info is received
@@ -921,7 +921,7 @@ Item {
                 var running = +(state.pkgState === state.s_Running);
                 rtPlotData.addSample([time, running, wheelslip, sat, fpState].concat(newRt));
                 rtPlotData.makeReady();
-            } else if (msgtype === c_REALTIME_DATA_IDS) {
+            } else if (msgtype === c_REALTIME_DATA_INTERNAL_IDS) {
                 if (state.commsState !== state.comms_RTDataIDs) {
                     return;
                 }
