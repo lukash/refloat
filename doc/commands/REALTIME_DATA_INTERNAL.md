@@ -1,8 +1,10 @@
-# Command: REALTIME_DATA
+# Command: REALTIME_DATA_INTERNAL
 
 **ID**: 31
 
 Provides realtime data from the package to the client.
+
+This command is internal to the package and compatibility of its interface is not guaranteed. Using this command in 3rd party clients is not recommended.
 
 ## Request
 
