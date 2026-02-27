@@ -36,3 +36,10 @@ These commands are internal to the package and compatibility of their interfaces
 
 - [REALTIME_DATA_INTERNAL](REALTIME_DATA_INTERNAL.md)
 - [REALTIME_DATA_INTERNAL_IDS](REALTIME_DATA_INTERNAL_IDS.md)
+
+### Deprecated Commands
+
+These commands are deprecated. They are slated to be removed in the next minor version.
+
+- GET_RTDATA (1): Replace with [REALTIME_DATA](REALTIME_DATA.md)
+- GET_ALLDATA (10): Replace with [REALTIME_DATA](REALTIME_DATA.md)
