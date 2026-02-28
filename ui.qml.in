@@ -33,7 +33,7 @@ import QtQuick.Controls.Material 2.2
 
 Item {
     id: mainItem
-
+    property string tabTitle: "Refloat" 
     property Commands vescCommands: VescIf.commands()
 
     function round(num) {
