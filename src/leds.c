@@ -792,7 +792,7 @@ void leds_init(Leds *leds) {
     led_driver_init(&leds->led_driver);
 }
 
-void leds_setup(Leds *leds, CfgHwLeds *hw_cfg, const CfgLeds *cfg, FootpadSensorState fs_state) {
+void leds_setup(Leds *leds, CfgHwLeds *hw_cfg, const CfgLeds *cfg) {
     uint8_t status_offset = 0;
     uint8_t front_offset = 0;
     uint8_t rear_offset = 0;
@@ -823,9 +823,7 @@ void leds_setup(Leds *leds, CfgHwLeds *hw_cfg, const CfgLeds *cfg, FootpadSensor
         leds->status_strip.length + leds->front_strip.length + leds->rear_strip.length;
 
     uint32_t *led_data = NULL;
-    if (fs_state == FS_BOTH) {
-        log_msg("Both sensors pressed, not initializing LEDs.");
-    } else if (leds->front_strip.length + leds->rear_strip.length > LEDS_FRONT_AND_REAR_COUNT_MAX) {
+    if (leds->front_strip.length + leds->rear_strip.length > LEDS_FRONT_AND_REAR_COUNT_MAX) {
         log_error("Front and rear LED counts exceed maximum.");
     } else if (hw_cfg->mode & LED_MODE_INTERNAL && led_count > 0) {
         led_data = VESC_IF->malloc(sizeof(uint32_t) * led_count);
