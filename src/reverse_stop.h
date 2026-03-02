@@ -40,7 +40,7 @@ void reverse_stop_reset(ReverseStop *rs, float distance);
 void reverse_stop_configure(ReverseStop *rs, float frequency);
 
 void reverse_stop_update(
-    ReverseStop *rs, float distance, float setpoint, const Time *time, bool enabled
+    ReverseStop *rs, float distance, float erpm, float setpoint, const Time *time, bool enabled
 );
 
 float reverse_stop_setpoint(ReverseStop *rs);

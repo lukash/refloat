@@ -904,6 +904,7 @@ static void refloat_thd(void *arg) {
             reverse_stop_update(
                 &d->reverse_stop,
                 d->motor.distance,
+                d->motor.erpm,
                 d->setpoint_target_interpolated,
                 &d->time,
                 d->float_conf.fault_reversestop_enabled

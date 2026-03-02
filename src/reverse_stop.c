@@ -50,9 +50,9 @@ void reverse_stop_configure(ReverseStop *rs, float frequency) {
 }
 
 void reverse_stop_update(
-    ReverseStop *rs, float distance, float setpoint, const Time *time, bool enabled
+    ReverseStop *rs, float distance, float erpm, float setpoint, const Time *time, bool enabled
 ) {
-    if (!enabled && rs->progress.value >= 1.0f) {
+    if ((!enabled || erpm > -200) && rs->progress.value >= 1.0f) {
         rs->start_distance = distance;
         return;
     }
