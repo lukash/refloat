@@ -224,7 +224,7 @@ static void configure(Data *d) {
 
     if (d->state.state == STATE_DISABLED) {
         beep_alert(d, 3, false);
-    } else {
+    } else if (d->state.state != STATE_STARTUP) {
         beep_alert(d, 1, false);
     }
 }
