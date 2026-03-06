@@ -84,8 +84,8 @@ typedef struct {
 
     // Beeper
     int beep_num_left;
-    int beep_duration;
-    int beep_countdown;
+    float beep_duration;
+    time_t beeper_timer;
     int beep_reason;
     bool beeper_enabled;
 

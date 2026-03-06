@@ -108,9 +108,8 @@ void beeper_init() {
 
 void beeper_update(Data *d) {
     if (d->beeper_enabled && (d->beep_num_left > 0)) {
-        d->beep_countdown--;
-        if (d->beep_countdown <= 0) {
-            d->beep_countdown = d->beep_duration;
+        if (timer_older(&d->time, d->beeper_timer, d->beep_duration)) {
+            timer_refresh(&d->time, &d->beeper_timer);
             d->beep_num_left--;
             if (d->beep_num_left & 0x1) {
                 EXT_BEEPER_ON();
@@ -121,21 +120,14 @@ void beeper_update(Data *d) {
     }
 }
 
-void beeper_enable(Data *d, bool enable) {
-    d->beeper_enabled = enable;
-    if (!enable) {
-        EXT_BEEPER_OFF();
-    }
-}
-
 void beep_alert(Data *d, int num_beeps, bool longbeep) {
     if (!d->beeper_enabled) {
         return;
     }
     if (d->beep_num_left == 0) {
         d->beep_num_left = num_beeps * 2 + 1;
-        d->beep_duration = longbeep ? 300 : 80;
-        d->beep_countdown = d->beep_duration;
+        d->beep_duration = longbeep ? 0.25f : 0.05f;
+        timer_refresh(&d->time, &d->beeper_timer);
     }
 }
 
@@ -1235,8 +1227,8 @@ static void data_init(Data *d) {
     d->odometer = VESC_IF->mc_get_odometer();
 
     d->beep_num_left = 0;
-    d->beep_duration = 0;
-    d->beep_countdown = 0;
+    d->beep_duration = 0.0f;
+    d->beeper_timer = 0;
 }
 
 // See also:
