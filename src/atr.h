@@ -34,6 +34,9 @@ typedef struct {
 
     float target;
 
+    EMA transition_target;
+    float transition_boost;
+
     SmoothSetpoint setpoint;
 } ATR;
 
