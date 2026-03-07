@@ -54,6 +54,6 @@ void smooth_setpoint_configure(
 
 void smooth_setpoint_reset(SmoothSetpoint *st);
 
-void smooth_setpoint_update(SmoothSetpoint *st, float target, bool forward, float dt);
+void smooth_setpoint_update(SmoothSetpoint *st, float target, bool forward, float mult, float dt);
 
 void smooth_setpoint_winddown(SmoothSetpoint *st);

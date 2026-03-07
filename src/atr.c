@@ -28,6 +28,7 @@ void atr_init(ATR *atr) {
     atr->ad_alpha2 = 0.0f;
     atr->ad_alpha3 = 0.0f;
 
+    ema_init(&atr->transition_target);
     smooth_setpoint_init(&atr->setpoint);
 
     atr_reset(atr);
@@ -38,6 +39,8 @@ void atr_reset(ATR *atr) {
     atr->speed_boost = 0.0f;
 
     atr->target = 0.0f;
+    ema_reset(&atr->transition_target, 0.0f);
+    atr->transition_boost = 1.0f;
     smooth_setpoint_reset(&atr->setpoint);
 }
 
@@ -53,6 +56,7 @@ void atr_configure(ATR *atr, const RefloatConfig *config, float frequency) {
     atr->ad_alpha2 = ema_calculate_alpha(6.0f, frequency);
     atr->ad_alpha1 = ema_calculate_alpha(1.0f, frequency);
 
+    ema_configure(&atr->transition_target, 6.0f, frequency);
     smooth_setpoint_configure(
         &atr->setpoint,
         config->atr.filter.time_constant,
@@ -139,8 +143,26 @@ void atr_update(
 ) {
     if (!wheelslip) {
         calculate_atr_target(atr, motor, config);
-        smooth_setpoint_update(&atr->setpoint, atr->target, motor->forward, dt);
+
+        ema_update(&atr->transition_target, atr->target);
+
+        float transition_target = atr->transition_target.value;
+        float degrees_diff = fabsf(atr->setpoint.value - transition_target) - 1.0f;
+        // Only apply transition boost if the setpoint and target differ in
+        // signs and the degree diff is greater than 1
+        if (atr->setpoint.value * transition_target < 0 && degrees_diff > 0.0f) {
+            // Scale the transition multiplier linearly from 1 to 2 degrees of difference
+            atr->transition_boost =
+                1.0f + min(degrees_diff, 1.0f) * (config->atr.transition_boost - 1.0f);
+        } else {
+            atr->transition_boost = 1.0f;
+        }
+
+        smooth_setpoint_update(
+            &atr->setpoint, atr->target, motor->forward, atr->transition_boost, dt
+        );
     } else {
         smooth_setpoint_winddown(&atr->setpoint);
+        ema_reset(&atr->transition_target, atr->setpoint.value);
     }
 }
