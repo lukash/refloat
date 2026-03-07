@@ -68,7 +68,7 @@ void smooth_setpoint_reset(SmoothSetpoint *st) {
     st->value = 0.0f;
 }
 
-void smooth_setpoint_update(SmoothSetpoint *st, float target, float dt, bool forward) {
+void smooth_setpoint_update(SmoothSetpoint *st, float target, bool forward, float dt) {
     if (st->is_winddown) {
         st->is_winddown = false;
         st->v1 = st->value;
