@@ -136,7 +136,7 @@ void turn_tilt_update(
 ) {
     if (!wheelslip) {
         calculate_turn_tilt_target(tt, motor, config);
-        smooth_setpoint_update(&tt->setpoint, tt->target, motor->forward, dt);
+        smooth_setpoint_update(&tt->setpoint, tt->target, motor->forward, 1.0f, dt);
     } else {
         smooth_setpoint_winddown(&tt->setpoint);
     }

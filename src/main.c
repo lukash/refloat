@@ -1582,7 +1582,7 @@ static void cmd_runtime_tune(Data *d, unsigned char *cfg, int len) {
 
         split(cfg[8], &h1, &h2);
         d->float_conf.atr_response_boost = ((float) h1) / 10 + 1;
-        d->float_conf.atr_transition_boost = ((float) h2) / 5 + 1;
+        d->float_conf.atr.transition_boost = ((float) h2) / 5 + 1;
 
         split(cfg[9], &h1, &h2);
         d->float_conf.atr_amps_accel_ratio = h1 + 5;
@@ -1660,7 +1660,7 @@ static void cmd_tune_defaults(Data *d) {
     d->float_conf.atr_on_speed = CFG_DFLT_ATR_ON_SPEED;
     d->float_conf.atr_off_speed = CFG_DFLT_ATR_OFF_SPEED;
     d->float_conf.atr_response_boost = CFG_DFLT_ATR_RESPONSE_BOOST;
-    d->float_conf.atr_transition_boost = CFG_DFLT_ATR_TRANSITION_BOOST;
+    d->float_conf.atr.transition_boost = CFG_DFLT_ATR_TRANSITION_BOOST;
     d->float_conf.atr_filter = CFG_DFLT_ATR_FILTER;
     d->float_conf.atr_amps_accel_ratio = CFG_DFLT_ATR_AMPS_ACCEL_RATIO;
     d->float_conf.atr_amps_decel_ratio = CFG_DFLT_ATR_AMPS_DECEL_RATIO;

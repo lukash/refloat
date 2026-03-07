@@ -2400,7 +2400,7 @@ p, li { white-space: pre-wrap; }
             <suffix>x</suffix>
             <vTx>7</vTx>
         </atr_response_boost>
-        <atr_transition_boost>
+        <atr.transition_boost>
             <longName>Tiltback Transition Boost</longName>
             <type>1</type>
             <transmittable>1</transmittable>
@@ -2413,15 +2413,15 @@ p, li { white-space: pre-wrap; }
             <editorDecimalsDouble>1</editorDecimalsDouble>
             <editorScale>1</editorScale>
             <editAsPercentage>0</editAsPercentage>
-            <maxDouble>10</maxDouble>
+            <maxDouble>4</maxDouble>
             <minDouble>1</minDouble>
             <showDisplay>0</showDisplay>
             <stepDouble>0.5</stepDouble>
-            <valDouble>3</valDouble>
+            <valDouble>2</valDouble>
             <vTxDoubleScale>1000</vTxDoubleScale>
             <suffix>x</suffix>
             <vTx>7</vTx>
-        </atr_transition_boost>
+        </atr.transition_boost>
         <atr_filter>
             <longName>Current Filter</longName>
             <type>1</type>
@@ -4422,7 +4422,7 @@ p, li { white-space: pre-wrap; }
         <ser>atr_on_speed_downhill</ser>
         <ser>atr_off_speed_downhill</ser>
         <ser>atr_response_boost</ser>
-        <ser>atr_transition_boost</ser>
+        <ser>atr.transition_boost</ser>
         <ser>atr_filter</ser>
         <ser>atr_amps_accel_ratio</ser>
         <ser>atr_amps_decel_ratio</ser>
@@ -4586,7 +4586,7 @@ p, li { white-space: pre-wrap; }
                     <param>atr_on_speed_downhill</param>
                     <param>atr_off_speed_downhill</param>
                     <param>atr_response_boost</param>
-                    <param>atr_transition_boost</param>
+                    <param>atr.transition_boost</param>
                     <param>::sep::Advanced</param>
                     <param>atr_amps_accel_ratio</param>
                     <param>atr_amps_decel_ratio</param>
