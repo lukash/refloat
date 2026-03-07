@@ -139,7 +139,7 @@ void atr_update(
 ) {
     if (!wheelslip) {
         calculate_atr_target(atr, motor, config);
-        smooth_setpoint_update(&atr->setpoint, atr->target, dt, motor->forward);
+        smooth_setpoint_update(&atr->setpoint, atr->target, motor->forward, dt);
     } else {
         smooth_setpoint_winddown(&atr->setpoint);
     }

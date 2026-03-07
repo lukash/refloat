@@ -90,7 +90,7 @@ void brake_tilt_update(
             bt->target = 0;
         }
 
-        smooth_setpoint_update(&bt->setpoint, bt->target, dt, motor->forward);
+        smooth_setpoint_update(&bt->setpoint, bt->target, motor->forward, dt);
     } else {
         smooth_setpoint_winddown(&bt->setpoint);
     }

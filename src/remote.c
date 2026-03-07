@@ -91,5 +91,5 @@ void remote_update(Remote *remote, const State *state, const RefloatConfig *conf
     }
 
     // The `forward` argument doesn't matter, as up and down speeds are the same
-    smooth_setpoint_update(&remote->setpoint, target, dt, true);
+    smooth_setpoint_update(&remote->setpoint, target, true, dt);
 }
