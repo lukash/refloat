@@ -66,5 +66,5 @@ void torque_tilt_update(
     tt->target =
         fminf(torque_base * strength, config->torquetilt_angle_limit) * sign(motor->torque);
 
-    smooth_setpoint_update(&tt->setpoint, tt->target, motor->forward, dt);
+    smooth_setpoint_update(&tt->setpoint, tt->target, motor->forward, 1.0f, dt);
 }

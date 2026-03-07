@@ -136,5 +136,5 @@ void turn_tilt_update(
         }
     }
 
-    smooth_setpoint_update(&tt->setpoint, tt->target, md->forward, dt);
+    smooth_setpoint_update(&tt->setpoint, tt->target, md->forward, 1.0f, dt);
 }
