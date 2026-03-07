@@ -2139,6 +2139,7 @@ Item {
         ["booster.torque", {"name": "Booster Torque", "color": "#8f2f26", "visible": false}],
         ["atr.accel_diff", {"name": "ATR Accel Diff", "color": "#4f5984", "visible": false}],
         ["atr.speed_boost", {"name": "ATR Speed Boost", "color": "#34633c", "visible": false}],
+        ["atr.transition_boost", {"name": "ATR Transition Boost", "color": "#827029", "visible": false}],
         ["remote.input", {"name": "Remote Throttle", "color": "#525023", "visible": false}],
 
         ["state.running", {"name": "Running", "color": "#3f6620", "visible": false}],
@@ -2157,7 +2158,6 @@ Item {
         "#4bc6af",
         "#a15622",
         "#254f3a",
-        "#827029",
         "#e95314",
         "#69c180",
         "#ce77d2",
