@@ -68,7 +68,7 @@ void smooth_setpoint_reset(SmoothSetpoint *st) {
     st->value = 0.0f;
 }
 
-void smooth_setpoint_update(SmoothSetpoint *st, float target, bool forward, float dt) {
+void smooth_setpoint_update(SmoothSetpoint *st, float target, bool forward, float mult, float dt) {
     if (st->is_winddown) {
         st->is_winddown = false;
         st->v1 = st->value;
@@ -77,14 +77,14 @@ void smooth_setpoint_update(SmoothSetpoint *st, float target, bool forward, floa
 
     bool is_up = (st->value >= 0.0f) == forward;
 
-    st->v1 += st->alpha * (target - st->v1);
-    float delta = st->alpha * (st->v1 - st->value);
+    st->v1 += mult * st->alpha * (target - st->v1);
+    float delta = mult * st->alpha * (st->v1 - st->value);
 
     if (fabsf(delta) > fabsf(st->step) || sign(delta) != sign(st->step)) {
         if (sign(st->value) == sign(delta)) {
-            st->step += st->on_speed_alpha * (delta - st->step);
+            st->step += mult * st->on_speed_alpha * (delta - st->step);
         } else {
-            st->step += st->off_speed_alpha * (delta - st->step);
+            st->step += mult * st->off_speed_alpha * (delta - st->step);
         }
     } else {
         st->step = delta;
@@ -101,7 +101,7 @@ void smooth_setpoint_update(SmoothSetpoint *st, float target, bool forward, floa
         speed_limit = on_speed;
     }
 
-    st->value += sign(st->step) * min(fabsf(st->step), speed_limit * dt);
+    st->value += sign(st->step) * min(fabsf(st->step), mult * speed_limit * dt);
 }
 
 void smooth_setpoint_winddown(SmoothSetpoint *st) {
