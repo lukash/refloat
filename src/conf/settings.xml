@@ -2615,7 +2615,7 @@ p, li { white-space: pre-wrap; }
             <minDouble>0.01</minDouble>
             <showDisplay>0</showDisplay>
             <stepDouble>0.1</stepDouble>
-            <valDouble>0.3</valDouble>
+            <valDouble>0.15</valDouble>
             <vTxDoubleScale>1000</vTxDoubleScale>
             <suffix> s</suffix>
             <vTx>7</vTx>
@@ -2637,7 +2637,7 @@ p, li { white-space: pre-wrap; }
             <minDouble>0.01</minDouble>
             <showDisplay>0</showDisplay>
             <stepDouble>0.1</stepDouble>
-            <valDouble>0.4</valDouble>
+            <valDouble>0.03</valDouble>
             <vTxDoubleScale>1000</vTxDoubleScale>
             <suffix> s</suffix>
             <vTx>7</vTx>
@@ -2659,7 +2659,7 @@ p, li { white-space: pre-wrap; }
             <minDouble>0.01</minDouble>
             <showDisplay>0</showDisplay>
             <stepDouble>0.1</stepDouble>
-            <valDouble>0.05</valDouble>
+            <valDouble>0.03</valDouble>
             <vTxDoubleScale>1000</vTxDoubleScale>
             <suffix> s</suffix>
             <vTx>7</vTx>
