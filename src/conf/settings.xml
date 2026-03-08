@@ -2378,32 +2378,6 @@ p, li { white-space: pre-wrap; }
             <suffix> °/s</suffix>
             <vTx>7</vTx>
         </atr_off_speed_downhill>
-        <atr_response_boost>
-            <longName>Tiltback Response Boost</longName>
-            <type>1</type>
-            <transmittable>1</transmittable>
-            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;React more quickly to ATR responses when at high speeds. When you're riding fast and ATR increases, then you also want it to respond faster. Boost is applied twice: at 2500 and 6000 ERPM.&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;*Note: ERPM = RPM * (Motor Poles / 2)&lt;br /&gt;For an 11&amp;quot; Tire on a Hypercore Motor (30 Poles):&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;2500 ERPM ≈ 5.5 mph ≈ 9 km/h&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;6000 ERPM ≈ 13 mph ≈ 21 km/h&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
-            <cDefine>CFG_DFLT_ATR_RESPONSE_BOOST</cDefine>
-            <editorDecimalsDouble>1</editorDecimalsDouble>
-            <editorScale>1</editorScale>
-            <editAsPercentage>0</editAsPercentage>
-            <maxDouble>2</maxDouble>
-            <minDouble>1</minDouble>
-            <showDisplay>0</showDisplay>
-            <stepDouble>0.1</stepDouble>
-            <valDouble>1.5</valDouble>
-            <vTxDoubleScale>1000</vTxDoubleScale>
-            <suffix>x</suffix>
-            <vTx>7</vTx>
-        </atr_response_boost>
         <atr.transition_boost>
             <longName>Tiltback Transition Boost</longName>
             <type>1</type>
@@ -4426,7 +4400,6 @@ p, li { white-space: pre-wrap; }
         <ser>atr_off_speed</ser>
         <ser>atr_on_speed_downhill</ser>
         <ser>atr_off_speed_downhill</ser>
-        <ser>atr_response_boost</ser>
         <ser>atr.transition_boost</ser>
         <ser>atr_filter</ser>
         <ser>atr_amps_accel_ratio</ser>
@@ -4590,7 +4563,6 @@ p, li { white-space: pre-wrap; }
                     <param>atr_off_speed</param>
                     <param>atr_on_speed_downhill</param>
                     <param>atr_off_speed_downhill</param>
-                    <param>atr_response_boost</param>
                     <param>atr.transition_boost</param>
                     <param>::sep::Advanced</param>
                     <param>atr_amps_accel_ratio</param>
