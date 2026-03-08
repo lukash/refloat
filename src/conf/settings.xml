@@ -265,15 +265,15 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Practically (given your Tiltback speeds and the base Smoothing Time Constant are set to fairly responsive values), setting this very low and riding into an uphill, the board will snap fast into a high setpoint, while setting this to a high value will make the board go into a high setpoint slowly. The speed at which the board will go back to 0° setpoint when you reach the top of the hill will be unaffected. On a downhill it also applies to the initial transition into the negative setpoint.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_ATR_FILTER_ON_SPEED_TIME_CONSTANT</cDefine>
-            <editorDecimalsDouble>2</editorDecimalsDouble>
+            <editorDecimalsDouble>3</editorDecimalsDouble>
             <editorScale>1</editorScale>
             <editAsPercentage>0</editAsPercentage>
-            <maxDouble>5</maxDouble>
+            <maxDouble>1</maxDouble>
             <minDouble>0.01</minDouble>
             <showDisplay>0</showDisplay>
             <stepDouble>0.1</stepDouble>
             <valDouble>0.4</valDouble>
-            <vTxDoubleScale>1000</vTxDoubleScale>
+            <vTxDoubleScale>10000</vTxDoubleScale>
             <suffix> s</suffix>
             <vTx>7</vTx>
         </atr.filter.on_speed_time_constant>
@@ -289,15 +289,15 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Practically (given your Tiltback speeds and the base Smoothing Time Constant are set to fairly responsive values), setting this very low and riding uphill, when you reach the top the board will snap down to 0° setpoint fairly fast. Setting this to a high value will make the board go back to 0° setpoint at the top of the uphill mellow and slow. The speed at which the board will rise to a high setpoint at the start of the uphill will remain unaffected. On a downhill, it also applies to the return transition at the end.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_ATR_FILTER_OFF_SPEED_TIME_CONSTANT</cDefine>
-            <editorDecimalsDouble>2</editorDecimalsDouble>
+            <editorDecimalsDouble>3</editorDecimalsDouble>
             <editorScale>1</editorScale>
             <editAsPercentage>0</editAsPercentage>
-            <maxDouble>5</maxDouble>
+            <maxDouble>1</maxDouble>
             <minDouble>0.01</minDouble>
             <showDisplay>0</showDisplay>
             <stepDouble>0.1</stepDouble>
             <valDouble>0.05</valDouble>
-            <vTxDoubleScale>1000</vTxDoubleScale>
+            <vTxDoubleScale>10000</vTxDoubleScale>
             <suffix> s</suffix>
             <vTx>7</vTx>
         </atr.filter.off_speed_time_constant>
@@ -2486,15 +2486,15 @@ p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Torque Tilt smoothing on speed time constant for transitioning into a more extreme (higher for nose-up, lower for nose-down) setpoint. Defined as time needed for the &lt;span style=&quot; font-style:italic;&quot;&gt;speed&lt;/span&gt; of the setpoint change to reach two thirds of its new target value when transitioning into a more extreme Torque Tilt setpoint. Smoother means less responsive.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_TORQUE_TILT_FILTER_ON_SPEED_TIME_CONSTANT</cDefine>
-            <editorDecimalsDouble>2</editorDecimalsDouble>
+            <editorDecimalsDouble>3</editorDecimalsDouble>
             <editorScale>1</editorScale>
             <editAsPercentage>0</editAsPercentage>
-            <maxDouble>5</maxDouble>
+            <maxDouble>1</maxDouble>
             <minDouble>0.01</minDouble>
             <showDisplay>0</showDisplay>
             <stepDouble>0.1</stepDouble>
             <valDouble>0.4</valDouble>
-            <vTxDoubleScale>1000</vTxDoubleScale>
+            <vTxDoubleScale>10000</vTxDoubleScale>
             <suffix> s</suffix>
             <vTx>7</vTx>
         </torque_tilt.filter.on_speed_time_constant>
@@ -2508,15 +2508,15 @@ p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Torque Tilt smoothing off speed time constant for transitioning back to 0° setpoint. Defined as time needed for the &lt;span style=&quot; font-style:italic;&quot;&gt;speed&lt;/span&gt; of the setpoint change to reach two thirds of its new target value. Smoother means less responsive.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_TORQUE_TILT_FILTER_OFF_SPEED_TIME_CONSTANT</cDefine>
-            <editorDecimalsDouble>2</editorDecimalsDouble>
+            <editorDecimalsDouble>3</editorDecimalsDouble>
             <editorScale>1</editorScale>
             <editAsPercentage>0</editAsPercentage>
-            <maxDouble>5</maxDouble>
+            <maxDouble>1</maxDouble>
             <minDouble>0.01</minDouble>
             <showDisplay>0</showDisplay>
             <stepDouble>0.1</stepDouble>
             <valDouble>0.05</valDouble>
-            <vTxDoubleScale>1000</vTxDoubleScale>
+            <vTxDoubleScale>10000</vTxDoubleScale>
             <suffix> s</suffix>
             <vTx>7</vTx>
         </torque_tilt.filter.off_speed_time_constant>
@@ -2558,15 +2558,15 @@ p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Turn Tilt smoothing on speed time constant for transitioning into a more extreme (higher for nose-up, lower for nose-down) setpoint. Defined as time needed for the &lt;span style=&quot; font-style:italic;&quot;&gt;speed&lt;/span&gt; of the setpoint change to reach two thirds of its new target value when transitioning into a more extreme Turn Tilt setpoint. Smoother means less responsive.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_TURN_TILT_FILTER_ON_SPEED_TIME_CONSTANT</cDefine>
-            <editorDecimalsDouble>2</editorDecimalsDouble>
+            <editorDecimalsDouble>3</editorDecimalsDouble>
             <editorScale>1</editorScale>
             <editAsPercentage>0</editAsPercentage>
-            <maxDouble>5</maxDouble>
+            <maxDouble>1</maxDouble>
             <minDouble>0.01</minDouble>
             <showDisplay>0</showDisplay>
             <stepDouble>0.1</stepDouble>
             <valDouble>0.4</valDouble>
-            <vTxDoubleScale>1000</vTxDoubleScale>
+            <vTxDoubleScale>10000</vTxDoubleScale>
             <suffix> s</suffix>
             <vTx>7</vTx>
         </turn_tilt.filter.on_speed_time_constant>
@@ -2580,15 +2580,15 @@ p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Turn Tilt smoothing off speed time constant for transitioning back to 0° setpoint. Defined as time needed for the &lt;span style=&quot; font-style:italic;&quot;&gt;speed&lt;/span&gt; of the setpoint change to reach two thirds of its new target value. Smoother means less responsive.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_TURN_TILT_FILTER_OFF_SPEED_TIME_CONSTANT</cDefine>
-            <editorDecimalsDouble>2</editorDecimalsDouble>
+            <editorDecimalsDouble>3</editorDecimalsDouble>
             <editorScale>1</editorScale>
             <editAsPercentage>0</editAsPercentage>
-            <maxDouble>5</maxDouble>
+            <maxDouble>1</maxDouble>
             <minDouble>0.01</minDouble>
             <showDisplay>0</showDisplay>
             <stepDouble>0.1</stepDouble>
             <valDouble>0.05</valDouble>
-            <vTxDoubleScale>1000</vTxDoubleScale>
+            <vTxDoubleScale>10000</vTxDoubleScale>
             <suffix> s</suffix>
             <vTx>7</vTx>
         </turn_tilt.filter.off_speed_time_constant>
@@ -2630,15 +2630,15 @@ p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Remote smoothing on speed time constant for transitioning into a more extreme (higher for nose-up, lower for nose-down) setpoint. Defined as time needed for the &lt;span style=&quot; font-style:italic;&quot;&gt;speed&lt;/span&gt; of the setpoint change to reach two thirds of its new target value when transitioning into a more extreme Remote setpoint. Smoother means less responsive.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_REMOTE_FILTER_ON_SPEED_TIME_CONSTANT</cDefine>
-            <editorDecimalsDouble>2</editorDecimalsDouble>
+            <editorDecimalsDouble>3</editorDecimalsDouble>
             <editorScale>1</editorScale>
             <editAsPercentage>0</editAsPercentage>
-            <maxDouble>5</maxDouble>
+            <maxDouble>1</maxDouble>
             <minDouble>0.01</minDouble>
             <showDisplay>0</showDisplay>
             <stepDouble>0.1</stepDouble>
             <valDouble>0.03</valDouble>
-            <vTxDoubleScale>1000</vTxDoubleScale>
+            <vTxDoubleScale>10000</vTxDoubleScale>
             <suffix> s</suffix>
             <vTx>7</vTx>
         </remote.filter.on_speed_time_constant>
@@ -2652,15 +2652,15 @@ p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Remote smoothing off speed time constant for transitioning back to 0° setpoint. Defined as time needed for the &lt;span style=&quot; font-style:italic;&quot;&gt;speed&lt;/span&gt; of the setpoint change to reach two thirds of its new target value. Smoother means less responsive.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_REMOTE_FILTER_OFF_SPEED_TIME_CONSTANT</cDefine>
-            <editorDecimalsDouble>2</editorDecimalsDouble>
+            <editorDecimalsDouble>3</editorDecimalsDouble>
             <editorScale>1</editorScale>
             <editAsPercentage>0</editAsPercentage>
-            <maxDouble>5</maxDouble>
+            <maxDouble>1</maxDouble>
             <minDouble>0.01</minDouble>
             <showDisplay>0</showDisplay>
             <stepDouble>0.1</stepDouble>
             <valDouble>0.03</valDouble>
-            <vTxDoubleScale>1000</vTxDoubleScale>
+            <vTxDoubleScale>10000</vTxDoubleScale>
             <suffix> s</suffix>
             <vTx>7</vTx>
         </remote.filter.off_speed_time_constant>
