@@ -310,7 +310,6 @@ typedef struct {
     float atr_angle_limit;
     float atr_on_speed;
     float atr_off_speed;
-    float atr_response_boost;
     float atr_filter;
     float atr_amps_accel_ratio;
     float atr_amps_decel_ratio;
