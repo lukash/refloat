@@ -1336,7 +1336,6 @@ static void cmd_send_all_data(Data *d, unsigned char mode) {
             state |= 0x8;
         }
         buffer[ind++] = (state & 0xF) + (d->beep_reason << 4);
-        d->beep_reason = BEEP_NONE;
 
         buffer[ind++] = d->footpad.adc1 * 50;
         buffer[ind++] = d->footpad.adc2 * 50;
