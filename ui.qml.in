@@ -2133,8 +2133,8 @@ Item {
         ["mosfet_temp", {"name": "Controller Temp", "color": "#ddae68", "visible": false}],
         ["motor_temp", {"name": "Motor Temp", "color": "#88bb93", "visible": false}],
         ["roll", {"name": "Roll", "color": "#c68f7e", "visible": false}],
-        ["adc1", {"name": "ADC1 Voltage", "color": "#69aad7", "visible": false}],
-        ["adc2", {"name": "ADC2 Voltage", "color": "#4a8772", "visible": false}],
+        ["adc_left", {"name": "Left ADC Voltage", "color": "#69aad7", "visible": false}],
+        ["adc_right", {"name": "Right ADC Voltage", "color": "#4a8772", "visible": false}],
         ["balance_current", {"name": "Balance Current", "color": "#36738b", "visible": false}],
         ["booster.torque", {"name": "Booster Torque", "color": "#8f2f26", "visible": false}],
         ["atr.accel_diff", {"name": "ATR Accel Diff", "color": "#4f5984", "visible": false}],
@@ -6366,8 +6366,8 @@ Item {
                             width: parent.height
                             height: width
 
-                            property real leftVoltage: state.rtData["adc1"]
-                            property real rightVoltage: state.rtData["adc2"]
+                            property real leftVoltage: state.rtData["adc_left"]
+                            property real rightVoltage: state.rtData["adc_right"]
 
                             property real canvasWidth: width * 0.85
                             property real scale: canvasWidth / footpadPath.width
