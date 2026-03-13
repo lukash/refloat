@@ -27,7 +27,8 @@ typedef enum {
 } FootpadSensorState;
 
 typedef struct {
-    float adc1, adc2;
+    float adc_left;
+    float adc_right;
     FootpadSensorState state;
 } FootpadSensor;
 
