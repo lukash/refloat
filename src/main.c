@@ -901,14 +901,19 @@ static void refloat_thd(void *arg) {
             break;
 
         case (STATE_RUNNING):
-            reverse_stop_update(
-                &d->reverse_stop,
-                d->motor.distance,
-                d->motor.erpm,
-                d->setpoint_target_interpolated,
-                &d->time,
-                d->float_conf.fault_reversestop_enabled
-            );
+            // Only update reverse stop after centering, as the centering angle
+            // change registers as negative distance, which progresses Reverse
+            // Stop and causes a jolt right after centering is finished.
+            if (d->state.sat != SAT_CENTERING) {
+                reverse_stop_update(
+                    &d->reverse_stop,
+                    d->motor.distance,
+                    d->motor.erpm,
+                    d->setpoint_target_interpolated,
+                    &d->time,
+                    d->float_conf.fault_reversestop_enabled
+                );
+            }
 
             // Check for faults
             if (check_faults(d)) {
