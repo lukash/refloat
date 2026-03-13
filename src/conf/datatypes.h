@@ -173,6 +173,7 @@ typedef struct {
 
 typedef struct {
     CfgHwLeds leds;
+    bool swap_footpad_adcs;
 } CfgHardware;
 
 typedef struct {
