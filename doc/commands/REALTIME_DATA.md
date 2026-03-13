@@ -49,8 +49,8 @@ The bits in `mask1` and `mask2` control which fields are included in the respons
 | 17  | `pitch`                    | float16/float32 | IMU pitch angle [°].                             |
 | 18  | `balance_pitch`            | float16/float32 | Balance pitch angle [°].                         |
 | 19  | `roll`                     | float16/float32 | IMU roll angle [°].                              |
-| 20  | `adc1`                     | float16/float32 | Footpad sensor ADC1 value [V].                   |
-| 21  | `adc2`                     | float16/float32 | Footpad sensor ADC2 value [V].                   |
+| 20  | `adc_left`                 | float16/float32 | Footpad sensor Left ADC value [V].               |
+| 21  | `adc_right`                | float16/float32 | Footpad sensor Right ADC value [V].              |
 | 22  | `remote_input`             | float16/float32 | Remote control input value (0.0-1.0).            |
 | 23  | `setpoint`                 | float16/float32 | Current balance setpoint [°].                    |
 | 24  | `atr_setpoint`             | float16/float32 | ATR setpoint [°].                                |

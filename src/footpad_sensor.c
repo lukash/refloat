@@ -20,43 +20,29 @@
 #include "vesc_c_if.h"
 
 void footpad_sensor_init(FootpadSensor *fs) {
-    fs->adc1 = 0.0f;
-    fs->adc2 = 0.0f;
+    fs->adc_left = 0.0f;
+    fs->adc_right = 0.0f;
     fs->state = FS_NONE;
 }
 
 void footpad_sensor_update(FootpadSensor *fs, const RefloatConfig *config) {
-    fs->adc1 = VESC_IF->io_read_analog(VESC_PIN_ADC1);
-    // Returns -1.0 if the pin is missing on the hardware
-    fs->adc2 = VESC_IF->io_read_analog(VESC_PIN_ADC2);
-    if (fs->adc2 < 0.0) {
-        fs->adc2 = 0.0;
-    }
+    // io_read_analog() returns -1.0 if the pin is missing on the hardware
+    float adc1 = VESC_IF->io_read_analog(VESC_PIN_ADC1);
+    float adc2 = VESC_IF->io_read_analog(VESC_PIN_ADC2);
 
-    fs->state = FS_NONE;
+    bool adc1_on = config->fault_adc1 == 0.0f || adc1 > config->fault_adc1;
+    bool adc2_on = config->fault_adc2 == 0.0f || adc2 > config->fault_adc2;
 
-    if (config->fault_adc1 == 0 && config->fault_adc2 == 0) {  // No sensors
-        fs->state = FS_BOTH;
-    } else if (config->fault_adc2 == 0) {  // Single sensor on ADC1
-        if (fs->adc1 > config->fault_adc1) {
-            fs->state = FS_BOTH;
-        }
-    } else if (config->fault_adc1 == 0) {  // Single sensor on ADC2
-        if (fs->adc2 > config->fault_adc2) {
-            fs->state = FS_BOTH;
-        }
-    } else {  // Double sensor
-        if (fs->adc1 > config->fault_adc1) {
-            if (fs->adc2 > config->fault_adc2) {
-                fs->state = FS_BOTH;
-            } else {
-                fs->state = FS_LEFT;
-            }
-        } else {
-            if (fs->adc2 > config->fault_adc2) {
-                fs->state = FS_RIGHT;
-            }
-        }
+    if (config->hardware.swap_footpad_adcs) {
+        fs->adc_left = adc2;
+        fs->adc_right = adc1;
+        fs->state = adc1_on ? FS_RIGHT : FS_NONE;
+        fs->state |= adc2_on ? FS_LEFT : FS_NONE;
+    } else {
+        fs->adc_left = adc1;
+        fs->adc_right = adc2;
+        fs->state = adc1_on ? FS_LEFT : FS_NONE;
+        fs->state |= adc2_on ? FS_RIGHT : FS_NONE;
     }
 }
 
