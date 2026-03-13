@@ -56,8 +56,8 @@
     R(imu.pitch, "pitch")                                                                          \
     R(imu.balance_pitch, "balance_pitch")                                                          \
     S(imu.roll, "roll")                                                                            \
-    S(footpad.adc1, "adc1")                                                                        \
-    S(footpad.adc2, "adc2")                                                                        \
+    S(footpad.adc_left, "adc_left")                                                                \
+    S(footpad.adc_right, "adc_right")                                                              \
     S(remote.input, "remote.input")
 
 #define RT_DATA_RUNTIME_ITEMS(S, R)                                                                \

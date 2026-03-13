@@ -1328,8 +1328,8 @@ static void send_realtime_data(Data *d) {
         state |= 0x8;
     }
     buffer[ind++] = (state & 0xF) + (d->beep_reason << 4);
-    buffer_append_float32_auto(buffer, d->footpad.adc1, &ind);
-    buffer_append_float32_auto(buffer, d->footpad.adc2, &ind);
+    buffer_append_float32_auto(buffer, d->footpad.adc_left, &ind);
+    buffer_append_float32_auto(buffer, d->footpad.adc_right, &ind);
 
     // Setpoints
     buffer_append_float32_auto(buffer, d->setpoint, &ind);
@@ -1386,8 +1386,8 @@ static void cmd_send_all_data(Data *d, unsigned char mode) {
         buffer[ind++] = (state & 0xF) + (d->beep_reason << 4);
         d->beep_reason = BEEP_NONE;
 
-        buffer[ind++] = d->footpad.adc1 * 50;
-        buffer[ind++] = d->footpad.adc2 * 50;
+        buffer[ind++] = d->footpad.adc_left * 50;
+        buffer[ind++] = d->footpad.adc_right * 50;
 
         // Setpoints (can be positive or negative)
         buffer[ind++] = d->setpoint * 5 + 128;
@@ -2043,8 +2043,8 @@ enum {
     RT_MASK1_PITCH = 1 << 17,
     RT_MASK1_BALANCE_PITCH = 1 << 18,
     RT_MASK1_ROLL = 1 << 19,
-    RT_MASK1_ADC1 = 1 << 20,
-    RT_MASK1_ADC2 = 1 << 21,
+    RT_MASK1_ADC_LEFT = 1 << 20,
+    RT_MASK1_ADC_RIGHT = 1 << 21,
     RT_MASK1_REMOTE_INPUT = 1 << 22,
     RT_MASK1_SETPOINT = 1 << 23,
     RT_MASK1_ATR_SETPOINT = 1 << 24,
@@ -2128,8 +2128,8 @@ static void cmd_realtime_data(Data *d, uint8_t *buf, int len) {
     add_rt_item(buffer, &ind, mask1, RT_MASK1_PITCH, d->imu.pitch, use_f32);
     add_rt_item(buffer, &ind, mask1, RT_MASK1_BALANCE_PITCH, d->imu.balance_pitch, use_f32);
     add_rt_item(buffer, &ind, mask1, RT_MASK1_ROLL, d->imu.roll, use_f32);
-    add_rt_item(buffer, &ind, mask1, RT_MASK1_ADC1, d->footpad.adc1, use_f32);
-    add_rt_item(buffer, &ind, mask1, RT_MASK1_ADC2, d->footpad.adc2, use_f32);
+    add_rt_item(buffer, &ind, mask1, RT_MASK1_ADC_LEFT, d->footpad.adc_left, use_f32);
+    add_rt_item(buffer, &ind, mask1, RT_MASK1_ADC_RIGHT, d->footpad.adc_right, use_f32);
     add_rt_item(buffer, &ind, mask1, RT_MASK1_REMOTE_INPUT, d->remote.input, use_f32);
     add_rt_item(buffer, &ind, mask1, RT_MASK1_SETPOINT, d->setpoint, use_f32);
     add_rt_item(buffer, &ind, mask1, RT_MASK1_ATR_SETPOINT, d->atr.setpoint.value, use_f32);
