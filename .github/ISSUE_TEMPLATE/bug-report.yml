@@ -1,0 +1,21 @@
+name: Bug report
+description: File a bug report.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please make sure you are providing sufficient details for the report to be useful, written concisely. If applicable, provide a set of steps to reproduce. If unsure, get in touch on [discord](https://discord.com/channels/1346864089170710739/1347601377815429151).
+  - type: input
+    id: version
+    attributes:
+      label: Refloat version
+      description: As displayed at the bottom of the Refloat UI tab.
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Problem description
+    validations:
+      required: true

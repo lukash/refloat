@@ -1,0 +1,14 @@
+name: Feature request
+description: Only after discussing your idea on discord.
+labels: ["feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Feature requests need to be discussed on [discord](https://discord.com/channels/1346864089170710739/1347601377815429151) first. If you don't have discord, you can make a post on [pev.dev](https://pev.dev/c/package-development/20) and tag me (riddimrider) or contact me via [email](mailto:lukkash@email.cz).
+  - type: textarea
+    id: description
+    attributes:
+      label: Feature description
+    validations:
+      required: true
