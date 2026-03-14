@@ -2035,39 +2035,40 @@ enum {
     RT_MASK1_DIR_CURRENT = 1 << 9,
     RT_MASK1_FILT_CURRENT = 1 << 10,
     RT_MASK1_DUTY_CYCLE = 1 << 11,
-    RT_MASK1_BATT_VOLTAGE = 1 << 12,
-    RT_MASK1_BATT_CURRENT = 1 << 13,
-    RT_MASK1_MOSFET_TEMP = 1 << 14,
-    RT_MASK1_MOTOR_TEMP = 1 << 15,
-    RT_MASK1_PITCH = 1 << 16,
-    RT_MASK1_BALANCE_PITCH = 1 << 17,
-    RT_MASK1_ROLL = 1 << 18,
-    RT_MASK1_ADC1 = 1 << 19,
-    RT_MASK1_ADC2 = 1 << 20,
-    RT_MASK1_REMOTE_INPUT = 1 << 21,
-    RT_MASK1_SETPOINT = 1 << 22,
-    RT_MASK1_ATR_SETPOINT = 1 << 23,
-    RT_MASK1_BRAKE_TILT_SETPOINT = 1 << 24,
-    RT_MASK1_TORQUE_TILT_SETPOINT = 1 << 25,
-    RT_MASK1_TURN_TILT_SETPOINT = 1 << 26,
-    RT_MASK1_REMOTE_SETPOINT = 1 << 27,
-    RT_MASK1_BALANCE_CURRENT = 1 << 28,
+    RT_MASK1_BATTERY_VOLTAGE = 1 << 12,
+    RT_MASK1_BATTERY_CURRENT = 1 << 13,
+    RT_MASK1_BATTERY_SOC = 1 << 14,
+    RT_MASK1_MOSFET_TEMP = 1 << 15,
+    RT_MASK1_MOTOR_TEMP = 1 << 16,
+    RT_MASK1_PITCH = 1 << 17,
+    RT_MASK1_BALANCE_PITCH = 1 << 18,
+    RT_MASK1_ROLL = 1 << 19,
+    RT_MASK1_ADC1 = 1 << 20,
+    RT_MASK1_ADC2 = 1 << 21,
+    RT_MASK1_REMOTE_INPUT = 1 << 22,
+    RT_MASK1_SETPOINT = 1 << 23,
+    RT_MASK1_ATR_SETPOINT = 1 << 24,
+    RT_MASK1_BRAKE_TILT_SETPOINT = 1 << 25,
+    RT_MASK1_TORQUE_TILT_SETPOINT = 1 << 26,
+    RT_MASK1_TURN_TILT_SETPOINT = 1 << 27,
+    RT_MASK1_REMOTE_SETPOINT = 1 << 28,
+    RT_MASK1_BALANCE_CURRENT = 1 << 29,
 };
 
 enum {
     RT_MASK2_ODOMETER = 1 << 0,
     RT_MASK2_DISTANCE_ABS = 1 << 1,
-    RT_MASK2_BATTERY_LEVEL = 1 << 2,
-    RT_MASK2_CHARGING_VOLTAGE = 1 << 3,
-    RT_MASK2_CHARGING_CURRENT = 1 << 4,
-    RT_MASK2_AMP_HOURS = 1 << 5,
-    RT_MASK2_AMP_HOURS_CHARGED = 1 << 6,
-    RT_MASK2_WATT_HOURS = 1 << 7,
-    RT_MASK2_WATT_HOURS_CHARGED = 1 << 8,
+    RT_MASK2_CHARGING_VOLTAGE = 1 << 2,
+    RT_MASK2_CHARGING_CURRENT = 1 << 3,
+    RT_MASK2_AMP_HOURS = 1 << 4,
+    RT_MASK2_AMP_HOURS_CHARGED = 1 << 5,
+    RT_MASK2_WATT_HOURS = 1 << 6,
+    RT_MASK2_WATT_HOURS_CHARGED = 1 << 7,
+    RT_MASK2_MOTOR_ID = 1 << 8,  // The FOC direct axis motor current
 };
 
 static void cmd_realtime_data(Data *d, uint8_t *buf, int len) {
-    if (len < 9) {
+    if (len < 5) {
         return;
     }
 
@@ -2076,10 +2077,14 @@ static void cmd_realtime_data(Data *d, uint8_t *buf, int len) {
     bool use_f32 = control_flags & 0x1;
 
     uint32_t mask1 = buffer_get_uint32(buf, &ind);
-    uint32_t mask2 = buffer_get_uint32(buf, &ind);
+    uint32_t mask2 = 0;
 
-    // 9 header + 4 time + (64 fields * 4 bytes) = 269 bytes
-    static const int bufsize = 269;
+    if (len >= 9) {
+        buffer_get_uint32(buf, &ind);
+    }
+
+    // 9B header + 4B time + (65 fields * 4B)
+    static const int bufsize = 273;
     uint8_t buffer[bufsize];
     ind = 0;
 
@@ -2104,14 +2109,20 @@ static void cmd_realtime_data(Data *d, uint8_t *buf, int len) {
         );
     }
 
+    // MASK1
     add_rt_item(buffer, &ind, mask1, RT_MASK1_SPEED, d->motor.speed, use_f32);
     add_rt_item(buffer, &ind, mask1, RT_MASK1_ERPM, d->motor.erpm, use_f32);
     add_rt_item(buffer, &ind, mask1, RT_MASK1_CURRENT, d->motor.current, use_f32);
     add_rt_item(buffer, &ind, mask1, RT_MASK1_DIR_CURRENT, d->motor.dir_current, use_f32);
     add_rt_item(buffer, &ind, mask1, RT_MASK1_FILT_CURRENT, d->motor.filt_current.value, use_f32);
     add_rt_item(buffer, &ind, mask1, RT_MASK1_DUTY_CYCLE, d->motor.duty_cycle.value, use_f32);
-    add_rt_item(buffer, &ind, mask1, RT_MASK1_BATT_VOLTAGE, d->motor.batt_voltage, use_f32);
-    add_rt_item(buffer, &ind, mask1, RT_MASK1_BATT_CURRENT, d->motor.batt_current.value, use_f32);
+    add_rt_item(buffer, &ind, mask1, RT_MASK1_BATTERY_VOLTAGE, d->motor.batt_voltage, use_f32);
+    add_rt_item(
+        buffer, &ind, mask1, RT_MASK1_BATTERY_CURRENT, d->motor.batt_current.value, use_f32
+    );
+    add_rt_item(
+        buffer, &ind, mask1, RT_MASK1_BATTERY_SOC, VESC_IF->mc_get_battery_level(NULL), use_f32
+    );
     add_rt_item(buffer, &ind, mask1, RT_MASK1_MOSFET_TEMP, d->motor.mosfet_temp, use_f32);
     add_rt_item(buffer, &ind, mask1, RT_MASK1_MOTOR_TEMP, d->motor.motor_temp, use_f32);
     add_rt_item(buffer, &ind, mask1, RT_MASK1_PITCH, d->imu.pitch, use_f32);
@@ -2134,37 +2145,36 @@ static void cmd_realtime_data(Data *d, uint8_t *buf, int len) {
     add_rt_item(buffer, &ind, mask1, RT_MASK1_REMOTE_SETPOINT, d->remote.setpoint.value, use_f32);
     add_rt_item(buffer, &ind, mask1, RT_MASK1_BALANCE_CURRENT, d->balance_current.value, use_f32);
 
-    if (mask1 & RT_MASK2_ODOMETER) {
+    // MASK2
+    if (mask2 & RT_MASK2_ODOMETER) {
         buffer_append_uint32(buffer, VESC_IF->mc_get_odometer(), &ind);
     }
     add_rt_item(
-        buffer, &ind, mask1, RT_MASK2_DISTANCE_ABS, VESC_IF->mc_get_distance_abs(), use_f32
+        buffer, &ind, mask2, RT_MASK2_DISTANCE_ABS, VESC_IF->mc_get_distance_abs(), use_f32
     );
-    add_rt_item(
-        buffer, &ind, mask1, RT_MASK2_BATTERY_LEVEL, VESC_IF->mc_get_battery_level(NULL), use_f32
-    );
-    add_rt_item(buffer, &ind, mask1, RT_MASK2_CHARGING_VOLTAGE, d->charging.voltage, use_f32);
-    add_rt_item(buffer, &ind, mask1, RT_MASK2_CHARGING_CURRENT, d->charging.current, use_f32);
-    add_rt_item(buffer, &ind, mask1, RT_MASK2_AMP_HOURS, VESC_IF->mc_get_amp_hours(false), use_f32);
+    add_rt_item(buffer, &ind, mask2, RT_MASK2_CHARGING_VOLTAGE, d->charging.voltage, use_f32);
+    add_rt_item(buffer, &ind, mask2, RT_MASK2_CHARGING_CURRENT, d->charging.current, use_f32);
+    add_rt_item(buffer, &ind, mask2, RT_MASK2_AMP_HOURS, VESC_IF->mc_get_amp_hours(false), use_f32);
     add_rt_item(
         buffer,
         &ind,
-        mask1,
+        mask2,
         RT_MASK2_AMP_HOURS_CHARGED,
         VESC_IF->mc_get_amp_hours_charged(false),
         use_f32
     );
     add_rt_item(
-        buffer, &ind, mask1, RT_MASK2_WATT_HOURS, VESC_IF->mc_get_watt_hours(false), use_f32
+        buffer, &ind, mask2, RT_MASK2_WATT_HOURS, VESC_IF->mc_get_watt_hours(false), use_f32
     );
     add_rt_item(
         buffer,
         &ind,
-        mask1,
+        mask2,
         RT_MASK2_WATT_HOURS_CHARGED,
         VESC_IF->mc_get_watt_hours_charged(false),
         use_f32
     );
+    add_rt_item(buffer, &ind, mask2, RT_MASK2_MOTOR_ID, VESC_IF->foc_get_id(), use_f32);
 
     SEND_APP_DATA(buffer, bufsize, ind);
 }
