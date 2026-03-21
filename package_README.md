@@ -1,6 +1,8 @@
-# Refloat
+# Refloat 1.3 feature preview 1
 
 A full-featured self-balancing skateboard package.
+
+This is a feature preview of the upcoming 1.3 version, meant to showcase new features and gather feedback.
 
 ## New in 1.3
 This version reworks a lot of the core control mechanisms and corrects a number of minor inaccuracies, which impacts behavior. Due to this, as well as due to the added Setpoint Smoothing, boards will behave slightly differently and tunes might need adjusting.
@@ -11,7 +13,7 @@ Changelog highlights:
 - Compensation for different motors' torque constant (6.06+)
 - Setpoint smoothing for all tilts (Torque Tilt, ATR, Turn Tilt, Brake Tilt, Remote)
 
-For more details, read the [1.3 release post]().
+For more details, read the [1.3-preview1 release post](https://pev.dev/t/relfoat-1-3-feature-preview-1-timing-rework-and-setpoint-smoothing/2959).
 
 ## Installation
 ### Upgrading
