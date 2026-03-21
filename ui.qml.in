@@ -2142,6 +2142,9 @@ Item {
         ["atr.transition_boost", {"name": "ATR Transition Boost", "color": "#827029", "visible": false}],
         ["remote.input", {"name": "Remote Throttle", "color": "#525023", "visible": false}],
 
+        ["control.dt", {"name": "Control Loop dt", "color": "#e95314", "visible": false}],
+        ["control.freq", {"name": "Control Loop Frequency", "color": "#69c180", "visible": false}],
+
         ["state.running", {"name": "Running", "color": "#3f6620", "visible": false}],
         ["state.wheelslip", {"name": "Wheelslip", "color": "#893075", "visible": false}],
         ["footpad.state", {"name": "Footpad State", "color": "#584f99", "visible": false}],
@@ -2158,8 +2161,6 @@ Item {
         "#4bc6af",
         "#a15622",
         "#254f3a",
-        "#e95314",
-        "#69c180",
         "#ce77d2",
         "#859b3b",
         "#dd4044",

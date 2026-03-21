@@ -36,13 +36,8 @@
 // the UI).
 
 #define RT_DATA_ITEMS(S, R)                                                                        \
-    S(main_t.frequency.value, "main_frequency")                                                    \
-    S(main_t.recalcs, "main_recalcs")                                                              \
-    S(main_t.filter_frequency, "main_fltr_freq")                                                   \
-    R(imu_t.dt, "imu_dt")                                                                          \
-    R(imu_t.frequency.value, "imu_frequency")                                                      \
-    S(imu_t.recalcs, "imu_recalcs")                                                                \
-    S(imu_t.filter_frequency, "imu_fltr_freq")                                                     \
+    R(imu_t.dt, "control.dt")                                                                      \
+    R(imu_t.frequency.value, "control.freq")                                                       \
     S(motor.speed, "speed")                                                                        \
     R(motor.erpm, "erpm")                                                                          \
     S(motor.current, "current")                                                                    \
