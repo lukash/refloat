@@ -704,7 +704,7 @@ static void reset_led_bars(
 
 static bool headlights_should_be_on(const Leds *leds) {
     return (leds->state.state == STATE_RUNNING && leds->state.mode != MODE_FLYWHEEL) &&
-        leds->cfg->headlights_on;
+        leds->runtime_status.headlights_enabled;
 }
 
 static const LedBar *target_bar(const Leds *leds, bool flip) {
@@ -767,9 +767,14 @@ void leds_init(Leds *leds) {
     leds->status_on_front_idle_time = 0.0f;
     leds->board_is_upright = false;
 
-    leds->split_distance = 0.0f;
+    leds->runtime_status.enabled = false;
+    leds->runtime_status.headlights_enabled = false;
+    leds->runtime_status_overriden.enabled = false;
+    leds->runtime_status_overriden.headlights_enabled = false;
+
     leds->headlights_on = false;
     leds->direction_forward = true;
+    leds->split_distance = 0.0f;
     leds->headlights_time = 0.0f;
     leds->animation_start = 0;
 
@@ -872,9 +877,30 @@ void leds_configure(Leds *leds, const CfgLeds *cfg) {
     leds->headlights_trans.transition = cfg->headlights_transition;
     leds->dir_trans.transition = cfg->direction_transition;
 
+    if (!leds->runtime_status_overriden.enabled) {
+        leds->runtime_status.enabled = cfg->on;
+    }
+    if (!leds->runtime_status_overriden.headlights_enabled) {
+        leds->runtime_status.headlights_enabled = cfg->headlights_on;
+    }
+
     float current_time = VESC_IF->system_time();
     leds->status_idle_time = current_time;
     leds->status_on_front_idle_time = current_time;
+}
+
+const LedsRuntimeStatus *leds_get_runtime_status(const Leds *leds) {
+    return &leds->runtime_status;
+}
+
+void leds_set_enabled(Leds *leds, bool value) {
+    leds->runtime_status.enabled = value;
+    leds->runtime_status_overriden.enabled = true;
+}
+
+void leds_set_headlights_enabled(Leds *leds, bool value) {
+    leds->runtime_status.headlights_enabled = value;
+    leds->runtime_status_overriden.headlights_enabled = true;
 }
 
 void leds_update(Leds *leds, const State *state, FootpadSensorState fs_state) {
@@ -891,7 +917,7 @@ void leds_update(Leds *leds, const State *state, FootpadSensorState fs_state) {
         return;
     }
 
-    if (leds->cfg->on) {
+    if (leds->runtime_status.enabled) {
         if (leds->on_off_fade == 0.0f) {
             full_animation_reset(leds, current_time);
         }
@@ -951,7 +977,7 @@ void leds_update(Leds *leds, const State *state, FootpadSensorState fs_state) {
 
     // status brightness
     float status_brightness = leds->cfg->status.brightness_headlights_off;
-    if (leds->cfg->headlights_on) {
+    if (leds->runtime_status.headlights_enabled) {
         status_brightness = leds->cfg->status.brightness_headlights_on;
     }
     if (leds->status_idle_blend > 0.0f) {

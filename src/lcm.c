@@ -34,17 +34,20 @@ void lcm_init(LcmData *lcm, CfgHwLeds *hw_cfg) {
     lcm->lights_off_when_lifted = true;
 }
 
-void lcm_configure(LcmData *lcm, const CfgLeds *cfg) {
+void lcm_configure(LcmData *lcm, const Leds *leds) {
     if (!lcm->enabled) {
         return;
     }
 
-    if (!cfg->on) {
+    const CfgLeds *cfg = leds->cfg;
+    const LedsRuntimeStatus *status = leds_get_runtime_status(leds);
+
+    if (!status->enabled) {
         lcm->brightness = 0.0f;
         lcm->brightness_idle = 0.0f;
         lcm->status_brightness = 0.0f;
     } else {
-        if (cfg->headlights_on) {
+        if (status->headlights_enabled) {
             lcm->brightness = cfg->headlights.brightness * 100;
             lcm->status_brightness = cfg->status.brightness_headlights_on * 100;
         } else {

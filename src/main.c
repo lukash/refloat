@@ -178,8 +178,6 @@ static void reconfigure(Data *d) {
 static void configure(Data *d) {
     state_set_disabled(&d->state, d->float_conf.disabled);
 
-    lcm_configure(&d->lcm, &d->float_conf.leds);
-
     // Loop time in microseconds
     d->loop_time_us = 1e6 / d->float_conf.hertz;
 
@@ -214,6 +212,8 @@ static void configure(Data *d) {
 
     reconfigure(d);
 
+    lcm_configure(&d->lcm, &d->leds);
+
     if (d->state.state == STATE_DISABLED) {
         beep_alert(d, 3, false);
     } else if (d->state.state != STATE_STARTUP) {
@@ -221,9 +221,9 @@ static void configure(Data *d) {
     }
 }
 
-static void leds_headlights_switch(CfgLeds *cfg_leds, LcmData *lcm, bool headlights_on) {
-    cfg_leds->headlights_on = headlights_on;
-    lcm_configure(lcm, cfg_leds);
+static void leds_headlights_switch(Leds *leds, LcmData *lcm, bool headlights_on) {
+    leds_set_headlights_enabled(leds, headlights_on);
+    lcm_configure(lcm, leds);
 }
 
 static void reset_runtime_vars(Data *d) {
@@ -964,14 +964,15 @@ static void refloat_thd(void *arg) {
             }
 
             if (d->float_conf.hardware.leds.mode != LED_MODE_OFF) {
-                if (!d->leds.cfg->headlights_on &&
+                const LedsRuntimeStatus *led_status = leds_get_runtime_status(&d->leds);
+                if (!led_status->headlights_enabled &&
                     konami_check(&d->headlights_on_konami, &d->leds, &d->footpad, &d->time)) {
-                    leds_headlights_switch(&d->float_conf.leds, &d->lcm, true);
+                    leds_headlights_switch(&d->leds, &d->lcm, true);
                 }
 
-                if (d->leds.cfg->headlights_on &&
+                if (led_status->headlights_enabled &&
                     konami_check(&d->headlights_off_konami, &d->leds, &d->footpad, &d->time)) {
-                    leds_headlights_switch(&d->float_conf.leds, &d->lcm, false);
+                    leds_headlights_switch(&d->leds, &d->lcm, false);
                 }
             }
 
@@ -2028,7 +2029,7 @@ static void cmd_alerts_control(AlertTracker *at, uint8_t *buf, size_t len) {
     }
 }
 
-static void lights_control_request(CfgLeds *leds, uint8_t *buffer, size_t len, LcmData *lcm) {
+static void lights_control_request(Leds *leds, uint8_t *buffer, size_t len, LcmData *lcm) {
     if (len < 5) {
         return;
     }
@@ -2040,25 +2041,27 @@ static void lights_control_request(CfgLeds *leds, uint8_t *buffer, size_t len, L
         uint8_t value = buffer[ind++];
 
         if (mask & 0x1) {
-            leds->on = value & 0x1;
+            leds_set_enabled(leds, value & 0x1);
         }
 
         if (mask & 0x2) {
-            leds->headlights_on = value & 0x2;
+            leds_set_headlights_enabled(leds, value & 0x2);
         }
 
         lcm_configure(lcm, leds);
     }
 }
 
-static void lights_control_response(const CfgLeds *leds) {
+static void lights_control_response(const Leds *leds) {
     static const int bufsize = 3;
     uint8_t buffer[bufsize];
     int32_t ind = 0;
 
     buffer[ind++] = 101;  // Package ID
     buffer[ind++] = COMMAND_LIGHTS_CONTROL;
-    buffer[ind++] = leds->headlights_on << 1 | leds->on;
+
+    const LedsRuntimeStatus *status = leds_get_runtime_status(leds);
+    buffer[ind++] = status->headlights_enabled << 1 | status->enabled;
 
     SEND_APP_DATA(buffer, bufsize, ind);
 }
@@ -2273,8 +2276,8 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
         return;
     }
     case COMMAND_LIGHTS_CONTROL: {
-        lights_control_request(&d->float_conf.leds, &buffer[2], len - 2, &d->lcm);
-        lights_control_response(&d->float_conf.leds);
+        lights_control_request(&d->leds, &buffer[2], len - 2, &d->lcm);
+        lights_control_response(&d->leds);
         return;
     }
     case COMMAND_DATA_RECORD_REQUEST: {

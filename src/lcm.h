@@ -18,6 +18,7 @@
 #pragma once
 
 #include "footpad_sensor.h"
+#include "leds.h"
 #include "motor_data.h"
 #include "state.h"
 
@@ -50,7 +51,7 @@ typedef struct {
 
 void lcm_init(LcmData *lcm, CfgHwLeds *hw_cfg);
 
-void lcm_configure(LcmData *lcm, const CfgLeds *cfg);
+void lcm_configure(LcmData *lcm, const Leds *leds);
 
 /**
  * Poll request from LCM with any data that need to be passed to the package.
