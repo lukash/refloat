@@ -1041,6 +1041,10 @@ Item {
 
     component UIHint : Item {
         id: hint
+        // Workaround: Dynamically added SwipeView items are all visible at x=0
+        // until SwipeView preloads them. Only show when properly positioned.
+        visible: SwipeView.view ? (SwipeView.isCurrentItem || SwipeView.isPreviousItem || SwipeView.isNextItem) : false
+
         property var target
         property real targetX
         property real targetY
