@@ -22,6 +22,7 @@
 
 static void start_recording(DataRecord *dr) {
     circular_buffer_clear(&dr->buffer);
+    dr->decimation_counter = 0;
     dr->recording = true;
 }
 
@@ -35,10 +36,11 @@ typedef struct {
     size_t length;
 } DataBufferInfo;
 
-void data_recorder_init(DataRecord *dr) {
+void data_recorder_init(DataRecord *dr, uint16_t imu_sample_rate) {
     dr->recording = false;
     dr->autostart = true;
     dr->autostop = true;
+    dr->decimation_counter = 0;
 
     // fetch information about the data buffer, it's stored at the end of the
     // VESC interface memory area
@@ -62,10 +64,20 @@ void data_recorder_init(DataRecord *dr) {
 
     dr->enabled = true;
     size_t size = buffer_info->length;
-    size_t sample_nr = size / sizeof(Sample);
+    dr->sample_count = size / sizeof(Sample);
     uint8_t *buffer = buffer_info->buffer;
-    circular_buffer_init(&dr->buffer, sizeof(Sample), sample_nr, buffer);
-    log_msg("Data Record buffer size: %uB (%u samples)", size, sample_nr);
+    circular_buffer_init(&dr->buffer, sizeof(Sample), dr->sample_count, buffer);
+
+    dr->sample_rate = imu_sample_rate;
+
+    // calculate decimation so that the recorded time period is at least 10 seconds
+    dr->decimation = max(10 * imu_sample_rate / dr->sample_count, 1);
+
+    log_msg("Data Record buffer size: %uB (%u samples)", size, dr->sample_count);
+}
+
+void data_recorder_set_sample_rate(DataRecord *dr, uint16_t sample_rate) {
+    dr->sample_rate = sample_rate;
 }
 
 bool data_recorder_has_capability(const DataRecord *dr) {
@@ -88,6 +100,11 @@ void data_recorder_sample(DataRecord *dr, const Data *d, time_t time) {
     if (!dr->enabled || !dr->recording) {
         return;
     }
+
+    if (++dr->decimation_counter < dr->decimation) {
+        return;
+    }
+    dr->decimation_counter = 0;
 
     uint8_t flags = d->state.sat << 4 | d->footpad.state << 2;
     flags |= d->state.wheelslip << 1 | (d->state.state == STATE_RUNNING);
@@ -134,15 +151,18 @@ typedef enum {
 } DataRecordCommands;
 
 static void send_status(const DataRecord *dr) {
-    uint8_t buf[4];
+    uint8_t buf[7];
     int32_t ind = 0;
 
     buf[ind++] = 101;  // Package ID
     buf[ind++] = COMMAND_DATA_RECORD;
     buf[ind++] = dr->enabled;
     buf[ind++] = dr->autostop << 2 | dr->autostart << 1 | dr->recording;
+    buf[ind++] = dr->decimation;
+    uint32_t centiseconds = (uint32_t) dr->sample_count * 100 / dr->sample_rate;
+    buffer_append_uint16(buf, min(centiseconds, 65535u), &ind);
 
-    SEND_APP_DATA(buf, 4, ind);
+    SEND_APP_DATA(buf, 7, ind);
 }
 
 static void send_header(DataRecord *dr) {
@@ -226,6 +246,8 @@ void data_recorder_request(DataRecord *dr, uint8_t *buffer, size_t len) {
                 dr->autostart = value;
             } else if (sub_mode == 3) {  // set autostop on disengage
                 dr->autostop = value;
+            } else if (sub_mode == 4) {  // set decimation (record every Nth sample)
+                dr->decimation = value > 0 ? value : 1;
             }
         }
         // sub_mode 0 is a no-op, just return the status
