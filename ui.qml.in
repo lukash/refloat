@@ -798,6 +798,7 @@ Item {
         readonly property int dr_RECORD: 1
         readonly property int dr_AUTOSTART: 2
         readonly property int dr_AUTOSTOP: 3
+        readonly property int dr_DECIMATION: 4
 
         // @param key One of the above dr_ properties
         // @param value Value to set, true or false
@@ -955,6 +956,8 @@ Item {
                 state.extraRecording = flags & 0x1;
                 state.extraRecAutostart = flags & 0x2;
                 state.extraRecAutostop = flags & 0x4;
+                state.extraRecDecimation = dv.getUint8(ind++);
+                state.extraRecDuration = dv.getUint16(ind) / 100; ind += 2;
             } else if (msgtype === c_DATA_RECORD_HEADER) {
                 recordedPlotData.receiveHeader(dv, ind);
             } else if (msgtype === c_DATA_RECORD_DATA) {
@@ -1271,7 +1274,7 @@ Item {
             UIHintText {
                 anchors.horizontalCenter: subject.horizontalCenter
                 anchors.bottom: subject.top
-                text: "This button indicates whether the board is recording. You can use it to start and stop the recording manually.\n\nThe board automatically starts recording when engaged and stops recording on disengage. You can disable the autostart and autostop functionality by long-pressing the button.\n\nIf you nosedive, check the recording before engaging again!"
+                text: "This button indicates whether the board is recording. You can use it to start and stop the recording manually.\n\nThe board automatically starts recording when engaged and stops recording on disengage. Control this and the recording duration by long-pressing the button.\n\nIf you nosedive, check the recording before engaging again!"
                 visible: stage == 2
             }
 
@@ -1743,6 +1746,8 @@ Item {
         property bool extraRecording: false
         property bool extraRecAutostart: false
         property bool extraRecAutostop: false
+        property int extraRecDecimation: 1
+        property real extraRecDuration: 0
 
         property int ticksPerSecond
 
@@ -2959,6 +2964,14 @@ Item {
                 Menu {
                     id: recMenu
 
+                    property real recordDuration
+
+                    onVisibleChanged: {
+                        if (visible) {
+                            recordDuration = mainItem.state.extraRecDuration;
+                        }
+                    }
+
                     CheckBox {
                         text: "Autostart"
                         checkable: true
@@ -2976,6 +2989,35 @@ Item {
                             commands.sendDataRecordControl(commands.dr_AUTOSTOP, checked);
                         }
                     }
+
+                    ColumnLayout {
+                    NText {
+                        Layout.fillWidth: true
+                        horizontalAlignment: TextInput.AlignHCenter
+                        text: "Decimation"
+                    }
+
+                    LText {
+                        Layout.fillWidth: true
+                        Layout.topMargin: 2
+                        Layout.bottomMargin: -5
+                        horizontalAlignment: TextInput.AlignHCenter
+                        text: Math.round(decimationSlider.value) + " (" + (recMenu.recordDuration * decimationSlider.value).toFixed(1) + "s)"
+                    }
+
+                    Slider {
+                        id: decimationSlider
+                        from: 1
+                        to: recMenu.recordDuration > 0 ? Math.floor(120 / recMenu.recordDuration) : 100
+                        value: mainItem.state.extraRecDecimation
+                        stepSize: 1
+                        snapMode: Slider.SnapAlways
+
+                        onMoved: {
+                            commands.sendDataRecordControl(commands.dr_DECIMATION, value);
+                        }
+                    }
+                }
                 }
             }
 

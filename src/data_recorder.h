@@ -29,7 +29,9 @@
 //
 // See: /doc/realtime_value_tracking.md
 
-void data_recorder_init(DataRecord *dr);
+void data_recorder_init(DataRecord *dr, uint16_t imu_sample_rate);
+
+void data_recorder_set_sample_rate(DataRecord *dr, uint16_t sample_rate);
 
 bool data_recorder_has_capability(const DataRecord *dr);
 

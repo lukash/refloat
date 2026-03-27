@@ -35,5 +35,9 @@ typedef struct {
     bool recording;
     bool autostart;
     bool autostop;
+    uint8_t decimation;
+    uint8_t decimation_counter;
+    uint16_t sample_rate;
+    uint16_t sample_count;
     CircularBuffer buffer;
 } DataRecord;
