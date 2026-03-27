@@ -172,6 +172,8 @@ static void imu_freq_update_reconfigure(float frequency) {
     pid_configure(&d->pid, frequency);
     booster_configure(&d->booster, frequency);
     ema_configure(&d->balance_current, 25.0f, frequency);
+
+    data_recorder_set_sample_rate(&d->data_record, frequency);
 }
 
 static void reconfigure(Data *d) {
@@ -1240,7 +1242,7 @@ static void data_init(Data *d) {
     charging_init(&d->charging);
     bms_init(&d->bms);
 
-    data_recorder_init(&d->data_record);
+    data_recorder_init(&d->data_record, imu_sample_rate);
 
     konami_init(&d->flywheel_konami, flywheel_konami_sequence, sizeof(flywheel_konami_sequence));
     konami_init(
