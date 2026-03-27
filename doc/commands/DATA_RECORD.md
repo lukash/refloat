@@ -37,6 +37,9 @@ _Autostart will automatically start recording when engaging the board. Default v
 - **`sub_mode = 3`: Set Autostop to `value`**\
 _Autostop will automatically stop recording when disengaged. Default value: True_
 
+- **`sub_mode = 4`: Set Decimation to `value`**.\
+_Decimation controls how often samples are recorded. A value of 1 records every sample, 2 records every 2nd sample, etc. This allows recording over a longer time period at reduced resolution. Default value: 1_
+
 ### Mode: Send
 
 Requests sending the data. Send mode has two submodes:
@@ -72,6 +75,8 @@ Response to Control mode requests with the current status of the data recording 
 |--------|------|---------------|---------------|
 | 0      | 1    | `enabled`     | Whether data recording is available (requires compatible firmware). |
 | 1      | 1    | `flags`       | Data recording state flags. |
+| 2      | 1    | `decimation`  | Current decimation value. |
+| 3      | 2    | `duration`    | Recording duration in centiseconds (hundredths of a second) at decimation 1 as `uint16`. |
 
 #### flags
 
