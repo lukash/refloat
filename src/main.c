@@ -1291,7 +1291,7 @@ enum {
     COMMAND_REALTIME_DATA = 33,
     COMMAND_ALERTS_LIST = 35,
     COMMAND_ALERTS_CONTROL = 36,
-    COMMAND_DATA_RECORD_REQUEST = 41,
+    COMMAND_DATA_RECORD = 41,
 
     // commands above 200 are unstable and can change protocol at any time
 } Commands;
@@ -1975,7 +1975,7 @@ static void cmd_realtime_data_internal_ids() {
 }
 
 static uint8_t encode_extra_flags(const DataRecord *dr) {
-    return dr->autostop << 2 | dr->autostart << 1 | dr->recording;
+    return dr->recording;
 }
 
 static uint32_t encode_state_flags(
@@ -2537,7 +2537,7 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
         lights_control_response(&d->leds);
         return;
     }
-    case COMMAND_DATA_RECORD_REQUEST: {
+    case COMMAND_DATA_RECORD: {
         data_recorder_request(&d->data_record, &buffer[2], len - 2);
         return;
     }

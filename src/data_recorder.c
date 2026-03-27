@@ -128,9 +128,22 @@ void data_recorder_send_experiment_plot(DataRecord *dr) {
 }
 
 typedef enum {
+    COMMAND_DATA_RECORD = 41,
     COMMAND_DATA_RECORD_HEADER = 42,
     COMMAND_DATA_RECORD_DATA = 43,
 } DataRecordCommands;
+
+static void send_status(const DataRecord *dr) {
+    uint8_t buf[4];
+    int32_t ind = 0;
+
+    buf[ind++] = 101;  // Package ID
+    buf[ind++] = COMMAND_DATA_RECORD;
+    buf[ind++] = dr->enabled;
+    buf[ind++] = dr->autostop << 2 | dr->autostart << 1 | dr->recording;
+
+    SEND_APP_DATA(buf, 4, ind);
+}
 
 static void send_header(DataRecord *dr) {
     static const int bufsize = 256;
@@ -197,22 +210,26 @@ void data_recorder_request(DataRecord *dr, uint8_t *buffer, size_t len) {
     uint8_t mode = buffer[ind++];
     uint8_t sub_mode = buffer[ind++];
     if (mode == 1) {  // control
-        if (len < 3) {
-            log_error("Data Record request missing value, length: %u", len);
-            return;
-        }
-        uint8_t value = buffer[ind++];
-        if (sub_mode == 1) {  // start/stop recording
-            if (value > 0) {
-                start_recording(dr);
-            } else {
-                stop_recording(dr);
+        if (sub_mode > 0) {
+            if (len < 3) {
+                log_error("Data Record request missing value, length: %u", len);
+                return;
             }
-        } else if (sub_mode == 2) {  // set autostart on engage
-            dr->autostart = value;
-        } else if (sub_mode == 3) {  // set autostop on disengage
-            dr->autostop = value;
+            uint8_t value = buffer[ind++];
+            if (sub_mode == 1) {  // start/stop recording
+                if (value > 0) {
+                    start_recording(dr);
+                } else {
+                    stop_recording(dr);
+                }
+            } else if (sub_mode == 2) {  // set autostart on engage
+                dr->autostart = value;
+            } else if (sub_mode == 3) {  // set autostop on disengage
+                dr->autostop = value;
+            }
         }
+        // sub_mode 0 is a no-op, just return the status
+        send_status(dr);
     } else if (mode == 2) {  // send
         if (sub_mode == 1) {  // header
             // pause recording; in theory a race, but the delay between sending the header
