@@ -78,11 +78,11 @@ The bits in `mask1` and `mask2` control which fields are included in the respons
 
 ### extra_flags
 
-| 7-3 |                      2 |                       1 |                       0 |
-|-----|------------------------|-------------------------|-------------------------|
-|   0 | `data_record_autostop` | `data_record_autostart` | `data_record_recording` |
+| 7-1 |                       0 |
+|-----|-------------------------|
+|   0 | `data_record_recording` |
 
-The `data_record_*` flags represent data recording internal state, see [DATA_RECORD](DATA_RECORD.md).
+- `data_record_recording` whether data recording is active, see [DATA_RECORD](DATA_RECORD.md).
 
 ### state_flags
 

@@ -234,6 +234,17 @@ Item {
         }
     }
 
+    // 2Hz timer to poll for data record status if capability is available
+    Timer {
+        running: state.capDataRecord
+        repeat: true
+        interval: 500
+        triggeredOnStart: true
+        onTriggered: {
+            commands.sendDataRecordStatus();
+        }
+    }
+
     QtObject {
         id: board
 
@@ -641,7 +652,7 @@ Item {
         readonly property int c_REALTIME_DATA_INTERNAL_IDS: 32
         readonly property int c_ALERTS_LIST: 35
         readonly property int c_ALERTS_CONTROL: 36
-        readonly property int c_DATA_RECORD_REQUEST: 41
+        readonly property int c_DATA_RECORD: 41
         readonly property int c_DATA_RECORD_HEADER: 42
         readonly property int c_DATA_RECORD_DATA: 43
 
@@ -783,6 +794,7 @@ Item {
             vescCommands.sendCustomAppData(data.buffer);
         }
 
+        readonly property int dr_STATUS: 0
         readonly property int dr_RECORD: 1
         readonly property int dr_AUTOSTART: 2
         readonly property int dr_AUTOSTOP: 3
@@ -790,7 +802,7 @@ Item {
         // @param key One of the above dr_ properties
         // @param value Value to set, true or false
         function sendDataRecordControl(key, value) {
-            var data = createData(5, c_DATA_RECORD_REQUEST);
+            var data = createData(5, c_DATA_RECORD);
             data.setUint8(2, 1); // control
             data.setUint8(3, key);
             data.setUint8(4, value);
@@ -798,13 +810,21 @@ Item {
             vescCommands.sendCustomAppData(data.buffer);
         }
 
+        function sendDataRecordStatus() {
+            var data = createData(4, c_DATA_RECORD);
+            data.setUint8(2, 1); // control
+            data.setUint8(3, dr_STATUS);
+
+            vescCommands.sendCustomAppData(data.buffer);
+        }
+
         function sendDataRecordRequest(header, offset) {
             if (header) {
-                var data = createData(4, c_DATA_RECORD_REQUEST);
+                var data = createData(4, c_DATA_RECORD);
                 data.setUint8(2, 2); // send
                 data.setUint8(3, 1); // header
             } else {
-                var data = createData(8, c_DATA_RECORD_REQUEST);
+                var data = createData(8, c_DATA_RECORD);
                 data.setUint8(2, 2); // send
                 data.setUint8(3, 2); // data
                 data.setUint32(4, offset);
@@ -865,8 +885,6 @@ Item {
 
                 var extraFlags = dv.getUint8(ind++);
                 state.extraRecording = extraFlags & 0x1;
-                state.extraRecAutostart = extraFlags & 0x2;
-                state.extraRecAutostop = extraFlags & 0x4;
 
                 var time = dv.getUint32(ind); ind += 4;
                 state.setTimeReference(time);
@@ -931,6 +949,12 @@ Item {
                 state.rtDataAllItems = state.rtDataIdleItems.concat(state.rtDataRuntimeItems);
 
                 state.commsState = state.comms_Initialized;
+            } else if (msgtype === c_DATA_RECORD) {
+                var enabled = dv.getUint8(ind++);
+                var flags = dv.getUint8(ind++);
+                state.extraRecording = flags & 0x1;
+                state.extraRecAutostart = flags & 0x2;
+                state.extraRecAutostop = flags & 0x4;
             } else if (msgtype === c_DATA_RECORD_HEADER) {
                 recordedPlotData.receiveHeader(dv, ind);
             } else if (msgtype === c_DATA_RECORD_DATA) {
