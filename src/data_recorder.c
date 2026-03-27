@@ -43,7 +43,19 @@ void data_recorder_init(DataRecord *dr) {
     // fetch information about the data buffer, it's stored at the end of the
     // VESC interface memory area
     DataBufferInfo *buffer_info = (DataBufferInfo *) ((uint8_t *) VESC_IF + 2036);
-    if (buffer_info->magic != 0xcafe1111) {
+
+    // Magic format: 0xcafe1XVM where X=ignored (reserved for future use),
+    // V=major version (4 bits), M=minor version (4 bits)
+    // we check that the base magic matches and the version is compatible
+    const uint32_t magic_base = buffer_info->magic & 0xfffff000;
+    const uint8_t magic_major = (buffer_info->magic >> 4) & 0x0f;
+    const uint8_t magic_minor = buffer_info->magic & 0x0f;
+    const uint8_t required_major = 1;
+    const uint8_t required_minor = 1;
+    if (magic_base != 0xcafe1000 || magic_major != required_major || magic_minor < required_minor) {
+        if (buffer_info->magic != 0) {
+            log_msg("Data Record incompatible magic: 0x%08x", buffer_info->magic);
+        }
         dr->enabled = false;
         return;
     }
