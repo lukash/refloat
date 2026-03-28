@@ -3882,6 +3882,10 @@ Item {
                     var xLen = xLength;
                     var dotsEnbld = plot.dotsEnabled;
 
+                    // bounds for clipping with a small epsilon to avoid precision issues
+                    var yBoundsTop = -yMax - 0.001;
+                    var yBoundsBottom = -yMin + 0.001;
+
                     // calculate start and end indices according to window
                     var start = 0;
                     var end = data.length;
@@ -4009,8 +4013,13 @@ Item {
                                         maxy -= offset;
                                     }
 
-                                    ctx.moveTo(lastX, miny);
-                                    ctx.lineTo(lastX, maxy);
+                                    // only draw if range intersects with visible bounds, then clamp
+                                    if (miny >= yBoundsTop && maxy <= yBoundsBottom) {
+                                        var clampedMiny = Math.min(yBoundsBottom, miny);
+                                        var clampedMaxy = Math.max(yBoundsTop, maxy);
+                                        ctx.moveTo(lastX, clampedMiny);
+                                        ctx.lineTo(lastX, clampedMaxy);
+                                    }
 
                                     var tmp = min;
                                     min = max;
@@ -4029,11 +4038,32 @@ Item {
                                 max = y < max ? y : max;
                             }
 
+                            // check if points are within vertical bounds
+                            var yInBounds = y >= yBoundsTop && y <= yBoundsBottom;
+                            var lastYInBounds = lastY >= yBoundsTop && lastY <= yBoundsBottom;
+
                             if (!minMaxMode) {
-                                if (dotsEnbld && origX - lastX > halfASecondPixels) {
+                                var shouldGap = dotsEnbld && origX - lastX > halfASecondPixels;
+
+                                // check if line segment intersects visible area
+                                if ((yInBounds || lastYInBounds) || (lastY < yBoundsTop) !== (y < yBoundsTop)) {
+                                    var drawY = yInBounds ? y : (y < yBoundsTop ? yBoundsTop : yBoundsBottom);
+                                    var drawX = yInBounds ? x : lastX + (drawY - lastY) / (y - lastY) * (x - lastX);
+
+                                    if (!lastYInBounds && !shouldGap) {
+                                        var startY = lastY < yBoundsTop ? yBoundsTop : yBoundsBottom;
+                                        var startX = lastX + (startY - lastY) / (y - lastY) * (x - lastX);
+                                        ctx.moveTo(startX, startY);
+                                    }
+
+                                    if (shouldGap) {
+                                        ctx.moveTo(drawX, drawY);
+                                    } else {
+                                        ctx.lineTo(drawX, drawY);
+                                    }
+                                }
+                                if (!yInBounds) {
                                     ctx.moveTo(x, y);
-                                } else {
-                                    ctx.lineTo(x, y);
                                 }
 
                                 min = y;
@@ -4045,10 +4075,10 @@ Item {
                             if (dotsEnbld && i > start && origX >= 0 && (paintDots || x - lastSampleX > dotDistThreshold || origX - lastSampleX > halfASecondPixels)) {
                                 ctx.stroke();
                                 ctx.beginPath();
-                                if (!drawnLastDot && lastX >= 0) {
+                                if (!drawnLastDot && lastX >= 0 && lastYInBounds) {
                                     ctx.arc(lastX, lastY, 2.5, 0, 2 * Math.PI, false);
                                 }
-                                if (origX <= xLen + 0.001) {
+                                if (origX <= xLen + 0.001 && yInBounds) {
                                     ctx.arc(x, y, 2.5, 0, 2 * Math.PI, false);
                                 }
                                 ctx.fill();
