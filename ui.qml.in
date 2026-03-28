@@ -2147,19 +2147,19 @@ Item {
     property var plotSeriesMetaData: [
         ["erpm", {"name": "ERPM", "color": "#469138", "visible": true}],
         ["duty_cycle", {"name": "Duty Cycle", "color": "#e3ac34", "visible": true}],
-        ["current", {"name": "Motor Current", "color": "#e33421", "visible": true}],
-        ["dir_current", {"name": "Directional Current", "color": "#cc686b", "visible": false}],
-        ["filt_current", {"name": "Filtered Current", "color": "#734828", "visible": false}],
+        ["current", {"name": "Motor Current", "color": "#e33421", "visible": true, "scalingGroup": "current"}],
+        ["dir_current", {"name": "Directional Current", "color": "#cc686b", "visible": false, "scalingGroup": "current"}],
+        ["filt_current", {"name": "Filtered Current", "color": "#734828", "visible": false, "scalingGroup": "current"}],
 
-        ["pitch", {"name": "Pitch", "color": "#b1b277", "visible": true}],
-        ["balance_pitch", {"name": "Balance Pitch", "color": "#53b3bf", "visible": true}],
+        ["pitch", {"name": "Pitch", "color": "#b1b277", "visible": true, "scalingGroup": "pitch"}],
+        ["balance_pitch", {"name": "Balance Pitch", "color": "#53b3bf", "visible": true, "scalingGroup": "pitch"}],
 
-        ["torque_tilt.setpoint", {"name": "Torque Tilt Setpoint", "color": "#df4a98", "visible": true}],
-        ["atr.setpoint", {"name": "ATR Setpoint", "color": "#7640d6", "visible": true}],
-        ["brake_tilt.setpoint", {"name": "Brake Tilt Setpoint", "color": "#b29ad7", "visible": false}],
-        ["turn_tilt.setpoint", {"name": "Turn Tilt Setpoint", "color": "#e095af", "visible": false}],
-        ["remote.setpoint", {"name": "Remote Setpoint", "color": "#803a4d", "visible": false}],
-        ["setpoint", {"name": "Setpoint", "color": "#e57e20", "visible": true}],
+        ["torque_tilt.setpoint", {"name": "Torque Tilt Setpoint", "color": "#df4a98", "visible": true, "scalingGroup": "pitch"}],
+        ["atr.setpoint", {"name": "ATR Setpoint", "color": "#7640d6", "visible": true, "scalingGroup": "pitch"}],
+        ["brake_tilt.setpoint", {"name": "Brake Tilt Setpoint", "color": "#b29ad7", "visible": false, "scalingGroup": "pitch"}],
+        ["turn_tilt.setpoint", {"name": "Turn Tilt Setpoint", "color": "#e095af", "visible": false, "scalingGroup": "pitch"}],
+        ["remote.setpoint", {"name": "Remote Setpoint", "color": "#803a4d", "visible": false, "scalingGroup": "pitch"}],
+        ["setpoint", {"name": "Setpoint", "color": "#e57e20", "visible": true, "scalingGroup": "pitch"}],
 
         ["speed", {"name": "Speed", "color": "#3f9469", "visible": false}],
         ["batt_voltage", {"name": "Battery Voltage", "color": "#6e6ee0", "visible": false}],
@@ -2169,7 +2169,7 @@ Item {
         ["roll", {"name": "Roll", "color": "#c68f7e", "visible": false}],
         ["adc_left", {"name": "Left ADC Voltage", "color": "#69aad7", "visible": false}],
         ["adc_right", {"name": "Right ADC Voltage", "color": "#4a8772", "visible": false}],
-        ["balance_current", {"name": "Balance Current", "color": "#36738b", "visible": false}],
+        ["balance_current", {"name": "Balance Current", "color": "#36738b", "visible": false, "scalingGroup": "current"}],
         ["booster.torque", {"name": "Booster Torque", "color": "#8f2f26", "visible": false}],
         ["atr.accel_diff", {"name": "ATR Accel Diff", "color": "#4f5984", "visible": false}],
         ["atr.speed_boost", {"name": "ATR Speed Boost", "color": "#34633c", "visible": false}],
@@ -2694,15 +2694,14 @@ Item {
 
             positiveRatio = clamp(newRatio, 0.15, 0.85);
 
-            var setScale = function(i, s) {
-                if (s != scales[i]) {
-                    scalesUpdate();
-                }
-                scales[i] = s;
-            }
-
+            var groupMinScales = {};
             var newScale;
+            var scalesChanged = false;
             for (var i = 0; i < sampleSize; i++) {
+                if (!srs[i].visible) {
+                    continue;
+                }
+
                 var minRatio = (1 - positiveRatio) / lMins[i];
                 var maxRatio = positiveRatio / lMaxs[i];
                 if (lMaxs[i] > 0) {
@@ -2714,8 +2713,29 @@ Item {
                 } else {
                     newScale = isFinite(minRatio) ? -minRatio : 1;
                 }
-                var rns = Math.min(newScale, srs[i].maxScale ?? 1);
-                setScale(i, rns);
+
+                var s = Math.min(newScale, srs[i].maxScale ?? 1);
+                var group = srs[i].scalingGroup;
+                if (group) {
+                    groupMinScales[group] = Math.min(groupMinScales[group] ?? s, s);
+                } else {
+                    if (s !== scales[i]) {
+                        scalesChanged = true;
+                    }
+                    scales[i] = s;
+                }
+            }
+
+            for (var i = 0; i < sampleSize; i++) {
+                var s = groupMinScales[srs[i].scalingGroup];
+                if (s !== undefined && s !== scales[i]) {
+                    scales[i] = s;
+                    scalesChanged = true;
+                }
+            }
+
+            if (scalesChanged) {
+                scalesUpdate();
             }
 
             timeStart = data[0][0];
