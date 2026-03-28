@@ -2515,9 +2515,24 @@ Item {
         // arrive, to ensure time is always increasing
         property real timeOffset: 0
 
-        property var mins: []
-        property var maxs: []
         property var scales: []
+
+        // { key: { min: value, max: value } } - key is scalingGroup name or series index
+        // Updated as samples arrive
+        property var minMaxes: ({})
+
+        // Custom scaling: { key: bound } - absence means auto scaling
+        property var customScaling: ({})
+
+        // Minimum range threshold to avoid numerical instability with very small scales
+        property real minScaleRange: 0.001
+
+        // Threshold which auto-scale is clamped to and below which values don't affect top/bottom plot ratio
+        property real smallValueThreshold: 1
+
+        function getMinMaxKey(seriesMd, index) {
+            return seriesMd.scalingGroup ?? index;
+        }
 
         property real timeStart
         property real timeEnd
@@ -2557,9 +2572,8 @@ Item {
         function initSeries(ids, allVisible) {
             var smplSize = ids.length + extraFlags.length;
             sampleSize = smplSize;
-            mins = Array(smplSize).fill(0);
-            maxs = Array(smplSize).fill(0);
             scales = Array(smplSize).fill(1);
+            minMaxes = {};
 
             if (arraysEqual(ids, seriesIds)) {
                 initialized = true;
@@ -2641,6 +2655,8 @@ Item {
 
             data.push(sample);
 
+            var mm = minMaxes;
+            var mmChanged = false;
             for (var i = 0; i < sampleSize; i++) {
                 var val = sample[i + 1];
                 // optimization: NaN check
@@ -2648,12 +2664,26 @@ Item {
                     continue;
                 }
 
-                if (val > maxs[i]) {
-                    maxs[i] = val;
+                var add = (key) => {
+                    var m = mm[key];
+                    if (!m) {
+                        mm[key] = { min: val, max: val };
+                        mmChanged = true;
+                    } else {
+                        if (val < m.min) { m.min = val; mmChanged = true; }
+                        if (val > m.max) { m.max = val; mmChanged = true; }
+                    }
                 }
-                if (val < mins[i]) {
-                    mins[i] = val;
+
+                var ser = series[i];
+                if (ser.scalingGroup) {
+                    add(ser.scalingGroup);
                 }
+
+                add(i);
+            }
+            if (mmChanged) {
+                minMaxes = mm;
             }
 
             sampleNr = data.length;
@@ -2670,72 +2700,126 @@ Item {
                 return;
             }
 
+            var srs = series;
+            var cs = customScaling;
+            var mm = minMaxes;
+            var minRange = minScaleRange;
+            var smallValThr = smallValueThreshold;
+
+            var hasRatioContrib = false;
             var lowestRatio = 1;
             var highestRatio = 0;
-            var lMins = mins;
-            var lMaxs = maxs;
-            var srs = series;
+            var smallLowestRatio = 1;
+            var smallHighestRatio = 0;
+            // Group min/max from visible series only, so hiding the largest
+            // series in a group rescales the remaining ones
+            var groupMm = {};
+
             for (var i = 0; i < sampleSize; i++) {
                 if (!srs[i].visible) {
                     continue;
                 }
 
-                if (lMaxs[i] > 1 || lMins[i] < -1) {
-                    var ratio = clamp(lMaxs[i] / (lMaxs[i] - lMins[i]), 0, 1);
-                    lowestRatio = Math.min(lowestRatio, ratio);
-                    highestRatio = Math.max(highestRatio, ratio);
+                var m = mm[i];
+                if (m) {
+                    var group = srs[i].scalingGroup;
+                    if (group) {
+                        var gm = groupMm[group];
+                        if (!gm) {
+                            groupMm[group] = { min: m.min, max: m.max };
+                        } else {
+                            gm.min = Math.min(gm.min, m.min);
+                            gm.max = Math.max(gm.max, m.max);
+                        }
+                    }
+
+                    var eMax = m.max;
+                    var eMin = m.min;
+
+                    // Custom-scaled dual-sided: clamp effective range by bound
+                    // so the ratio gradually moves toward 0.5 as user zooms in
+                    var key = getMinMaxKey(srs[i], i);
+                    var bound = cs[key];
+                    if (bound !== undefined && m.max > 0 && m.min < 0) {
+                        eMax = Math.min(eMax, bound);
+                        eMin = Math.max(eMin, -bound);
+                    }
+
+                    if (m.max >= smallValThr || m.min <= -smallValThr) {
+                        // Large values: always contribute to main ratio
+                        hasRatioContrib = true;
+                        var ratio = clamp(eMax / (eMax - eMin), 0, 1);
+                        lowestRatio = Math.min(lowestRatio, ratio);
+                        highestRatio = Math.max(highestRatio, ratio);
+                    } else if (bound !== undefined && eMax > 0 && eMin < 0) {
+                        // Custom-scaled small dual-sided: bound-based ratio to
+                        // main (gradual transition when large series present),
+                        // raw data ratio to fallback (matches auto-scale, used
+                        // when no large series). Don't set hasRatioContrib so
+                        // the fallback takes priority when alone.
+                        var ratio = clamp(bound / (bound - eMin), 0, 1);
+                        lowestRatio = Math.min(lowestRatio, ratio);
+                        highestRatio = Math.max(highestRatio, ratio);
+                        var dataRatio = clamp(m.max / (m.max - m.min), 0, 1);
+                        smallLowestRatio = Math.min(smallLowestRatio, dataRatio);
+                        smallHighestRatio = Math.max(smallHighestRatio, dataRatio);
+                    } else if (eMax > 0 || eMin < 0) {
+                        // Small series: fallback only, used when no large series
+                        var ratio = clamp(eMax / (eMax - eMin), 0, 1);
+                        smallLowestRatio = Math.min(smallLowestRatio, ratio);
+                        smallHighestRatio = Math.max(smallHighestRatio, ratio);
+                    }
                 }
+            }
+
+            // Fall back to small series ratios when no large series contributed
+            if (!hasRatioContrib && smallLowestRatio <= smallHighestRatio) {
+                lowestRatio = smallLowestRatio;
+                highestRatio = smallHighestRatio;
+                hasRatioContrib = true;
             }
 
             var newRatio;
-            if (lowestRatio < 0.5) {
-                if (highestRatio > 0.5) {
-                    newRatio = 0.5;
-                } else {
-                    newRatio = highestRatio;
-                }
+            if (!hasRatioContrib) {
+                newRatio = 0.5;
+            } else if (lowestRatio <= 0.5) {
+                newRatio = Math.min(highestRatio, 0.5);
             } else {
                 newRatio = lowestRatio;
             }
-
             positiveRatio = clamp(newRatio, 0.15, 0.85);
 
-            var groupMinScales = {};
-            var newScale;
             var scalesChanged = false;
+
             for (var i = 0; i < sampleSize; i++) {
                 if (!srs[i].visible) {
                     continue;
                 }
 
-                var minRatio = (1 - positiveRatio) / lMins[i];
-                var maxRatio = positiveRatio / lMaxs[i];
-                if (lMaxs[i] > 0) {
-                    if (lMins[i] < 0) {
-                        newScale = Math.min(maxRatio, -minRatio);
+                var key = getMinMaxKey(srs[i], i);
+                var m = (srs[i].scalingGroup ? groupMm[srs[i].scalingGroup] : mm[i]) ?? { min: 0, max: 0 };
+                var scale;
+                var bound = cs[key] !== undefined ? Math.max(cs[key], minRange) : null;
+
+                if (bound !== null) {
+                    scale = (m.max > -m.min ? positiveRatio : (1 - positiveRatio)) / bound;
+                } else {
+                    var minRatio = (1 - positiveRatio) / Math.max(-m.min, smallValThr);
+                    var maxRatio = positiveRatio / Math.max(m.max, smallValThr);
+
+                    if (m.max > 0 && m.min < 0) {
+                        var posScale = Math.min(maxRatio, (1 - positiveRatio) / -m.min);
+                        var negScale = Math.min(minRatio, positiveRatio / m.max);
+                        scale = Math.max(posScale, negScale);
+                    } else if (m.min < 0) {
+                        scale = minRatio;
                     } else {
-                        newScale = isFinite(maxRatio) ? maxRatio : 1;
+                        scale = maxRatio;
                     }
-                } else {
-                    newScale = isFinite(minRatio) ? -minRatio : 1;
                 }
 
-                var s = Math.min(newScale, srs[i].maxScale ?? 1);
-                var group = srs[i].scalingGroup;
-                if (group) {
-                    groupMinScales[group] = Math.min(groupMinScales[group] ?? s, s);
-                } else {
-                    if (s !== scales[i]) {
-                        scalesChanged = true;
-                    }
-                    scales[i] = s;
-                }
-            }
-
-            for (var i = 0; i < sampleSize; i++) {
-                var s = groupMinScales[srs[i].scalingGroup];
-                if (s !== undefined && s !== scales[i]) {
-                    scales[i] = s;
+                if (scale !== scales[i]) {
+                    scales[i] = scale;
                     scalesChanged = true;
                 }
             }
@@ -2880,6 +2964,7 @@ Item {
             enabled: tapSlider.sliderEnabled
             onMoved: tapSlider.moved()
             onValueChanged: if (tapSlider.value !== value) tapSlider.value = value
+            onToChanged: if (value !== tapSlider.value) value = tapSlider.value
         }
 
         MouseArea {
@@ -2911,6 +2996,48 @@ Item {
 
             onPositionChanged: (mouse) => {
                 applyValue(mouse.x, mouse.y);
+            }
+        }
+    }
+
+    component MenuCheckBox : CheckBox {
+        id: cb
+        property string markerText
+        property real size
+
+        width: size
+        height: size
+
+        indicator: Rectangle {
+            implicitHeight: cb.height * 0.9
+            implicitWidth: implicitHeight
+            y: cb.height / 2 - height / 2
+            radius: 2
+            color: "transparent"
+            border.color: cb.enabled ? cb.checked ? getDarkThemeColor("lightText") : getDarkThemeColor("normalText") : getDarkThemeColor("disabledText")
+
+            Rectangle {
+                height: parent.height * 0.5
+                width: height
+                x: parent.width / 2 - width / 2
+                y: parent.height / 2 - height / 2
+                radius: 1
+                color: parent.border.color
+                visible: cb.checked && !cb.markerText
+            }
+
+            Text {
+                height: parent.height
+                width: height
+                x: parent.width / 2 - width / 2
+                y: parent.height / 2 - height / 2
+                text: cb.markerText
+                color: parent.border.color
+                font.bold: true
+                fontSizeMode: Text.Fit
+                horizontalAlignment: TextInput.AlignHCenter
+                verticalAlignment: TextInput.AlignVCenter
+                visible: cb.checked && cb.markerText
             }
         }
     }
@@ -2952,6 +3079,7 @@ Item {
         onVisibleChanged: {
             if (!visible) {
                 menu.visible = false;
+                menu.deselectSeries();
             }
         }
 
@@ -2974,6 +3102,9 @@ Item {
 
                 onClicked: {
                     menu.visible = !menu.visible;
+                    if (!menu.visible) {
+                        menu.deselectSeries();
+                    }
                 }
             }
 
@@ -3100,15 +3231,31 @@ Item {
             anchors.topMargin: topMargin
             anchors.leftMargin: sideMargin
             height: menuScrollView.height
-            width: menuScrollView.width
+            width: menuScrollView.width + (selectedSeries ? scalingPanel.width + 4 : 0)
             visible: false
+
+            color: getDarkThemeColor("darkBackground");
 
             property real topMargin: unit
             property real sideMargin: 0.2 * unit
             property real hPadding: 8
             property real vPadding: 4
 
-            color: getDarkThemeColor("darkBackground");
+            property var selectedSeries: null
+            property int selectedIndex: -1
+
+            function deselectSeries() {
+                selectedSeries = null;
+                selectedIndex = -1;
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                z: -1
+                preventStealing: true
+                onClicked: function(mouse) { mouse.accepted = true; }
+                onPressed: function(mouse) { mouse.accepted = true; }
+            }
 
             ScrollView {
                 id: menuScrollView
@@ -3134,12 +3281,35 @@ Item {
                             width: menuRow.width
                             height: label.height + 2 * menu.vPadding
 
+                            Rectangle {
+                                anchors.left: parent.left
+                                anchors.top: parent.top
+                                anchors.bottom: parent.bottom
+                                width: menuColumn.width
+                                color: {
+                                    var sel = menu.selectedSeries;
+                                    if (!sel) {
+                                        return "transparent";
+                                    }
+
+                                    var match = sel.scalingGroup ? sel.scalingGroup === modelData.scalingGroup : sel.dataOrder === modelData.dataOrder;
+                                    return match ? getDarkThemeColor("normalBackground") : "transparent";
+                                }
+                            }
+
                             MouseArea {
                                 anchors.top: parent.top
                                 anchors.left: parent.left
                                 width: menuColumn.width
                                 height: parent.height
-                                onClicked: itemCheckBox.toggle()
+                                onClicked: {
+                                    itemCheckBox.toggle();
+                                    menu.deselectSeries();
+                                }
+                                onPressAndHold: {
+                                    menu.selectedSeries = modelData;
+                                    menu.selectedIndex = modelData.dataOrder;
+                                }
                             }
 
                             Row {
@@ -3149,36 +3319,15 @@ Item {
                                 anchors.leftMargin: menu.hPadding
                                 spacing: 4
 
-                                CheckBox {
+                                MenuCheckBox {
                                     id: itemCheckBox
-                                    height: label.height
-                                    width: height
-
+                                    size: label.height
                                     checked: modelData.visible
 
                                     onCheckedChanged: {
                                         plot.plotData.seriesSorted[index].visible = checked;
                                         plot.plotData.calculateRanges();
                                         plotCanvas.requestPaint();
-                                    }
-
-                                    indicator: Rectangle {
-                                        implicitHeight: parent.height * 0.9
-                                        implicitWidth: implicitHeight
-                                        y: parent.height / 2 - height / 2
-                                        radius: 2
-                                        color: "transparent"
-                                        border.color: parent.checked ? getDarkThemeColor("lightText") : getDarkThemeColor("normalText")
-
-                                        Rectangle {
-                                            height: parent.height * 0.5
-                                            width: height
-                                            x: parent.width / 2 - width / 2
-                                            y: parent.height / 2 - height / 2
-                                            radius: 1
-                                            color: parent.border.color
-                                            visible: parent.parent.checked
-                                        }
                                     }
                                 }
 
@@ -3189,6 +3338,100 @@ Item {
                                     color: modelData.color
                                 }
                             }
+                        }
+                    }
+                }
+            }
+
+            // Scaling panel - appears to the right of menu when long-pressing a series
+            Rectangle {
+                id: scalingPanel
+                visible: menu.selectedSeries !== null
+                anchors.left: menuScrollView.right
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                width: 50
+                color: getDarkThemeColor("darkBackground")
+
+                property var seriesKey: menu.selectedSeries ? plot.plotData.getMinMaxKey(menu.selectedSeries, menu.selectedIndex) : null
+                property var customBound: seriesKey !== null ? plot.plotData.customScaling[seriesKey] : undefined
+                property bool isAuto: customBound === undefined
+                property bool hasData: seriesKey !== null && plot.plotData.minMaxes[seriesKey] !== undefined
+                property real maxBound: {
+                    if (!hasData) return 0;
+                    var mm = plot.plotData.minMaxes[seriesKey];
+                    return Math.max(Math.abs(mm.max), Math.abs(mm.min), plot.plotData.smallValueThreshold);
+                }
+
+                Column {
+                    id: scalingColumn
+                    anchors.fill: parent
+                    anchors.topMargin: 8
+                    anchors.bottomMargin: 8
+                    spacing: 6
+
+                    Text {
+                        id: boundLabel
+                        width: parent.width
+                        horizontalAlignment: Text.AlignHCenter
+                        color: !autoCheckBox.checked ? getDarkThemeColor("lightText") : getDarkThemeColor("disabledText")
+                        fontSizeMode: Text.HorizontalFit
+                        minimumPointSize: 8
+                        font.pointSize: 16
+                        text: scaleSlider.realValue.toFixed(scaleSlider.realValue < 10 ? scaleSlider.realValue < 1 ? 3 : 2 : 1)
+                    }
+
+                    TapSlider {
+                        id: scaleSlider
+                        property real realValue: Math.exp(value)
+                        orientation: Qt.Vertical
+                        width: parent.width
+                        height: scalingColumn.height - boundLabel.height - autoCheckBox.height - 2 * scalingColumn.spacing
+                        from: Math.log(plot.plotData.minScaleRange)
+                        to: Math.log(Math.ceil(scalingPanel.maxBound / plot.plotData.minScaleRange) * plot.plotData.minScaleRange)
+                        sliderEnabled: !autoCheckBox.checked
+
+                        Connections {
+                            target: scalingPanel
+                            function onSeriesKeyChanged() { scaleSlider.resetValue(); }
+                            function onIsAutoChanged() { scaleSlider.resetValue(); }
+                            function onMaxBoundChanged() { if (scalingPanel.isAuto) scaleSlider.resetValue(); }
+                        }
+
+                        function resetValue() {
+                            var bound = scalingPanel.customBound;
+                            if (bound !== undefined) {
+                                value = Math.log(bound);
+                            } else {
+                                value = to;
+                            }
+                        }
+
+                        onMoved: {
+                            var cs = plot.plotData.customScaling;
+                            cs[scalingPanel.seriesKey] = realValue;
+                            plot.plotData.customScaling = cs;
+                            plot.plotData.calculateRanges();
+                        }
+                    }
+
+                    MenuCheckBox {
+                        id: autoCheckBox
+                        size: 20
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        checked: scalingPanel.isAuto
+                        enabled: scalingPanel.hasData || !checked
+                        markerText: "A"
+
+                        onClicked: {
+                            var cs = plot.plotData.customScaling;
+                            if (checked) {
+                                delete cs[scalingPanel.seriesKey];
+                            } else {
+                                cs[scalingPanel.seriesKey] = scaleSlider.realValue;
+                            }
+                            plot.plotData.customScaling = cs;
+                            plot.plotData.calculateRanges();
                         }
                     }
                 }
@@ -3262,6 +3505,7 @@ Item {
 
                 onPressed: {
                     menu.visible = false;
+                    menu.deselectSeries();
 
                     initialX = x(mouse);
                     initialY = mouse.y;
