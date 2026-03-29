@@ -2670,11 +2670,17 @@ Item {
             data.push(sample);
 
             for (var i = 0; i < sampleSize; i++) {
-                if (sample[i + 1] > maxs[i]) {
-                    maxs[i] = sample[i + 1];
+                var val = sample[i + 1];
+                // optimization: NaN check
+                if (val !== val) {
+                    continue;
                 }
-                if (sample[i + 1] < mins[i]) {
-                    mins[i] = sample[i + 1];
+
+                if (val > maxs[i]) {
+                    maxs[i] = val;
+                }
+                if (val < mins[i]) {
+                    mins[i] = val;
                 }
             }
 
