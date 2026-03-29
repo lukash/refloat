@@ -1230,10 +1230,33 @@ Item {
                     pd.makeReady();
                     if (hintId === "plotCursor") {
                         subject.spawnCursor(4);
+                    } else if (hintId === "plotScaling") {
+                        subject.showMenu();
+                        subject.selectSeries("current");
+                        scalingPanelHintFrame.createObject(subject.getMenuFrame());
                     }
                 }
 
-                UIHintFrame {}
+                onVisibleChanged: {
+                    if (hintId !== "statusText") {
+                        bottomStackTabs.currentIndex = 2;
+                    }
+                    if (hintId === "plotScaling") {
+                        subject.showMenu();
+                        subject.selectSeries("current");
+                    }
+                }
+
+                UIHintFrame {
+                    visible: hintId !== "plotScaling"
+                }
+
+                Component {
+                    id: scalingPanelHintFrame
+                    UIHintFrame {
+                        anchors.margins: -1
+                    }
+                }
 
                 UIHintUnderline {
                     anchors.topMargin: unit
@@ -1260,6 +1283,13 @@ Item {
                 anchors.bottom: subject.top
                 text: "View a plot of realtime data (log) from the package on the Data tab.\n\nLong press anywhere in the plot area to spawn a cursor.\n\nYou can dismiss the cursor by a swipe up gesture on it."
                 visible: hintId === "plotCursor"
+            }
+
+            UIHintText {
+                anchors.horizontalCenter: subject.horizontalCenter
+                anchors.bottom: subject.top
+                text: "Use the plot series (hamburger) menu to toggle series visibility.\n\nLong press on a series to open the scaling panel.\n\nUse the \"A\" checkbox to toggle automatic scaling.\n\nThe slider can then be used to zoom in on the data."
+                visible: hintId === "plotScaling"
             }
 
             UIHintText {
@@ -1294,6 +1324,7 @@ Item {
 
             property bool statusText
             property bool plotCursor
+            property bool plotScaling
 
             property bool drGeneral
             property bool drStartStop
@@ -1303,6 +1334,7 @@ Item {
         readonly property var hints: new Map([
             ["statusText", statusTextComp],
             ["plotCursor", plotComp],
+            ["plotScaling", plotComp],
         ])
 
         readonly property var dataRecordHints: new Map([
@@ -1314,9 +1346,6 @@ Item {
         function fill(container) {
             for (let [key, value] of hints) {
                 if (!uiHintsSettings[key]) {
-                    if (key == "plotCursor") {
-                        bottomStackTabs.currentIndex = 2;
-                    }
                     value.createObject(container, {settings: uiHintsSettings, hintId: key});
                 }
             }
@@ -1326,7 +1355,6 @@ Item {
             if (state.capDataRecord) {
                 for (let [key, value] of dataRecordHints) {
                     if (!uiHintsSettings[key]) {
-                        bottomStackTabs.currentIndex = 2;
                         value.createObject(container, {settings: uiHintsSettings, hintId: key});
                     }
                 }
@@ -2629,6 +2657,7 @@ Item {
                 if (visible) {
                     seriesMd.visible = visible;
                 }
+                seriesMd.id = id;
                 seriesMd.dataOrder = i;
                 srs.push(seriesMd);
                 srsSorted.push(seriesMd);
@@ -3107,6 +3136,21 @@ Item {
         function hideMenu() {
             menu.visible = false;
             menu.deselectSeries();
+        }
+
+        function selectSeries(seriesId) {
+            for (var i = 0; i < plotData.series.length; i++) {
+                var s = plotData.series[i];
+                if (s.id === seriesId) {
+                    menu.selectedSeries = s;
+                    menu.selectedIndex = s.dataOrder;
+                    return;
+                }
+            }
+        }
+
+        function getMenuFrame() {
+            return menu;
         }
 
         onVisibleChanged: {
