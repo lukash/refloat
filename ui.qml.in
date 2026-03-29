@@ -1078,7 +1078,7 @@ Item {
         property real targetHeight
 
         property Settings settings
-        property string settingName
+        property string hintId
         property bool shown
 
         function updateTarget() {
@@ -1118,11 +1118,11 @@ Item {
         }
 
         Component.onCompleted: {
-            shown = settings[settingName];
+            shown = settings[hintId];
         }
 
         onShownChanged: {
-            settings[settingName] = shown;
+            settings[hintId] = shown;
         }
 
         MouseArea {
@@ -1191,8 +1191,6 @@ Item {
         UIHint {
             target: rtPlot
 
-            property int stage: settingName === "plotCursor" ? 0 : settingName === "drGeneral" ? 1 : settingName === "drStartStop" ? 2 : 3
-
             Plot {
                 id: subject
                 x: parent.targetX
@@ -1216,7 +1214,7 @@ Item {
                     pd.addSample([4,0,0,0,0, 15], 2);
                     pd.addSample([9,0,0,0,0, 30], 3);
                     pd.makeReady();
-                    if (stage === 0) {
+                    if (hintId === "plotCursor") {
                         subject.spawnCursor(4);
                     }
                 }
@@ -1227,19 +1225,19 @@ Item {
                     anchors.topMargin: unit
                     anchors.leftMargin: unit
                     width: unit * 1.7
-                    visible: stage === 1
+                    visible: hintId === "drGeneral"
                 }
 
                 UIHintUnderline {
                     anchors.topMargin: unit
                     anchors.leftMargin: 1.9 * unit
-                    visible: stage === 2
+                    visible: hintId === "drStartStop"
                 }
 
                 UIHintUnderline {
                     anchors.topMargin: unit
                     anchors.leftMargin: unit
-                    visible: stage === 3
+                    visible: hintId === "drDownload"
                 }
             }
 
@@ -1247,28 +1245,28 @@ Item {
                 anchors.horizontalCenter: subject.horizontalCenter
                 anchors.bottom: subject.top
                 text: "View a plot of realtime data (log) from the package on the Data tab.\n\nLong press anywhere in the plot area to spawn a cursor.\n\nYou can dismiss the cursor by a swipe up gesture on it."
-                visible: stage === 0
+                visible: hintId === "plotCursor"
             }
 
             UIHintText {
                 anchors.horizontalCenter: subject.horizontalCenter
                 anchors.bottom: subject.top
                 text: "Congratulations, you have the Data Record firmware installed. You are now part of the secret Data Recording society.\n\nYour board has the ability to store a short detailed data \"log\" by itself, you don't need to be connected.\n\nIt's controlled by these two buttons."
-                visible: stage === 1
+                visible: hintId === "drGeneral"
             }
 
             UIHintText {
                 anchors.horizontalCenter: subject.horizontalCenter
                 anchors.bottom: subject.top
                 text: "This button indicates whether the board is recording. You can use it to start and stop the recording manually.\n\nThe board automatically starts recording when engaged and stops recording on disengage. Control this and the recording duration by long-pressing the button.\n\nIf you nosedive, check the recording before engaging again!"
-                visible: stage == 2
+                visible: hintId === "drStartStop"
             }
 
             UIHintText {
                 anchors.horizontalCenter: subject.horizontalCenter
                 anchors.bottom: subject.top
                 text: "You can download the stored data using this button. It automatically stops recording. Do not start it while you're downloading, or you'll corrupt your data."
-                visible: stage == 3
+                visible: hintId === "drDownload"
             }
         }
     }
@@ -1305,7 +1303,7 @@ Item {
                     if (key == "plotCursor") {
                         bottomStackTabs.currentIndex = 2;
                     }
-                    value.createObject(container, {settings: uiHintsSettings, settingName: key});
+                    value.createObject(container, {settings: uiHintsSettings, hintId: key});
                 }
             }
         }
@@ -1315,7 +1313,7 @@ Item {
                 for (let [key, value] of dataRecordHints) {
                     if (!uiHintsSettings[key]) {
                         bottomStackTabs.currentIndex = 2;
-                        value.createObject(container, {settings: uiHintsSettings, settingName: key});
+                        value.createObject(container, {settings: uiHintsSettings, hintId: key});
                     }
                 }
             }
