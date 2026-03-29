@@ -3102,10 +3102,18 @@ Item {
             plotCanvas.fadeCursor();
         }
 
+        function showMenu() {
+            menu.visible = true;
+        }
+
+        function hideMenu() {
+            menu.visible = false;
+            menu.deselectSeries();
+        }
+
         onVisibleChanged: {
             if (!visible) {
-                menu.visible = false;
-                menu.deselectSeries();
+                hideMenu();
             }
         }
 
@@ -3127,9 +3135,10 @@ Item {
                 }
 
                 onClicked: {
-                    menu.visible = !menu.visible;
-                    if (!menu.visible) {
-                        menu.deselectSeries();
+                    if (menu.visible) {
+                        hideMenu();
+                    } else {
+                        showMenu();
                     }
                 }
             }
@@ -3530,8 +3539,7 @@ Item {
                 }
 
                 onPressed: {
-                    menu.visible = false;
-                    menu.deselectSeries();
+                    hideMenu();
 
                     initialX = x(mouse);
                     initialY = mouse.y;
