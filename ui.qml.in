@@ -170,14 +170,6 @@ Item {
             } else {
                 commands.sendGetRtData();
             }
-
-            if (moveSlider.value != 0) {
-                commands.sendRcMove(moveSlider.value);
-            }
-
-            if (tiltEnabled.checked) {
-                vescCommands.lispSendReplCmd("(set-remote-state " + tiltSlider.value + " 0 0 0 0)");
-            }
         }
     }
 
@@ -189,48 +181,6 @@ Item {
         triggeredOnStart: true
         onTriggered: {
             commands.sendLightsControl();
-        }
-    }
-
-    // 100hz for for UI updates
-    Timer {
-        running: true
-        repeat: true
-        interval: 10
-        onTriggered: {
-            if (!moveSlider.pressed) {
-                var stepSize = 0.05;
-                if (moveSlider.value > 0) {
-                    if (moveSlider.value < stepSize) {
-                        moveSlider.value = 0;
-                    } else {
-                        moveSlider.value -= stepSize;
-                    }
-                } else if (moveSlider.value < 0) {
-                    if (moveSlider.value > -stepSize) {
-                        moveSlider.value = 0;
-                    } else {
-                        moveSlider.value += stepSize;
-                    }
-                }
-            }
-
-            if (!tiltSlider.pressed) {
-                var stepSize = 0.05;
-                if (tiltSlider.value > 0) {
-                    if (tiltSlider.value < stepSize) {
-                        tiltSlider.value = 0;
-                    } else {
-                        tiltSlider.value -= stepSize;
-                    }
-                } else if (tiltSlider.value < 0) {
-                    if (tiltSlider.value > -stepSize) {
-                        tiltSlider.value = 0;
-                    } else {
-                        tiltSlider.value += stepSize;
-                    }
-                }
-            }
         }
     }
 
@@ -7583,62 +7533,40 @@ Item {
                     }
 
                     LText {
-                        id: movementControlsHeader
                         anchors.horizontalCenter: parent.horizontalCenter
-
                         font.pixelSize: fontSizeBig
-                        text: "Move"
+                        text: "Remote"
                     }
 
                     Slider {
-                        id: moveSlider
+                        id: remoteSlider
                         width: parent.width * 0.9
                         anchors.horizontalCenter: parent.horizontalCenter
 
                         from: -1
                         to: 1
                         value: 0
-                    }
 
-                    Item {
-                        width: parent.width
-                        implicitHeight: tiltEnabled.implicitHeight
-                        anchors.horizontalCenter: parent.horizontalCenter
-
-                        LText {
-                            id: tiltControlsHeader
-                            anchors.centerIn: parent
-
-                            font.pixelSize: fontSizeBig
-                            text: "Tilt"
-                        }
-
-                        CheckBox {
-                            id: tiltEnabled
-                            anchors.left: tiltControlsHeader.right
-                            anchors.leftMargin: 0.2 * unit
-
-                            checked: false
-                            font.pixelSize: fontSizeNormal
-                            text: "enable"
-
-                            onClicked: {
-                                if (checked) {
-                                    packageConfig.setInputTiltRemoteType(1);
-                                }
+                        onPressedChanged: {
+                            if (pressed) {
+                                remoteTimer.running = true;
                             }
                         }
-                    }
 
-                    Slider {
-                        id: tiltSlider
-                        width: parent.width * 0.9
-                        anchors.horizontalCenter: parent.horizontalCenter
-
-                        enabled: tiltEnabled.checked
-                        from: -1
-                        to: 1
-                        value: 0
+                        Timer {
+                            id: remoteTimer
+                            running: false
+                            repeat: true
+                            interval: 20
+                            triggeredOnStart: true
+                            onTriggered: {
+                                if (!remoteSlider.pressed) {
+                                    remoteSlider.value = 0;
+                                    running = false;
+                                }
+                                commands.sendRcMove(remoteSlider.value);
+                            }
+                        }
                     }
 
                     LText {
