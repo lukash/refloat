@@ -20,18 +20,29 @@
 #include "conf/datatypes.h"
 #include "filters/smooth_setpoint.h"
 #include "state.h"
+#include "time.h"
 
 typedef struct {
     float input;
     SmoothSetpoint setpoint;
+    time_t command_input_time;
+
+    float move_speed;  // speed for the remote (wheel) move; NAN means no remote control
+    float move_pid_i;
 } Remote;
 
-void remote_init(Remote *remote);
+void remote_init(Remote *remote, const Time *time);
 
 void remote_reset(Remote *remote);
 
 void remote_configure(Remote *remote, const RefloatConfig *config, float frequency);
 
-void remote_input(Remote *remote, const RefloatConfig *config);
+void remote_input(Remote *remote, const Time *time, const RefloatConfig *config);
+
+void remote_command_input(
+    Remote *remote, float value, const Time *time, const RefloatConfig *config
+);
+
+float remote_get_move_torque(Remote *remote, float speed, float dt);
 
 void remote_update(Remote *remote, const State *state, const RefloatConfig *config, float dt);

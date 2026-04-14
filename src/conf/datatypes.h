@@ -217,6 +217,7 @@ typedef struct {
 
 typedef struct {
     CfgSetpointFilter filter;
+    uint8_t max_move_speed;
 } CfgRemote;
 
 typedef struct {
@@ -278,7 +279,6 @@ typedef struct {
     float inputtilt_angle_limit;
     bool inputtilt_invert_throttle;
     float inputtilt_deadband;
-    float remote_throttle_current_max;
     float remote_throttle_grace_period;
     float noseangling_speed;
     float startup_pitch_tolerance;

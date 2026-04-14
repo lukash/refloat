@@ -255,10 +255,6 @@ static void reset_runtime_vars(Data *d) {
     d->traction_control = false;
     d->softstart_pid_limit = 0;
     d->startup_pitch_tolerance = d->float_conf.startup_pitch_tolerance;
-
-    // RC Move:
-    d->rc_steps = 0;
-    d->rc_current = 0;
 }
 
 static void engage(Data *d) {
@@ -268,39 +264,6 @@ static void engage(Data *d) {
     state_engage(&d->state);
     timer_refresh(&d->time, &d->time.engage_timer);
     data_recorder_trigger(&d->data_record, true);
-}
-
-/**
- *  do_rc_move: perform motor movement while board is idle
- */
-static void do_rc_move(Data *d) {
-    if (d->rc_steps > 0) {
-        d->rc_current = d->rc_current * 0.95 + d->rc_current_target * 0.05;
-        if (d->motor.abs_erpm > 800) {
-            d->rc_current = 0;
-        }
-        d->rc_steps--;
-        d->rc_counter++;
-        if ((d->rc_counter == 500) && (d->rc_current_target > 2)) {
-            d->rc_current_target /= 2;
-        }
-        motor_control_request_current(&d->motor_control, d->rc_current);
-    } else {
-        d->rc_counter = 0;
-
-        // Throttle must be greater than 2% (Help mitigate lingering throttle)
-        if ((d->float_conf.remote_throttle_current_max > 0) &&
-            time_elapsed(&d->time, disengage, d->float_conf.remote_throttle_grace_period) &&
-            (fabsf(d->remote.input) > 0.02)) {
-            float servo_val = d->remote.input;
-            servo_val *= (d->float_conf.inputtilt_invert_throttle ? -1.0 : 1.0);
-            d->rc_current = d->rc_current * 0.95 +
-                (d->float_conf.remote_throttle_current_max * servo_val) * 0.05;
-            motor_control_request_current(&d->motor_control, d->rc_current);
-        } else {
-            d->rc_current = 0;
-        }
-    }
 }
 
 static float get_setpoint_adjustment_speed(Data *d) {
@@ -782,6 +745,14 @@ static void imu_ref_callback(float *acc, float *gyro, float *mag, float dt) {
         pid_control(d, dt);
     }
 
+    if (d->state.state == STATE_READY) {
+        // returned torque is NAN if no control move is going on, meaning no current reqested
+        float move_torque = remote_get_move_torque(&d->remote, d->motor.speed, dt);
+        motor_control_request_current(
+            &d->motor_control, motor_data_torque_to_current(&d->motor, move_torque)
+        );
+    }
+
     motor_control_apply(
         &d->motor_control, d->motor.abs_erpm_smooth.value, d->state.state, &d->time
     );
@@ -829,7 +800,7 @@ static void refloat_thd(void *arg) {
 
         motor_data_update(&d->motor, dt);
 
-        remote_input(&d->remote, &d->float_conf);
+        remote_input(&d->remote, &d->time, &d->float_conf);
 
         turn_tilt_aggregate(&d->turn_tilt, &d->imu, dt);
 
@@ -1074,7 +1045,6 @@ static void refloat_thd(void *arg) {
                 }
             }
 
-            do_rc_move(d);
             break;
         case (STATE_DISABLED):
             break;
@@ -1229,7 +1199,7 @@ static void data_init(Data *d) {
     brake_tilt_init(&d->brake_tilt);
     turn_tilt_init(&d->turn_tilt);
     booster_init(&d->booster);
-    remote_init(&d->remote);
+    remote_init(&d->remote, &d->time);
 
     state_init(&d->state);
     footpad_sensor_init(&d->footpad);
@@ -1286,6 +1256,7 @@ enum {
     COMMAND_LOCK = 12,
     COMMAND_HANDTEST = 13,
     COMMAND_TUNE_TILT = 14,
+    COMMAND_REMOTE = 15,
     COMMAND_LIGHTS_CONTROL = 20,
     COMMAND_FLYWHEEL = 22,
     COMMAND_REALTIME_DATA_INTERNAL = 31,
@@ -1762,32 +1733,23 @@ static void cmd_runtime_tune_other(Data *d, unsigned char *cfg, int len) {
     reconfigure(d);
 }
 
-void cmd_rc_move(Data *d, unsigned char *cfg) {
-    int ind = 0;
-    int direction = cfg[ind++];
-    int current = cfg[ind++];
-    int time = cfg[ind++];
-    int sum = cfg[ind++];
-    if (sum != time + current) {
-        current = 0;
-    } else if (direction == 0) {
-        current = -current;
+void cmd_remote(Data *d, uint8_t *buf, int len) {
+    if (len < 1) {
+        return;
     }
 
-    if (d->state.state == STATE_READY) {
-        d->rc_counter = 0;
-        if (current == 0) {
-            d->rc_steps = 1;
-            d->rc_current_target = 0;
-            d->rc_current = 0;
-        } else {
-            d->rc_steps = time * 100;
-            d->rc_current_target = current / 10.0;
-            if (d->rc_current_target > 8) {
-                d->rc_current_target = 2;
-            }
-        }
+    int8_t val = buf[0];
+    if (val == -128) {
+        return;
     }
+
+    remote_command_input(&d->remote, val / 127.0f, &d->time, &d->float_conf);
+}
+
+void cmd_rc_move(Data *d, unsigned char *cfg) {
+    // current is 10..80 or -10..-80, convert to -127..127
+    int8_t value = clampf((cfg[1] - 10) * 127.0f / 70.0f * (cfg[0] > 0 ? 1 : -1), -127.0f, 127.0f);
+    cmd_remote(d, (uint8_t *) &value, 1);
 }
 
 static void cmd_flywheel_toggle(Data *d, unsigned char *cfg, int len) {
@@ -2397,6 +2359,10 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
         } else {
             log_error("Command data length incorrect: %u", len);
         }
+        return;
+    }
+    case COMMAND_REMOTE: {
+        cmd_remote(d, &buffer[2], len - 2);
         return;
     }
     case COMMAND_CFG_RESTORE: {
