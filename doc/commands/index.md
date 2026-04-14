@@ -29,6 +29,7 @@ In the commands' documentation, the first two bytes with `package_interface_id` 
 - [ALERTS_LIST](ALERTS_LIST.md)
 - [ALERTS_CONTROL](ALERTS_CONTROL.md)
 - [REALTIME_DATA](REALTIME_DATA.md)
+- [REMOTE](REMOTE.md)
 
 ### Internal Package Commands
 
@@ -43,3 +44,4 @@ These commands are deprecated. They are slated to be removed in the next minor v
 
 - GET_RTDATA (1): Replace with [REALTIME_DATA](REALTIME_DATA.md)
 - GET_ALLDATA (10): Replace with [REALTIME_DATA](REALTIME_DATA.md)
+- COMMAND_RC_MOVE (7): Replace with [REMOTE](REMOTE.md)
