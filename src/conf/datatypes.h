@@ -214,7 +214,6 @@ typedef struct {
     float mahony_kp_roll;
     float kp_brake;
     float kp2_brake;
-    uint16_t hertz;
     float fault_pitch;
     float fault_roll;
     float fault_adc1;

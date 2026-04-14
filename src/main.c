@@ -57,6 +57,8 @@
 
 HEADER
 
+#define MAIN_THREAD_FREQ 500
+
 typedef enum {
     BEEP_NONE = 0,
     BEEP_LV = 1,
@@ -195,7 +197,7 @@ static void reconfigure(Data *d) {
 static void configure(Data *d) {
     state_set_disabled(&d->state, d->float_conf.disabled);
 
-    d->main_loop_ticks = SYSTEM_TICK_RATE_HZ / d->float_conf.hertz;
+    d->main_loop_ticks = SYSTEM_TICK_RATE_HZ / MAIN_THREAD_FREQ;
 
     // Backwards compatibility hack:
     // If mahony kp from the firmware internal filter is higher than 1, it's
@@ -1209,7 +1211,7 @@ static void data_init(Data *d) {
 
     time_init(&d->time);
 
-    frequency_tracker_init(&d->main_freq_tracker, d->float_conf.hertz, &d->time);
+    frequency_tracker_init(&d->main_freq_tracker, MAIN_THREAD_FREQ, &d->time);
     int imu_sample_rate = VESC_IF->get_cfg_int(CFG_PARAM_IMU_sample_rate);
     if (imu_sample_rate == 0) {
         // 6.02 doesn't provide IMU frequency; use a random number between 416
