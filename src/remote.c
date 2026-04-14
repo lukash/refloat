@@ -19,15 +19,25 @@
 
 #include "lib/utils.h"
 
-void remote_init(Remote *remote) {
+#define MOVE_KP 1.2f
+#define MOVE_KI 1.0f
+#define MOVE_TORQUE_LIMIT 10.0f
+
+#define REMOTE_TIMEOUT 0.5f
+
+void remote_init(Remote *remote, const Time *time) {
     remote->input = 0;
     smooth_setpoint_init(&remote->setpoint);
+
+    remote->command_input_time = time->now - REMOTE_TIMEOUT;
 
     remote_reset(remote);
 }
 
 void remote_reset(Remote *remote) {
     smooth_setpoint_reset(&remote->setpoint);
+    remote->move_speed = NAN;
+    remote->move_pid_i = 0.0f;
 }
 
 void remote_configure(Remote *remote, const RefloatConfig *config, float frequency) {
@@ -45,7 +55,12 @@ void remote_configure(Remote *remote, const RefloatConfig *config, float frequen
     );
 }
 
-void remote_input(Remote *remote, const RefloatConfig *config) {
+void remote_input(Remote *remote, const Time *time, const RefloatConfig *config) {
+    if (!timer_older(time, remote->command_input_time, 0.5f)) {
+        // input is being set from a package command
+        return;
+    }
+
     bool connected = false;
     float value = 0;
 
@@ -66,14 +81,26 @@ void remote_input(Remote *remote, const RefloatConfig *config) {
 
     if (!connected) {
         remote->input = 0;
+        remote->move_speed = NAN;
         return;
     }
 
     float deadband = config->inputtilt_deadband;
-    if (fabsf(value) < deadband) {
+    float value_abs = fabsf(value);
+    if (value_abs < deadband) {
         value = 0.0;
     } else {
-        value = sign(value) * (fabsf(value) - deadband) / (1 - deadband);
+        value = sign(value) * (value_abs - deadband) / (1 - deadband);
+    }
+
+    // remote move logic
+    if (value == 0.0f) {
+        remote->move_speed = NAN;
+    } else {
+        if (config->remote_throttle_current_max > 0 &&
+            time_elapsed(time, disengage, config->remote_throttle_grace_period)) {
+            remote->move_speed = value * config->remote_throttle_current_max;
+        }
     }
 
     if (config->inputtilt_invert_throttle) {
@@ -81,6 +108,33 @@ void remote_input(Remote *remote, const RefloatConfig *config) {
     }
 
     remote->input = value;
+}
+
+void remote_command_input(
+    Remote *remote, float value, const Time *time, const RefloatConfig *config
+) {
+    remote->input = value;
+    if (time_elapsed(time, disengage, 2.0f)) {
+        float speed_max =
+            config->remote_throttle_current_max > 0 ? config->remote_throttle_current_max : 10;
+        remote->move_speed = value * speed_max;
+    }
+
+    timer_refresh(time, &remote->command_input_time);
+}
+
+float remote_get_move_torque(Remote *remote, float speed, float dt) {
+    if (!isnan(remote->move_speed)) {
+        float error = remote->move_speed - speed;
+
+        remote->move_pid_i += MOVE_KI * error * dt;
+        remote->move_pid_i = clampf(remote->move_pid_i, -MOVE_TORQUE_LIMIT, MOVE_TORQUE_LIMIT);
+
+        return clampf(MOVE_KP * error + remote->move_pid_i, -MOVE_TORQUE_LIMIT, MOVE_TORQUE_LIMIT);
+    } else {
+        remote->move_pid_i = 0.0f;
+        return NAN;
+    }
 }
 
 void remote_update(Remote *remote, const State *state, const RefloatConfig *config, float dt) {
