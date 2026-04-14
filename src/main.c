@@ -152,7 +152,6 @@ static void main_freq_update_reconfigure(float frequency) {
     Data *d = (Data *) ARG;
 
     motor_data_configure(&d->motor, d->float_conf.atr_filter, frequency);
-    motor_control_configure(&d->motor_control, &d->float_conf, frequency);
 
     atr_configure(&d->atr, &d->float_conf, frequency);
     turn_tilt_configure(&d->turn_tilt, &d->float_conf, frequency);
@@ -164,6 +163,7 @@ static void main_freq_update_reconfigure(float frequency) {
 static void imu_freq_update_reconfigure(float frequency) {
     Data *d = (Data *) ARG;
 
+    motor_control_configure(&d->motor_control, &d->float_conf, frequency);
     pid_configure(&d->pid, frequency);
     booster_configure(&d->booster, frequency);
     ema_configure(&d->balance_current, 25.0f, frequency);
