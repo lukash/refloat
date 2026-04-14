@@ -594,8 +594,8 @@ Item {
         target: vescCommands
 
         readonly property int c_INFO: 0
-        readonly property int c_RC_MOVE: 7
         readonly property int c_HANDTEST: 13
+        readonly property int c_REMOTE: 15
         readonly property int c_LIGHTS_CONTROL: 20
         readonly property int c_FLYWHEEL: 22
         readonly property int c_REALTIME_DATA_INTERNAL: 31
@@ -710,15 +710,9 @@ Item {
             vescCommands.sendCustomAppData(data.buffer);
         }
 
-        function sendRcMove(value) {
-            var data = createData(6, c_RC_MOVE);
-
-            var current = Math.abs(Math.round(value * 70)) + 10;
-
-            data.setUint8(2, value > 0 ? 1 : 0); // direction
-            data.setUint8(3, current); // current
-            data.setUint8(4, 1); // time
-            data.setUint8(5, current + 1); // sum = time + current
+        function sendRemote(value) {
+            var data = createData(3, c_REMOTE);
+            data.setUint8(2, value * 127);
 
             vescCommands.sendCustomAppData(data.buffer);
         }
@@ -6450,7 +6444,7 @@ Item {
                 if (remoteOverlay.value === 0) {
                     running = false;
                 }
-                commands.sendRcMove(remoteOverlay.value);
+                commands.sendRemote(remoteOverlay.value);
             }
         }
 
@@ -7694,7 +7688,7 @@ Item {
                                     remoteSlider.value = 0;
                                     running = false;
                                 }
-                                commands.sendRcMove(remoteSlider.value);
+                                commands.sendRemote(remoteSlider.value);
                             }
                         }
                     }

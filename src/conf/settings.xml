@@ -1512,32 +1512,30 @@ p, li { white-space: pre-wrap; }
             <suffix> %</suffix>
             <vTx>7</vTx>
         </inputtilt_deadband>
-        <remote_throttle_current_max>
-            <longName>Throttle Current Maximum</longName>
-            <type>1</type>
+        <remote.max_move_speed>
+            <longName>Maximum Move Speed</longName>
+            <type>2</type>
             <transmittable>1</transmittable>
             <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Max Current able to be applied using Remote Throttle, allowing the control of the board using your remote's throttle when disengaged. Actual current applied is linearly scaled up to Max Current, based on your throttle percentage.&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Maximum move speed (for turning the motor to remotely make the board move) at full throttle. Speed is linearly scaled based on the remote throttle percentage.&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Recommended Values: 5A - 10A&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-style:italic;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;*DISCLAIMER: Make sure your remote idles at 0% throttle!! Otherwise, current will be continually request, which can drain your battery. Reference &amp;quot;Remote Input&amp;quot; in AppUI Tab of VESC Tool. If it is not idling at 0%, you must either tweak Input Deadband above, or properly calibrate your remote.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
-            <cDefine>CFG_DFLT_REMOTE_THROTTLE_CURRENT_MAX</cDefine>
-            <editorDecimalsDouble>0</editorDecimalsDouble>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;This value also controls the maximum speed for the app remote control. When the value of this option is 0 (disabling remote move for the physical remote), the app remote control defaults to max speed of 5 km/h.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;*DISCLAIMER: Make sure your remote idles at 0% throttle!! Otherwise, current will be continually requested, which can drain your battery. Reference &amp;quot;Remote Input&amp;quot; in the Refloat UI tab of VESC Tool. If it is not idling at 0%, you must either tweak Input Deadband above, or properly calibrate your remote.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_REMOTE_MAX_MOVE_SPEED</cDefine>
             <editorScale>1</editorScale>
             <editAsPercentage>0</editAsPercentage>
-            <maxDouble>50</maxDouble>
-            <minDouble>0</minDouble>
+            <maxInt>10</maxInt>
+            <minInt>0</minInt>
             <showDisplay>0</showDisplay>
-            <stepDouble>2</stepDouble>
-            <valDouble>0</valDouble>
-            <vTxDoubleScale>10</vTxDoubleScale>
-            <suffix> A</suffix>
-            <vTx>7</vTx>
-        </remote_throttle_current_max>
+            <stepInt>1</stepInt>
+            <valInt>0</valInt>
+            <suffix> km/h</suffix>
+            <vTx>1</vTx>
+        </remote.max_move_speed>
         <remote_throttle_grace_period>
             <longName>Grace Period</longName>
             <type>1</type>
@@ -4159,7 +4157,7 @@ p, li { white-space: pre-wrap; }
         <ser>inputtilt_speed</ser>
         <ser>inputtilt_invert_throttle</ser>
         <ser>inputtilt_deadband</ser>
-        <ser>remote_throttle_current_max</ser>
+        <ser>remote.max_move_speed</ser>
         <ser>remote_throttle_grace_period</ser>
         <ser>startup_pitch_tolerance</ser>
         <ser>startup_roll_tolerance</ser>
@@ -4453,7 +4451,7 @@ p, li { white-space: pre-wrap; }
                     <param>inputtilt_invert_throttle</param>
                     <param>inputtilt_deadband</param>
                     <param>::sep::Remote Throttle</param>
-                    <param>remote_throttle_current_max</param>
+                    <param>remote.max_move_speed</param>
                     <param>remote_throttle_grace_period</param>
                 </subgroupParams>
             </subgroup>

@@ -127,10 +127,4 @@ typedef struct {
     float softstart_pid_limit;
 
     uint64_t odometer;
-
-    // Feature: RC Move (control via app while idle)
-    int rc_steps;
-    int rc_counter;
-    float rc_current_target;
-    float rc_current;
 } Data;
