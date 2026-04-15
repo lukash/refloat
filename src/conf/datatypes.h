@@ -232,6 +232,9 @@ typedef struct {
 
 typedef struct {
     bool disabled;
+    float rc_kp;
+    float rc_ki;
+    float rc_limit;
     float kp;
     float ki;
     float kp2;

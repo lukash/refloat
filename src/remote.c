@@ -123,14 +123,16 @@ void remote_command_input(
     timer_refresh(time, &remote->command_input_time);
 }
 
-float remote_get_move_torque(Remote *remote, float speed, float dt) {
+float remote_get_move_torque(Remote *remote, float speed, RefloatConfig *config, float dt) {
     if (!isnan(remote->move_speed)) {
         float error = remote->move_speed - speed;
 
-        remote->move_pid_i += MOVE_KI * error * dt;
-        remote->move_pid_i = clampf(remote->move_pid_i, -MOVE_TORQUE_LIMIT, MOVE_TORQUE_LIMIT);
+        remote->move_pid_i += config->rc_ki * error * dt;
+        remote->move_pid_i = clampf(remote->move_pid_i, -config->rc_limit, config->rc_limit);
 
-        return clampf(MOVE_KP * error + remote->move_pid_i, -MOVE_TORQUE_LIMIT, MOVE_TORQUE_LIMIT);
+        return clampf(
+            config->rc_kp * error + remote->move_pid_i, -config->rc_limit, config->rc_limit
+        );
     } else {
         remote->move_pid_i = 0.0f;
         return NAN;

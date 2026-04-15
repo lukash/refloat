@@ -747,7 +747,7 @@ static void imu_ref_callback(float *acc, float *gyro, float *mag, float dt) {
 
     if (d->state.state == STATE_READY) {
         // returned torque is NAN if no control move is going on, meaning no current reqested
-        float move_torque = remote_get_move_torque(&d->remote, d->motor.speed, dt);
+        float move_torque = remote_get_move_torque(&d->remote, d->motor.speed, &d->float_conf, dt);
         motor_control_request_current(
             &d->motor_control, motor_data_torque_to_current(&d->motor, move_torque)
         );

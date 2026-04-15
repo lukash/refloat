@@ -43,6 +43,6 @@ void remote_command_input(
     Remote *remote, float value, const Time *time, const RefloatConfig *config
 );
 
-float remote_get_move_torque(Remote *remote, float speed, float dt);
+float remote_get_move_torque(Remote *remote, float speed, RefloatConfig *config, float dt);
 
 void remote_update(Remote *remote, const State *state, const RefloatConfig *config, float dt);
