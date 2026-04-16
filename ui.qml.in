@@ -2342,6 +2342,12 @@ Item {
         }
     }
 
+    component CloseToolButton : FloatingToolButton {
+        iconPath: Path {
+            PathSvg {path: "M 15 15 L 35 35 M 15 35 L 35 15"}
+        }
+    }
+
     component Dial : Item {
         id: dial
 
@@ -4494,13 +4500,9 @@ Item {
         showRecordDownload: parent.state.capDataRecord
         toolbarOffset: 1
 
-        FloatingToolButton {
+        CloseToolButton {
             anchors.top: parent.top
             anchors.left: parent.left
-
-            iconPath: Path {
-                PathSvg {path: "M 15 15 L 35 35 M 15 35 L 35 15"}
-            }
 
             onClicked: {
                 parent.visible = false;
