@@ -2884,6 +2884,65 @@ Item {
         }
     }
 
+    // A slider that changes position when tapped (Android slider requires a move)
+    component TapSlider : Item {
+        id: tapSlider
+        property int orientation: Qt.Horizontal
+        property real from: 0
+        property real to: 1
+        property real value: 0
+        property real stepSize: 0
+        property bool sliderEnabled: true
+
+        signal moved()
+
+        onValueChanged: if (slider.value !== value) slider.value = value
+
+        Slider {
+            id: slider
+            anchors.fill: parent
+            orientation: tapSlider.orientation
+            from: tapSlider.from
+            to: tapSlider.to
+            stepSize: tapSlider.stepSize
+            enabled: tapSlider.sliderEnabled
+            onMoved: tapSlider.moved()
+            onValueChanged: if (tapSlider.value !== value) tapSlider.value = value
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            preventStealing: true
+
+            function valueFromPos(mouseX, mouseY) {
+                var handleSize = slider.handle ? (tapSlider.orientation === Qt.Vertical ? slider.handle.height : slider.handle.width) : 0;
+                var padding = handleSize / 2;
+                var trackSize = (tapSlider.orientation === Qt.Vertical ? height : width) - 2 * padding;
+                var pos = tapSlider.orientation === Qt.Vertical
+                    ? (height - padding - mouseY) / trackSize
+                    : (mouseX - padding) / trackSize;
+                pos = clamp(pos, 0, 1);
+                var val = tapSlider.from + pos * (tapSlider.to - tapSlider.from);
+                if (tapSlider.stepSize > 0)
+                    val = Math.round(val / tapSlider.stepSize) * tapSlider.stepSize;
+                return clamp(val, tapSlider.from, tapSlider.to);
+            }
+
+            function applyValue(mouseX, mouseY) {
+                tapSlider.value = valueFromPos(mouseX, mouseY);
+                tapSlider.moved();
+            }
+
+            onPressed: (mouse) => {
+                applyValue(mouse.x, mouse.y);
+            }
+
+            onPositionChanged: (mouse) => {
+                applyValue(mouse.x, mouse.y);
+            }
+        }
+    }
+
     component Plot : Rectangle {
         id: plot
         color: "#0b0b0b"
