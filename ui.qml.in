@@ -1160,8 +1160,8 @@ Item {
     component UIHintUnderline : Rectangle {
         anchors.left: parent.left
         anchors.top: parent.top
-        width: unit * 0.8
-        height: 3
+        width: toolButtonSize
+        height: 2
         color: Utility.getAppHexColor("lightAccent")
         opacity: 0.7
     }
@@ -1259,21 +1259,21 @@ Item {
                 }
 
                 UIHintUnderline {
-                    anchors.topMargin: unit
-                    anchors.leftMargin: unit
-                    width: unit * 1.7
+                    anchors.topMargin: toolButtonSize * 1.2
+                    anchors.leftMargin: toolButtonSize * 1.2
+                    width: toolButtonSize * 2.1
                     visible: hintId === "drGeneral"
                 }
 
                 UIHintUnderline {
-                    anchors.topMargin: unit
-                    anchors.leftMargin: 1.9 * unit
+                    anchors.topMargin: toolButtonSize * 1.2
+                    anchors.leftMargin: toolButtonSize * 2.3
                     visible: hintId === "drStartStop"
                 }
 
                 UIHintUnderline {
-                    anchors.topMargin: unit
-                    anchors.leftMargin: unit
+                    anchors.topMargin: toolButtonSize * 1.2
+                    anchors.leftMargin: toolButtonSize * 1.2
                     visible: hintId === "drDownload"
                 }
             }
@@ -2259,11 +2259,12 @@ Item {
         color: Utility.getAppHexColor("disabledText")
     }
 
+    property real toolButtonSize: 36
     component FloatingToolButton : RoundButton {
         id: button
-        anchors.margins: 4
-        width: unit
-        height: unit
+        anchors.margins: toolButtonSize / 10
+        width: size
+        height: size
         padding: 0
         leftInset: 0
         rightInset: 0
@@ -2272,7 +2273,8 @@ Item {
 
         property Path iconPath
         property Path fillIconPath
-        property real iconSize: width * 0.7
+        property real size: toolButtonSize
+        property real iconSize: size * 0.7
         property color strokeColor: Utility.getAppHexColor("normalText")
         property color fillColor: Utility.getAppHexColor("normalText")
         property color bgColor: Utility.getAppHexColor("darkBackground")
@@ -3092,7 +3094,7 @@ Item {
         property bool followEnd: false
         property real startWindow: 10
 
-        property real toolbarOffset: 0
+        property int toolbarOffset: 0
 
         property bool showRecordDownload: false
         property int maxWindowMinutes
@@ -3148,16 +3150,17 @@ Item {
         }
 
         Row {
+            id: toolbar
             anchors.left: parent.left
             anchors.top: parent.top
-            anchors.leftMargin: toolbarOffset * unit + 0.1 * unit
-            anchors.topMargin: 0.1 * unit
-            spacing: 0.1 * unit
+            anchors.leftMargin: toolbarOffset * (menuButton.size + spacing) + spacing
+            anchors.topMargin: spacing
+            spacing: toolButtonSize / 10
+            height: menuButton.size + 2 * spacing
             z: parent.z + 5
 
             FloatingToolButton {
-                width: 0.8 * unit
-                height: 0.8 * unit
+                id: menuButton
                 visible: plotData.initialized
 
                 iconPath: Path {
@@ -3174,8 +3177,6 @@ Item {
             }
 
             FloatingToolButton {
-                width: 0.8 * unit
-                height: 0.8 * unit
                 visible: plot.showRecordDownload
 
                 iconPath: Path {
@@ -3188,8 +3189,6 @@ Item {
             }
 
             ToggleFloatingToolButton {
-                width: 0.8 * unit
-                height: 0.8 * unit
                 visible: plot.showRecordDownload
 
                 autonomous: false
@@ -3275,9 +3274,6 @@ Item {
             }
 
 //            FloatingToolButton {
-//                width: 0.8 * unit
-//                height: 0.8 * unit
-//
 //                iconPath: Path {
 //                    PathAngleArc {centerX: 25; centerY: 25; radiusX: 12; radiusY: 12; startAngle: 45; sweepAngle: 270;}
 //                }
@@ -3301,8 +3297,8 @@ Item {
 
             color: getDarkThemeColor("darkBackground");
 
-            property real topMargin: unit
-            property real sideMargin: 0.2 * unit
+            property real topMargin: toolbar.height
+            property real sideMargin: toolbar.spacing
             property real hPadding: 8
             property real vPadding: 4
 
@@ -3649,7 +3645,7 @@ Item {
                 property real window
 
                 property int padding: 8
-                property int toolbarHeight: unit
+                property int toolbarHeight: toolbar.height
                 property int bottomHeight: 20
 
                 property real length: width
@@ -4511,13 +4507,11 @@ Item {
         property bool vertical: parent.height > parent.width
 
         showRecordDownload: parent.state.capDataRecord
-        toolbarOffset: 0.9
+        toolbarOffset: 1
 
         FloatingToolButton {
             anchors.top: parent.top
             anchors.left: parent.left
-            width: 0.8 * unit
-            height: 0.8 * unit
 
             iconPath: Path {
                 PathSvg {path: "M 15 15 L 35 35 M 15 35 L 35 15"}
@@ -6283,8 +6277,6 @@ Item {
 //        FloatingToolButton {
 //            anchors.bottom: parent.bottom
 //            anchors.right: parent.right
-//            width: 0.6 * unit
-//            height: 0.6 * unit
 //
 //            iconPath: Path {
 //                PathSvg {path: "M 15 15 L 35 35 M 15 35 L 35 15"}
@@ -6528,7 +6520,7 @@ Item {
                     Layout.alignment: Qt.AlignVCenter
                     Layout.preferredWidth: 0.8 * unit
                     Layout.preferredHeight: 0.8 * unit
-                    height: 0.8 * unit
+                    size: 0.8 * unit
 
                     iconPath: Path {
                         PathSvg {path: "M 10.59 24 L 17.63 32.42 L 6 35 L 10.59 24 M 10.59 24 L 34.39 4 L 41.49 12.42 L 17.69 32.42 M 4 42 L 46 42"}
@@ -6544,7 +6536,7 @@ Item {
                     Layout.alignment: Qt.AlignVCenter
                     Layout.preferredWidth: 0.8 * unit
                     Layout.preferredHeight: 0.8 * unit
-                    height: 0.8 * unit
+                    size: 0.8 * unit
 
                     iconPath: Path {
                         PathSvg {path: "M 14.25 37.81 L 10.59 39.42 A 3 3 0 0 1 6.98 38.47 22.5 22.5 0 0 1 4.32 33.87 A 3 3 0 0 1 5.30 30.27 L 8.53 27.9 A 3.6 3.6 0 0 0 8.53 22.1 L 5.30 19.73 A 3 3 0 0 1 4.32 16.13 A 22.5 22.5 0 0 1 6.98 11.53 A 3 3 0 0 1 10.59 10.58 L 14.25 12.19 A 3.6 3.6 0 0 0 19.28 9.29 L 19.79 5.31 A 3 3 0 0 1 22.35 2.66 A 22.5 22.5 0 0 1 27.65 2.66 A 3 3 0 0 1 30.28 5.31 L 30.72 9.29 A 3.6 3.6 0 0 0 35.75 12.19 L 39.41 10.58 A 3 3 0 0 1 43.02 11.53 A 22.5 22.5 0 0 1 45.67 16.13 A 3 3 0 0 1 44.7 19.73 L 41.47 22.1 A 3.6 3.6 0 0 0 41.47 27.9 L 44.7 30.27 A 3 3 0 0 1 45.68 33.87 A 22.5 22.5 0 0 1 43.02 38.47 A 3 3 0 0 1 39.41 39.42 L 35.75 37.81 A 3.6 3.6 0 0 0 30.72 40.71 L 30.28 44.69 A 3 3 0 0 1 27.65 47.34 A 22.5 22.5 0 0 1 22.35 47.34 A 3 3 0 0 1 19.72 44.69 L 19.28 40.71 A 3.6 3.6 0 0 0 14.25 37.81"}
@@ -7527,6 +7519,7 @@ Item {
                     id: downloadTunesButton
                     anchors.right: parent.right
                     anchors.top: parent.top
+                    size: unit
 
                     iconPath: Path {
                         PathSvg {path: "M 43 39 L 16 39 M 38.5 32 L 11.5 32 M 34 25 L 7 25 M 25 2 L 25 18 L 33 11 M 25 18 L 17 11"}
@@ -7686,8 +7679,6 @@ Item {
                     id: toggleDataPlotButton
                     anchors.top: parent.top
                     anchors.right: parent.right
-                    width: 0.8 * unit
-                    height: 0.8 * unit
                     z: 1
                     value: true
 
