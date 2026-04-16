@@ -6327,6 +6327,124 @@ Item {
         }
     }
 
+    Popup {
+        id: remoteOverlay
+        parent: mainItem
+        width: parent.width
+        height: parent.height
+        modal: true
+        closePolicy: Popup.CloseOnEscape
+
+        Overlay.modal: Rectangle {
+            color: "#bb000000"
+        }
+
+        property real value: 0
+
+        background: Item {}
+
+        contentItem: Item {
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                y: remoteSliderArea.y / 2 - paintedHeight / 2
+                visible: remoteOverlayTimer.running
+
+                font.pixelSize: 42
+                color: Utility.getAppHexColor("normalText")
+
+                text: {
+                    if (state.pkgState === state.s_Running) {
+                        return toFixed1Zero(state.rtData["remote.setpoint"]) + "°";
+                    }
+                    if (state.pkgState === state.s_Ready) {
+                        return round(Math.abs(state.rtData["speed"]) * vescConfig.imperialFactor) + " " + vescConfig.speedUnit;
+                    }
+                    return "";
+                }
+            }
+
+            Item {
+                id: remoteSliderArea
+                anchors.centerIn: parent
+                width: parent.width * 0.5
+                height: 500
+
+                Rectangle {
+                    id: remoteSliderContent
+                    anchors.fill: parent
+                    color: "#22bbbbbb"
+                    visible: false
+
+                    Rectangle {
+                        width: parent.width
+                        color: Utility.getAppHexColor("lightAccent")
+                        opacity: 0.5
+                        y: remoteOverlay.value >= 0 ? parent.height / 2 - height : parent.height / 2
+                        height: Math.abs(remoteOverlay.value) * parent.height / 2
+                    }
+
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: parent.width
+                        height: 2
+                        color: Utility.getAppHexColor("disabledText")
+                    }
+                }
+
+                Rectangle {
+                    id: remoteSliderMask
+                    anchors.fill: parent
+                    radius: 10
+                    visible: false
+                }
+
+                OpacityMask {
+                    anchors.fill: parent
+                    source: remoteSliderContent
+                    maskSource: remoteSliderMask
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+
+                    onPressed: function(mouse) {
+                        remoteOverlay.value = clamp(1 - 2 * mouse.y / height, -1, 1);
+                        remoteOverlayTimer.running = true;
+                    }
+
+                    onPositionChanged: function(mouse) {
+                        remoteOverlay.value = clamp(1 - 2 * mouse.y / height, -1, 1);
+                    }
+
+                    onReleased: {
+                        remoteOverlay.value = 0;
+                    }
+                }
+            }
+
+            CloseToolButton {
+                anchors.top: parent.top
+                anchors.right: parent.right
+                onClicked: remoteOverlay.close()
+            }
+        }
+
+        Timer {
+            id: remoteOverlayTimer
+            repeat: true
+            interval: 20
+            triggeredOnStart: true
+            onTriggered: {
+                if (remoteOverlay.value === 0) {
+                    running = false;
+                }
+                commands.sendRcMove(remoteOverlay.value);
+            }
+        }
+
+        onClosed: value = 0
+    }
+
     ColumnLayout {
         id: root
         anchors.fill: parent
@@ -7566,6 +7684,14 @@ Item {
                                 }
                                 commands.sendRcMove(remoteSlider.value);
                             }
+                        }
+                    }
+
+                    Button {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: "Fullscreen Remote"
+                        onClicked: {
+                            remoteOverlay.open();
                         }
                     }
 
