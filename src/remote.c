@@ -67,12 +67,12 @@ void remote_input(Remote *remote, const Time *time, const RefloatConfig *config)
     switch (config->inputtilt_remote_type) {
     case (INPUTTILT_PPM):
         value = VESC_IF->get_ppm();
-        connected = VESC_IF->get_ppm_age() < 1;
+        connected = VESC_IF->get_ppm_age() < REMOTE_TIMEOUT;
         break;
     case (INPUTTILT_UART): {
         remote_state remote = VESC_IF->get_remote_state();
         value = remote.js_y;
-        connected = remote.age_s < 1;
+        connected = remote.age_s < REMOTE_TIMEOUT;
         break;
     }
     case (INPUTTILT_NONE):
