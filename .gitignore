@@ -10,3 +10,5 @@ ui.qml
 *.obj
 *.so
 *.vescpkg
+
+/result
