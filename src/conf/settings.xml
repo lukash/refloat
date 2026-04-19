@@ -4275,7 +4275,6 @@ p, li { white-space: pre-wrap; }
                 <subgroupParams>
                     <param>::sep::Refloat Package Details</param>
                     <param>disabled</param>
-                    <param>::sep::Balance Loop</param>
                     <param>::sep::Voltage Pushbacks</param>
                     <param>tiltback_hv</param>
                     <param>tiltback_lv</param>
