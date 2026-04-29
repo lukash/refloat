@@ -44,11 +44,7 @@ void haptic_feedback_configure(HapticFeedback *hf, const RefloatConfig *cfg) {
 }
 
 static HapticFeedbackType haptic_feedback_get_type(
-    const HapticFeedback *hf,
-    const State *state,
-    const MotorData *md,
-    bool sensor_alert_active,
-    const AlertTracker *at
+    const HapticFeedback *hf, const State *state, const MotorData *md, const AlertTracker *at
 ) {
     // TODO: Ideally we don't even do pushback in handtest, as it can be confusing
     if (state->state != STATE_RUNNING || state->mode == MODE_HANDTEST) {
@@ -59,7 +55,8 @@ static HapticFeedbackType haptic_feedback_get_type(
         return HAPTIC_FEEDBACK_ERROR_FATAL;
     }
 
-    if (sensor_alert_active) {
+    if (alert_tracker_is_alert_active(at, ALERT_ADC_FULL) ||
+        alert_tracker_is_alert_active(at, ALERT_ADC_HALF)) {
         return HAPTIC_FEEDBACK_SENSOR_ALERT;
     }
 
@@ -149,12 +146,10 @@ void haptic_feedback_update(
     MotorControl *mc,
     const State *state,
     const MotorData *md,
-    bool sensor_alert_active,
     const AlertTracker *at,
     const Time *time
 ) {
-    HapticFeedbackType type_to_play =
-        haptic_feedback_get_type(hf, state, md, sensor_alert_active, at);
+    HapticFeedbackType type_to_play = haptic_feedback_get_type(hf, state, md, at);
 
     if (type_to_play != hf->type_playing && hf->can_change_type) {
         hf->type_playing = type_to_play;

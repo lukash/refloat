@@ -54,7 +54,6 @@ void haptic_feedback_update(
     MotorControl *mc,
     const State *state,
     const MotorData *md,
-    bool sensor_alert_active,
     const AlertTracker *at,
     const Time *time
 );

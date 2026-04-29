@@ -32,7 +32,9 @@ typedef enum {
 typedef enum {
     ALERT_NONE = 0,
     ALERT_FW_FAULT = 1,
-    ALERT_LAST = ALERT_FW_FAULT
+    ALERT_ADC_FULL = 2,
+    ALERT_ADC_HALF = 3,
+    ALERT_LAST = ALERT_ADC_HALF
 } AlertId;
 
 typedef struct {
@@ -68,6 +70,6 @@ void alert_tracker_add(AlertTracker *at, const Time *time, uint8_t id, uint8_t d
 
 void alert_tracker_finalize(AlertTracker *at, const Time *time);
 
-bool alert_tracker_is_alert_active(AlertTracker *at, AlertId alert);
+bool alert_tracker_is_alert_active(const AlertTracker *at, AlertId alert);
 
 void alert_tracker_clear_fatal(AlertTracker *at);

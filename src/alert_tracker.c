@@ -23,6 +23,8 @@ static uint32_t alert_id_to_mask(AlertId alert_id) {
 
 static const AlertProperties alert_properties[] = {
     [ALERT_FW_FAULT] = {.type = ATYPE_FATAL},
+    [ALERT_ADC_FULL] = {.type = ATYPE_WARNING},
+    [ALERT_ADC_HALF] = {.type = ATYPE_WARNING},
 };
 
 const AlertProperties *alert_tracker_properties(AlertId alert_id) {
@@ -47,9 +49,10 @@ void alert_tracker_configure(AlertTracker *at, const RefloatConfig *config) {
 }
 
 void alert_tracker_add(AlertTracker *at, const Time *time, uint8_t id, uint8_t code) {
-    uint32_t mask = alert_id_to_mask(ALERT_FW_FAULT);
-    bool already_active = at->active_alert_mask & mask;
-    if (id == ALERT_FW_FAULT) {
+    AlertId alert_id = (AlertId) id;
+    uint32_t mask = alert_id_to_mask(alert_id);
+    bool already_active = (at->active_alert_mask | at->new_active_alert_mask) & mask;
+    if (alert_id == ALERT_FW_FAULT) {
         already_active = already_active && code == at->fw_fault_code;
         at->fw_fault_code = code;
     }
@@ -59,7 +62,7 @@ void alert_tracker_add(AlertTracker *at, const Time *time, uint8_t id, uint8_t c
         circular_buffer_push(&at->alert_buffer, &alert);
     }
 
-    if (alert_tracker_properties(id)->type == ATYPE_FATAL) {
+    if (alert_tracker_properties(alert_id)->type == ATYPE_FATAL) {
         at->fatal_error = true;
     }
 
@@ -90,8 +93,9 @@ void alert_tracker_finalize(AlertTracker *at, const Time *time) {
     at->fatal_error &= !clear_fatal;
 }
 
-bool alert_tracker_is_alert_active(AlertTracker *at, AlertId alert) {
-    return at->active_alert_mask & alert_id_to_mask(alert);
+bool alert_tracker_is_alert_active(const AlertTracker *at, AlertId alert) {
+    uint32_t mask = alert_id_to_mask(alert);
+    return (at->active_alert_mask | at->new_active_alert_mask) & mask;
 }
 
 void alert_tracker_clear_fatal(AlertTracker *at) {
