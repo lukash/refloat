@@ -180,10 +180,20 @@ typedef struct {
     float strength;
 } CfgHapticTone;
 
+typedef enum {
+    HAPTIC_SENSOR_ALERT_OFF = 0,
+    HAPTIC_SENSOR_ALERT_FULL,
+    HAPTIC_SENSOR_ALERT_HALF,
+    HAPTIC_SENSOR_ALERT_BOTH
+} HapticSensorAlertMode;
+
 typedef struct {
     CfgHapticTone duty;
     CfgHapticTone error;
+    CfgHapticTone sensor;
     CfgHapticTone vibrate;
+    HapticSensorAlertMode sensor_mode;
+    uint16_t sensor_timeout;
     float min_strength;
     float strength_curvature;
     float max_strength_speed;

@@ -27,6 +27,7 @@ typedef enum {
     HAPTIC_FEEDBACK_NONE = 0,
     HAPTIC_FEEDBACK_DUTY_SPEED,
     HAPTIC_FEEDBACK_DUTY_CONTINUOUS,
+    HAPTIC_FEEDBACK_SENSOR_ALERT,
     HAPTIC_FEEDBACK_ERROR_TEMPERATURE,
     HAPTIC_FEEDBACK_ERROR_VOLTAGE,
     HAPTIC_FEEDBACK_ERROR_FATAL,
@@ -53,6 +54,7 @@ void haptic_feedback_update(
     MotorControl *mc,
     const State *state,
     const MotorData *md,
+    bool sensor_alert_active,
     const AlertTracker *at,
     const Time *time
 );

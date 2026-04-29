@@ -44,7 +44,11 @@ void haptic_feedback_configure(HapticFeedback *hf, const RefloatConfig *cfg) {
 }
 
 static HapticFeedbackType haptic_feedback_get_type(
-    const HapticFeedback *hf, const State *state, const MotorData *md, const AlertTracker *at
+    const HapticFeedback *hf,
+    const State *state,
+    const MotorData *md,
+    bool sensor_alert_active,
+    const AlertTracker *at
 ) {
     // TODO: Ideally we don't even do pushback in handtest, as it can be confusing
     if (state->state != STATE_RUNNING || state->mode == MODE_HANDTEST) {
@@ -53,6 +57,10 @@ static HapticFeedbackType haptic_feedback_get_type(
 
     if (at->fatal_error) {
         return HAPTIC_FEEDBACK_ERROR_FATAL;
+    }
+
+    if (sensor_alert_active) {
+        return HAPTIC_FEEDBACK_SENSOR_ALERT;
     }
 
     switch (state->sat) {
@@ -91,6 +99,8 @@ static uint8_t get_beats(HapticFeedbackType type) {
         return 2;
     case HAPTIC_FEEDBACK_DUTY_CONTINUOUS:
         return 0;
+    case HAPTIC_FEEDBACK_SENSOR_ALERT:
+        return 4;
     case HAPTIC_FEEDBACK_ERROR_TEMPERATURE:
         return 6;
     case HAPTIC_FEEDBACK_ERROR_VOLTAGE:
@@ -109,6 +119,8 @@ static const CfgHapticTone *get_haptic_tone(const HapticFeedback *hf) {
     case HAPTIC_FEEDBACK_DUTY_SPEED:
     case HAPTIC_FEEDBACK_DUTY_CONTINUOUS:
         return &hf->cfg->duty;
+    case HAPTIC_FEEDBACK_SENSOR_ALERT:
+        return &hf->cfg->sensor;
     case HAPTIC_FEEDBACK_ERROR_TEMPERATURE:
     case HAPTIC_FEEDBACK_ERROR_VOLTAGE:
     case HAPTIC_FEEDBACK_ERROR_FATAL:
@@ -137,10 +149,12 @@ void haptic_feedback_update(
     MotorControl *mc,
     const State *state,
     const MotorData *md,
+    bool sensor_alert_active,
     const AlertTracker *at,
     const Time *time
 ) {
-    HapticFeedbackType type_to_play = haptic_feedback_get_type(hf, state, md, at);
+    HapticFeedbackType type_to_play =
+        haptic_feedback_get_type(hf, state, md, sensor_alert_active, at);
 
     if (type_to_play != hf->type_playing && hf->can_change_type) {
         hf->type_playing = type_to_play;

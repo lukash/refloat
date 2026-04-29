@@ -794,6 +794,8 @@ static void refloat_thd(void *arg) {
 
     uint32_t loop_timer = VESC_IF->timer_time_now();
     float dt = 0.0f;
+    bool sensor_haptic_pending = false;
+    time_t sensor_haptic_timer = 0;
 
     while (!VESC_IF->should_terminate()) {
         // sleep first to have a correct dt on the first iteration
@@ -844,11 +846,39 @@ static void refloat_thd(void *arg) {
             beep_off(d, false);
         }
 
+        bool sensor_haptic_condition = false;
+        if (d->state.state == STATE_RUNNING && d->state.mode != MODE_FLYWHEEL &&
+            d->motor.abs_erpm > d->switch_warn_beep_erpm) {
+            if (d->float_conf.haptic.sensor_mode == HAPTIC_SENSOR_ALERT_FULL) {
+                sensor_haptic_condition = d->footpad.state == FS_NONE;
+            } else if (d->float_conf.haptic.sensor_mode == HAPTIC_SENSOR_ALERT_HALF) {
+                sensor_haptic_condition =
+                    d->footpad.state == FS_LEFT || d->footpad.state == FS_RIGHT;
+            } else if (d->float_conf.haptic.sensor_mode == HAPTIC_SENSOR_ALERT_BOTH) {
+                sensor_haptic_condition = d->footpad.state != FS_BOTH;
+            }
+        }
+
+        bool sensor_haptic_alert = false;
+        if (sensor_haptic_condition) {
+            if (!sensor_haptic_pending) {
+                timer_refresh(&d->time, &sensor_haptic_timer);
+                sensor_haptic_pending = true;
+            }
+
+            sensor_haptic_alert = timer_older_ms(
+                &d->time, sensor_haptic_timer, d->float_conf.haptic.sensor_timeout
+            );
+        } else {
+            sensor_haptic_pending = false;
+        }
+
         haptic_feedback_update(
             &d->haptic_feedback,
             &d->motor_control,
             &d->state,
             &d->motor,
+            sensor_haptic_alert,
             &d->alert_tracker,
             &d->time
         );
