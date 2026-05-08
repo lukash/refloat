@@ -45,6 +45,8 @@ void motor_data_init(MotorData *m) {
 
     ema_init(&m->batt_current);
     m->batt_voltage = 0.0f;
+    m->motor_current_saturation = 0.0f;
+    m->battery_current_saturation = 0.0f;
 
     m->mosfet_temp = 0.0f;
     m->motor_temp = 0.0f;
@@ -144,6 +146,21 @@ void motor_data_update(MotorData *m, float dt) {
     ema_update(&m->batt_current, VESC_IF->mc_get_tot_current_in_filtered());
     m->batt_voltage = VESC_IF->mc_get_input_voltage_filtered();
 
+    float motor_current_limit = m->braking ? m->current_min : m->current_max;
+    if (motor_current_limit > 0.0f) {
+        m->motor_current_saturation = fabsf(m->filt_current.value) / motor_current_limit;
+    } else {
+        m->motor_current_saturation = 0.0f;
+    }
+
+    float battery_current_limit =
+        m->batt_current.value < 0 ? m->battery_current_min : m->battery_current_max;
+    if (battery_current_limit > 0.0f) {
+        m->battery_current_saturation = fabsf(m->batt_current.value) / battery_current_limit;
+    } else {
+        m->battery_current_saturation = 0.0f;
+    }
+
     m->mosfet_temp = VESC_IF->mc_temp_fet_filtered();
     m->motor_temp = VESC_IF->mc_temp_motor_filtered();
 }
@@ -158,10 +175,5 @@ void motor_data_evaluate_alerts(const MotorData *m, AlertTracker *at, const Time
 }
 
 float motor_data_get_current_saturation(const MotorData *m) {
-    float motor_saturation =
-        fabsf(m->filt_current.value) / (m->braking ? m->current_min : m->current_max);
-    float battery_saturation = m->batt_current.value /
-        (m->batt_current.value < 0 ? m->battery_current_min : m->battery_current_max);
-
-    return max(motor_saturation, battery_saturation);
+    return max(m->motor_current_saturation, m->battery_current_saturation);
 }

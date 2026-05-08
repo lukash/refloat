@@ -78,6 +78,8 @@ static const uint32_t colors[] = {
 
 #define BATTERY_COLOR 0x00909090
 #define DUTY_COLOR 0x00FFB030
+#define MOTOR_CURRENT_COLOR 0x00FF70A0
+#define BATTERY_CURRENT_COLOR 0x0000FF50
 #define FOOTPAD_SENSOR_COLOR 0x0000C0FF
 #define RED_BAR_COLOR 0x00FF3828
 #define BATTERY10_BAR_COLOR 0x00FF5038
@@ -535,21 +537,32 @@ static void anim_confirm(Leds *leds, const LedStrip *strip, float time) {
 }
 
 static void status_animate(
-    Leds *leds, const LedStrip *strip, float current_time, float blend, float idle_blend
+    Leds *leds,
+    const LedStrip *strip,
+    const MotorData *motor,
+    float current_time,
+    float blend,
+    float idle_blend
 ) {
     if (fabsf(VESC_IF->mc_get_rpm()) > ERPM_MOVING_THRESHOLD) {
         leds->status_idle_time = current_time;
     }
 
-    float duty = 0;
+    float duty = 0.0f;
+    float motor_current = 0.0f;
+    float battery_current = 0.0f;
     if (leds->state.state == STATE_RUNNING && leds->state.mode != MODE_FLYWHEEL) {
-        duty = fminf(fabsf(VESC_IF->mc_get_duty_cycle_now() * 10.0f / 9.0f), 1.0f);
+        duty = clampf(motor->duty_cycle.value * 10.0f / 9.0f, 0.0f, 1.0f);
+        motor_current = clampf(motor->motor_current_saturation, 0.0f, 1.0f);
+        battery_current = clampf(motor->battery_current_saturation, 0.0f, 1.0f);
     }
 
-    if (duty > leds->duty_threshold) {
-        rate_limitf(&leds->status_duty_blend, 1.0f, SB_RATE);
-    } else if (duty < leds->duty_threshold - 0.1f) {  // 10 percent hysteresis
-        rate_limitf(&leds->status_duty_blend, 0.0f, SB_RATE);
+    float max_saturation = fmaxf(duty, fmaxf(motor_current, battery_current));
+    if (max_saturation > leds->motor_utilization_threshold) {
+        rate_limitf(&leds->status_blend, 1.0f, SB_RATE);
+    } else if (max_saturation <
+               leds->motor_utilization_threshold - 0.1f) {  // 10 percent hysteresis
+        rate_limitf(&leds->status_blend, 0.0f, SB_RATE);
     }
 
     if (idle_blend > 0.0f) {
@@ -567,17 +580,27 @@ static void status_animate(
 
     if (idle_blend < 1.0f) {
         const bool reverse = strip == &leds->front_strip;
-        if (leds->status_duty_blend < 1.0f) {
+        if (leds->status_blend < 1.0f) {
             const float battery = VESC_IF->mc_get_battery_level(NULL);
             anim_battery_bar(
                 leds, strip, battery, reverse, fminf(blend, 1.0f - idle_blend), current_time
             );
         }
 
-        if (leds->status_duty_blend > 0.0f) {
-            anim_progress_bar(
-                leds, strip, duty, DUTY_COLOR, true, reverse, leds->status_duty_blend
-            );
+        if (leds->status_blend > 0.0f) {
+            float max_sat = duty;
+            uint32_t max_color = DUTY_COLOR;
+
+            if (motor_current > max_sat) {
+                max_sat = motor_current;
+                max_color = MOTOR_CURRENT_COLOR;
+            }
+            if (battery_current > max_sat) {
+                max_sat = battery_current;
+                max_color = BATTERY_CURRENT_COLOR;
+            }
+
+            anim_progress_bar(leds, strip, max_sat, max_color, true, reverse, leds->status_blend);
         }
 
         if (leds->left_sensor > 0.0f || leds->right_sensor > 0.0f) {
@@ -770,8 +793,8 @@ void leds_init(Leds *leds) {
 
     leds->on_off_fade = 0.0f;
 
-    leds->duty_threshold = 0.0f;
-    leds->status_duty_blend = 0.0f;
+    leds->motor_utilization_threshold = 0.0f;
+    leds->status_blend = 0.0f;
     leds->status_idle_blend = 0.0f;
     leds->status_idle_time = 0.0f;
     leds->status_animation_start = 0.0f;
@@ -886,7 +909,7 @@ void leds_setup(Leds *leds, CfgHwLeds *hw_cfg, const CfgLeds *cfg) {
 }
 
 void leds_configure(Leds *leds, const CfgLeds *cfg) {
-    leds->duty_threshold = fmaxf(cfg->status.duty_threshold, 0.15);
+    leds->motor_utilization_threshold = fmaxf(cfg->status.motor_utilization_threshold, 0.15);
 
     leds->headlights_trans.transition = cfg->headlights_transition;
     leds->dir_trans.transition = cfg->direction_transition;
@@ -917,7 +940,9 @@ void leds_set_headlights_enabled(Leds *leds, bool value) {
     leds->runtime_status_overriden.headlights_enabled = true;
 }
 
-void leds_update(Leds *leds, const State *state, FootpadSensorState fs_state) {
+void leds_update(
+    Leds *leds, const State *state, const MotorData *motor, FootpadSensorState fs_state
+) {
     if (!leds->led_data) {
         return;
     }
@@ -1200,10 +1225,13 @@ void leds_update(Leds *leds, const State *state, FootpadSensorState fs_state) {
             rate_limitf(&leds->status_idle_blend, 0.0f, BR_RATE);
         }
 
-        status_animate(leds, &leds->status_strip, current_time, 1.0f, leds->status_idle_blend);
+        status_animate(
+            leds, &leds->status_strip, motor, current_time, 1.0f, leds->status_idle_blend
+        );
     }
 
-    if (leds->cfg->status_on_front_when_lifted && leds->status_on_front_blend > 0.0f) {
+    if (leds->cfg->status_on_front_when_lifted && leds->status_on_front_blend > 0.0f &&
+        leds->front_strip.length > 0) {
         if (leds->cfg->lights_off_when_lifted &&
             current_time - leds->status_on_front_idle_time > 3.0f) {
             rate_limitf(&leds->status_on_front_idle_blend, 1.0f, BR_RATE);
@@ -1214,6 +1242,7 @@ void leds_update(Leds *leds, const State *state, FootpadSensorState fs_state) {
         status_animate(
             leds,
             &leds->front_strip,
+            motor,
             current_time,
             leds->status_on_front_blend,
             leds->status_on_front_idle_blend
