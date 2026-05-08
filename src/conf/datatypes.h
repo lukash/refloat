@@ -320,7 +320,6 @@ typedef struct {
     float turntilt_angle_limit;
     float turntilt_start_angle;
     uint16_t turntilt_start_erpm;
-    float turntilt_speed;
     uint16_t turntilt_erpm_boost;
     uint16_t turntilt_erpm_boost_end;
     int turntilt_yaw_aggregate;

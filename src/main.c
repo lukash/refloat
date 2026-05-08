@@ -1663,7 +1663,6 @@ static void cmd_tune_defaults(Data *d) {
     d->float_conf.turntilt_angle_limit = CFG_DFLT_TURNTILT_ANGLE_LIMIT;
     d->float_conf.turntilt_start_angle = CFG_DFLT_TURNTILT_START_ANGLE;
     d->float_conf.turntilt_start_erpm = CFG_DFLT_TURNTILT_START_ERPM;
-    d->float_conf.turntilt_speed = CFG_DFLT_TURNTILT_SPEED;
     d->float_conf.turntilt_erpm_boost = CFG_DFLT_TURNTILT_ERPM_BOOST;
     d->float_conf.turntilt_erpm_boost_end = CFG_DFLT_TURNTILT_ERPM_BOOST_END;
     d->float_conf.turntilt_yaw_aggregate = CFG_DFLT_TURNTILT_YAW_AGGREGATE;
