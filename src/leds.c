@@ -460,6 +460,20 @@ static void anim_progress_bar(
     }
 }
 
+static void anim_battery_bar(
+    Leds *leds, const LedStrip *strip, float value, bool reverse, float blend, float current_time
+) {
+    float battery = clampf(value, 0.0f, 1.0f);
+    anim_progress_bar(leds, strip, battery, BATTERY_COLOR, false, reverse, blend);
+
+    float blink_threshold = 1.0f / strip->length;
+    if (battery <= blink_threshold) {
+        uint8_t led = reverse ? strip->length - 1 : 0;
+        float blink = 0.15f + 0.85f * cosine_progress(current_time * 2.0f);
+        led_set_color(leds, strip, led, BATTERY10_BAR_COLOR, strip->brightness * blink, blend);
+    }
+}
+
 static void anim_disabled(Leds *leds, const LedStrip *strip, float time) {
     LedBar disabled_bar = {
         .brightness = 0.0f,
@@ -552,11 +566,11 @@ static void status_animate(
     }
 
     if (idle_blend < 1.0f) {
-        bool reverse = strip == &leds->front_strip;
+        const bool reverse = strip == &leds->front_strip;
         if (leds->status_duty_blend < 1.0f) {
-            float battery = VESC_IF->mc_get_battery_level(NULL);
-            anim_progress_bar(
-                leds, strip, battery, BATTERY_COLOR, false, reverse, fminf(blend, 1.0f - idle_blend)
+            const float battery = VESC_IF->mc_get_battery_level(NULL);
+            anim_battery_bar(
+                leds, strip, battery, reverse, fminf(blend, 1.0f - idle_blend), current_time
             );
         }
 
