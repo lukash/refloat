@@ -2381,7 +2381,7 @@ p, li { white-space: pre-wrap; }
             <vTx>7</vTx>
         </torque_tilt.filter.off_speed_time_constant>
         <turn_tilt.filter.time_constant>
-            <longName>Smoothing</longName>
+            <longName>Smoothing Time Constant</longName>
             <type>1</type>
             <transmittable>1</transmittable>
             <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
@@ -2408,50 +2408,6 @@ p, li { white-space: pre-wrap; }
             <suffix> s</suffix>
             <vTx>7</vTx>
         </turn_tilt.filter.time_constant>
-        <turn_tilt.filter.on_speed_time_constant>
-            <longName>Smoothing On Speed Time Constant</longName>
-            <type>1</type>
-            <transmittable>1</transmittable>
-            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Turn Tilt smoothing on speed time constant for transitioning into a more extreme (higher for nose-up, lower for nose-down) setpoint. Defined as time needed for the &lt;span style=&quot; font-style:italic;&quot;&gt;speed&lt;/span&gt; of the setpoint change to reach two thirds of its new target value when transitioning into a more extreme Turn Tilt setpoint. Smoother means less responsive.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
-            <cDefine>CFG_DFLT_TURN_TILT_FILTER_ON_SPEED_TIME_CONSTANT</cDefine>
-            <editorDecimalsDouble>2</editorDecimalsDouble>
-            <editorScale>1</editorScale>
-            <editAsPercentage>0</editAsPercentage>
-            <maxDouble>0.5</maxDouble>
-            <minDouble>0.01</minDouble>
-            <showDisplay>0</showDisplay>
-            <stepDouble>0.05</stepDouble>
-            <valDouble>0.1</valDouble>
-            <vTxDoubleScale>1000</vTxDoubleScale>
-            <suffix> s</suffix>
-            <vTx>7</vTx>
-        </turn_tilt.filter.on_speed_time_constant>
-        <turn_tilt.filter.off_speed_time_constant>
-            <longName>Smoothing Off Speed Time Constant</longName>
-            <type>1</type>
-            <transmittable>1</transmittable>
-            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Turn Tilt smoothing off speed time constant for transitioning back to 0° setpoint. Defined as time needed for the &lt;span style=&quot; font-style:italic;&quot;&gt;speed&lt;/span&gt; of the setpoint change to reach two thirds of its new target value. Smoother means less responsive.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
-            <cDefine>CFG_DFLT_TURN_TILT_FILTER_OFF_SPEED_TIME_CONSTANT</cDefine>
-            <editorDecimalsDouble>2</editorDecimalsDouble>
-            <editorScale>1</editorScale>
-            <editAsPercentage>0</editAsPercentage>
-            <maxDouble>0.5</maxDouble>
-            <minDouble>0.01</minDouble>
-            <showDisplay>0</showDisplay>
-            <stepDouble>0.05</stepDouble>
-            <valDouble>0.1</valDouble>
-            <vTxDoubleScale>1000</vTxDoubleScale>
-            <suffix> s</suffix>
-            <vTx>7</vTx>
-        </turn_tilt.filter.off_speed_time_constant>
         <remote.filter.time_constant>
             <longName>Smoothing Time Constant</longName>
             <type>1</type>
@@ -4195,8 +4151,6 @@ p, li { white-space: pre-wrap; }
         <ser>torque_tilt.filter.on_speed_time_constant</ser>
         <ser>torque_tilt.filter.off_speed_time_constant</ser>
         <ser>turn_tilt.filter.time_constant</ser>
-        <ser>turn_tilt.filter.on_speed_time_constant</ser>
-        <ser>turn_tilt.filter.off_speed_time_constant</ser>
         <ser>remote.filter.time_constant</ser>
         <ser>remote.filter.on_speed_time_constant</ser>
         <ser>remote.filter.off_speed_time_constant</ser>
@@ -4412,13 +4366,11 @@ p, li { white-space: pre-wrap; }
                     <param>turntilt_angle_limit</param>
                     <param>turntilt_start_erpm</param>
                     <param>turntilt_speed</param>
+                    <param>turn_tilt.filter.time_constant</param>
                     <param>turntilt_erpm_boost</param>
                     <param>turntilt_erpm_boost_end</param>
                     <param>turntilt_yaw_aggregate</param>
                     <param>turntilt_start_angle</param>
-                    <param>turn_tilt.filter.time_constant</param>
-                    <param>turn_tilt.filter.on_speed_time_constant</param>
-                    <param>turn_tilt.filter.off_speed_time_constant</param>
                 </subgroupParams>
             </subgroup>
             <subgroup>

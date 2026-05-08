@@ -198,6 +198,10 @@ typedef struct {
 } CfgSetpointFilter;
 
 typedef struct {
+    float time_constant;
+} CfgSetpointFilterSimple;
+
+typedef struct {
     CfgSetpointFilter filter;
 } CfgTorqueTilt;
 
@@ -206,7 +210,7 @@ typedef struct {
 } CfgATR;
 
 typedef struct {
-    CfgSetpointFilter filter;
+    CfgSetpointFilterSimple filter;
 } CfgTurnTilt;
 
 typedef struct {
