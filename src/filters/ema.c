@@ -17,10 +17,15 @@
 
 #include "ema.h"
 
+#include "lib/utils.h"
+
 #include <math.h>
 
 float ema_calculate_alpha(float cutoff_freq, float update_freq) {
-    float omega = 2.0f * M_PI * cutoff_freq / update_freq;
+    // limit omega to < 0.5, the Taylor series approximation is not accurate
+    // over that and equals to alpha = 0.375, which is already not effectively
+    // filtering much at all.
+    float omega = min(2.0f * M_PI * cutoff_freq / update_freq, 0.5f);
     // second order Taylor series approximation of alpha = 1 - e^-omega
     return omega - 0.5f * omega * omega;
 }
