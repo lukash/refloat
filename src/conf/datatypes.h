@@ -130,7 +130,7 @@ typedef struct {
 
 typedef struct {
     uint16_t idle_timeout;
-    float duty_threshold;
+    float motor_utilization_threshold;
     float red_bar_percentage;
     bool show_sensors_while_running;
     float brightness_headlights_on;

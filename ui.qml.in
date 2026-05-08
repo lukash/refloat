@@ -1360,6 +1360,13 @@ Item {
             return tunes;
         }
 
+        function replaceProperty(tune, oldName, newName) {
+            if (tune.settings.hasOwnProperty(oldName)) {
+                tune.settings[newName] = tune.settings[oldName];
+                delete tune.settings[oldName];
+            }
+        }
+
         // Major package versions require a migration, minor don't.
         // Migration functions should return: [tuneObject, [newMajor, newMinor]]
         property var migrations: {
@@ -1375,6 +1382,11 @@ Item {
                 }
 
                 return [tune, [1, 2]];
+            },
+            "1.2": function(tune) {
+                replaceProperty(tune, "leds.status.duty_threshold", "leds.status.motor_utilization_threshold");
+
+                return [tune, [1, 3]];
             },
         }
 
