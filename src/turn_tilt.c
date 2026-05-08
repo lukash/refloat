@@ -50,10 +50,10 @@ void turn_tilt_configure(TurnTilt *tt, const RefloatConfig *config, float freque
         config->turn_tilt.filter.time_constant,
         speed_time_constant,
         speed_time_constant,
-        config->turntilt_speed,
-        config->turntilt_speed,
-        config->turntilt_speed,
-        config->turntilt_speed,
+        20.0f,
+        20.0f,
+        20.0f,
+        20.0f,
         frequency
     );
 }
