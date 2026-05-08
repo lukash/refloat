@@ -21,6 +21,7 @@
 #include "footpad_sensor.h"
 #include "led_driver.h"
 #include "led_strip.h"
+#include "motor_data.h"
 #include "state.h"
 
 #define LEDS_REFRESH_RATE 30
@@ -51,8 +52,8 @@ typedef struct {
 
     float on_off_fade;
 
-    float duty_threshold;
-    float status_duty_blend;
+    float motor_utilization_threshold;
+    float status_utilization_blend;
     float status_idle_blend;
     float status_idle_time;
     float status_animation_start;
@@ -101,7 +102,9 @@ void leds_set_enabled(Leds *leds, bool value);
 
 void leds_set_headlights_enabled(Leds *leds, bool value);
 
-void leds_update(Leds *leds, const State *state, FootpadSensorState fs_state);
+void leds_update(
+    Leds *leds, const State *state, const MotorData *motor, FootpadSensorState fs_state
+);
 
 void leds_status_confirm(Leds *leds);
 

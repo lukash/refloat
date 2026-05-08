@@ -3294,32 +3294,34 @@ p, li { white-space: pre-wrap; }
             <cDefine>CFG_DFLT_LEDS_STATUS_SHOW_SENSORS_WHILE_RUNNING</cDefine>
             <valInt>1</valInt>
         </leds.status.show_sensors_while_running>
-        <leds.status.duty_threshold>
-            <longName>Status Duty Threshold</longName>
+        <leds.status.motor_utilization_threshold>
+            <longName>Motor Utilization Threshold</longName>
             <type>1</type>
             <transmittable>1</transmittable>
             <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Duty threshold above which the duty is shown on the status bar (in amber yellow color) instead of the battery. Note there is a 10% hysteresis, meaning if you duty shows at 20%, it will be shown until it drops below 10% (to avoid constant blinking). Values below 15% set the threshold to 15%.&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Threshold above which motor utilization is shown on the status bar (instead of the battery). Motor utilization is the maximum of duty cycle, motor current saturation, and battery current saturation. Note there is a 10% hysteresis, meaning if motor utilization shows at 60%, it will keep showing until it drops below 50% (to avoid constant blinking).&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Set to 0 to not show the duty bar.&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The colors are as follows:&lt;br /&gt;Duty cycle: amber&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Motor current: pink&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Battery current: teal&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Note: Since duty above 95% is not achievable and you're unlikely to ever benefit from values above 90% being shown on your status bar, duty level of 90% is scaled to 100% on the status bar to make full use of its real estate.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
-            <cDefine>CFG_DFLT_HARDWARE_LEDS_STATUS_DUTY_THRESHOLD</cDefine>
+            <cDefine>CFG_DFLT_HARDWARE_LEDS_STATUS_MOTOR_UTILIZATION_THRESHOLD</cDefine>
             <editorDecimalsDouble>0</editorDecimalsDouble>
             <editorScale>100</editorScale>
             <editAsPercentage>0</editAsPercentage>
             <maxDouble>1</maxDouble>
-            <minDouble>0</minDouble>
+            <minDouble>0.15</minDouble>
             <showDisplay>0</showDisplay>
             <stepDouble>5</stepDouble>
-            <valDouble>0.5</valDouble>
+            <valDouble>0.6</valDouble>
             <vTxDoubleScale>10000</vTxDoubleScale>
             <suffix>%</suffix>
             <vTx>7</vTx>
-        </leds.status.duty_threshold>
+        </leds.status.motor_utilization_threshold>
         <leds.status.red_bar_percentage>
             <longName>Red Color Bar Percentage</longName>
             <type>1</type>
@@ -4007,7 +4009,7 @@ p, li { white-space: pre-wrap; }
         <ser>leds.status.brightness_headlights_off</ser>
         <ser>leds.status.brightness_headlights_on</ser>
         <ser>leds.status.show_sensors_while_running</ser>
-        <ser>leds.status.duty_threshold</ser>
+        <ser>leds.status.motor_utilization_threshold</ser>
         <ser>leds.status.red_bar_percentage</ser>
         <ser>leds.status.idle_timeout</ser>
         <ser>leds.status_idle.mode</ser>
@@ -4259,7 +4261,7 @@ p, li { white-space: pre-wrap; }
                     <param>leds.status.brightness_headlights_off</param>
                     <param>leds.status.brightness_headlights_on</param>
                     <param>leds.status.show_sensors_while_running</param>
-                    <param>leds.status.duty_threshold</param>
+                    <param>leds.status.motor_utilization_threshold</param>
                     <param>leds.status.red_bar_percentage</param>
                     <param>leds.status.idle_timeout</param>
                     <param>::sep::Status Idle</param>

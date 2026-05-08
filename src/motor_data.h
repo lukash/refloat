@@ -50,6 +50,8 @@ typedef struct {
 
     EMA batt_current;
     float batt_voltage;
+    float motor_current_saturation;
+    float battery_current_saturation;
 
     float mosfet_temp;
     float motor_temp;

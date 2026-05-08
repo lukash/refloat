@@ -1154,7 +1154,7 @@ static void aux_thd(void *arg) {
             &d->imu_freq_tracker, running, &d->time, &imu_freq_update_reconfigure
         );
 
-        leds_update(&d->leds, &d->state, d->footpad.state);
+        leds_update(&d->leds, &d->state, &d->motor, d->footpad.state);
 
         // store odometer if we've gone more than 200m
         if (!running && VESC_IF->mc_get_odometer() > d->odometer + 200) {
