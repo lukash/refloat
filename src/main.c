@@ -1248,7 +1248,6 @@ enum {
     COMMAND_CFG_SAVE = 4,  // save config to eeprom
     COMMAND_CFG_RESTORE = 5,  // restore config from eeprom
     COMMAND_TUNE_OTHER = 6,  // make runtime changes to startup/etc
-    COMMAND_RC_MOVE = 7,  // move motor while board is idle
     COMMAND_BOOSTER = 8,  // change booster settings
     COMMAND_PRINT_INFO = 9,  // print verbose info
     COMMAND_GET_ALLDATA = 10,  // send all data, compact
@@ -1744,12 +1743,6 @@ void cmd_remote(Data *d, uint8_t *buf, int len) {
     }
 
     remote_command_input(&d->remote, val / 127.0f, &d->time, &d->float_conf);
-}
-
-void cmd_rc_move(Data *d, unsigned char *cfg) {
-    // current is 10..80 or -10..-80, convert to -127..127
-    int8_t value = clampf((cfg[1] - 10) * 127.0f / 70.0f * (cfg[0] > 0 ? 1 : -1), -127.0f, 127.0f);
-    cmd_remote(d, (uint8_t *) &value, 1);
 }
 
 static void cmd_flywheel_toggle(Data *d, unsigned char *cfg, int len) {
@@ -2351,14 +2344,6 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
     case COMMAND_TUNE_TILT: {
         if (len >= 7) {
             cmd_runtime_tune_tilt(d, &buffer[2], len - 2);
-        } else {
-            log_error("Command data length incorrect: %u", len);
-        }
-        return;
-    }
-    case COMMAND_RC_MOVE: {
-        if (len == 6) {
-            cmd_rc_move(d, &buffer[2]);
         } else {
             log_error("Command data length incorrect: %u", len);
         }
