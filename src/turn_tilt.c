@@ -44,11 +44,12 @@ void turn_tilt_configure(TurnTilt *tt, const RefloatConfig *config, float freque
     tt->boost_per_erpm =
         (float) config->turntilt_erpm_boost / 100.0 / config->turntilt_erpm_boost_end;
 
+    float speed_time_constant = config->turn_tilt.filter.time_constant * 0.5f;
     smooth_setpoint_configure(
         &tt->setpoint,
         config->turn_tilt.filter.time_constant,
-        config->turn_tilt.filter.on_speed_time_constant,
-        config->turn_tilt.filter.off_speed_time_constant,
+        speed_time_constant,
+        speed_time_constant,
         config->turntilt_speed,
         config->turntilt_speed,
         config->turntilt_speed,
