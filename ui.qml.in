@@ -1242,7 +1242,7 @@ Item {
             UIHintText {
                 anchors.horizontalCenter: subject.horizontalCenter
                 anchors.bottom: subject.top
-                text: "Congratulations, you have the Data Record firmware installed. You are now part of the secret Data Recording society.\n\nYour board has the ability to store a short detailed data \"log\" by itself, you don't need to be connected.\n\nIt's controlled by these two buttons."
+                text: "You have the Data Record firmware installed.\n\nYour board has the ability to store a short detailed data \"log\" by itself, you don't need to be connected.\n\nIt's controlled by these two buttons."
                 visible: stage === 1
             }
 
