@@ -1042,9 +1042,12 @@ Item {
 
     component UIHint : Item {
         id: hint
-        // Workaround: Dynamically added SwipeView items are all visible at x=0
+        // Workaround: Dynamically added SwipeView items may be visible at x=0
         // until SwipeView preloads them. Only show when properly positioned.
         visible: SwipeView.view ? (SwipeView.isCurrentItem || SwipeView.isPreviousItem || SwipeView.isNextItem) : false
+        // Workaround 2: SwipeView may fail to position items added during
+        // Component.onCompleted. Use a binding to set x as a fallback.
+        x: SwipeView.view ? SwipeView.index * SwipeView.view.width : 0
 
         property var target
         property real targetX
@@ -1058,7 +1061,12 @@ Item {
 
         function updateTarget() {
             if (target !== null) {
-                var p = mapFromItem(target, 0, 0);
+                // Map relative to the SwipeView rather than this item, so that
+                // the result doesn't depend on our x offset within the content
+                // area. Falls back to mapping relative to ourselves when the
+                // SwipeView isn't available yet (x is 0 then, so equivalent).
+                var ref = SwipeView.view || hint;
+                var p = ref.mapFromItem(target, 0, 0);
                 targetX = p.x;
                 targetY = p.y;
             }
@@ -1184,6 +1192,12 @@ Item {
                 }
 
                 Component.onCompleted: {
+                    // Need to show the plot if any of the hints use it to get
+                    // it initialized, otherwise the layout randomly breaks
+                    if (hintId !== "statusText") {
+                        bottomStackTabs.currentIndex = 2;
+                    }
+
                     pd.init(["current"], 1);
                     subject.init(1);
                     pd.addSample([0, 0,0,0,0, 10], 0);
