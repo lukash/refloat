@@ -1,4 +1,4 @@
-# Refloat 1.3 feature preview 1
+# Refloat 1.3 feature preview 3
 
 A full-featured self-balancing skateboard package.
 
