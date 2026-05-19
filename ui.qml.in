@@ -7834,7 +7834,7 @@ Item {
                                 Value {label: "Filtered current"; unit: "A"; value: toFixed2Zero(state.rtData["filt_current"]);}
                                 Value {label: "ATR Accel. diff."; value: toFixed2Zero(state.rtData["atr.accel_diff"]);}
                                 Value {label: "ATR Speed Boost"; unit: "%"; value: round(state.rtData["atr.speed_boost"] * 100);}
-                                Value {label: "Booster torque"; unit: "A"; value: toFixed2Zero(state.rtData["booster.torque"]);}
+                                Value {label: "Booster torque"; unit: "Nm"; value: toFixed2Zero(state.rtData["booster.torque"]);}
                                 Value {label: "Remote input"; unit: "%"; value: round(state.rtData["remote.input"] * 100);}
                             }
 

@@ -94,13 +94,13 @@ void atr_update(
     // expected acceleration is proportional to current (minus an offset, required to
     // balance/maintain speed)
     float expected_acc;
-    if (abs_torque < 25) {
+    if (abs_torque < 15) {
         expected_acc = (motor->torque - motor->erpm_sign * torque_offset) / accel_factor;
     } else {
         // primitive linear approximation of non-linear torque-accel relationship
         int torque_sign = sign(motor->torque);
-        expected_acc = (torque_sign * 25 - motor->erpm_sign * torque_offset) / accel_factor;
-        expected_acc += torque_sign * (abs_torque - 25) / accel_factor2;
+        expected_acc = (torque_sign * 15 - motor->erpm_sign * torque_offset) / accel_factor;
+        expected_acc += torque_sign * (abs_torque - 15) / accel_factor2;
     }
 
     float new_accel_diff = expected_acc - measured_acc;

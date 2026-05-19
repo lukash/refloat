@@ -58,7 +58,7 @@ void torque_tilt_update(
 
     float strength =
         (motor->braking ? config->torquetilt_strength_regen : config->torquetilt_strength) *
-        TORQUE_CONSTANT_COMPAT;
+        (1 / TORQUE_CONSTANT_COMPAT);
 
     float torque_base = fmaxf(
         (fabsf(motor->torque) - config->torquetilt_start_current * TORQUE_CONSTANT_COMPAT), 0
