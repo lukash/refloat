@@ -73,6 +73,12 @@ void state_stop(State *state, StopCondition stop_condition);
 
 void state_engage(State *state);
 
+/**
+ * Doesn't actually turn off the Flywheel mode, it's being done separately due
+ * to legacy logic.
+ */
+void state_flywheel_off(State *state);
+
 void state_set_disabled(State *state, bool disabled);
 
 /**

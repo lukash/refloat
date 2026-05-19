@@ -472,7 +472,7 @@ static bool check_faults(Data *d) {
         }
 
         if (d->state.mode == MODE_FLYWHEEL && d->footpad.state == FS_BOTH) {
-            state_stop(&d->state, STOP_SWITCH_HALF);
+            state_flywheel_off(&d->state);
             d->flywheel_abort = true;
             return true;
         }
@@ -1819,83 +1819,86 @@ static void cmd_flywheel_toggle(Data *d, unsigned char *cfg, int len) {
     // Optional:
     // cfg[6]: Duty TB Speed in deg/sec
     int command = cfg[0] & 0x7F;
-    d->state.mode = command == 0 ? MODE_NORMAL : MODE_FLYWHEEL;
-    if (d->state.mode == MODE_FLYWHEEL) {
-        if (d->imu.flywheel_pitch_offset == 0 || command == 2) {
-            // accidental button press?? board isn't evn close to being upright
-            if (fabsf(d->imu.pitch) < 70) {
-                d->state.mode = MODE_NORMAL;
-                return;
-            }
-
-            imu_set_flywheel_offsets(&d->imu);
-            beep_alert(d, 1, 1);
-        } else {
-            beep_alert(d, 3, 0);
-        }
-        d->flywheel_abort = false;
-
-        // Tighter startup/fault tolerances
-        d->startup_pitch_tolerance = 0.2;
-        d->float_conf.startup_pitch_tolerance = 0.2;
-        d->float_conf.startup_roll_tolerance = 25;
-        d->float_conf.fault_pitch = 6;
-        d->float_conf.fault_roll = 35;  // roll can fluctuate significantly in the upright position
-        if (command & 0x4) {
-            d->float_conf.fault_roll = 90;
-        }
-        d->float_conf.fault_delay_pitch = 50;  // 50ms delay should help filter out IMU noise
-        d->float_conf.fault_delay_roll = 50;  // 50ms delay should help filter out IMU noise
-
-        // Aggressive P with some D (aka Rate-P) for Mahony kp=0.3
-        d->float_conf.kp = 8.0;
-        d->float_conf.kp2 = 0.3;
-
-        if (cfg[1] > 0) {
-            d->float_conf.kp = cfg[1] * 0.1f;
-        }
-        if (cfg[2] > 0) {
-            d->float_conf.kp2 = cfg[2] * 0.01f;
-        }
-
-        d->float_conf.tiltback_duty_angle = 2;
-        d->float_conf.tiltback_duty = 0.1;
-        d->float_conf.tiltback_duty_speed = 5;
-        d->float_conf.tiltback_return_speed = 5;
-
-        if (cfg[3] > 0) {
-            d->float_conf.tiltback_duty_angle = cfg[3] * 0.1f;
-        }
-        if (cfg[4] > 0) {
-            d->float_conf.tiltback_duty = cfg[4] * 0.01f;
-        }
-        if ((len > 6) && (cfg[6] > 1) && (cfg[6] < 100)) {
-            d->float_conf.tiltback_duty_speed = cfg[6] * 0.5f;
-            d->float_conf.tiltback_return_speed = cfg[6] * 0.5f;
-        }
-
-        // Disable I-term and all tune modifiers and tilts
-        d->float_conf.ki = 0;
-        d->float_conf.kp_brake = 1;
-        d->float_conf.kp2_brake = 1;
-        d->float_conf.brkbooster_angle = 100;
-        d->float_conf.booster_angle = 100;
-        d->float_conf.torquetilt_strength = 0;
-        d->float_conf.torquetilt_strength_regen = 0;
-        d->float_conf.atr_strength_up = 0;
-        d->float_conf.atr_strength_down = 0;
-        d->float_conf.turntilt_strength = 0;
-        d->float_conf.tiltback_constant = 0;
-        d->float_conf.tiltback_variable = 0;
-        d->float_conf.brake_current = 0;
-        d->float_conf.fault_darkride_enabled = false;
-        d->float_conf.fault_reversestop_enabled = false;
-        d->float_conf.tiltback_constant = 0;
-        d->tiltback_variable_max_erpm = 0;
-        d->tiltback_variable = 0;
-    } else {
+    if (command == 0) {
+        // Ensure PID won't run with the wrong pitch by stopping before mode change
+        state_flywheel_off(&d->state);
         flywheel_stop(d);
+        return;
     }
+
+    d->state.mode = MODE_FLYWHEEL;
+    if (d->imu.flywheel_pitch_offset == 0 || command == 2) {
+        // accidental button press?? board isn't evn close to being upright
+        if (fabsf(d->imu.pitch) < 70) {
+            d->state.mode = MODE_NORMAL;
+            return;
+        }
+
+        imu_set_flywheel_offsets(&d->imu);
+        beep_alert(d, 1, 1);
+    } else {
+        beep_alert(d, 3, 0);
+    }
+    d->flywheel_abort = false;
+
+    // Tighter startup/fault tolerances
+    d->startup_pitch_tolerance = 0.2;
+    d->float_conf.startup_pitch_tolerance = 0.2;
+    d->float_conf.startup_roll_tolerance = 25;
+    d->float_conf.fault_pitch = 6;
+    d->float_conf.fault_roll = 35;  // roll can fluctuate significantly in the upright position
+    if (command & 0x4) {
+        d->float_conf.fault_roll = 90;
+    }
+    d->float_conf.fault_delay_pitch = 50;  // 50ms delay should help filter out IMU noise
+    d->float_conf.fault_delay_roll = 50;  // 50ms delay should help filter out IMU noise
+
+    // Aggressive P with some D (aka Rate-P) for Mahony kp=0.3
+    d->float_conf.kp = 8.0;
+    d->float_conf.kp2 = 0.3;
+
+    if (cfg[1] > 0) {
+        d->float_conf.kp = cfg[1] * 0.1f;
+    }
+    if (cfg[2] > 0) {
+        d->float_conf.kp2 = cfg[2] * 0.01f;
+    }
+
+    d->float_conf.tiltback_duty_angle = 2;
+    d->float_conf.tiltback_duty = 0.1;
+    d->float_conf.tiltback_duty_speed = 5;
+    d->float_conf.tiltback_return_speed = 5;
+
+    if (cfg[3] > 0) {
+        d->float_conf.tiltback_duty_angle = cfg[3] * 0.1f;
+    }
+    if (cfg[4] > 0) {
+        d->float_conf.tiltback_duty = cfg[4] * 0.01f;
+    }
+    if ((len > 6) && (cfg[6] > 1) && (cfg[6] < 100)) {
+        d->float_conf.tiltback_duty_speed = cfg[6] * 0.5f;
+        d->float_conf.tiltback_return_speed = cfg[6] * 0.5f;
+    }
+
+    // Disable I-term and all tune modifiers and tilts
+    d->float_conf.ki = 0;
+    d->float_conf.kp_brake = 1;
+    d->float_conf.kp2_brake = 1;
+    d->float_conf.brkbooster_angle = 100;
+    d->float_conf.booster_angle = 100;
+    d->float_conf.torquetilt_strength = 0;
+    d->float_conf.torquetilt_strength_regen = 0;
+    d->float_conf.atr_strength_up = 0;
+    d->float_conf.atr_strength_down = 0;
+    d->float_conf.turntilt_strength = 0;
+    d->float_conf.tiltback_constant = 0;
+    d->float_conf.tiltback_variable = 0;
+    d->float_conf.brake_current = 0;
+    d->float_conf.fault_darkride_enabled = false;
+    d->float_conf.fault_reversestop_enabled = false;
+    d->float_conf.tiltback_constant = 0;
+    d->tiltback_variable_max_erpm = 0;
+    d->tiltback_variable = 0;
 }
 
 void flywheel_stop(Data *d) {
