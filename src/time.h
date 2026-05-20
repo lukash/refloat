@@ -49,6 +49,14 @@ inline void timer_refresh(const Time *t, time_t *timer) {
     *timer = t->now;
 }
 
+/**
+ * Sets the timer to an already-expired state, as if it was last refreshed
+ * `age` seconds ago.
+ */
+inline void timer_expire(const Time *t, time_t *timer, float age) {
+    *timer = t->now - (time_t) (age * SYSTEM_TICK_RATE_HZ);
+}
+
 inline bool timer_older(const Time *t, time_t timer, float seconds) {
     return t->now - timer > (time_t) (seconds * SYSTEM_TICK_RATE_HZ);
 }
