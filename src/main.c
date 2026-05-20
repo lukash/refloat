@@ -83,7 +83,7 @@ typedef enum {
 } BeepReason;
 
 static const FootpadSensorState flywheel_konami_sequence[] = {
-    FS_LEFT, FS_NONE, FS_RIGHT, FS_NONE, FS_LEFT, FS_NONE, FS_RIGHT
+    FS_LEFT, FS_NONE, FS_RIGHT, FS_NONE, FS_LEFT, FS_NONE, FS_RIGHT, FS_NONE
 };
 
 static const FootpadSensorState headlights_on_konami_sequence[] = {
@@ -471,7 +471,7 @@ static bool check_faults(Data *d) {
             }
         }
 
-        if (d->state.mode == MODE_FLYWHEEL && d->footpad.state == FS_BOTH) {
+        if (d->state.mode == MODE_FLYWHEEL && d->footpad.state != FS_NONE) {
             state_flywheel_off(&d->state);
             d->flywheel_abort = true;
             return true;
@@ -966,7 +966,7 @@ static void refloat_thd(void *arg) {
             break;
         case (STATE_READY):
             if (d->state.mode == MODE_FLYWHEEL) {
-                if (d->flywheel_abort || d->footpad.state == FS_BOTH) {
+                if (d->flywheel_abort || d->footpad.state != FS_NONE) {
                     flywheel_stop(d);
                     break;
                 }
