@@ -24,6 +24,7 @@
 #define MOVE_TORQUE_LIMIT 10.0f
 
 #define REMOTE_TIMEOUT 0.5f
+#define MOVE_IDLE_TIMEOUT 1.0f
 
 void remote_init(Remote *remote, const Time *time) {
     remote->input = 0;
@@ -31,13 +32,14 @@ void remote_init(Remote *remote, const Time *time) {
 
     timer_expire(time, &remote->command_input_time, REMOTE_TIMEOUT);
 
-    remote_reset(remote);
+    remote_reset(remote, time);
 }
 
-void remote_reset(Remote *remote) {
+void remote_reset(Remote *remote, const Time *time) {
     smooth_setpoint_reset(&remote->setpoint);
     remote->move_speed = NAN;
     remote->move_pid_i = 0.0f;
+    timer_expire(time, &remote->move_idle_time, MOVE_IDLE_TIMEOUT);
 }
 
 void remote_configure(Remote *remote, const RefloatConfig *config, float frequency) {
@@ -95,11 +97,16 @@ void remote_input(Remote *remote, const Time *time, const RefloatConfig *config)
 
     // remote move logic
     if (value == 0.0f) {
-        remote->move_speed = NAN;
+        if (timer_older(time, remote->move_idle_time, MOVE_IDLE_TIMEOUT)) {
+            remote->move_speed = NAN;
+        } else {
+            remote->move_speed = 0.0f;
+        }
     } else {
         if (config->remote.max_move_speed > 0 &&
             time_elapsed(time, disengage, config->remote_throttle_grace_period)) {
             remote->move_speed = value * config->remote.max_move_speed;
+            timer_refresh(time, &remote->move_idle_time);
         }
     }
 

@@ -241,7 +241,7 @@ static void reset_runtime_vars(Data *d) {
     atr_reset(&d->atr);
     brake_tilt_reset(&d->brake_tilt);
     turn_tilt_reset(&d->turn_tilt);
-    remote_reset(&d->remote);
+    remote_reset(&d->remote, &d->time);
     booster_reset(&d->booster);
     reverse_stop_reset(&d->reverse_stop, d->motor.distance);
 

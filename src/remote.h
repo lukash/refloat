@@ -29,11 +29,12 @@ typedef struct {
 
     float move_speed;  // speed for the remote (wheel) move; NAN means no remote control
     float move_pid_i;
+    time_t move_idle_time;
 } Remote;
 
 void remote_init(Remote *remote, const Time *time);
 
-void remote_reset(Remote *remote);
+void remote_reset(Remote *remote, const Time *time);
 
 void remote_configure(Remote *remote, const RefloatConfig *config, float frequency);
 
