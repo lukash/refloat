@@ -32,7 +32,7 @@ void time_init(Time *t) {
     // Workaround: After startup (assume the time is very close to 0), we don't
     // want anything to be thinking we have just disengaged. Set disengage time
     // a minute into the past to prevent this.
-    t->disengage_timer = t->now - 60;
+    timer_expire(t, &t->disengage_timer, 60);
     time_refresh_idle(t);
 }
 
