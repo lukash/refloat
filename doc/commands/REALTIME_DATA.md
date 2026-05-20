@@ -59,7 +59,8 @@ The bits in `mask1` and `mask2` control which fields are included in the respons
 | 27  | `turn_tilt_setpoint`       | float16/float32 | Turn tilt setpoint [°].                          |
 | 28  | `remote_setpoint`          | float16/float32 | Remote control setpoint [°].                     |
 | 29  | `balance_current`          | float16/float32 | Balance (output) current [A].                    |
-| 30-31 | _(unused)_               | -               | Reserved for future use.                         |
+| 30  | `loop_frequency`           | float16/float32 | Control loop frequency [Hz].                     |
+| 31  | _(unused)_                 | -               | Reserved for future use.                         |
 
 #### mask2
 

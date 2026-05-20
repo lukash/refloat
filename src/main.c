@@ -2041,6 +2041,7 @@ enum {
     RT_MASK1_TURN_TILT_SETPOINT = 1 << 27,
     RT_MASK1_REMOTE_SETPOINT = 1 << 28,
     RT_MASK1_BALANCE_CURRENT = 1 << 29,
+    RT_MASK1_LOOP_FREQUENCY = 1 << 30,
 };
 
 enum {
@@ -2132,6 +2133,9 @@ static void cmd_realtime_data(Data *d, uint8_t *buf, int len) {
     );
     add_rt_item(buffer, &ind, mask1, RT_MASK1_REMOTE_SETPOINT, d->remote.setpoint.value, use_f32);
     add_rt_item(buffer, &ind, mask1, RT_MASK1_BALANCE_CURRENT, d->balance_current.value, use_f32);
+    add_rt_item(
+        buffer, &ind, mask1, RT_MASK1_LOOP_FREQUENCY, d->imu_freq_tracker.frequency.value, use_f32
+    );
 
     // MASK2
     if (mask2 & RT_MASK2_ODOMETER) {
