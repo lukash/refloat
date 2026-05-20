@@ -53,7 +53,7 @@ typedef struct {
     float on_off_fade;
 
     float motor_utilization_threshold;
-    float status_blend;
+    float status_utilization_blend;
     float status_idle_blend;
     float status_idle_time;
     float status_animation_start;

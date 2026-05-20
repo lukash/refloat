@@ -557,12 +557,12 @@ static void status_animate(
         battery_current = clampf(motor->battery_current_saturation, 0.0f, 1.0f);
     }
 
-    float max_saturation = fmaxf(duty, fmaxf(motor_current, battery_current));
-    if (max_saturation > leds->motor_utilization_threshold) {
-        rate_limitf(&leds->status_blend, 1.0f, SB_RATE);
-    } else if (max_saturation <
-               leds->motor_utilization_threshold - 0.1f) {  // 10 percent hysteresis
-        rate_limitf(&leds->status_blend, 0.0f, SB_RATE);
+    float motor_utilization = fmaxf(duty, fmaxf(motor_current, battery_current));
+    // 10 percent hysteresis
+    if (motor_utilization > leds->motor_utilization_threshold) {
+        rate_limitf(&leds->status_utilization_blend, 1.0f, SB_RATE);
+    } else if (motor_utilization < leds->motor_utilization_threshold - 0.1f) {
+        rate_limitf(&leds->status_utilization_blend, 0.0f, SB_RATE);
     }
 
     if (idle_blend > 0.0f) {
@@ -580,14 +580,14 @@ static void status_animate(
 
     if (idle_blend < 1.0f) {
         const bool reverse = strip == &leds->front_strip;
-        if (leds->status_blend < 1.0f) {
+        if (leds->status_utilization_blend < 1.0f) {
             const float battery = VESC_IF->mc_get_battery_level(NULL);
             anim_battery_bar(
                 leds, strip, battery, reverse, fminf(blend, 1.0f - idle_blend), current_time
             );
         }
 
-        if (leds->status_blend > 0.0f) {
+        if (leds->status_utilization_blend > 0.0f) {
             float max_sat = duty;
             uint32_t max_color = DUTY_COLOR;
 
@@ -600,7 +600,9 @@ static void status_animate(
                 max_color = BATTERY_CURRENT_COLOR;
             }
 
-            anim_progress_bar(leds, strip, max_sat, max_color, true, reverse, leds->status_blend);
+            anim_progress_bar(
+                leds, strip, max_sat, max_color, true, reverse, leds->status_utilization_blend
+            );
         }
 
         if (leds->left_sensor > 0.0f || leds->right_sensor > 0.0f) {
@@ -794,7 +796,7 @@ void leds_init(Leds *leds) {
     leds->on_off_fade = 0.0f;
 
     leds->motor_utilization_threshold = 0.0f;
-    leds->status_blend = 0.0f;
+    leds->status_utilization_blend = 0.0f;
     leds->status_idle_blend = 0.0f;
     leds->status_idle_time = 0.0f;
     leds->status_animation_start = 0.0f;
