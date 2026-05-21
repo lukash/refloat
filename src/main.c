@@ -1722,6 +1722,9 @@ static void cmd_runtime_tune_tilt(Data *d, unsigned char *cfg, int len) {
     d->float_conf.tiltback_duty = (float) cfg[2] / 100.0;
     d->float_conf.tiltback_duty_angle = (float) cfg[3] / 10.0;
     d->float_conf.tiltback_duty_speed = (float) cfg[4] / 10.0;
+    if (len >= 6) {
+        d->float_conf.tiltback_speed = (float) cfg[5];
+    }
 
     beep_alert(d, 3, 0);
 }
