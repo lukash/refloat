@@ -70,6 +70,10 @@ void motor_control_apply(MotorControl *mc, float abs_erpm, RunState state, const
     }
 
     if (mc->tone_ticks > 0) {
+        if (isnan(mc->requested_current)) {
+            mc->requested_current = 0.0f;
+        }
+
         if (--mc->tone_counter == 0) {
             mc->tone_counter = mc->tone_ticks;
             mc->tone_high = !mc->tone_high;
