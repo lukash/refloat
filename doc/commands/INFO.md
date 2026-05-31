@@ -40,5 +40,5 @@ _Note: What is now referred to as version `1` of this command originally had no 
 | 25     | 20   | `package_version_suffix` | An optional package version suffix string. Zero-padded to 20 bytes, not zero-terminated in case all 20 bytes are used. |
 | 45     | 4    | `git_hash`               | First 4 bytes of the git hash from which the package was built. |
 | 49     | 4    | `tick_rate`              | Tick rate of the system in Hz. This number can be used to convert time measured in ticks in other commands (namely `REALTIME_DATA`) to seconds by dividing by this number. Currently the tick rate for VESC is always `10000`. |
-| 53     | 4    | `capabilities`           | Capability flags of the package:<br> `0x1`: LED lighting.<br> `0x2`: LED lighting is external through a module.<br> `0x80000000`: Data Recording. See the [Realtime Value Tracking](../realtime_value_tracking.md) page for details. |
+| 53     | 4    | `capabilities`           | Capability flags of the package:<br> `0x1`: LED lighting.<br> `0x2`: LED lighting is external through a module.<br> `0x4`: GNSS data available.<br> `0x80000000`: Data Recording. See the [Realtime Value Tracking](../realtime_value_tracking.md) page for details. |
 | 57     | 1    | `extra_flags`            | Extra flags:<br> [empty] |

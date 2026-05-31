@@ -75,7 +75,13 @@ The bits in `mask1` and `mask2` control which fields are included in the respons
 | 6   | `watt_hours`               | float16/float32 | Watt hours consumed [Wh].                        |
 | 7   | `watt_hours_charged`       | float16/float32 | Watt hours charged [Wh].                         |
 | 8   | `motor_id`                 | float16/float32 | FOC direct axis motor current [A].               |
-| 9-31 | _(unused)_                | -               | Reserved for future use.                         |
+| 9   | `gnss_lat`                 | float64         | GNSS latitude [°]. Encoded as IEEE 754. |
+| 10  | `gnss_lon`                 | float64         | GNSS longitude [°]. Encoded as IEEE 754. |
+| 11  | `gnss_altitude`            | float16/float32 | GNSS altitude [m].                               |
+| 12  | `gnss_speed`               | float16/float32 | GNSS speed [km/h].                               |
+| 13  | `gnss_accuracy`            | float16/float32 | GNSS horizontal dilution of precision (HDOP).    |
+| 14  | `gnss_last_update`         | uint32          | GNSS last update timestamp [ticks]. Always sent as uint32. Overflows every ~4.97 days at the current tick rate of 10000 Hz. |
+| 15-31 | _(unused)_               | -               | Reserved for future use.                         |
 
 ### extra_flags
 
@@ -156,7 +162,8 @@ The state flags are encoded as a 32-bit unsigned integer with the following bit 
 ## Notes
 
 - Numeric values are encoded as [float16](float16.md) by default. Set bit 0 of `control_flags` to use float32 encoding instead.
-- The `odometer` field is always encoded as a uint32 regardless of the `control_flags` setting.
+- The `odometer` and `gnss_last_update` fields are always encoded as uint32 regardless of the `control_flags` setting.
+- The `gnss_lat` and `gnss_lon` fields are always encoded as IEEE 754 float64 (big-endian) regardless of the `control_flags` setting.
 
 ## Example
 

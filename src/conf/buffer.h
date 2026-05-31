@@ -30,6 +30,7 @@ void buffer_append_float16(uint8_t *buffer, float number, float scale, int32_t *
 void buffer_append_float32(uint8_t *buffer, float number, float scale, int32_t *index);
 void buffer_append_float32_auto(uint8_t *buffer, float number, int32_t *index);
 void buffer_append_float16_auto(uint8_t *buffer, float number, int32_t *index);
+void buffer_append_float64(uint8_t *buffer, double number, int32_t *index);
 void buffer_append_string(uint8_t *buffer, const char *str, int32_t *index);
 void buffer_append_string_max(uint8_t *buffer, const char *str, int32_t *index, uint8_t length);
 void buffer_append_string_fixed(uint8_t *buffer, const char *str, int32_t *index, uint8_t length);
