@@ -144,6 +144,18 @@ void buffer_append_float16_auto(uint8_t *buffer, float number, int32_t *index) {
     buffer_append_uint16(buffer, to_float16(number), index);
 }
 
+void buffer_append_float64(uint8_t *buffer, double number, int32_t *index) {
+    union {
+        double d;
+        uint32_t u[2];
+    } un;
+    un.d = number;
+    // ARM is little-endian: u[1] is the high 32 bits, u[0] is the low 32 bits.
+    // Send big-endian (high bits first).
+    buffer_append_uint32(buffer, un.u[1], index);
+    buffer_append_uint32(buffer, un.u[0], index);
+}
+
 void buffer_append_string(uint8_t *buffer, const char *str, int32_t *index) {
     int32_t idx = *index + 1;
     size_t i = 0;

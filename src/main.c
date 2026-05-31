@@ -2054,6 +2054,12 @@ enum {
     RT_MASK2_WATT_HOURS = 1 << 6,
     RT_MASK2_WATT_HOURS_CHARGED = 1 << 7,
     RT_MASK2_MOTOR_ID = 1 << 8,  // The FOC direct axis motor current
+    RT_MASK2_GNSS_LAT = 1 << 9,
+    RT_MASK2_GNSS_LON = 1 << 10,
+    RT_MASK2_GNSS_ALTITUDE = 1 << 11,
+    RT_MASK2_GNSS_SPEED = 1 << 12,
+    RT_MASK2_GNSS_ACCURACY = 1 << 13,
+    RT_MASK2_GNSS_LAST_UPDATE = 1 << 14,
 };
 
 static void cmd_realtime_data(Data *d, uint8_t *buf, int len) {
@@ -2072,8 +2078,8 @@ static void cmd_realtime_data(Data *d, uint8_t *buf, int len) {
         mask2 = buffer_get_uint32(buf, &ind);
     }
 
-    // 9B header + 4B time + (65 fields * 4B)
-    static const int bufsize = 273;
+    // 11B header + 4B time + (64 fields * 4B) + (2 * 4B extra for GNSS lat/lon float64s)
+    static const int bufsize = 279;
     uint8_t buffer[bufsize];
     ind = 0;
 
@@ -2167,6 +2173,29 @@ static void cmd_realtime_data(Data *d, uint8_t *buf, int len) {
         use_f32
     );
     add_rt_item(buffer, &ind, mask2, RT_MASK2_MOTOR_ID, VESC_IF->foc_get_id(), use_f32);
+
+    // GNSS fields - lat/lon are always float64, the rest follow the use_f32 flag
+    // Note: lat/lon are 8 byte values and the updates are not synchronized, so
+    // it's possible to hit the exact moment between the high and low side
+    // being updated and get an inconsistent read (different GNSS values are
+    // obviously not synchronised between each other either).
+    if (mask2 &
+        (RT_MASK2_GNSS_LAT | RT_MASK2_GNSS_LON | RT_MASK2_GNSS_ALTITUDE | RT_MASK2_GNSS_SPEED |
+         RT_MASK2_GNSS_ACCURACY | RT_MASK2_GNSS_LAST_UPDATE)) {
+        volatile gnss_data *gnss = VESC_IF->mc_gnss();
+        if (mask2 & RT_MASK2_GNSS_LAT) {
+            buffer_append_float64(buffer, gnss->lat, &ind);
+        }
+        if (mask2 & RT_MASK2_GNSS_LON) {
+            buffer_append_float64(buffer, gnss->lon, &ind);
+        }
+        add_rt_item(buffer, &ind, mask2, RT_MASK2_GNSS_ALTITUDE, gnss->height, use_f32);
+        add_rt_item(buffer, &ind, mask2, RT_MASK2_GNSS_SPEED, gnss->speed * 3.6f, use_f32);
+        add_rt_item(buffer, &ind, mask2, RT_MASK2_GNSS_ACCURACY, gnss->hdop, use_f32);
+        if (mask2 & RT_MASK2_GNSS_LAST_UPDATE) {
+            buffer_append_uint32(buffer, gnss->last_update, &ind);
+        }
+    }
 
     SEND_APP_DATA(buffer, bufsize, ind);
 }
@@ -2340,6 +2369,13 @@ static void cmd_info(const Data *d, unsigned char *buf, int len) {
             if (d->float_conf.hardware.leds.mode & LED_MODE_EXTERNAL) {
                 capabilities |= 1 << 1;
             }
+        }
+
+        // Note: The last_update timestamp overflows every ~4.97 days and it can
+        // end up being 0 for a 100us time frame, during which the package will
+        // report no GNSS capability, this extremely niche case is not handled.
+        if (VESC_IF->mc_gnss()->last_update != 0) {
+            capabilities |= 1 << 2;
         }
 
         buffer_append_uint32(send_buffer, capabilities, &ind);
