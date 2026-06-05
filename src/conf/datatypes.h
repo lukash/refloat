@@ -272,7 +272,6 @@ typedef struct {
     float tiltback_variable_max;
     uint16_t tiltback_variable_erpm;
     FLOAT_INPUTTILT_REMOTE_TYPE inputtilt_remote_type;
-    float inputtilt_speed;
     float inputtilt_angle_limit;
     bool inputtilt_invert_throttle;
     float inputtilt_deadband;
