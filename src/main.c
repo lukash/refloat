@@ -1781,7 +1781,8 @@ static void cmd_runtime_tune_other(Data *d, unsigned char *cfg, int len) {
             d->float_conf.inputtilt_remote_type = inputtilt;
             if (inputtilt > 0) {
                 d->float_conf.inputtilt_angle_limit = cfg[12] >> 2;
-                d->float_conf.inputtilt_speed = cfg[13];
+                // inputtilt_speed was removed
+                // d->float_conf.inputtilt_speed = cfg[13];
             }
         }
     }
