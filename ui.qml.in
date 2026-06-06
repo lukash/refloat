@@ -1576,11 +1576,13 @@ Item {
 
             if (packageConfig.isDefault()) {
                 var backup = loadBackup("auto_backup_" + board.getId());
-                if (backup) {
+                if (!backup) {
+                    print("Refloat: No automatic backup to restore.");
+                } else if (packageConfig.diffConfig(backup).differs.length === 0) {
+                    print("Refloat: Automatic backup matches defaults, skipping.");
+                } else {
                     print("Refloat: Automatic backup restore.");
                     applyConfigDialog.show(backup, true, false);
-                } else {
-                    print("Refloat: No automatic backup to restore.");
                 }
             } else {
                 print("Refloat: Automatic config backup.");
@@ -5532,12 +5534,20 @@ Item {
             if (!applyConfigDiff.isEmpty && !isTune) {
                 standardButton(Dialog.Apply).text = "Restore";
             }
+            if (automatic) {
+                // Roles are chosen for correct button ordering on Android:
+                // Restore (Apply) | Keep Defaults (Close/Reject) | Skip (Discard/Destructive)
+                standardButton(Dialog.Close).text = "Keep Defaults";
+                standardButton(Dialog.Discard).text = "Skip";
+            }
             open();
         }
 
         // workaround: the buttons sometimes wouldn't appear if declared via `standardButtons` only
         footer: DialogButtonBox {
-            standardButtons: applyConfigDiff.isEmpty ? Dialog.Close : Dialog.Apply | Dialog.Close
+            standardButtons: (applyConfigDiff.isEmpty ? 0 : Dialog.Apply)
+                | (applyConfigDialog.automatic ? Dialog.Discard : 0)
+                | Dialog.Close
         }
 
         function set(cfg) {
@@ -5548,6 +5558,19 @@ Item {
             packageConfig.applyConfig(config);
             close();
             tuneArchiveDialog.close();
+        }
+
+        // "Keep Defaults" — uses RejectRole for middle position on Android
+        onRejected: {
+            if (automatic) {
+                packageConfig.writeConfig();
+            }
+            close();
+        }
+
+        // "Skip" — uses DestructiveRole for right position on Android
+        onDiscarded: {
+            close();
         }
 
         ColumnLayout {
