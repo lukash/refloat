@@ -1991,7 +1991,7 @@ p, li { white-space: pre-wrap; }
             <maxDouble>1</maxDouble>
             <minDouble>0</minDouble>
             <showDisplay>0</showDisplay>
-            <stepDouble>0.05</stepDouble>
+            <stepDouble>0.01</stepDouble>
             <valDouble>0.1</valDouble>
             <vTxDoubleScale>1000</vTxDoubleScale>
             <suffix> °/A</suffix>
@@ -2015,7 +2015,7 @@ p, li { white-space: pre-wrap; }
             <maxDouble>1</maxDouble>
             <minDouble>0</minDouble>
             <showDisplay>0</showDisplay>
-            <stepDouble>0.05</stepDouble>
+            <stepDouble>0.01</stepDouble>
             <valDouble>0.1</valDouble>
             <vTxDoubleScale>1000</vTxDoubleScale>
             <suffix> °/A</suffix>
