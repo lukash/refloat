@@ -44,9 +44,11 @@ void bms_update(BMS *bms, const CfgBMS *cfg, const Time *time) {
     const float timeout = 5.0f;
 
     // Before the first BMS update occurs right after startup, msg_age has its
-    // init value. We need to wait the `timeout` time before issuing errors.
-    if (bms->msg_age > timeout && time_elapsed(time, start, timeout)) {
-        set_fault(&fault_mask, BMSF_CONNECTION);
+    // init value. Suppress all telemetry faults until the grace period expires.
+    if (bms->msg_age > timeout) {
+        if (time_elapsed(time, start, timeout)) {
+            set_fault(&fault_mask, BMSF_CONNECTION);
+        }
         bms->fault_mask = fault_mask;
         return;
     }
