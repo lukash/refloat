@@ -2493,8 +2493,6 @@ INIT_FUN(lib_info *info) {
         return false;
     }
 
-    footpad_sensor_update(&d->footpad, &d->float_conf);
-
     VESC_IF->imu_set_read_callback(imu_ref_callback);
     VESC_IF->conf_custom_add_config(get_cfg, set_cfg, get_cfg_xml);
     VESC_IF->set_app_data_handler(on_command_received);
