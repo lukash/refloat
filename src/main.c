@@ -185,6 +185,8 @@ static void reconfigure(Data *d) {
     haptic_feedback_configure(&d->haptic_feedback, &d->float_conf);
     alert_tracker_configure(&d->alert_tracker, &d->float_conf);
 
+    leds_configure(&d->leds, &d->float_conf.leds);
+
     d->startup_pitch_trickmargin = d->float_conf.startup_dirtylandings_enabled ? 10 : 0;
     d->tiltback_variable =
         d->float_conf.tiltback_variable / 1000 * sign(d->float_conf.tiltback_variable_max);
@@ -1208,6 +1210,7 @@ static void data_init(Data *d) {
     reverse_stop_init(&d->reverse_stop);
 
     leds_init(&d->leds);
+    leds_setup(&d->leds, &d->float_conf.hardware.leds, &d->float_conf.leds);
     lcm_init(&d->lcm, &d->float_conf.hardware.leds);
     charging_init(&d->charging);
     bms_init(&d->bms);
@@ -2629,7 +2632,6 @@ static bool set_cfg(uint8_t *buffer) {
     if (res) {
         write_cfg_to_eeprom(d);
         configure(d);
-        leds_configure(&d->leds, &d->float_conf.leds);
     }
 
     return res;
@@ -2700,7 +2702,6 @@ INIT_FUN(lib_info *info) {
     }
 
     footpad_sensor_update(&d->footpad, &d->float_conf);
-    leds_setup(&d->leds, &d->float_conf.hardware.leds, &d->float_conf.leds);
 
     VESC_IF->imu_set_read_callback(imu_ref_callback);
     VESC_IF->conf_custom_add_config(get_cfg, set_cfg, get_cfg_xml);
