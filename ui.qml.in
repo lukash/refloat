@@ -2671,7 +2671,14 @@ Item {
             // also don't push if the timestamp is the same as that of the last
             // record, this can happen if two clients are connected to the same
             // VESC (they both poll for data and the messages get sent twice)
-            if ((offset !== undefined && offset !== data.length) || lastTime === sampleTime) {
+            if (offset !== undefined) {
+                // recorded data download path: rely solely on the offset for ordering/dedup.
+                // (timestamps may not be unique at high IMU rates)
+                if (offset !== data.length) {
+                    return;
+                }
+            } else if (lastTime === sampleTime) {
+                // realtime plot path (no offset): drop duplicate-timestamp points
                 return;
             }
 
