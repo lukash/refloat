@@ -23,6 +23,7 @@
 static void start_recording(DataRecord *dr) {
     circular_buffer_clear(&dr->buffer);
     dr->decimation_counter = 0;
+    dr->last_time = 0;
     dr->recording = true;
 }
 
@@ -41,6 +42,7 @@ void data_recorder_init(DataRecord *dr, uint16_t imu_sample_rate) {
     dr->autostart = true;
     dr->autostop = true;
     dr->decimation_counter = 0;
+    dr->last_time = 0;
 
     // fetch information about the data buffer, it's stored at the end of the
     // VESC interface memory area
@@ -105,6 +107,14 @@ void data_recorder_sample(DataRecord *dr, const Data *d, time_t time) {
         return;
     }
     dr->decimation_counter = 0;
+
+    // keep timestamps strictly increasing: the 100us system tick can't
+    // distinguish samples at high IMU rates (they arrive in bursts sharing a
+    // tick), and duplicate timestamps break the download and plotting
+    if (time <= dr->last_time) {
+        time = dr->last_time + 1;
+    }
+    dr->last_time = time;
 
     uint8_t flags = d->state.sat << 4 | d->footpad.state << 2;
     flags |= d->state.wheelslip << 1 | (d->state.state == STATE_RUNNING);
