@@ -5175,7 +5175,7 @@ Item {
 
                                 from: 2
                                 to: tuneManager.maxTunes
-                                value: 4
+                                value: 6
                                 stepSize: 1
                             }
 
