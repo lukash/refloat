@@ -207,9 +207,8 @@ static void configure(Data *d) {
     // the old setup with it being the main balancing filter. In that case, set
     // the kp and acc confidence decay to hardcoded defaults of the former true
     // pitch filter, to preserve the behavior of the old setup in the new one.
-    // (Though Mahony KP 0.4 instead of 0.2 is used, as it seems to work better)
     if (VESC_IF->get_cfg_float(CFG_PARAM_IMU_mahony_kp) > 1) {
-        VESC_IF->set_cfg_float(CFG_PARAM_IMU_mahony_kp, 0.4);
+        VESC_IF->set_cfg_float(CFG_PARAM_IMU_mahony_kp, 0.2);
         VESC_IF->set_cfg_float(CFG_PARAM_IMU_mahony_ki, 0);
         VESC_IF->set_cfg_float(CFG_PARAM_IMU_accel_confidence_decay, 0.1);
     }
