@@ -2393,13 +2393,13 @@ static void cmd_info(const Data *d, unsigned char *buf, int len) {
 // Handler for incoming app commands
 static void on_command_received(unsigned char *buffer, unsigned int len) {
     Data *d = (Data *) ARG;
-    uint8_t magicnr = buffer[0];
-    uint8_t command = buffer[1];
-
     if (len < 2) {
         log_error("Received command data too short.");
         return;
     }
+
+    uint8_t magicnr = buffer[0];
+    uint8_t command = buffer[1];
     if (magicnr != 101) {
         log_error("Invalid Package ID: %u", magicnr);
         return;
