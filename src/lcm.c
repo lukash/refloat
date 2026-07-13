@@ -66,13 +66,11 @@ void lcm_poll_request(LcmData *lcm, uint8_t *buffer, size_t len) {
 
     // Optionally pass in LCM name and version in a single string
     if (len > 0) {
-        for (size_t i = 0; i < MAX_LCM_NAME_LENGTH; i++) {
-            if (i > len || i > MAX_LCM_NAME_LENGTH - 1 || buffer[i] == '\0') {
-                lcm->name[i] = '\0';
-                break;
-            }
+        size_t name_len = min(len, sizeof(lcm->name) - 1);
+        for (size_t i = 0; i < name_len; ++i) {
             lcm->name[i] = buffer[i];
         }
+        lcm->name[name_len] = '\0';
     }
 }
 
