@@ -40,6 +40,14 @@ uint16_t to_float16(float x) {
     return (b&0x80000000)>>16 | (e>112)*((((e-112)<<10)&0x7C00)|m>>13) | ((e<113)&(e>101))*((((0x007FF000+m)>>(125-e))+1)>>1) | (e>143)*0x7FFF;
 }
 
+float from_float16(uint16_t x) {
+    const float sign = x & 0x8000u ? -1.0f : 1.0f;
+    const uint16_t exponent = (x >> 10) & 0x1fu;
+    const uint16_t mantissa = x & 0x03ffu;
+    return sign * (exponent ? ldexpf(1024.0f + mantissa, exponent - 25)
+                            : ldexpf(mantissa, -24));
+}
+
 // clang-format on
 #pragma GCC diagnostic pop
 

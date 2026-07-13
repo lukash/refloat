@@ -21,6 +21,7 @@
 #include <stdint.h>
 
 uint16_t to_float16(float x);
+float from_float16(uint16_t x);
 
 void buffer_append_int16(uint8_t *buffer, int16_t number, int32_t *index);
 void buffer_append_uint16(uint8_t *buffer, uint16_t number, int32_t *index);
