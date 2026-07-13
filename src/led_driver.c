@@ -180,6 +180,26 @@ inline static uint8_t color_order_bits(LedColorOrder order) {
     return 24;
 }
 
+static uint32_t color_grb(uint8_t w, uint8_t r, uint8_t g, uint8_t b);
+static uint32_t color_grbw(uint8_t w, uint8_t r, uint8_t g, uint8_t b);
+static uint32_t color_rgb(uint8_t w, uint8_t r, uint8_t g, uint8_t b);
+static uint32_t color_wrgb(uint8_t w, uint8_t r, uint8_t g, uint8_t b);
+
+LedColorConverter led_driver_color_converter(LedColorOrder order) {
+    switch (order) {
+    case LED_COLOR_GRB:
+        return color_grb;
+    case LED_COLOR_GRBW:
+        return color_grbw;
+    case LED_COLOR_RGB:
+        return color_rgb;
+    case LED_COLOR_WRGB:
+        return color_wrgb;
+    }
+
+    return NULL;
+}
+
 void led_driver_init(LedDriver *driver) {
     driver->bitbuffer_length = 0;
     driver->bitbuffer = NULL;
@@ -192,6 +212,7 @@ bool led_driver_setup(
         log_error("Invalid LED pin configured: %u", pin);
         return false;
     }
+
     driver->pin_hw_config = &pin_hw_configs[pin];
 
     driver->bitbuffer_length = 0;
@@ -268,22 +289,6 @@ void led_driver_paint(LedDriver *driver) {
             break;
         }
 
-        uint32_t (*color_conv)(uint8_t, uint8_t, uint8_t, uint8_t);
-        switch (strip->color_order) {
-        case LED_COLOR_GRB:
-            color_conv = color_grb;
-            break;
-        case LED_COLOR_GRBW:
-            color_conv = color_grbw;
-            break;
-        case LED_COLOR_RGB:
-            color_conv = color_rgb;
-            break;
-        case LED_COLOR_WRGB:
-            color_conv = color_wrgb;
-            break;
-        }
-
         uint8_t bits = color_order_bits(strip->color_order);
         uint16_t *strip_bitbuffer = driver->strip_bitbuffs[i];
 
@@ -294,7 +299,7 @@ void led_driver_paint(LedDriver *driver) {
             uint8_t g = cgamma((color >> 8) & 0xFF);
             uint8_t b = cgamma(color & 0xFF);
 
-            color = color_conv(w, r, g, b);
+            color = strip->color_conv(w, r, g, b);
 
             for (int8_t bit = bits - 1; bit >= 0; --bit) {
                 strip_bitbuffer[bit + j * bits] = color & 0x1 ? WS2812_ONE : WS2812_ZERO;

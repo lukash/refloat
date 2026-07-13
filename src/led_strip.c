@@ -23,6 +23,7 @@ void led_strip_init(LedStrip *strip) {
     strip->data = NULL;
     strip->length = 0;
     strip->color_order = LED_COLOR_GRB;
+    strip->color_conv = NULL;
     strip->reverse = false;
 }
 

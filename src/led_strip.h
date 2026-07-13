@@ -32,10 +32,13 @@ typedef union {
     CipherData cipher;
 } TransitionData;
 
+typedef uint32_t (*LedColorConverter)(uint8_t w, uint8_t r, uint8_t g, uint8_t b);
+
 typedef struct {
     uint32_t *data;
     uint8_t length;
     LedColorOrder color_order;
+    LedColorConverter color_conv;
     bool reverse;
     float brightness;
     TransitionData trans_data;
