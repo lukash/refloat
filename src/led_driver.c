@@ -241,20 +241,20 @@ inline static uint8_t cgamma(uint8_t c) {
 
 static uint32_t color_grb(uint8_t w, uint8_t r, uint8_t g, uint8_t b) {
     unused(w);
-    return (g << 16) | (r << 8) | b;
+    return ((uint32_t) g << 16) | ((uint32_t) r << 8) | b;
 }
 
 static uint32_t color_grbw(uint8_t w, uint8_t r, uint8_t g, uint8_t b) {
-    return (g << 24) | (r << 16) | (b << 8) | w;
+    return ((uint32_t) g << 24) | ((uint32_t) r << 16) | ((uint32_t) b << 8) | w;
 }
 
 static uint32_t color_rgb(uint8_t w, uint8_t r, uint8_t g, uint8_t b) {
     unused(w);
-    return (r << 16) | (g << 8) | b;
+    return ((uint32_t) r << 16) | ((uint32_t) g << 8) | b;
 }
 
 static uint32_t color_wrgb(uint8_t w, uint8_t r, uint8_t g, uint8_t b) {
-    return (w << 24) | (r << 16) | (g << 8) | b;
+    return ((uint32_t) w << 24) | ((uint32_t) r << 16) | ((uint32_t) g << 8) | b;
 }
 
 void led_driver_paint(LedDriver *driver) {
