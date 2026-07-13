@@ -121,11 +121,11 @@ void remote_input(Remote *remote, const Time *time, const RefloatConfig *config)
 void remote_command_input(
     Remote *remote, float value, const Time *time, const RefloatConfig *config
 ) {
-    remote->input = value;
+    remote->input = config->inputtilt_invert_throttle ? -value : value;
     if (time_elapsed(time, disengage, 2.0f)) {
         // default to a limit of 5 km/h if limit of 0 is configured for the remote
         float speed_max = config->remote.max_move_speed > 0 ? config->remote.max_move_speed : 5;
-        remote->move_speed = value * speed_max;
+        remote->move_speed = remote->input * speed_max;
     }
 
     timer_refresh(time, &remote->command_input_time);
