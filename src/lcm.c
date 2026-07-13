@@ -196,9 +196,9 @@ void lcm_light_ctrl_request(LcmData *lcm, unsigned char *cfg, int len) {
 
     int32_t idx = 0;
 
-    lcm->brightness = cfg[idx++];
-    lcm->brightness_idle = cfg[idx++];
-    lcm->status_brightness = cfg[idx++];
+    lcm->brightness = min(cfg[idx++], 100u);
+    lcm->brightness_idle = min(cfg[idx++], 100u);
+    lcm->status_brightness = min(cfg[idx++], 100u);
 
     if (len > 3) {
         if (lcm->enabled) {
