@@ -1216,16 +1216,18 @@ static void data_init(Data *d) {
 
     data_recorder_init(&d->data_record, imu_sample_rate);
 
-    konami_init(&d->flywheel_konami, flywheel_konami_sequence, sizeof(flywheel_konami_sequence));
+    konami_init(
+        &d->flywheel_konami, flywheel_konami_sequence, array_size(flywheel_konami_sequence)
+    );
     konami_init(
         &d->headlights_on_konami,
         headlights_on_konami_sequence,
-        sizeof(headlights_on_konami_sequence)
+        array_size(headlights_on_konami_sequence)
     );
     konami_init(
         &d->headlights_off_konami,
         headlights_off_konami_sequence,
-        sizeof(headlights_off_konami_sequence)
+        array_size(headlights_off_konami_sequence)
     );
 
     ema_init(&d->balance_current);
