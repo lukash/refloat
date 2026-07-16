@@ -134,11 +134,10 @@ static void send_point_vt_experiment(const void *item, void *data) {
     unused(data);
 
     Sample *sample = (Sample *) item;
+    const float time = sample->time * (1.0f / SYSTEM_TICK_RATE_HZ);
     for (uint8_t i = 0; i < ITEMS_COUNT_REC(RT_DATA_ALL_ITEMS); ++i) {
         VESC_IF->plot_set_graph(i);
-        VESC_IF->plot_send_points(
-            sample->time * (1.0f / SYSTEM_TICK_RATE_HZ), from_float16(sample->values[i])
-        );
+        VESC_IF->plot_send_points(time, from_float16(sample->values[i]));
     }
 }
 
