@@ -847,16 +847,33 @@ void leds_setup(Leds *leds, CfgHwLeds *hw_cfg, const CfgLeds *cfg) {
     for (uint8_t i = 1; i <= STRIP_COUNT; ++i) {
         if (hw_cfg->status.order == i && hw_cfg->status.count > 0) {
             led_strip_configure(&leds->status_strip, &hw_cfg->status);
+            leds->status_strip.color_conv =
+                led_driver_color_converter(leds->status_strip.color_order);
+            if (!leds->status_strip.color_conv) {
+                log_error("Invalid status LED color order: %u.", hw_cfg->status.color_order);
+                return;
+            }
             status_offset = current_offset;
             current_offset += leds->status_strip.length;
             strip_array[strip_i++] = &leds->status_strip;
         } else if (hw_cfg->front.order == i && hw_cfg->front.count > 0) {
             led_strip_configure(&leds->front_strip, &hw_cfg->front);
+            leds->front_strip.color_conv =
+                led_driver_color_converter(leds->front_strip.color_order);
+            if (!leds->front_strip.color_conv) {
+                log_error("Invalid front LED color order: %u.", hw_cfg->front.color_order);
+                return;
+            }
             front_offset = current_offset;
             current_offset += leds->front_strip.length;
             strip_array[strip_i++] = &leds->front_strip;
         } else if (hw_cfg->rear.order == i && hw_cfg->rear.count > 0) {
             led_strip_configure(&leds->rear_strip, &hw_cfg->rear);
+            leds->rear_strip.color_conv = led_driver_color_converter(leds->rear_strip.color_order);
+            if (!leds->rear_strip.color_conv) {
+                log_error("Invalid rear LED color order: %u.", hw_cfg->rear.color_order);
+                return;
+            }
             rear_offset = current_offset;
             current_offset += leds->rear_strip.length;
             strip_array[strip_i++] = &leds->rear_strip;

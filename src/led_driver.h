@@ -56,6 +56,8 @@ bool led_driver_setup(
     LedDriver *driver, LedPin pin, LedPinConfig pin_config, const LedStrip **led_strips
 );
 
+LedColorConverter led_driver_color_converter(LedColorOrder order);
+
 void led_driver_paint(LedDriver *driver);
 
 void led_driver_destroy(LedDriver *driver);
