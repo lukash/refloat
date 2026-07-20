@@ -79,6 +79,12 @@ bool circular_buffer_pop(CircularBuffer *cb, size_t i, void *item) {
         return false;
     }
 
+    while (i > 0) {
+        size_t dst = (cb->tail + i) % cb->length;
+        size_t src = (cb->tail + i - 1) % cb->length;
+        memcpy(cb->buffer + dst * cb->item_size, cb->buffer + src * cb->item_size, cb->item_size);
+        --i;
+    }
     increment(cb, &cb->tail);
     if (cb->tail == cb->head) {
         cb->empty = true;
