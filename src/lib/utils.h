@@ -38,6 +38,7 @@
 #define TORQUE_CONSTANT_COMPAT (1.5f * 15 * 0.027f)
 
 #define unused(x) (void) (x)
+#define array_size(array) (sizeof(array) / sizeof((array)[0]))
 
 #if defined(__GNUC__) && __GNUC__ < 9
 
