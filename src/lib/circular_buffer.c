@@ -102,7 +102,7 @@ void circular_buffer_iterate(
 
     size_t i = cb->tail;
     do {
-        callback(&cb->buffer[i], data);
+        callback(cb->buffer + i * cb->item_size, data);
         increment(cb, &i);
     } while (i != cb->head);
 }
