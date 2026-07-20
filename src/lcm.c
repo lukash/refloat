@@ -66,13 +66,11 @@ void lcm_poll_request(LcmData *lcm, uint8_t *buffer, size_t len) {
 
     // Optionally pass in LCM name and version in a single string
     if (len > 0) {
-        for (size_t i = 0; i < MAX_LCM_NAME_LENGTH; i++) {
-            if (i > len || i > MAX_LCM_NAME_LENGTH - 1 || buffer[i] == '\0') {
-                lcm->name[i] = '\0';
-                break;
-            }
+        size_t name_len = min(len, sizeof(lcm->name) - 1);
+        for (size_t i = 0; i < name_len; ++i) {
             lcm->name[i] = buffer[i];
         }
+        lcm->name[name_len] = '\0';
     }
 }
 
@@ -192,29 +190,25 @@ void lcm_get_battery_response(const LcmData *lcm) {
 }
 
 void lcm_light_ctrl_request(LcmData *lcm, unsigned char *cfg, int len) {
-    if (!lcm->enabled || len < 3) {
+    if (!lcm->enabled) {
+        return;
+    }
+
+    lcm->payload_size = 0;
+    if (len < 3) {
         return;
     }
 
     int32_t idx = 0;
 
-    lcm->brightness = cfg[idx++];
-    lcm->brightness_idle = cfg[idx++];
-    lcm->status_brightness = cfg[idx++];
+    lcm->brightness = min(cfg[idx++], 100u);
+    lcm->brightness_idle = min(cfg[idx++], 100u);
+    lcm->status_brightness = min(cfg[idx++], 100u);
 
     if (len > 3) {
-        if (lcm->enabled) {
-            // Copy rest of payload into data for LCM to pull
-            lcm->payload_size = len - idx;
-            for (int i = 0; i < lcm->payload_size; i++) {
-                lcm->payload[i] = cfg[idx + i];
-            }
-        } else {
-            if (len > 5) {
-                // d->float_conf.led_mode = cfg[idx++];
-                // d->float_conf.led_mode_idle = cfg[idx++];
-                // d->float_conf.led_status_mode = cfg[idx++];
-            }
+        lcm->payload_size = min(len - idx, MAX_LCM_PAYLOAD_LENGTH);
+        for (int i = 0; i < lcm->payload_size; i++) {
+            lcm->payload[i] = cfg[idx + i];
         }
     }
 }
