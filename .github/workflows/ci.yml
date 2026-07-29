@@ -26,3 +26,9 @@ jobs:
         uses: ./.github/actions/build
         with:
           cache-auth-token: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+
+      - name: Upload refloat.vescpkg
+        uses: actions/upload-artifact@v4
+        with:
+          name: refloat-package
+          path: refloat.vescpkg
