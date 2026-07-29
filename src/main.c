@@ -205,7 +205,7 @@ static void configure(Data *d) {
     }
 
     // Feature: Reverse Stop
-    d->reverse_tolerance = 20000;
+    d->reverse_tolerance = 400000;
     d->reverse_stop_step_size = 100.0 / d->float_conf.hertz;
 
     // Speed above which to warn users about an impending full switch fault
@@ -531,7 +531,7 @@ static void calculate_setpoint_target(Data *d) {
                 }
             }
         }
-    } else if (d->float_conf.fault_reversestop_enabled && d->motor.erpm < -200 &&
+    } else if (d->float_conf.fault_reversestop_enabled && d->motor.erpm < -2000 &&
                !d->state.darkride) {
         // Detecting reverse stop takes priority over any error condition SAT
         if (d->state.sat >= SAT_PB_HIGH_VOLTAGE) {

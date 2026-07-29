@@ -2,6 +2,9 @@
 
 A full-featured self-balancing skateboard package.
 
+## Experiments
+Playing with reverse stop config for anti ghosting protection
+
 ## New in 1.2
 - BMS alerting support (Pushback and Haptic)
 - Speed-based alerting (Pushback and Haptic)
