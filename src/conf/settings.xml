@@ -525,22 +525,22 @@ p, li { white-space: pre-wrap; }
             <longName>Reverse Stop Tolerance</longName>
             <type>2</type>
             <transmittable>1</transmittable>
-            <description>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"&gt;
-            &lt;html&gt;&lt;head&gt;&lt;meta name="qrichtext" content="1" /&gt;&lt;style type="text/css"&gt;
-            p, li { white-space: pre-wrap; }
-            &lt;/style&gt;&lt;/head&gt;&lt;body&gt;
-            &lt;p&gt;ERPM deadzone before Reverse Stop begins to slow the board.&lt;/p&gt;
-            &lt;/body&gt;&lt;/html&gt;</description>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;            &lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;ERPM deadzone before Reverse Stop begins to slow the board.            &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_REVERSE_TOLERANCE</cDefine>
             <editorScale>1</editorScale>
             <editAsPercentage>0</editAsPercentage>
-            <showDisplay>0</showDisplay>
             <maxInt>100000000</maxInt>
             <minInt>0</minInt>
+            <showDisplay>0</showDisplay>
             <stepInt>5000</stepInt>
             <valInt>400000</valInt>
-            <suffix> erpm</suffix>
-            <vTx>3</vTx>
+            <suffix> ERPM</suffix>
+            <vTx>5</vTx>
         </reverse_tolerance>
         <tiltback_duty_angle>
             <longName>Pushback Angle</longName>
