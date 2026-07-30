@@ -521,6 +521,24 @@ p, li { white-space: pre-wrap; }
             <cDefine>CFG_DFLT_FAULT_REVERSESTOP_ENABLED</cDefine>
             <valInt>0</valInt>
         </fault_reversestop_enabled>
+        <reverse_tolerance>
+            <longName>Reverse Stop Tolerance</longName>
+            <type>2</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"&gt;
+            &lt;html&gt;&lt;head&gt;&lt;meta name="qrichtext" content="1" /&gt;&lt;style type="text/css"&gt;
+            p, li { white-space: pre-wrap; }
+            &lt;/style&gt;&lt;/head&gt;&lt;body&gt;
+            &lt;p&gt;ERPM deadzone before Reverse Stop begins to slow the board.&lt;/p&gt;
+            &lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_REVERSE_TOLERANCE</cDefine>
+            <maxInt>1000000</maxInt>
+            <minInt>0</minInt>
+            <stepInt>5000</stepInt>
+            <valInt>400000</valInt>
+            <suffix> erpm</suffix>
+            <vTx>7</vTx>
+        </reverse_tolerance>
         <tiltback_duty_angle>
             <longName>Pushback Angle</longName>
             <type>1</type>
@@ -3944,6 +3962,7 @@ p, li { white-space: pre-wrap; }
         <ser>enable_quickstop</ser>
         <ser>fault_darkride_enabled</ser>
         <ser>fault_reversestop_enabled</ser>
+        <ser>reverse_tolerance</ser>
         <ser>tiltback_duty_angle</ser>
         <ser>tiltback_duty_speed</ser>
         <ser>tiltback_duty</ser>
@@ -4204,6 +4223,7 @@ p, li { white-space: pre-wrap; }
                     <param>::sep::Features</param>
                     <param>fault_darkride_enabled</param>
                     <param>fault_reversestop_enabled</param>
+                    <param>reverse_tolerance</param>
                 </subgroupParams>
             </subgroup>
             <subgroup>

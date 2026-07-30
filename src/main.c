@@ -205,7 +205,7 @@ static void configure(Data *d) {
     }
 
     // Feature: Reverse Stop
-    d->reverse_tolerance = 400000;
+    d->reverse_tolerance = d->float_conf.reverse_tolerance;
     d->reverse_stop_step_size = 100.0 / d->float_conf.hertz;
 
     // Speed above which to warn users about an impending full switch fault
