@@ -532,12 +532,15 @@ p, li { white-space: pre-wrap; }
             &lt;p&gt;ERPM deadzone before Reverse Stop begins to slow the board.&lt;/p&gt;
             &lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_REVERSE_TOLERANCE</cDefine>
-            <maxInt>1000000</maxInt>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <showDisplay>0</showDisplay>
+            <maxInt>100000000</maxInt>
             <minInt>0</minInt>
             <stepInt>5000</stepInt>
             <valInt>400000</valInt>
             <suffix> erpm</suffix>
-            <vTx>7</vTx>
+            <vTx>3</vTx>
         </reverse_tolerance>
         <tiltback_duty_angle>
             <longName>Pushback Angle</longName>
