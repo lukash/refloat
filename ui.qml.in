@@ -2143,7 +2143,7 @@ Item {
         ["footpad.adc1", {"name": "ADC1 Voltage", "color": "#69aad7", "visible": false}],
         ["footpad.adc2", {"name": "ADC2 Voltage", "color": "#4a8772", "visible": false}],
         ["balance_current", {"name": "Balance Current", "color": "#36738b", "visible": false}],
-        ["reverse_total_erpm", {"name": "Reverse Total ERPM", "color": "#748b36", "visible": false}],
+        ["reverse_total_erpm_plot", {"name": "Reverse Total ERPM (k)", "color": "#748b36", "visible": false}],
         ["reverse_timer", {"name": "Reverse Timer", "color": "#368b5c", "visible": false}],
         ["booster.current", {"name": "Booster Current", "color": "#8f2f26", "visible": false}],
         ["atr.accel_diff", {"name": "ATR Accel Diff", "color": "#4f5984", "visible": false}],

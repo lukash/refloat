@@ -61,7 +61,7 @@
     S(turn_tilt.setpoint)                                                                          \
     S(remote.setpoint)                                                                             \
     R(balance_current)                                                                             \
-    R(reverse_total_erpm)                                                                          \
+    R(reverse_total_erpm_plot)                                                                    \
     R(reverse_timer)                                                                               \
     S(atr.accel_diff)                                                                              \
     S(atr.speed_boost)                                                                             \

@@ -207,6 +207,7 @@ static void configure(Data *d) {
     // Feature: Reverse Stop
     d->reverse_tolerance = d->float_conf.reverse_tolerance;
     d->reverse_stop_step_size = 100.0 / d->float_conf.hertz;
+    d->reverse_total_erpm_plot = d->reverse_total_erpm * 0.001f;
 
     // Speed above which to warn users about an impending full switch fault
     d->switch_warn_beep_erpm = d->float_conf.is_footbeep_enabled ? 2000 : 100000;
@@ -518,13 +519,14 @@ static void calculate_setpoint_target(Data *d) {
     } else if (d->state.sat == SAT_REVERSESTOP) {
         // accumalete erpms:
         d->reverse_total_erpm += d->motor.erpm;
+        d->reverse_total_erpm_plot = d->reverse_total_erpm * 0.001f;
         if (fabsf(d->reverse_total_erpm) > d->reverse_tolerance) {
             // tilt down by 10 degrees after exceeding aggregate erpm
             d->setpoint_target =
                 (fabsf(d->reverse_total_erpm) - d->reverse_tolerance) * REVSTOP_ERPM_INCR;
         } else {
             if (fabsf(d->reverse_total_erpm) <= d->reverse_tolerance * 0.5) {
-                if (d->motor.erpm >= 0) {
+                if (d->motor.erpm >= -2000) {
                     d->state.sat = SAT_NONE;
                     d->reverse_total_erpm = 0;
                     d->setpoint_target = 0;
