@@ -526,14 +526,14 @@ static void calculate_setpoint_target(Data *d) {
                 (fabsf(d->reverse_total_erpm) - d->reverse_tolerance) * REVSTOP_ERPM_INCR;
         } else {
             if (fabsf(d->reverse_total_erpm) <= d->reverse_tolerance * 0.5) {
-                if (d->motor.erpm >= -2000) {
+                if (d->motor.erpm >= -(int)d->float_conf.reverse_stop_trigger_erpm) {
                     d->state.sat = SAT_NONE;
                     d->reverse_total_erpm = 0;
                     d->setpoint_target = 0;
                 }
             }
         }
-    } else if (d->float_conf.fault_reversestop_enabled && d->motor.erpm < -2000 &&
+    } else if (d->float_conf.fault_reversestop_enabled && d->motor.erpm < -(int)d->float_conf.reverse_stop_trigger_erpm &&
                !d->state.darkride) {
         // Detecting reverse stop takes priority over any error condition SAT
         if (d->state.sat >= SAT_PB_HIGH_VOLTAGE) {
