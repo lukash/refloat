@@ -562,6 +562,28 @@ p, li { white-space: pre-wrap; }
             <suffix> ERPM</suffix>
             <vTx>3</vTx>
         </reverse_stop_trigger_erpm>
+        <reverse_erpm_incr>
+            <longName>Reverse Stop ERPM Increment</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Scale factor used to convert aggregated ERPM over the reverse tolerance into a tiltback setpoint angle. Smaller values make the system less aggressive.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_REVERSE_ERPM_INCR</cDefine>
+            <editorDecimalsDouble>8</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>10</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>1e-05</stepDouble>
+            <valDouble>8e-05</valDouble>
+            <vTxDoubleScale>1</vTxDoubleScale>
+            <suffix></suffix>
+            <vTx>9</vTx>
+        </reverse_erpm_incr>
         <tiltback_duty_angle>
             <longName>Pushback Angle</longName>
             <type>1</type>
@@ -3987,6 +4009,7 @@ p, li { white-space: pre-wrap; }
         <ser>fault_reversestop_enabled</ser>
         <ser>reverse_tolerance</ser>
         <ser>reverse_stop_trigger_erpm</ser>
+        <ser>reverse_erpm_incr</ser>
         <ser>tiltback_duty_angle</ser>
         <ser>tiltback_duty_speed</ser>
         <ser>tiltback_duty</ser>
@@ -4249,6 +4272,7 @@ p, li { white-space: pre-wrap; }
                     <param>fault_reversestop_enabled</param>
                     <param>reverse_tolerance</param>
                     <param>reverse_stop_trigger_erpm</param>
+                    <param>reverse_erpm_incr</param>
                 </subgroupParams>
             </subgroup>
             <subgroup>
