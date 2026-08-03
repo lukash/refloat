@@ -557,7 +557,7 @@ p, li { white-space: pre-wrap; }
             <maxInt>65000</maxInt>
             <minInt>0</minInt>
             <showDisplay>0</showDisplay>
-            <stepInt>5000</stepInt>
+            <stepInt>200</stepInt>
             <valInt>2000</valInt>
             <suffix> ERPM</suffix>
             <vTx>3</vTx>
