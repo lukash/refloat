@@ -229,6 +229,9 @@ typedef struct {
     bool enable_quickstop;
     bool fault_darkride_enabled;
     bool fault_reversestop_enabled;
+    uint32_t reverse_tolerance;
+    uint16_t reverse_stop_trigger_erpm;
+    float reverse_erpm_incr;
     float tiltback_duty_angle;
     float tiltback_duty_speed;
     float tiltback_duty;

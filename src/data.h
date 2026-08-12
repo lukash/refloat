@@ -121,6 +121,7 @@ typedef struct {
 
     // Feature: Reverse Stop
     float reverse_stop_step_size, reverse_tolerance, reverse_total_erpm;
+    float reverse_total_erpm_plot;
     time_t reverse_timer;
 
     // Feature: Soft Start
