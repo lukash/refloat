@@ -16,6 +16,7 @@ jobs:
       - uses: rrbutani/use-nix-shell-action@v1
         with:
           flakes: nixpkgs#llvmPackages_18.clang-tools, nixpkgs#pre-commit
+          extraNixOptions: --inputs-from .
 
       - name: Run clang-format
         id: clang-format

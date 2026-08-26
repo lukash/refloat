@@ -26,13 +26,16 @@ else
     MINIFY_CMD="cat"
 endif
 
+BUILD_DATE=`date --rfc-3339=seconds`
+GIT_HASH=`git rev-parse --short HEAD`
+
 package_README-gen.md: package_README.md version
 	cp $< $@
 	echo "" >> $@
 	echo "### Build Info" >> $@
 	echo "- Version: ${VERSION}" >> $@
-	echo "- Build Date: `date --rfc-3339=seconds`" >> $@
-	echo "- Git Commit: #`git rev-parse --short HEAD`" >> $@
+	echo "- Build Date: ${BUILD_DATE}" >> $@
+	echo "- Git Commit: #${GIT_HASH}" >> $@
 
 ui.qml: ui.qml.in package_name version
 	cat $< | \
