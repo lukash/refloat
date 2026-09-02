@@ -7699,7 +7699,7 @@ Item {
                         Button {
                             Layout.preferredWidth: 3 * unit
                             Layout.alignment: Qt.AlignHCenter
-                            text: lights.on ? "Lights Off" : "Lights On"
+                            text: lights.on ? "Idle LEDs Off" : "Idle LEDs On"
                             onClicked: {
                                 commands.sendLightsControl(!lights.on);
                             }
@@ -7709,7 +7709,7 @@ Item {
                             id : headlightsButton
                             Layout.minimumWidth: 3 * unit
                             Layout.alignment: Qt.AlignHCenter
-                            text: lights.headlightsOn ? "Headlights Off" : "Headlights On"
+                            text: lights.headlightsOn ? "Riding LEDs Off" : "Riding LEDs On"
                             onClicked: {
                                 commands.sendLightsControl(undefined, !lights.headlightsOn);
                             }
