@@ -1212,6 +1212,11 @@ static void data_init(Data *d) {
     alert_tracker_init(&d->alert_tracker);
     reverse_stop_init(&d->reverse_stop);
 
+    if ((d->float_conf.is_beeper_enabled) ||
+        (d->float_conf.inputtilt_remote_type != INPUTTILT_PPM)) {
+        beeper_init();
+    }
+
     leds_init(&d->leds);
     leds_setup(&d->leds, &d->float_conf.hardware.leds, &d->float_conf.leds);
     lcm_init(&d->lcm, &d->float_conf.hardware.leds);
@@ -2688,11 +2693,6 @@ INIT_FUN(lib_info *info) {
     motor_data_refresh_motor_config(
         &d->motor, d->float_conf.tiltback_lv, d->float_conf.tiltback_hv
     );
-
-    if ((d->float_conf.is_beeper_enabled) ||
-        (d->float_conf.inputtilt_remote_type != INPUTTILT_PPM)) {
-        beeper_init();
-    }
 
     d->main_thread = VESC_IF->spawn(refloat_thd, 1536, "Refloat Main", d);
     if (!d->main_thread) {
