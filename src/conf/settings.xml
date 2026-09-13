@@ -3511,7 +3511,7 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Status bar idle mode (effect). Set Status Idle Timeout to a non-zero value to enable the Status Bar Idle mode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Status bar idle mode (effect). Set Status Bar Idle Timeout to a non-zero value to enable the Status Bar Idle mode.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_LEDS_STATUS_IDLE_MODE</cDefine>
             <valInt>4</valInt>
             <enumNames>Solid</enumNames>
@@ -3525,7 +3525,7 @@ p, li { white-space: pre-wrap; }
             <enumNames>Rainbow Roll</enumNames>
         </leds.status_idle.mode>
         <leds.status_idle.brightness>
-            <longName>Status Bar Idle Brightness</longName>
+            <longName>Status Bar Idle Timeout Brightness</longName>
             <type>1</type>
             <transmittable>1</transmittable>
             <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
@@ -3605,7 +3605,7 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Status bat secondary color while idle.&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Status bar secondary color while idle.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_LEDS_STATUS_IDLE_COLOR2</cDefine>
             <valInt>0</valInt>
             <enumNames>Black</enumNames>
@@ -4456,7 +4456,7 @@ p, li { white-space: pre-wrap; }
                     <param>leds.rear.color1</param>
                     <param>leds.rear.color2</param>
                     <param>leds.rear.speed</param>
-                    <param>::sep::Status</param>
+                    <param>::sep::Status Bar</param>
                     <param>leds.status.brightness_headlights_off</param>
                     <param>leds.status.brightness_headlights_on</param>
                     <param>leds.status.show_sensors_while_running</param>
