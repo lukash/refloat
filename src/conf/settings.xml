@@ -3372,7 +3372,7 @@ p, li { white-space: pre-wrap; }
             <vTx>7</vTx>
         </leds.taillights.speed>
         <leds.status.brightness_headlights_off>
-            <longName>Status Bar Idle Brightness</longName>
+            <longName>Status Bar Brightness (Riding LEDs OFF)</longName>
             <type>1</type>
             <transmittable>1</transmittable>
             <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
@@ -3396,7 +3396,7 @@ p, li { white-space: pre-wrap; }
             <vTx>7</vTx>
         </leds.status.brightness_headlights_off>
         <leds.status.brightness_headlights_on>
-            <longName>Status Bar Riding Brightness</longName>
+            <longName>Status Bar Brightness (Riding LEDs ON)</longName>
             <type>1</type>
             <transmittable>1</transmittable>
             <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
