@@ -1873,6 +1873,7 @@ Item {
         readonly property int sc_SensorFull: 4
         readonly property int sc_ReverseStop: 5
         readonly property int sc_Quickstop: 6
+        readonly property int sc_ImuTimeout: 7
 
         readonly property var stopConditionToString: new Map([
             [sc_None, ""],
@@ -1882,6 +1883,7 @@ Item {
             [sc_SensorFull, "Sensor Full"],
             [sc_ReverseStop, "Reverse Stop"],
             [sc_Quickstop, "Quickstop"],
+            [sc_ImuTimeout, "IMU Timeout"],
         ])
 
         property int stopCondition: sc_None
@@ -1993,6 +1995,7 @@ Item {
         }
 
         readonly property int alert_fwFault: 1
+        readonly property int alert_imuTimeout: 2
 
         readonly property var alertData: new Map([
             [0, {
@@ -2002,6 +2005,10 @@ Item {
             [alert_fwFault, {
                 "name": "Fault",
                 "severity": "FATAL",
+            }],
+            [alert_imuTimeout, {
+                "name": "IMU Timeout",
+                "severity": "ERROR",
             }],
         ])
 

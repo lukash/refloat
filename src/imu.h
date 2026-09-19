@@ -19,6 +19,7 @@
 
 #include "balance_filter.h"
 #include "state.h"
+#include "time.h"
 
 typedef struct {
     float pitch;
@@ -29,10 +30,27 @@ typedef struct {
 
     float flywheel_pitch_offset;
     float flywheel_roll_offset;
+
+    time_t data_timer;
+    time_t timeout_timer;
+    bool timeout;
 } IMU;
 
-void imu_init(IMU *imu);
+void imu_init(IMU *imu, const Time *time);
 
-void imu_update(IMU *imu, const BalanceFilterData *bf, const State *state);
+void imu_update(IMU *imu, const BalanceFilterData *bf, const State *state, const Time *time);
 
 void imu_set_flywheel_offsets(IMU *imu);
+
+/**
+ * Checks for an IMU data timeout, storing the state on the IMU object. To be
+ * called periodically from outside the IMU data callback. Returns true while
+ * the data is timed out.
+ */
+bool imu_check_timeout(IMU *imu, const Time *time);
+
+/**
+ * True if the IMU data is live and has been for long enough for the attitude
+ * filter to reconverge from its stale pre-timeout state.
+ */
+bool imu_data_settled(const IMU *imu, const Time *time);

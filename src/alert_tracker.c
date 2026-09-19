@@ -23,6 +23,7 @@ static uint32_t alert_id_to_mask(AlertId alert_id) {
 
 static const AlertProperties alert_properties[] = {
     [ALERT_FW_FAULT] = {.type = ATYPE_FATAL},
+    [ALERT_IMU_TIMEOUT] = {.type = ATYPE_ERROR},
 };
 
 const AlertProperties *alert_tracker_properties(AlertId alert_id) {
