@@ -2036,19 +2036,26 @@ Item {
         }
 
         function updateActiveAlerts() {
-            if (activeAlertsMask & alert_fwFault) {
-                activeAlertHighlight = alert_fwFault;
-                activeAlertCount = 1;
-                isFatalActive = true;
-                activeAlerts = [
-                    alert_fwFault,
-                ];
-            } else {
-                activeAlertHighlight = 0;
-                activeAlertCount = 0;
-                isFatalActive = false;
-                activeAlerts = [];
-            }
+            var active = [];
+            var highlight = 0;
+            var fatal = false;
+            alertData.forEach(function(data, id) {
+                if (id === 0 || !(activeAlertsMask & (1 << (id - 1)))) {
+                    return;
+                }
+                active.push(id);
+                // highlight the first active alert, but prefer a fatal one
+                if (!highlight || (data.severity === "FATAL" && !fatal)) {
+                    highlight = id;
+                }
+                if (data.severity === "FATAL") {
+                    fatal = true;
+                }
+            });
+            activeAlertHighlight = highlight;
+            activeAlertCount = active.length;
+            isFatalActive = fatal;
+            activeAlerts = active;
         }
 
         function receiveAlertsList(dv, ind) {
