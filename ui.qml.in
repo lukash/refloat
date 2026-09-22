@@ -1997,7 +1997,7 @@ Item {
         readonly property var alertData: new Map([
             [0, {
                 "name": "None",
-                "severity": "WARNING",
+                "severity": "INFO",
             }],
             [alert_fwFault, {
                 "name": "Fault",
@@ -2007,8 +2007,9 @@ Item {
 
         readonly property var severityColors: new Map([
             ["FATAL", Utility.getAppHexColor("red")],
-            ["ERROR", Utility.getAppHexColor("orange")],
-            ["WARNING", Utility.getAppHexColor("lightText")],
+            ["ERROR", Utility.getAppHexColor("red")],
+            ["WARNING", Utility.getAppHexColor("orange")],
+            ["INFO", Utility.getAppHexColor("lightText")],
         ])
 
         property Timer alertsListPollTimer: Timer {
