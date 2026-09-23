@@ -4383,6 +4383,39 @@ p, li { white-space: pre-wrap; }
                 </subgroupParams>
             </subgroup>
             <subgroup>
+                <subgroupName>Specs</subgroupName>
+                <subgroupParams>
+                    <param>::sep::Refloat Package Details</param>
+                    <param>disabled</param>
+                    <param>::sep::Voltage Pushbacks</param>
+                    <param>tiltback_hv</param>
+                    <param>tiltback_lv</param>
+                    <param>::sep::Foot Sensors</param>
+                    <param>fault_adc1</param>
+                    <param>fault_adc2</param>
+                    <param>hardware.swap_footpad_adcs</param>
+                    <param>is_footbeep_enabled</param>
+                    <param>::sep::Miscellaneous</param>
+                    <param>is_beeper_enabled</param>
+                    <param>::sep::Leds (changes require reboot)</param>
+                    <param>hardware.leds.mode</param>
+                    <param>hardware.leds.pin</param>
+                    <param>hardware.leds.pin_config</param>
+                    <param>hardware.leds.status.order</param>
+                    <param>hardware.leds.status.count</param>
+                    <param>hardware.leds.status.color_order</param>
+                    <param>hardware.leds.status.reverse</param>
+                    <param>hardware.leds.front.order</param>
+                    <param>hardware.leds.front.count</param>
+                    <param>hardware.leds.front.color_order</param>
+                    <param>hardware.leds.front.reverse</param>
+                    <param>hardware.leds.rear.order</param>
+                    <param>hardware.leds.rear.count</param>
+                    <param>hardware.leds.rear.color_order</param>
+                    <param>hardware.leds.rear.reverse</param>
+                </subgroupParams>
+            </subgroup>
+            <subgroup>
                 <subgroupName>LEDs</subgroupName>
                 <subgroupParams>
                     <param>::sep::General</param>
@@ -4429,39 +4462,6 @@ p, li { white-space: pre-wrap; }
                     <param>leds.status_idle.color1</param>
                     <param>leds.status_idle.color2</param>
                     <param>leds.status_idle.speed</param>
-                </subgroupParams>
-            </subgroup>
-            <subgroup>
-                <subgroupName>Specs</subgroupName>
-                <subgroupParams>
-                    <param>::sep::Refloat Package Details</param>
-                    <param>disabled</param>
-                    <param>::sep::Voltage Pushbacks</param>
-                    <param>tiltback_hv</param>
-                    <param>tiltback_lv</param>
-                    <param>::sep::Foot Sensors</param>
-                    <param>fault_adc1</param>
-                    <param>fault_adc2</param>
-                    <param>hardware.swap_footpad_adcs</param>
-                    <param>is_footbeep_enabled</param>
-                    <param>::sep::Miscellaneous</param>
-                    <param>is_beeper_enabled</param>
-                    <param>::sep::Leds (changes require reboot)</param>
-                    <param>hardware.leds.mode</param>
-                    <param>hardware.leds.pin</param>
-                    <param>hardware.leds.pin_config</param>
-                    <param>hardware.leds.status.order</param>
-                    <param>hardware.leds.status.count</param>
-                    <param>hardware.leds.status.color_order</param>
-                    <param>hardware.leds.status.reverse</param>
-                    <param>hardware.leds.front.order</param>
-                    <param>hardware.leds.front.count</param>
-                    <param>hardware.leds.front.color_order</param>
-                    <param>hardware.leds.front.reverse</param>
-                    <param>hardware.leds.rear.order</param>
-                    <param>hardware.leds.rear.count</param>
-                    <param>hardware.leds.rear.color_order</param>
-                    <param>hardware.leds.rear.reverse</param>
                 </subgroupParams>
             </subgroup>
             <subgroup>
