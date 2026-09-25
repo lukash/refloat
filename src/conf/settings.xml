@@ -4152,6 +4152,34 @@ p, li { white-space: pre-wrap; }
             <cDefine>CFG_DFLT_HARDWARE_LEDS_REAR_REVERSE</cDefine>
             <valInt>0</valInt>
         </hardware.leds.rear.reverse>
+        <imu.offset_x>
+            <longName>IMU Offset X</longName>
+            <type>2</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Fore-aft position of the IMU relative to the axle, positive towards the nose.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;An IMU mounted away from the axle picks up extra acceleration whenever the board rotates quickly. A couple of examples are a curb nudge (a lingering nose up after the nudge) or a revert (180 revert always lifts the nose, meaning reverting into nose forward vs tail forward behaves differently). Setting the real distance removes these effects.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;This has felt to me more important after the Confidence algorithm change, not sure atm. (haven't been able to test nudges at all lately). It probably has a slight impact on regular ride feel which you may notice.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Ideally, measure from the axle center to the IMU chip on the controller PCB. A rough estimate should be fine. E.g. for Thors in the Fun box, values around 200 mm should be close, 210 mm for BTG. Set to 0 to disable the compensation.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Technical: The rotational components the offset IMU measures (tangential from angular acceleration, centripetal from angular rate) are computed from gyro data and subtracted from the accelerometer data feeding the balance filter: acc_axle = acc_imu - alpha x r - omega x (omega x r). Only the X offset is exposed, Y and Z offsets have proven insignificant.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_IMU_OFFSET_X</cDefine>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxInt>500</maxInt>
+            <minInt>-500</minInt>
+            <showDisplay>0</showDisplay>
+            <stepInt>1</stepInt>
+            <valInt>0</valInt>
+            <suffix> mm</suffix>
+            <vTx>4</vTx>
+        </imu.offset_x>
         <hardware.swap_footpad_adcs>
             <longName>Swap Footpad ADCs</longName>
             <type>5</type>
@@ -4343,6 +4371,7 @@ p, li { white-space: pre-wrap; }
         <ser>leds.status_idle.color1</ser>
         <ser>leds.status_idle.color2</ser>
         <ser>leds.status_idle.speed</ser>
+        <ser>imu.offset_x</ser>
         <ser>hardware.leds.mode</ser>
         <ser>hardware.leds.pin</ser>
         <ser>hardware.leds.pin_config</ser>
@@ -4623,6 +4652,8 @@ p, li { white-space: pre-wrap; }
                     <param>balance_filter.accel_confidence.half_dev</param>
                     <param>balance_filter.accel_confidence.time_constant</param>
                     <param>balance_filter.accel_confidence.dev_clamp</param>
+                    <param>::sep::NEW: IMU Offset Compensation</param>
+                    <param>imu.offset_x</param>
                     <param>::sep::Miscellaneous</param>
                     <param>is_beeper_enabled</param>
                     <param>::sep::LEDs (changes require reboot)</param>

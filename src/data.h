@@ -33,6 +33,7 @@
 #include "latency_tracker.h"
 #include "lcm.h"
 #include "leds.h"
+#include "lever_arm.h"
 #include "motor_control.h"
 #include "motor_data.h"
 #include "pid.h"
@@ -56,6 +57,7 @@ typedef struct {
 
     // IMU data for the balancing filter
     BalanceFilterData balance_filter;
+    LeverArm lever_arm;
 
     Time time;
     MotorData motor;

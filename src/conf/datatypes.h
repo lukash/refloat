@@ -182,6 +182,10 @@ typedef struct {
 } CfgHardware;
 
 typedef struct {
+    float offset_x;
+} CfgImu;
+
+typedef struct {
     AccelConfidenceAlgo algo;
     float half_dev;
     float time_constant;
@@ -351,6 +355,7 @@ typedef struct {
     CfgHapticFeedback haptic;
     CfgBMS bms;
     CfgLeds leds;
+    CfgImu imu;
     CfgHardware hardware;
 
     CfgMeta meta;

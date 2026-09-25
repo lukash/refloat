@@ -33,6 +33,7 @@
 #include "imu.h"
 #include "lcm.h"
 #include "leds.h"
+#include "lever_arm.h"
 #include "lib/utils.h"
 #include "motor_control.h"
 #include "motor_data.h"
@@ -179,6 +180,8 @@ static void imu_freq_update_reconfigure(float frequency) {
 }
 
 static void reconfigure(Data *d) {
+    lever_arm_configure(&d->lever_arm, &d->float_conf);
+
     main_freq_update_reconfigure(d->main_freq_tracker.filter_frequency);
     imu_freq_update_reconfigure(d->imu_freq_tracker.filter_frequency);
 
@@ -742,7 +745,10 @@ static void imu_ref_callback(float *acc, float *gyro, float *mag, float dt) {
 
     time_t time = vesc_system_time_ticks();
 
-    balance_filter_update(&d->balance_filter, gyro, acc, dt);
+    float acc_comp[3];
+    lever_arm_update(&d->lever_arm, gyro, acc, acc_comp, dt);
+
+    balance_filter_update(&d->balance_filter, gyro, acc_comp, dt);
 
     frequency_tracker_update(&d->imu_freq_tracker, dt);
 
@@ -1213,6 +1219,7 @@ static void data_init(Data *d) {
     latency_tracker_init(&d->imu_latency_tracker);
 
     balance_filter_init(&d->balance_filter);
+    lever_arm_init(&d->lever_arm);
 
     motor_data_init(&d->motor);
     imu_init(&d->imu, &d->time);
