@@ -39,6 +39,7 @@ typedef enum {
 
 typedef struct {
     bool enabled;
+    const CfgLeds *cfg;
     uint8_t brightness;
     uint8_t brightness_idle;
     uint8_t status_brightness;
@@ -49,7 +50,7 @@ typedef struct {
     uint8_t payload_size;
 } LcmData;
 
-void lcm_init(LcmData *lcm, CfgHwLeds *hw_cfg);
+void lcm_init(LcmData *lcm, const CfgLeds *cfg);
 
 void lcm_configure(LcmData *lcm, const Leds *leds);
 

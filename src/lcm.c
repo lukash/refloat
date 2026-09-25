@@ -24,8 +24,9 @@
 
 #include <math.h>
 
-void lcm_init(LcmData *lcm, CfgHwLeds *hw_cfg) {
-    lcm->enabled = hw_cfg->mode & LED_MODE_EXTERNAL;
+void lcm_init(LcmData *lcm, const CfgLeds *cfg) {
+    lcm->cfg = cfg;
+    lcm->enabled = cfg->led_type == LED_Type_External_Module;
     lcm->brightness = 0;
     lcm->brightness_idle = 0;
     lcm->status_brightness = 0;
@@ -35,11 +36,8 @@ void lcm_init(LcmData *lcm, CfgHwLeds *hw_cfg) {
 }
 
 void lcm_configure(LcmData *lcm, const Leds *leds) {
-    if (!lcm->enabled) {
-        return;
-    }
-
     const CfgLeds *cfg = leds->cfg;
+    lcm->cfg = cfg;
     const LedsRuntimeStatus *status = leds_get_runtime_status(leds);
 
     if (!status->enabled) {
@@ -47,16 +45,11 @@ void lcm_configure(LcmData *lcm, const Leds *leds) {
         lcm->brightness_idle = 0.0f;
         lcm->status_brightness = 0.0f;
     } else {
-        if (status->headlights_enabled) {
-            lcm->brightness = cfg->headlights.brightness * 100;
-            lcm->status_brightness = cfg->status.brightness_headlights_on * 100;
-        } else {
-            lcm->brightness = cfg->front.brightness * 100;
-            lcm->status_brightness = cfg->status.brightness_headlights_off * 100;
-        }
-        lcm->brightness_idle = cfg->front.brightness * 100;
+        lcm->brightness = status->headlights_enabled ? cfg->led_brightness : 0;
+        lcm->brightness_idle = status->headlights_enabled ? cfg->led_brightness_idle : 0;
+        lcm->status_brightness = cfg->led_status_brightness;
     }
-    lcm->lights_off_when_lifted = cfg->lights_off_when_lifted;
+    lcm->lights_off_when_lifted = true;
 }
 
 void lcm_poll_request(LcmData *lcm, uint8_t *buffer, size_t len) {
@@ -132,22 +125,19 @@ void lcm_light_info_response(const LcmData *lcm) {
     buffer[ind++] = 101;  // Package ID
     buffer[ind++] = COMMAND_LCM_LIGHT_INFO;
 
-    // Lights control for Refloat is not compatible with this interface; Send 3
-    // for LCM (3 is he identifier for external led module in Float), otherwise 0.
-    buffer[ind++] = lcm->enabled ? 3 : 0;
+    buffer[ind++] = lcm->cfg->led_type;
 
-    if (lcm->enabled) {
+    if (lcm->cfg->led_type != LED_Type_None) {
         buffer[ind++] = lcm->brightness;
         buffer[ind++] = lcm->brightness_idle;
         buffer[ind++] = lcm->status_brightness;
 
-        // Don't send Float-specific configuration.
-        buffer[ind++] = 0;  // led_mode
-        buffer[ind++] = 0;  // mode_idle
-        buffer[ind++] = 0;  // status_mode
-        buffer[ind++] = 0;  // status_count
-        buffer[ind++] = 0;  // forward_count
-        buffer[ind++] = 0;  // rear_count
+        buffer[ind++] = lcm->cfg->led_mode;
+        buffer[ind++] = lcm->cfg->led_mode_idle;
+        buffer[ind++] = lcm->cfg->led_status_mode;
+        buffer[ind++] = lcm->cfg->led_status_count;
+        buffer[ind++] = lcm->cfg->led_forward_count;
+        buffer[ind++] = lcm->cfg->led_rear_count;
     }
 
     SEND_APP_DATA(buffer, bufsize, ind);

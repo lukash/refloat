@@ -7692,28 +7692,20 @@ Item {
                         text: "Lights"
                     }
 
-                    RowLayout {
-                        width: parent.width
+                    Button {
+                        anchors.horizontalCenter: parent.horizontalCenter
                         visible: lights.enabled
+                        text: lights.headlightsOn ? "Headlights Off" : "Headlights On"
+                        onClicked: commands.sendLightsControl(true, !lights.headlightsOn)
+                    }
 
-                        Button {
-                            Layout.preferredWidth: 3 * unit
-                            Layout.alignment: Qt.AlignHCenter
-                            text: lights.on ? "Lights Off" : "Lights On"
-                            onClicked: {
-                                commands.sendLightsControl(!lights.on);
-                            }
-                        }
-
-                        Button {
-                            id : headlightsButton
-                            Layout.minimumWidth: 3 * unit
-                            Layout.alignment: Qt.AlignHCenter
-                            text: lights.headlightsOn ? "Headlights Off" : "Headlights On"
-                            onClicked: {
-                                commands.sendLightsControl(undefined, !lights.headlightsOn);
-                            }
-                        }
+                    LText {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        visible: lights.enabled
+                        width: parent.width
+                        horizontalAlignment: Text.AlignHCenter
+                        wrapMode: Text.WordWrap
+                        text: "Set brightness, modes and strip lengths in Refloat Cfg > LEDs"
                     }
 
                     LText {

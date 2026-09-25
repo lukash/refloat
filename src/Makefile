@@ -5,6 +5,7 @@
 VESC_TOOL ?= vesc_tool
 
 TARGET = package_lib
+USE_STLIB = yes
 
 all: $(TARGET)
 

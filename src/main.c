@@ -951,7 +951,7 @@ static void refloat_thd(void *arg) {
                 }
             }
 
-            if (d->float_conf.hardware.leds.mode != LED_MODE_OFF) {
+            if (d->float_conf.leds.led_type != LED_Type_None) {
                 const LedsRuntimeStatus *led_status = leds_get_runtime_status(&d->leds);
                 if (!led_status->headlights_enabled &&
                     konami_check(&d->headlights_on_konami, &d->leds, &d->footpad, &d->time)) {
@@ -1125,7 +1125,8 @@ static void aux_thd(void *arg) {
             &d->imu_freq_tracker, running, &d->time, &imu_freq_update_reconfigure
         );
 
-        leds_update(&d->leds, &d->state, &d->motor, d->footpad.state);
+        leds_update(&d->leds, &d->state, &d->motor, d->footpad.state,
+                    d->float_conf.fault_adc_half_erpm);
 
         // store odometer if we've gone more than 200m
         if (!running && VESC_IF->mc_get_odometer() > d->odometer + 200) {
@@ -1213,8 +1214,8 @@ static void data_init(Data *d) {
     reverse_stop_init(&d->reverse_stop);
 
     leds_init(&d->leds);
-    leds_setup(&d->leds, &d->float_conf.hardware.leds, &d->float_conf.leds);
-    lcm_init(&d->lcm, &d->float_conf.hardware.leds);
+    leds_setup(&d->leds, &d->float_conf.leds);
+    lcm_init(&d->lcm, &d->float_conf.leds);
     charging_init(&d->charging);
     bms_init(&d->bms);
 
@@ -2336,11 +2337,8 @@ static void cmd_info(const Data *d, unsigned char *buf, int len) {
         send_buffer[ind++] = MAJOR_VERSION * 10 + MINOR_VERSION;
         send_buffer[ind++] = 1;  // build number
 
-        // Backwards compatibility for the LED type - external used to be 3
-        uint8_t led_type = d->float_conf.hardware.leds.mode;
-        if (led_type & LED_MODE_EXTERNAL) {
-            led_type = 3;
-        }
+        // Float 2.0 LED type (0 none, 1 RGB, 2 RGBW, 3 external).
+        uint8_t led_type = d->float_conf.leds.led_type;
 
         // Send the full type here. This is redundant with cmd_light_info. It
         // likely shouldn't be here, as the type can be reconfigured and the
@@ -2372,9 +2370,9 @@ static void cmd_info(const Data *d, unsigned char *buf, int len) {
         if (data_recorder_has_capability(&d->data_record)) {
             capabilities |= 1 << 31;
         }
-        if (d->float_conf.hardware.leds.mode != LED_MODE_OFF) {
+        if (d->float_conf.leds.led_type != LED_Type_None) {
             capabilities |= 1;
-            if (d->float_conf.hardware.leds.mode & LED_MODE_EXTERNAL) {
+            if (d->float_conf.leds.led_type == LED_Type_External_Module) {
                 capabilities |= 1 << 1;
             }
         }
@@ -2506,7 +2504,21 @@ static void on_command_received(unsigned char *buffer, unsigned int len) {
         return;
     }
     case COMMAND_LCM_LIGHT_CTRL: {
-        lcm_light_ctrl_request(&d->lcm, &buffer[2], len - 2);
+        if (d->float_conf.leds.led_type == LED_Type_External_Module) {
+            lcm_light_ctrl_request(&d->lcm, &buffer[2], len - 2);
+        } else if (d->float_conf.leds.led_type != LED_Type_None && len >= 5) {
+            // Float 2.0 runtime light control: brightness, idle brightness,
+            // status brightness, then optional active/idle/status modes.
+            d->float_conf.leds.led_brightness = min(buffer[2], 100);
+            d->float_conf.leds.led_brightness_idle = min(buffer[3], 100);
+            d->float_conf.leds.led_status_brightness = min(buffer[4], 100);
+            if (len >= 8) {
+                d->float_conf.leds.led_mode = buffer[5];
+                d->float_conf.leds.led_mode_idle = buffer[6];
+                d->float_conf.leds.led_status_mode = buffer[7];
+            }
+            lcm_configure(&d->lcm, &d->leds);
+        }
         return;
     }
     case COMMAND_LCM_DEVICE_INFO: {

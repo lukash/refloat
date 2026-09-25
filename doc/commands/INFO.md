@@ -25,7 +25,7 @@ _Note: What is now referred to as version `1` of this command originally had no 
 |--------|------|-----------------------|---------------|
 | 0      | 1    | `major_minor_version` | Package major and minor version encoded in a single number: `major * 10 + minor` |
 | 1      | 1    | `build_number`        | Always `1`.                          |
-| 2      | 1    | `leds_type`           | LEDs type:<br> `0`: None<br> `1`: Internal<br> `3`: External <br> _Note: In this version, "External" is `3` and `2` is never returned._ |
+| 2      | 1    | `leds_type`           | LEDs type:<br> `0`: None<br> `1`: RGB<br> `2`: RGBW<br> `3`: External module. |
 
 ### version 2
 

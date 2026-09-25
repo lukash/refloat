@@ -34,145 +34,26 @@ typedef enum {
 } ParkingBrakeMode;
 
 typedef enum {
-    LED_MODE_OFF = 0,
-    LED_MODE_INTERNAL = 0x1,
-    LED_MODE_EXTERNAL = 0x2,
-    LED_MODE_BOTH = 0x3,
-} LedMode;
-
-typedef enum {
-    LED_PIN_B6 = 0,
-    LED_PIN_B7,
-    LED_PIN_C9,
-    LED_PIN_LAST = LED_PIN_C9
-} LedPin;
-
-typedef enum {
-    LED_PIN_CFG_PULLUP_TO_5V = 0,
-    LED_PIN_CFG_NO_PULLUP
-} LedPinConfig;
-
-typedef enum {
-    LED_COLOR_GRB = 0,
-    LED_COLOR_GRBW,
-    LED_COLOR_RGB,
-    LED_COLOR_WRGB
-} LedColorOrder;
-
-typedef enum {
-    LED_STRIP_ORDER_NONE = 0,
-    LED_STRIP_ORDER_1ST,
-    LED_STRIP_ORDER_2ND,
-    LED_STRIP_ORDER_3RD
-} LedStripOrder;
-
-typedef enum {
-    COLOR_BLACK = 0,
-    COLOR_WHITE_FULL,
-    COLOR_WHITE_RGB,
-    COLOR_WHITE_SINGLE,
-    COLOR_RED,
-    COLOR_FERRARI,
-    COLOR_FLAME,
-    COLOR_CORAL,
-    COLOR_SUNSET,
-    COLOR_SUNRISE,
-    COLOR_GOLD,
-    COLOR_ORANGE,
-    COLOR_YELLOW,
-    COLOR_BANANA,
-    COLOR_LIME,
-    COLOR_ACID,
-    COLOR_SAGE,
-    COLOR_GREEN,
-    COLOR_MINT,
-    COLOR_TIFFANY,
-    COLOR_CYAN,
-    COLOR_STEEL,
-    COLOR_SKY,
-    COLOR_AZURE,
-    COLOR_SAPPHIRE,
-    COLOR_BLUE,
-    COLOR_VIOLET,
-    COLOR_AMETHYST,
-    COLOR_MAGENTA,
-    COLOR_PINK,
-    COLOR_FUCHSIA,
-    COLOR_LAVENDER,
-} LedColor;
-
-typedef enum {
-    LED_ANIM_SOLID = 0,
-    LED_ANIM_FADE,
-    LED_ANIM_PULSE,
-    LED_ANIM_STROBE,
-    LED_ANIM_KNIGHT_RIDER,
-    LED_ANIM_FELONY,
-    LED_ANIM_RAINBOW_CYCLE,
-    LED_ANIM_RAINBOW_FADE,
-    LED_ANIM_RAINBOW_ROLL,
-} LedAnimMode;
-
-typedef enum {
-    LED_TRANS_FADE = 0,
-    LED_TRANS_FADE_OUT_IN,
-    LED_TRANS_CIPHER,
-    LED_TRANS_MONO_CIPHER,
-} LedTransition;
+    LED_Type_None = 0,
+    LED_Type_RGB,
+    LED_Type_RGBW,
+    LED_Type_External_Module,
+} LEDType;
 
 typedef struct {
-    float brightness;
-    LedColor color1;
-    LedColor color2;
-    LedAnimMode mode;
-    float speed;
-} LedBar;
-
-typedef struct {
-    uint16_t idle_timeout;
-    float motor_utilization_threshold;
-    float red_bar_percentage;
-    bool show_sensors_while_running;
-    float brightness_headlights_on;
-    float brightness_headlights_off;
-} StatusBar;
-
-typedef struct {
-    bool on;
-    bool headlights_on;
-
-    LedTransition headlights_transition;
-    LedTransition direction_transition;
-
-    bool lights_off_when_lifted;
-    bool status_on_front_when_lifted;
-
-    LedBar headlights;
-    LedBar taillights;
-    LedBar front;
-    LedBar rear;
-    StatusBar status;
-    LedBar status_idle;
+    uint8_t led_type;
+    uint8_t led_status_count;
+    uint8_t led_forward_count;
+    uint8_t led_rear_count;
+    uint8_t led_brightness;
+    uint8_t led_brightness_idle;
+    uint8_t led_mode;
+    uint8_t led_mode_idle;
+    uint8_t led_status_brightness;
+    uint8_t led_status_mode;
 } CfgLeds;
 
 typedef struct {
-    LedStripOrder order;
-    uint8_t count;
-    LedColorOrder color_order;
-    bool reverse;
-} CfgLedStrip;
-
-typedef struct {
-    LedMode mode;
-    LedPin pin;
-    LedPinConfig pin_config;
-    CfgLedStrip status;
-    CfgLedStrip front;
-    CfgLedStrip rear;
-} CfgHwLeds;
-
-typedef struct {
-    CfgHwLeds leds;
     bool swap_footpad_adcs;
 } CfgHardware;
 
