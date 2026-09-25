@@ -3202,6 +3202,7 @@ Item {
         property int toolbarOffset: 0
 
         property bool showRecordDownload: false
+        property bool showOffsetFit: false
         property int maxWindowMinutes
         property bool dotsEnabled: true
 
@@ -3375,6 +3376,18 @@ Item {
                         }
                     }
                 }
+                }
+            }
+
+            FloatingToolButton {
+                visible: plot.showOffsetFit && plotData.dataReady
+
+                iconPath: Path {
+                    PathSvg {path: "M 8 25 L 42 25 M 8 25 L 15 18 M 8 25 L 15 32 M 42 25 L 35 18 M 42 25 L 35 32"}
+                }
+
+                onClicked: {
+                    imuOffsetFitDialog.show(plotData);
                 }
             }
 
@@ -6599,6 +6612,7 @@ Item {
         id: recordedPlot
 
         maxWindowMinutes: preferences.plotMaxWindowMinutes
+        showOffsetFit: true
 
         plotData: RecordedPlotData {
             id: recordedPlotData
@@ -6626,6 +6640,267 @@ Item {
             font.pixelSize: fontSizeNormal
             horizontalAlignment: Text.AlignHCenter
             text: timeout ? "timeout" : recordedPlotData.noData ? "no plot data" : recordedPlotData.initialized ? "loading: %1".arg(recordedPlotData.sampleNr) : "loading..."
+        }
+    }
+
+    BaseDialog {
+        id: imuOffsetFitDialog
+
+        title: "IMU Offset Fit"
+        standardButtons: Dialog.Close
+
+        // "result" is a FINAL property of Dialog on newer Qt, don't shadow it
+        property string fitResult: ""
+
+        function show(pd) {
+            fitResult = fit(pd);
+            open();
+        }
+
+        // Least squares fit of the IMU position offset (lever arm) from
+        // recorded gyro and (raw) accelerometer data. Model per sample, in
+        // the board frame [m/s^2]:
+        //
+        //   acc = acc_axle + r_x * A_x + r_y * A_y + r_z * A_z
+        //   A_j = alpha x e_j + omega x (omega x e_j)
+        //
+        // acc_axle is unknown: its quasi-static (gravity) component is
+        // removed by highpassing all series identically, and gyro-integrated
+        // tilt regressors with free coefficients (expected ~= -/+ 9.81)
+        // absorb the first-order gravity leakage from the board tilting
+        // (pitch tilt on X, roll tilt on Y), which would otherwise bias r_z.
+        // Solves for p = [r_x, r_y, r_z, c_pitch, c_roll].
+        function fit(pd) {
+            const G = 9.80665;
+            const ids = pd.seriesIds;
+            const chan = ["gyro.x", "gyro.y", "gyro.z", "acc.x", "acc.y", "acc.z"];
+            const col = {};
+            for (const id of chan) {
+                const i = ids.indexOf(id);
+                if (i < 0) {
+                    return "Recording has no \"" + id + "\" channel.";
+                }
+                col[id] = i + pd.extraFlags.length + 1;
+            }
+
+            const data = pd.data;
+            const n = data.length;
+            if (n < 3) {
+                return "No data.";
+            }
+            const dt = (data[n - 1][0] - data[0][0]) / ((n - 1) * pd.ticksPerSecond);
+            if ((n - 1) * dt < 4) {
+                return "Recording too short (" + ((n - 1) * dt).toFixed(1)
+                    + "s), pump the board for at least ~10s.";
+            }
+
+            const wx = [], wy = [], wz = [], ax = [], ay = [], az = [];
+            for (const row of data) {
+                wx.push(row[col["gyro.x"]]);
+                wy.push(row[col["gyro.y"]]);
+                wz.push(row[col["gyro.z"]]);
+                ax.push(row[col["acc.x"]] * G);
+                ay.push(row[col["acc.y"]] * G);
+                az.push(row[col["acc.z"]] * G);
+            }
+
+            // per-unit-offset regressors A_x, A_z (by component) and the
+            // pitch/roll tilt integrals; alpha by central difference
+            const axx = [], axy = [], axz = [], ayx = [], ayy = [], ayz = [];
+            const azx = [], azy = [], azz = [];
+            const thp = [], thr = [];
+            let sp = 0, sr = 0;
+            for (let i = 0; i < n; i++) {
+                const l = i > 0 ? i - 1 : i;
+                const h = i < n - 1 ? i + 1 : i;
+                const d = (h - l) * dt;
+                const alx = (wx[h] - wx[l]) / d;
+                const aly = (wy[h] - wy[l]) / d;
+                const alz = (wz[h] - wz[l]) / d;
+
+                axx.push(-(wy[i] * wy[i] + wz[i] * wz[i]));
+                axy.push(alz + wx[i] * wy[i]);
+                axz.push(-aly + wx[i] * wz[i]);
+                ayx.push(-alz + wx[i] * wy[i]);
+                ayy.push(-(wx[i] * wx[i] + wz[i] * wz[i]));
+                ayz.push(alx + wy[i] * wz[i]);
+                azx.push(aly + wx[i] * wz[i]);
+                azy.push(-alx + wy[i] * wz[i]);
+                azz.push(-(wx[i] * wx[i] + wy[i] * wy[i]));
+
+                sp += wy[i] * dt;
+                sr += wx[i] * dt;
+                thp.push(sp);
+                thr.push(sr);
+            }
+
+            // Condition all series with an identical bandpass: a DC-blocking
+            // highpass removes the quasi-static gravity, a lowpass above the
+            // pumping band removes gyro noise (amplified by differentiation
+            // in the alpha regressors), which would otherwise bias the fit.
+            // Filtering measurements and regressors identically cancels out
+            // of the fitted coefficients.
+            const hpAlpha = Math.min(1, 2 * Math.PI * 0.3 * dt);
+            const lpAlpha = Math.min(1, 2 * Math.PI * 10 * dt);
+            function condition(src) {
+                let dc = src[0];
+                let lp1 = 0, lp2 = 0;
+                const out = [];
+                for (const v of src) {
+                    dc += hpAlpha * (v - dc);
+                    lp1 += lpAlpha * (v - dc - lp1);
+                    lp2 += lpAlpha * (lp1 - lp2);
+                    out.push(lp2);
+                }
+                return out;
+            }
+
+            const y = [condition(ax), condition(ay), condition(az)];
+            // regressors per axis equation: [A_x, A_y, A_z, tilt_pitch, tilt_roll]
+            const NP = 5;
+            const F = [
+                [condition(axx), condition(ayx), condition(azx), condition(thp), null],
+                [condition(axy), condition(ayy), condition(azy), null, condition(thr)],
+                [condition(axz), condition(ayz), condition(azz), null, null],
+            ];
+
+            // accumulate the normal equations, skipping the highpass warmup
+            const skip = Math.min(Math.round(1.5 / dt), Math.floor(n / 4));
+            const M = [];
+            const b = [];
+            for (let j = 0; j < NP; j++) {
+                M.push(new Array(NP).fill(0));
+                b.push(0);
+            }
+            let cAA = 0;
+            for (let i = skip; i < n; i++) {
+                cAA += F[0][2][i] * F[0][2][i];
+                for (let axis = 0; axis < 3; axis++) {
+                    const f = F[axis];
+                    for (let j = 0; j < NP; j++) {
+                        if (!f[j]) {
+                            continue;
+                        }
+                        b[j] += f[j][i] * y[axis][i];
+                        for (let k = j; k < NP; k++) {
+                            if (f[k]) {
+                                M[j][k] += f[j][i] * f[k][i];
+                            }
+                        }
+                    }
+                }
+            }
+            for (let j = 0; j < NP; j++) {
+                for (let k = 0; k < j; k++) {
+                    M[j][k] = M[k][j];
+                }
+            }
+
+            // tiny ridge: keeps unexcited parameters (e.g. roll coupling on a
+            // pure pitch capture) at ~0 instead of making M singular
+            let maxDiag = 0;
+            for (let j = 0; j < NP; j++) {
+                maxDiag = Math.max(maxDiag, M[j][j]);
+            }
+            if (maxDiag === 0) {
+                return "No motion in the recording.";
+            }
+            for (let j = 0; j < NP; j++) {
+                M[j][j] += 1e-9 * maxDiag + 1e-12;
+            }
+
+            const p = solve(M, b);
+
+            const sse = [0, 0, 0], sst = [0, 0, 0];
+            for (let i = skip; i < n; i++) {
+                for (let axis = 0; axis < 3; axis++) {
+                    let pred = 0;
+                    const f = F[axis];
+                    for (let j = 0; j < NP; j++) {
+                        if (f[j]) {
+                            pred += p[j] * f[j][i];
+                        }
+                    }
+                    const e = y[axis][i] - pred;
+                    sse[axis] += e * e;
+                    sst[axis] += y[axis][i] * y[axis][i];
+                }
+            }
+
+            const count = n - skip;
+            // don't judge the fit on axes with no meaningful signal (e.g. Y
+            // on a pure pitch-pumping capture holds mostly sensor noise)
+            const sstTotal = sst[0] + sst[1] + sst[2];
+            const r2 = (a) => sst[a] > 0.01 * sstTotal
+                ? (1 - sse[a] / sst[a]).toFixed(2) : "-";
+            // pitch tilt vs A_z on the X axis: collinear for single-frequency
+            // pumping, making r_z inseparable from the gravity leakage
+            const rho = M[2][3] / Math.sqrt(cAA * M[3][3] + 1e-12);
+            const excitation = Math.sqrt(cAA / count);
+            // Y is only identifiable with deliberate yaw excitation in the
+            // capture; incidental hand wobble drowns in gyro noise
+            const yExcited = M[1][1] > 0.02 * maxDiag;
+
+            // config offsets X and Y are positive towards the nose and the
+            // left side, which is -X/-Y in the IMU frame the fit runs in;
+            // report in config convention
+            let text = "IMU Offset X: " + (-p[0] * 1000).toFixed(0) + " mm\n"
+                + "IMU Offset Y: "
+                + (yExcited ? (-p[1] * 1000).toFixed(0) + " mm" : "- (no yaw excitation)") + "\n"
+                + "IMU Offset Z: " + (p[2] * 1000).toFixed(0) + " mm\n"
+                + "\n"
+                + "fit R² (x/y/z): " + r2(0) + " / " + r2(1) + " / " + r2(2) + "\n"
+                + "gravity coupling: " + p[3].toFixed(1) + " m/s² (|expected| ≈ 9.8)\n"
+                + "samples: " + count + " (" + (count * dt).toFixed(1) + "s @ "
+                + Math.round(1 / dt) + "Hz)";
+            if (excitation < 2) {
+                text += "\n\nWarning: low excitation, pump the board more vigorously.";
+            }
+            if (Math.abs(rho) > 0.95) {
+                text += "\n\nWarning: pumping too regular, vary the speed of the "
+                    + "motion, otherwise the Z offset can't be separated from "
+                    + "the gravity tilt.";
+            }
+            return text;
+        }
+
+        function solve(A, r) {
+            const n = r.length;
+            const m = A.map((row) => row.slice());
+            const v = r.slice();
+            for (let c = 0; c < n; c++) {
+                let piv = c;
+                for (let j = c + 1; j < n; j++) {
+                    if (Math.abs(m[j][c]) > Math.abs(m[piv][c])) {
+                        piv = j;
+                    }
+                }
+                [m[c], m[piv]] = [m[piv], m[c]];
+                [v[c], v[piv]] = [v[piv], v[c]];
+                for (let j = c + 1; j < n; j++) {
+                    const f = m[j][c] / m[c][c];
+                    for (let k = c; k < n; k++) {
+                        m[j][k] -= f * m[c][k];
+                    }
+                    v[j] -= f * v[c];
+                }
+            }
+            const x = new Array(n).fill(0);
+            for (let c = n - 1; c >= 0; c--) {
+                let s = v[c];
+                for (let k = c + 1; k < n; k++) {
+                    s -= m[c][k] * x[k];
+                }
+                x[c] = s / m[c][c];
+            }
+            return x;
+        }
+
+        LText {
+            width: imuOffsetFitDialog.availableWidth
+            font.family: "Mono"
+            wrapMode: Text.WordWrap
+            text: imuOffsetFitDialog.fitResult
         }
     }
 
