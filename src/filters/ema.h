@@ -32,6 +32,8 @@ void ema_init(EMA *ema);
 
 void ema_configure(EMA *ema, float cutoff_freq, float update_freq);
 
+void ema_configure_time_constant(EMA *ema, float time_constant, float update_freq);
+
 void ema_reset(EMA *ema, float value);
 
 inline void ema_update(EMA *ema, float target) {

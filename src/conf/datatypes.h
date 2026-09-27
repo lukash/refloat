@@ -34,6 +34,11 @@ typedef enum {
 } ParkingBrakeMode;
 
 typedef enum {
+    CONFIDENCE_ALGO_DECAY = 0,
+    CONFIDENCE_ALGO_ENVELOPE
+} AccelConfidenceAlgo;
+
+typedef enum {
     LED_MODE_OFF = 0,
     LED_MODE_INTERNAL = 0x1,
     LED_MODE_EXTERNAL = 0x2,
@@ -177,7 +182,14 @@ typedef struct {
 } CfgHardware;
 
 typedef struct {
+    AccelConfidenceAlgo algo;
+    float half_dev;
+    float time_constant;
+} CfgAccelConfidence;
+
+typedef struct {
     float ki;
+    CfgAccelConfidence accel_confidence;
 } CfgBalanceFilter;
 
 typedef struct {
