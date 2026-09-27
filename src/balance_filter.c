@@ -50,6 +50,16 @@ static float calculate_acc_confidence(float new_acc_mag, BalanceFilterData *data
     return confidence > 0 ? confidence : 0;
 }
 
+// Tracks the RMS envelope of the acceleration magnitude deviation from 1g and
+// turns it into a confidence with a Cauchy bell curve weight: flat around zero
+// deviation, 1/2 at the configured half deviation, rolling off smoothly beyond.
+static float calculate_acc_confidence_envelope(float new_acc_mag, BalanceFilterData *data) {
+    float dev = new_acc_mag - 1.0f;
+    ema_update(&data->acc_dev_sq, dev * dev);
+
+    return 1.0f / (1.0f + data->acc_dev_sq.value * data->half_dev_recip_sq);
+}
+
 void balance_filter_init(BalanceFilterData *data) {
     // Init with internal filter orientation, otherwise the AHRS would need a while to stabilize
     float quat[4];
@@ -60,6 +70,7 @@ void balance_filter_init(BalanceFilterData *data) {
     data->q3 = quat[3];
     ema_init(&data->acc_mag);
     ema_reset(&data->acc_mag, 1.0f);
+    ema_init(&data->acc_dev_sq);
     data->integral_fb_x = 0.0f;
     data->integral_fb_y = 0.0f;
     data->integral_fb_z = 0.0f;
@@ -68,7 +79,13 @@ void balance_filter_init(BalanceFilterData *data) {
 void balance_filter_configure(
     BalanceFilterData *data, const RefloatConfig *config, float frequency
 ) {
+    data->confidence_algo = config->balance_filter.accel_confidence.algo;
     ema_configure(&data->acc_mag, 8.0f, frequency);
+    float half_dev = config->balance_filter.accel_confidence.half_dev;
+    data->half_dev_recip_sq = half_dev > 0.0f ? 1.0f / (half_dev * half_dev) : 0.0f;
+    ema_configure_time_constant(
+        &data->acc_dev_sq, config->balance_filter.accel_confidence.time_constant, frequency
+    );
     data->kp_pitch = config->mahony_kp;
     data->kp_roll = config->mahony_kp_roll;
     data->ki = config->balance_filter.ki;
@@ -89,19 +106,32 @@ void balance_filter_update(BalanceFilterData *data, float *gyro_xyz, float *acce
 
     float accel_norm = sqrtf(ax * ax + ay * ay + az * az);
 
-    // Compute feedback only if accelerometer abs(vector)is not too small to avoid a division
-    // by a small number
-    if (accel_norm > 0.01) {
-        float accel_confidence = calculate_acc_confidence(accel_norm, data);
+    bool normalize = data->confidence_algo == CONFIDENCE_ALGO_DECAY;
+
+    // With normalization, skip the feedback entirely on a tiny magnitude to
+    // avoid dividing by ~zero
+    if (!normalize || accel_norm > 0.01f) {
+        // both confidence trackers are kept warm so that the algorithms can
+        // be switched at runtime for comparison
+        float conf_decay = calculate_acc_confidence(accel_norm, data);
+        float conf_envelope = calculate_acc_confidence_envelope(accel_norm, data);
+        float accel_confidence =
+            data->confidence_algo == CONFIDENCE_ALGO_ENVELOPE ? conf_envelope : conf_decay;
         float two_kp_pitch = 2.0 * data->kp_pitch * accel_confidence;
         float two_kp_roll = 2.0 * data->kp_roll * accel_confidence;
         float two_kp_yaw = 2.0 * data->kp_yaw * accel_confidence;
 
-        // Normalize accelerometer measurement
-        float recip_norm = inv_sqrt(ax * ax + ay * ay + az * az);
-        ax *= recip_norm;
-        ay *= recip_norm;
-        az *= recip_norm;
+        if (normalize) {
+            // Legacy behavior: the measurement is normalized, so only its
+            // direction enters the error term. Dividing by the magnitude
+            // makes weak readings (board going light) count more than strong
+            // ones (impacts), so shaking that should average out instead
+            // turns into a steady pitch error on rough ground.
+            float recip_norm = inv_sqrt(ax * ax + ay * ay + az * az);
+            ax *= recip_norm;
+            ay *= recip_norm;
+            az *= recip_norm;
+        }
 
         // Estimated direction of gravity and vector perpendicular to magnetic flux
         float halfvx = data->q1 * data->q3 - data->q0 * data->q2;

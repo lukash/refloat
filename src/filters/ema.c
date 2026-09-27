@@ -44,6 +44,10 @@ void ema_configure(EMA *ema, float cutoff_freq, float update_freq) {
     ema->alpha = ema_calculate_alpha(cutoff_freq, update_freq);
 }
 
+void ema_configure_time_constant(EMA *ema, float time_constant, float update_freq) {
+    ema->alpha = ema_calculate_alpha_time_constant(time_constant, update_freq);
+}
+
 void ema_reset(EMA *ema, float value) {
     ema->value = value;
 }
