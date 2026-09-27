@@ -177,6 +177,10 @@ typedef struct {
 } CfgHardware;
 
 typedef struct {
+    float ki;
+} CfgBalanceFilter;
+
+typedef struct {
     uint16_t frequency;
     float strength;
 } CfgHapticTone;
@@ -323,6 +327,8 @@ typedef struct {
     bool is_beeper_enabled;
     bool is_dutybeep_enabled;
     bool is_footbeep_enabled;
+
+    CfgBalanceFilter balance_filter;
 
     CfgTorqueTilt torque_tilt;
     CfgATR atr;
