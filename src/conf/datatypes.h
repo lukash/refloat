@@ -185,6 +185,7 @@ typedef struct {
     AccelConfidenceAlgo algo;
     float half_dev;
     float time_constant;
+    float dev_clamp;
 } CfgAccelConfidence;
 
 typedef struct {
