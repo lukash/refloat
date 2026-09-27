@@ -54,7 +54,15 @@ static float calculate_acc_confidence(float new_acc_mag, BalanceFilterData *data
 // turns it into a confidence with a Cauchy bell curve weight: flat around zero
 // deviation, 1/2 at the configured half deviation, rolling off smoothly beyond.
 static float calculate_acc_confidence_envelope(float new_acc_mag, BalanceFilterData *data) {
-    float dev = new_acc_mag - 1.0f;
+    float dev = fabsf(new_acc_mag - 1.0f);
+    if (data->acc_dev_clamp > 0.0f && dev > data->acc_dev_clamp) {
+        // Signal clipping: the envelope tracks the mean of the squared
+        // deviation, so without the clamp a single violent event (several g
+        // for a fraction of a second) deposits quadratically outsized energy
+        // and dominates the envelope for its full time constant, leaving the
+        // confidence lingering low long after the event.
+        dev = data->acc_dev_clamp;
+    }
     ema_update(&data->acc_dev_sq, dev * dev);
 
     return 1.0f / (1.0f + data->acc_dev_sq.value * data->half_dev_recip_sq);
@@ -83,6 +91,7 @@ void balance_filter_configure(
     ema_configure(&data->acc_mag, 8.0f, frequency);
     float half_dev = config->balance_filter.accel_confidence.half_dev;
     data->half_dev_recip_sq = half_dev > 0.0f ? 1.0f / (half_dev * half_dev) : 0.0f;
+    data->acc_dev_clamp = config->balance_filter.accel_confidence.dev_clamp;
     ema_configure_time_constant(
         &data->acc_dev_sq, config->balance_filter.accel_confidence.time_constant, frequency
     );

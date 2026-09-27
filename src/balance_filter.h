@@ -39,6 +39,8 @@ typedef struct {
     AccelConfidenceAlgo confidence_algo;
     // 1 / half_dev^2 of the Deviation Envelope algo, 0 disables
     float half_dev_recip_sq;
+    // signal clamp on the deviation entering the envelope, 0 disables
+    float acc_dev_clamp;
     float kp_pitch;
     float kp_roll;
     float kp_yaw;
