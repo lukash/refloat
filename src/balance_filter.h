@@ -27,11 +27,16 @@ typedef struct {
     float q2;
     float q3;
     EMA acc_mag;
+    // gyro bias estimated by the integral feedback [rad/s]
+    float integral_fb_x;
+    float integral_fb_y;
+    float integral_fb_z;
 
     // parameters
     float kp_pitch;
     float kp_roll;
     float kp_yaw;
+    float ki;
 } BalanceFilterData;
 
 void balance_filter_init(BalanceFilterData *data);

@@ -60,6 +60,9 @@ void balance_filter_init(BalanceFilterData *data) {
     data->q3 = quat[3];
     ema_init(&data->acc_mag);
     ema_reset(&data->acc_mag, 1.0f);
+    data->integral_fb_x = 0.0f;
+    data->integral_fb_y = 0.0f;
+    data->integral_fb_z = 0.0f;
 }
 
 void balance_filter_configure(
@@ -68,6 +71,7 @@ void balance_filter_configure(
     ema_configure(&data->acc_mag, 8.0f, frequency);
     data->kp_pitch = config->mahony_kp;
     data->kp_roll = config->mahony_kp_roll;
+    data->ki = config->balance_filter.ki;
     // Use middle value between Pitch KP and Roll KP. Yaw KP seems to have
     // negligible effect on balancing and the middle value should skew the
     // filter the least.
@@ -108,6 +112,21 @@ void balance_filter_update(BalanceFilterData *data, float *gyro_xyz, float *acce
         float halfex = (ay * halfvz - az * halfvy);
         float halfey = (az * halfvx - ax * halfvz);
         float halfez = (ax * halfvy - ay * halfvx);
+
+        // Compute and apply integral feedback (gyro bias estimation) if enabled.
+        if (data->ki > 0.0f) {
+            float two_ki = 2.0 * data->ki * accel_confidence;
+            data->integral_fb_x += two_ki * halfex * dt;
+            data->integral_fb_y += two_ki * halfey * dt;
+            data->integral_fb_z += two_ki * halfez * dt;
+            gx += data->integral_fb_x;
+            gy += data->integral_fb_y;
+            gz += data->integral_fb_z;
+        } else {
+            data->integral_fb_x = 0.0f;
+            data->integral_fb_y = 0.0f;
+            data->integral_fb_z = 0.0f;
+        }
 
         // Apply proportional feedback
         gx += two_kp_roll * halfex;
