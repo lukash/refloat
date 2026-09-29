@@ -984,7 +984,7 @@ void leds_update(
     } else if (leds->board_is_upright && leds->pitch < 50) {
         leds->board_is_upright = false;
         leds->status_idle_time = current_time;
-        if (leds->cfg->lights_off_when_lifted) {
+        if (leds->cfg->leds_off_while_lifted) {
             front_rear_animation_reset(leds, current_time);
         }
     }
@@ -1030,7 +1030,7 @@ void leds_update(
     if (status_on_front) {
         rate_limitf(&leds->front_strip.brightness, status_brightness, BR_RATE);
     } else {
-        if (leds->board_is_upright && leds->cfg->lights_off_when_lifted) {
+        if (leds->board_is_upright && leds->cfg->leds_off_while_lifted) {
             rate_limitf(&leds->front_strip.brightness, 0.0f, BR_RATE);
         } else {
             rate_limitf(&leds->front_strip.brightness, leds->front_bar->brightness, BR_RATE);
@@ -1038,7 +1038,7 @@ void leds_update(
     }
 
     // rear brightness
-    if (leds->board_is_upright && leds->cfg->lights_off_when_lifted) {
+    if (leds->board_is_upright && leds->cfg->leds_off_while_lifted) {
         rate_limitf(&leds->rear_strip.brightness, 0.0f, BR_RATE);
     } else {
         rate_limitf(&leds->rear_strip.brightness, leds->rear_bar->brightness, BR_RATE);
@@ -1234,7 +1234,7 @@ void leds_update(
 
     if (leds->cfg->status_on_front_when_lifted && leds->status_on_front_blend > 0.0f &&
         leds->front_strip.length > 0) {
-        if (leds->cfg->lights_off_when_lifted &&
+        if (leds->cfg->leds_off_while_lifted &&
             current_time - leds->status_on_front_idle_time > 3.0f) {
             rate_limitf(&leds->status_on_front_idle_blend, 1.0f, BR_RATE);
         } else {

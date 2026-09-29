@@ -2700,7 +2700,7 @@ p, li { white-space: pre-wrap; }
             <enumNames>Cipher</enumNames>
             <enumNames>Mono Cipher</enumNames>
         </leds.direction_transition>
-        <leds.lights_off_when_lifted>
+        <leds.leds_off_when_lifted>
             <longName>Lights Off When Lifted</longName>
             <type>5</type>
             <transmittable>1</transmittable>
@@ -2711,7 +2711,7 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;When enabled, turns off front and rear leds when you lift the board nose up (pitch angle &amp;gt; 60°). So that the LEDs don't blast into your eyes when you carry it.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_LEDS_LIGHTS_OFF_WHEN_LIFTED</cDefine>
             <valInt>1</valInt>
-        </leds.lights_off_when_lifted>
+        </leds.leds_off_when_lifted>
         <leds.status_on_front_when_lifted>
             <longName>Status On Front When Lifted</longName>
             <type>5</type>
@@ -4137,7 +4137,7 @@ p, li { white-space: pre-wrap; }
         <ser>leds.headlights_on</ser>
         <ser>leds.headlights_transition</ser>
         <ser>leds.direction_transition</ser>
-        <ser>leds.lights_off_when_lifted</ser>
+        <ser>leds.leds_off_when_lifted</ser>
         <ser>leds.status_on_front_when_lifted</ser>
         <ser>leds.front.mode</ser>
         <ser>leds.front.brightness</ser>
@@ -4390,7 +4390,7 @@ p, li { white-space: pre-wrap; }
                     <param>leds.headlights_on</param>
                     <param>leds.headlights_transition</param>
                     <param>leds.direction_transition</param>
-                    <param>leds.lights_off_when_lifted</param>
+                    <param>leds.leds_off_when_lifted</param>
                     <param>leds.status_on_front_when_lifted</param>
                     <param>::sep::Front</param>
                     <param>leds.front.mode</param>

@@ -144,7 +144,7 @@ typedef struct {
     LedTransition headlights_transition;
     LedTransition direction_transition;
 
-    bool lights_off_when_lifted;
+    bool leds_off_when_lifted;
     bool status_on_front_when_lifted;
 
     LedBar headlights;

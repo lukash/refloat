@@ -31,7 +31,7 @@ void lcm_init(LcmData *lcm, CfgHwLeds *hw_cfg) {
     lcm->status_brightness = 0;
     lcm->name[0] = '\0';
     lcm->payload_size = 0;
-    lcm->lights_off_when_lifted = true;
+    lcm->leds_off_when_lifted = true;
 }
 
 void lcm_configure(LcmData *lcm, const Leds *leds) {
@@ -56,7 +56,7 @@ void lcm_configure(LcmData *lcm, const Leds *leds) {
         }
         lcm->brightness_idle = cfg->front.brightness * 100;
     }
-    lcm->lights_off_when_lifted = cfg->lights_off_when_lifted;
+    lcm->leds_off_when_lifted = cfg->leds_off_when_lifted;
 }
 
 void lcm_poll_request(LcmData *lcm, uint8_t *buffer, size_t len) {
@@ -102,7 +102,7 @@ void lcm_poll_response(
             buffer[ind++] = fminf(100, fabsf(motor->duty_cycle.value * 100));
         } else {
             // pitch is a value between -180 and +180, so abs(pitch) fits into uint8
-            buffer[ind++] = lcm->lights_off_when_lifted ? fabsf(pitch) : 0;
+            buffer[ind++] = lcm->leds_off_when_lifted ? fabsf(pitch) : 0;
         }
 
         buffer_append_float16(buffer, motor->erpm, 1e0, &ind);

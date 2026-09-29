@@ -7699,7 +7699,7 @@ Item {
                         Button {
                             Layout.preferredWidth: 3 * unit
                             Layout.alignment: Qt.AlignHCenter
-                            text: lights.on ? "Lights Off" : "Lights On"
+                            text: lights.on ? "LEDs Off" : "LEDs On"
                             onClicked: {
                                 commands.sendLightsControl(!lights.on);
                             }

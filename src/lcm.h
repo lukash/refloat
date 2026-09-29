@@ -42,7 +42,7 @@ typedef struct {
     uint8_t brightness;
     uint8_t brightness_idle;
     uint8_t status_brightness;
-    bool lights_off_when_lifted;
+    bool leds_off_when_lifted;
 
     char name[MAX_LCM_NAME_LENGTH];
     uint8_t payload[MAX_LCM_PAYLOAD_LENGTH];
