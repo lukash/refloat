@@ -7709,6 +7709,7 @@ Item {
                             id : headlightsButton
                             Layout.minimumWidth: 3 * unit
                             Layout.alignment: Qt.AlignHCenter
+                            enabled: lights.on
                             text: lights.headlightsOn ? "Headlights Off" : "Headlights On"
                             onClicked: {
                                 commands.sendLightsControl(undefined, !lights.headlightsOn);
