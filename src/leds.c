@@ -355,7 +355,37 @@ static void led_strip_animate(Leds *leds, const LedStrip *strip, const LedBar *b
 
     switch (bar->mode) {
     case LED_ANIM_SOLID:
-        strip_set_color(leds, strip, colors[bar->color1], strip->brightness, 1.0f);
+        if (bar->banner_mode) {
+            const uint8_t third = strip->length / 3;
+            const uint8_t side_length = third + (strip->length % 3 == 2);
+            const uint8_t center_length = third + (strip->length % 3 == 1);
+            const uint8_t center_start = side_length;
+            const uint8_t right_start = center_start + center_length;
+
+            strip_set_color_range(
+                leds, strip, colors[bar->color1], strip->brightness, 1.0f, 0, side_length
+            );
+            strip_set_color_range(
+                leds,
+                strip,
+                colors[bar->color2],
+                strip->brightness,
+                1.0f,
+                center_start,
+                right_start
+            );
+            strip_set_color_range(
+                leds,
+                strip,
+                colors[bar->color1],
+                strip->brightness,
+                1.0f,
+                right_start,
+                strip->length
+            );
+        } else {
+            strip_set_color(leds, strip, colors[bar->color1], strip->brightness, 1.0f);
+        }
         break;
     case LED_ANIM_FADE:
         anim_fade(leds, strip, bar, time);
