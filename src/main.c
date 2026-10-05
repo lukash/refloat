@@ -1631,6 +1631,15 @@ static void cmd_runtime_tune(Data *d, unsigned char *cfg, int len) {
             d->float_conf.atr.filter.off_speed_limit = h2 * 2;
         }
     }
+    if (len >= 27) {
+        d->float_conf.atr.filter.time_constant = (float) max(1, cfg[20]) / 100.0f;
+        d->float_conf.atr.filter.on_speed_time_constant = (float) max(1, cfg[21]) / 100.0f;
+        d->float_conf.atr.filter.off_speed_time_constant = (float) max(1, cfg[22]) / 100.0f;
+        d->float_conf.torque_tilt.filter.time_constant = (float) max(1, cfg[23]) / 100.0f;
+        d->float_conf.torque_tilt.filter.on_speed_time_constant = (float) max(1, cfg[24]) / 100.0f;
+        d->float_conf.torque_tilt.filter.off_speed_time_constant = (float) max(1, cfg[25]) / 100.0f;
+        d->float_conf.turn_tilt.filter.time_constant = (float) max(1, cfg[26]) / 100.0f;
+    }
 
     reconfigure(d);
 }
