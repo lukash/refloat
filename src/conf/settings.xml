@@ -2736,7 +2736,8 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;When Banner Mode is enabled, Solid mode uses the primary color on the left and right zones and the secondary color in the center zone of the front LED strip.&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;When Banner Mode is enabled, the LED strip is divided into 3 equal or nearly equally parts: left and right are the primary color and the center is the secondary. In the Solid animation, they remain like this. For non-rainbow animations, the color of each section acts as the primary color in the animation and Black acts as the secondary.&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;So whether it's game day for your favorite team or you just want to unleash your inner Gryffindor, give it a try!&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Note: Banner Mode works but not as well with LED strips that include dedicated bright white headlights.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_LEDS_FRONT_BANNER_MODE</cDefine>
             <valInt>0</valInt>
@@ -2909,7 +2910,8 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;When Banner Mode is enabled, Solid mode uses the primary color on the left and right zones and the secondary color in the center zone of the rear LED strip.&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;When Banner Mode is enabled, the LED strip is divided into 3 equal or nearly equally parts: left and right are the primary color and the center is the secondary. In the Solid animation, they remain like this. For non-rainbow animations, the color of each section acts as the primary color in the animation and Black acts as the secondary.&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;So whether it's game day for your favorite team or you just want to unleash your inner Gryffindor, give it a try!&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Note: Banner Mode works but not as well with LED strips that include dedicated bright white headlights.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_LEDS_REAR_BANNER_MODE</cDefine>
             <valInt>0</valInt>
@@ -3082,7 +3084,8 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;When Banner Mode is enabled, Solid mode uses the primary color on the left and right zones and the secondary color in the center zone of the headlights strip.&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;When Banner Mode is enabled, the LED strip is divided into 3 equal or nearly equally parts: left and right are the primary color and the center is the secondary. In the Solid animation, they remain like this. For non-rainbow animations, the color of each section acts as the primary color in the animation and Black acts as the secondary.&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;So whether it's game day for your favorite team or you just want to unleash your inner Gryffindor, give it a try!&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Note: Banner Mode works but not as well with LED strips that include dedicated bright white headlights.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_LEDS_HEADLIGHTS_BANNER_MODE</cDefine>
             <valInt>0</valInt>
@@ -3257,7 +3260,8 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;When Banner Mode is enabled, Solid mode uses the primary color on the left and right zones and the secondary color in the center zone of the taillights strip.&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;When Banner Mode is enabled, the LED strip is divided into 3 equal or nearly equally parts: left and right are the primary color and the center is the secondary. In the Solid animation, they remain like this. For non-rainbow animations, the color of each section acts as the primary color in the animation and Black acts as the secondary.&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;So whether it's game day for your favorite team or you just want to unleash your inner Gryffindor, give it a try!&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Note: Banner Mode works but not as well with LED strips that include dedicated bright white headlights.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>CFG_DFLT_LEDS_TAILLIGHTS_BANNER_MODE</cDefine>
             <valInt>0</valInt>
