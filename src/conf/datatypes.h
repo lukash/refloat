@@ -124,6 +124,7 @@ typedef struct {
     float brightness;
     LedColor color1;
     LedColor color2;
+    bool banner_mode;
     LedAnimMode mode;
     float speed;
 } LedBar;

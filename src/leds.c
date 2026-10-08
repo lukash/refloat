@@ -218,15 +218,76 @@ static void strip_set_color(
     strip_set_color_range(leds, strip, color, brightness, blend, 0, strip->length);
 }
 
+static uint32_t anim_color_for_led(
+    const LedStrip *strip, const LedBar *bar, uint8_t i, float primary_blend
+) {
+    uint32_t primary = colors[bar->color1];
+    uint32_t secondary = colors[bar->color2];
+    if (bar->banner_mode) {
+        const uint8_t third = strip->length / 3;
+        const uint8_t side_length = third + (strip->length % 3 == 2);
+        const uint8_t center_start = side_length;
+        const uint8_t right_start = center_start + third + (strip->length % 3 == 1);
+        primary = colors[i < center_start || i >= right_start ? bar->color1 : bar->color2];
+        secondary = colors[COLOR_BLACK];
+    }
+    return color_blend(secondary, primary, primary_blend);
+}
+
 static void anim_fade(Leds *leds, const LedStrip *strip, const LedBar *bar, float time) {
     float p = cosine_progress(time);
+    if (bar->banner_mode) {
+        const uint8_t third = strip->length / 3;
+        const uint8_t side_length = third + (strip->length % 3 == 2);
+        const uint8_t center_length = third + (strip->length % 3 == 1);
+        const uint8_t center_start = side_length;
+        const uint8_t right_start = center_start + center_length;
+
+        strip_set_color_range(
+            leds,
+            strip,
+            color_blend(colors[COLOR_BLACK], colors[bar->color1], p),
+            strip->brightness,
+            1.0f,
+            0,
+            side_length
+        );
+        strip_set_color_range(
+            leds,
+            strip,
+            color_blend(colors[COLOR_BLACK], colors[bar->color2], p),
+            strip->brightness,
+            1.0f,
+            center_start,
+            right_start
+        );
+        strip_set_color_range(
+            leds,
+            strip,
+            color_blend(colors[COLOR_BLACK], colors[bar->color1], p),
+            strip->brightness,
+            1.0f,
+            right_start,
+            strip->length
+        );
+        return;
+    }
+
     uint32_t color = color_blend(colors[bar->color2], colors[bar->color1], p);
     strip_set_color(leds, strip, color, strip->brightness, 1.0f);
 }
 
 static void anim_strobe(Leds *leds, const LedStrip *strip, const LedBar *bar, float time) {
-    uint32_t color = fmodf(time, 2.0f) >= 1.0f ? colors[bar->color2] : colors[bar->color1];
-    strip_set_color(leds, strip, color, strip->brightness, 1.0f);
+    float primary_blend = fmodf(time, 2.0f) >= 1.0f ? 0.0f : 1.0f;
+    if (bar->banner_mode) {
+        for (uint8_t i = 0; i < strip->length; ++i) {
+            uint32_t color = anim_color_for_led(strip, bar, i, primary_blend);
+            led_set_color(leds, strip, i, color, strip->brightness, 1.0f);
+        }
+    } else {
+        uint32_t color = anim_color_for_led(strip, bar, 0, primary_blend);
+        strip_set_color(leds, strip, color, strip->brightness, 1.0f);
+    }
 }
 
 static void anim_pulse(
@@ -250,8 +311,7 @@ static void anim_pulse(
         float k1 = clampf(dist1 / feather, 0.0f, 1.0f);
         float k2 = clampf(dist2 / feather, 0.0f, 1.0f);
 
-        uint32_t color =
-            color_blend(colors[bar->color2], colors[bar->color1], fminf(k1, k2) * fade);
+        uint32_t color = anim_color_for_led(strip, bar, i, fminf(k1, k2) * fade);
         led_set_color(leds, strip, i, color, strip->brightness, 1.0f);
     }
 }
@@ -285,7 +345,7 @@ static void anim_knight_rider(Leds *leds, const LedStrip *strip, const LedBar *b
             k2 = 1 - x2 + floorf(x2);
         }
 
-        uint32_t color = color_blend(colors[bar->color2], colors[bar->color1], fmaxf(k1, k2));
+        uint32_t color = anim_color_for_led(strip, bar, i, fmaxf(k1, k2));
         led_set_color(leds, strip, i, color, strip->brightness, 1.0f);
     }
 }
@@ -299,7 +359,15 @@ static void anim_felony(Leds *leds, const LedStrip *strip, const LedBar *bar, fl
     // also account for led strips with odd numbers of leds (leaving the middle one black)
     uint8_t stop_idx = strip->length / 2;
     uint8_t start_idx = strip->length / 2 + strip->length % 2;
-    if (state_mod < state_duration) {
+    if (bar->banner_mode) {
+        for (uint8_t i = 0; i < strip->length; ++i) {
+            bool active = state_mod < state_duration ? i < stop_idx
+                : state_mod < 2.0f * state_duration  ? false
+                                                     : i >= start_idx;
+            uint32_t color = active ? anim_color_for_led(strip, bar, i, 1.0f) : color_off;
+            led_set_color(leds, strip, i, color, strip->brightness, 1.0f);
+        }
+    } else if (state_mod < state_duration) {
         strip_set_color_range(
             leds, strip, colors[bar->color1], strip->brightness, 1.0f, 0, stop_idx
         );
@@ -355,7 +423,31 @@ static void led_strip_animate(Leds *leds, const LedStrip *strip, const LedBar *b
 
     switch (bar->mode) {
     case LED_ANIM_SOLID:
-        strip_set_color(leds, strip, colors[bar->color1], strip->brightness, 1.0f);
+        if (bar->banner_mode) {
+            const uint8_t third = strip->length / 3;
+            const uint8_t side_length = third + (strip->length % 3 == 2);
+            const uint8_t center_length = third + (strip->length % 3 == 1);
+            const uint8_t center_start = side_length;
+            const uint8_t right_start = center_start + center_length;
+
+            strip_set_color_range(
+                leds, strip, colors[bar->color1], strip->brightness, 1.0f, 0, side_length
+            );
+            strip_set_color_range(
+                leds, strip, colors[bar->color2], strip->brightness, 1.0f, center_start, right_start
+            );
+            strip_set_color_range(
+                leds,
+                strip,
+                colors[bar->color1],
+                strip->brightness,
+                1.0f,
+                right_start,
+                strip->length
+            );
+        } else {
+            strip_set_color(leds, strip, colors[bar->color1], strip->brightness, 1.0f);
+        }
         break;
     case LED_ANIM_FADE:
         anim_fade(leds, strip, bar, time);
