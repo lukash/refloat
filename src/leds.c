@@ -362,8 +362,8 @@ static void anim_felony(Leds *leds, const LedStrip *strip, const LedBar *bar, fl
     if (bar->banner_mode) {
         for (uint8_t i = 0; i < strip->length; ++i) {
             bool active = state_mod < state_duration ? i < stop_idx
-                          : state_mod < 2.0f * state_duration ? false
-                                                              : i >= start_idx;
+                : state_mod < 2.0f * state_duration  ? false
+                                                     : i >= start_idx;
             uint32_t color = active ? anim_color_for_led(strip, bar, i, 1.0f) : color_off;
             led_set_color(leds, strip, i, color, strip->brightness, 1.0f);
         }
@@ -434,13 +434,7 @@ static void led_strip_animate(Leds *leds, const LedStrip *strip, const LedBar *b
                 leds, strip, colors[bar->color1], strip->brightness, 1.0f, 0, side_length
             );
             strip_set_color_range(
-                leds,
-                strip,
-                colors[bar->color2],
-                strip->brightness,
-                1.0f,
-                center_start,
-                right_start
+                leds, strip, colors[bar->color2], strip->brightness, 1.0f, center_start, right_start
             );
             strip_set_color_range(
                 leds,
