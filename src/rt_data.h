@@ -52,6 +52,10 @@
     R(imu.pitch, "pitch")                                                                          \
     R(imu.balance_pitch, "balance_pitch")                                                          \
     S(imu.roll, "roll")                                                                            \
+    R(balance_filter.deviation, "bf.deviation")                                                    \
+    R(balance_filter.sigma, "bf.envelope")                                                         \
+    R(balance_filter.confidence, "bf.confidence")                                                  \
+    R(balance_filter.integral_fb_y, "bf.integral_y")                                               \
     S(footpad.adc_left, "adc_left")                                                                \
     S(footpad.adc_right, "adc_right")                                                              \
     S(remote.input, "remote.input")

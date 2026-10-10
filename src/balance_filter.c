@@ -82,6 +82,9 @@ void balance_filter_init(BalanceFilterData *data) {
     data->integral_fb_x = 0.0f;
     data->integral_fb_y = 0.0f;
     data->integral_fb_z = 0.0f;
+    data->deviation = 0.0f;
+    data->sigma = 0.0f;
+    data->confidence = 1.0f;
 }
 
 void balance_filter_configure(
@@ -114,6 +117,7 @@ void balance_filter_update(BalanceFilterData *data, float *gyro_xyz, float *acce
     float az = accel_xyz[2];
 
     float accel_norm = sqrtf(ax * ax + ay * ay + az * az);
+    data->deviation = accel_norm - 1.0f;
 
     bool normalize = data->confidence_algo == CONFIDENCE_ALGO_DECAY;
 
@@ -126,6 +130,8 @@ void balance_filter_update(BalanceFilterData *data, float *gyro_xyz, float *acce
         float conf_envelope = calculate_acc_confidence_envelope(accel_norm, data);
         float accel_confidence =
             data->confidence_algo == CONFIDENCE_ALGO_ENVELOPE ? conf_envelope : conf_decay;
+        data->sigma = sqrtf(data->acc_dev_sq.value);
+        data->confidence = accel_confidence;
         float two_kp_pitch = 2.0 * data->kp_pitch * accel_confidence;
         float two_kp_roll = 2.0 * data->kp_roll * accel_confidence;
         float two_kp_yaw = 2.0 * data->kp_yaw * accel_confidence;

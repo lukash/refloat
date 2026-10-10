@@ -34,6 +34,10 @@ typedef struct {
     float integral_fb_x;
     float integral_fb_y;
     float integral_fb_z;
+    // confidence pipeline telemetry for realtime data
+    float deviation;  // instantaneous |acc| - 1 [g]
+    float sigma;  // deviation envelope (RMS) [g]
+    float confidence;  // the confidence weight applied
 
     // parameters
     AccelConfidenceAlgo confidence_algo;
