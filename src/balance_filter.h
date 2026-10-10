@@ -19,6 +19,7 @@
 #define BALANCE_FILTER_h
 
 #include "conf/datatypes.h"
+#include "filters/biquad.h"
 #include "filters/ema.h"
 
 typedef struct {
@@ -30,6 +31,8 @@ typedef struct {
     // envelope (Deviation Envelope algo)
     EMA acc_mag;
     EMA acc_dev_sq;
+    // lowpass on the accelerometer data (see balance_filter_update)
+    Biquad acc_lowpass[3];
     // gyro bias estimated by the integral feedback [rad/s]
     float integral_fb_x;
     float integral_fb_y;
@@ -40,6 +43,7 @@ typedef struct {
     float confidence;  // the confidence weight applied
 
     // parameters
+    bool lowpass_enabled;
     AccelConfidenceAlgo confidence_algo;
     // 1 / half_dev^2 of the Deviation Envelope algo, 0 disables
     float half_dev_recip_sq;

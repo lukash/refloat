@@ -79,6 +79,9 @@ void balance_filter_init(BalanceFilterData *data) {
     ema_init(&data->acc_mag);
     ema_reset(&data->acc_mag, 1.0f);
     ema_init(&data->acc_dev_sq);
+    for (int i = 0; i < 3; ++i) {
+        biquad_init(&data->acc_lowpass[i]);
+    }
     data->integral_fb_x = 0.0f;
     data->integral_fb_y = 0.0f;
     data->integral_fb_z = 0.0f;
@@ -90,6 +93,13 @@ void balance_filter_init(BalanceFilterData *data) {
 void balance_filter_configure(
     BalanceFilterData *data, const RefloatConfig *config, float frequency
 ) {
+    float lowpass = config->balance_filter.accel_lowpass;
+    data->lowpass_enabled = lowpass > 0.0f;
+    if (data->lowpass_enabled) {
+        for (int i = 0; i < 3; ++i) {
+            biquad_configure(&data->acc_lowpass[i], BQ_LOWPASS, lowpass, frequency);
+        }
+    }
     data->confidence_algo = config->balance_filter.accel_confidence.algo;
     ema_configure(&data->acc_mag, 8.0f, frequency);
     float half_dev = config->balance_filter.accel_confidence.half_dev;
@@ -115,6 +125,18 @@ void balance_filter_update(BalanceFilterData *data, float *gyro_xyz, float *acce
     float ax = accel_xyz[0];
     float ay = accel_xyz[1];
     float az = accel_xyz[2];
+
+    if (data->lowpass_enabled) {
+        // The main purpose is to remove the gyro noise amplified by the IMU
+        // offset compensation (its differentiation scales noise with
+        // frequency, far above the accelerometer's useful band).
+        biquad_update(&data->acc_lowpass[0], ax);
+        biquad_update(&data->acc_lowpass[1], ay);
+        biquad_update(&data->acc_lowpass[2], az);
+        ax = data->acc_lowpass[0].value;
+        ay = data->acc_lowpass[1].value;
+        az = data->acc_lowpass[2].value;
+    }
 
     float accel_norm = sqrtf(ax * ax + ay * ay + az * az);
     data->deviation = accel_norm - 1.0f;

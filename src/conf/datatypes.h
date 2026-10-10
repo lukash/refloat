@@ -194,6 +194,7 @@ typedef struct {
 
 typedef struct {
     float ki;
+    float accel_lowpass;
     CfgAccelConfidence accel_confidence;
 } CfgBalanceFilter;
 
