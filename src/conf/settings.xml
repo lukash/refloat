@@ -197,6 +197,34 @@ p, li { white-space: pre-wrap; }
             <suffix></suffix>
             <vTx>7</vTx>
         </balance_filter.ki>
+        <balance_filter.accel_lowpass>
+            <longName>Accelerometer Lowpass</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Smooths the accelerometer data feeding the balance filter.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Mainly needed with the IMU offset compensation, whose correction amplifies gyro noise. The filter removes that noise with no practical cost. Too low (below ~15 - 20 Hz) it starts hiding the very shaking the confidence mechanism needs to detect. Too high and the gyro noise will cause twitchiness introduced by the IMU offset compensation. 0 to disable.&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;You probably don't need to touch this at all (but experimentation welcome).&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Recommended Values: 20 - 30&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>CFG_DFLT_BALANCE_FILTER_ACCEL_LOWPASS</cDefine>
+            <editorDecimalsDouble>0</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>60</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>1</stepDouble>
+            <valDouble>20</valDouble>
+            <vTxDoubleScale>100</vTxDoubleScale>
+            <suffix> Hz</suffix>
+            <vTx>7</vTx>
+        </balance_filter.accel_lowpass>
         <balance_filter.accel_confidence.algo>
             <longName>Confidence Algorithm</longName>
             <type>4</type>
@@ -4237,6 +4265,7 @@ p, li { white-space: pre-wrap; }
         <ser>mahony_kp</ser>
         <ser>mahony_kp_roll</ser>
         <ser>balance_filter.ki</ser>
+        <ser>balance_filter.accel_lowpass</ser>
         <ser>balance_filter.accel_confidence.algo</ser>
         <ser>balance_filter.accel_confidence.half_dev</ser>
         <ser>balance_filter.accel_confidence.time_constant</ser>
@@ -4648,6 +4677,7 @@ p, li { white-space: pre-wrap; }
                     <param>is_footbeep_enabled</param>
                     <param>::sep::NEW: Balance Filter</param>
                     <param>balance_filter.ki</param>
+                    <param>balance_filter.accel_lowpass</param>
                     <param>balance_filter.accel_confidence.algo</param>
                     <param>balance_filter.accel_confidence.half_dev</param>
                     <param>balance_filter.accel_confidence.time_constant</param>
