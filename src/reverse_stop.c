@@ -17,12 +17,11 @@
 
 #include "reverse_stop.h"
 
-#include "lib/transitions.h"
 #include "lib/utils.h"
 #include <math.h>
 
-#define REVERSE_STOP_DISTANCE 0.25f
-#define TARGET_STOP_ANGLE 17.0f
+#define REVERSE_STOP_DISTANCE 0.18f
+#define TARGET_STOP_ANGLE 13.0f
 #define DISTANCE_PER_DEGREE (REVERSE_STOP_DISTANCE / TARGET_STOP_ANGLE)
 #define TIMER_ANGLE_THRESHOLD (TARGET_STOP_ANGLE / 2)
 
@@ -46,13 +45,13 @@ void reverse_stop_reset(ReverseStop *rs, float distance) {
 }
 
 void reverse_stop_configure(ReverseStop *rs, float frequency) {
-    ema_configure(&rs->progress, 1.0f, frequency);
+    ema_configure(&rs->progress, 3.0f, frequency);
 }
 
 void reverse_stop_update(
     ReverseStop *rs, float distance, float erpm, float setpoint, const Time *time, bool enabled
 ) {
-    if ((!enabled || erpm > -200) && rs->progress.value >= 1.0f) {
+    if ((!enabled || erpm > -150) && rs->progress.value >= 1.0f) {
         rs->start_distance = distance;
         return;
     }
@@ -107,7 +106,7 @@ void reverse_stop_update(
 }
 
 float reverse_stop_setpoint(ReverseStop *rs) {
-    float prog = smoothstep(rs->progress.value);
+    float prog = clampf(rs->progress.value, 0.0f, 1.0f);
     return rs->start_setpoint + prog * (rs->target_setpoint - rs->start_setpoint);
 }
 
