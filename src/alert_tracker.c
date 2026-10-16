@@ -23,6 +23,7 @@ static uint32_t alert_id_to_mask(AlertId alert_id) {
 
 static const AlertProperties alert_properties[] = {
     [ALERT_FW_FAULT] = {.type = ATYPE_FATAL},
+    [ALERT_IMU_TIMEOUT] = {.type = ATYPE_ERROR},
 };
 
 const AlertProperties *alert_tracker_properties(AlertId alert_id) {
@@ -47,7 +48,7 @@ void alert_tracker_configure(AlertTracker *at, const RefloatConfig *config) {
 }
 
 void alert_tracker_add(AlertTracker *at, const Time *time, uint8_t id, uint8_t code) {
-    uint32_t mask = alert_id_to_mask(ALERT_FW_FAULT);
+    uint32_t mask = alert_id_to_mask(id);
     bool already_active = at->active_alert_mask & mask;
     if (id == ALERT_FW_FAULT) {
         already_active = already_active && code == at->fw_fault_code;

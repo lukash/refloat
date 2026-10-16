@@ -80,6 +80,8 @@ uint8_t state_compat(const State *state) {
             return 12;  // FAULT_REVERSE
         case STOP_QUICKSTOP:
             return 13;  // FAULT_QUICKSTOP
+        case STOP_IMU_TIMEOUT:
+            return 11;  // FAULT_STARTUP (no Float equivalent)
         }
         return 11;  // FAULT_STARTUP
     case STATE_RUNNING:

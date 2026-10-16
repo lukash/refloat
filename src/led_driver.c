@@ -304,6 +304,12 @@ void led_driver_paint(LedDriver *driver) {
     }
 
     const PinHwConfig *cfg = driver->pin_hw_config;
+
+    // The firmware ChibiOS turns off the DMA1 clock when the last stream it
+    // has allocated is released (e.g. on an SPI driver stop). The LED DMA
+    // stream is unknown to it, so re-enable the clock before each transfer.
+    RCC->AHB1ENR |= RCC_AHB1Periph_DMA1;
+
     disable_timer_dma(cfg);
     disable_dma_stream(cfg);
     reset_dma_stream_transfer_complete(cfg);

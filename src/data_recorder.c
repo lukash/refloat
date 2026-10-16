@@ -20,6 +20,11 @@
 #include "lib/utils.h"
 #include "vesc_c_if.h"
 
+// calculate decimation so that the recorded time period is at least 10 seconds
+static void update_decimation(DataRecord *dr) {
+    dr->decimation = max(10 * dr->sample_rate / dr->sample_count, 1);
+}
+
 static void start_recording(DataRecord *dr) {
     circular_buffer_clear(&dr->buffer);
     dr->decimation_counter = 0;
@@ -71,15 +76,17 @@ void data_recorder_init(DataRecord *dr, uint16_t imu_sample_rate) {
     circular_buffer_init(&dr->buffer, sizeof(Sample), dr->sample_count, buffer);
 
     dr->sample_rate = imu_sample_rate;
-
-    // calculate decimation so that the recorded time period is at least 10 seconds
-    dr->decimation = max(10 * imu_sample_rate / dr->sample_count, 1);
+    dr->decimation_auto = true;
+    update_decimation(dr);
 
     log_msg("Data Record buffer size: %uB (%u samples)", size, dr->sample_count);
 }
 
 void data_recorder_set_sample_rate(DataRecord *dr, uint16_t sample_rate) {
     dr->sample_rate = sample_rate;
+    if (dr->decimation_auto) {
+        update_decimation(dr);
+    }
 }
 
 bool data_recorder_has_capability(const DataRecord *dr) {
@@ -258,6 +265,7 @@ void data_recorder_request(DataRecord *dr, uint8_t *buffer, size_t len) {
                 dr->autostop = value;
             } else if (sub_mode == 4) {  // set decimation (record every Nth sample)
                 dr->decimation = value > 0 ? value : 1;
+                dr->decimation_auto = false;
             }
         }
         // sub_mode 0 is a no-op, just return the status

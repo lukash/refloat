@@ -32,7 +32,8 @@ typedef enum {
 typedef enum {
     ALERT_NONE = 0,
     ALERT_FW_FAULT = 1,
-    ALERT_LAST = ALERT_FW_FAULT
+    ALERT_IMU_TIMEOUT = 2,
+    ALERT_LAST = ALERT_IMU_TIMEOUT
 } AlertId;
 
 typedef struct {

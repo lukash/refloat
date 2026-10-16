@@ -1873,6 +1873,7 @@ Item {
         readonly property int sc_SensorFull: 4
         readonly property int sc_ReverseStop: 5
         readonly property int sc_Quickstop: 6
+        readonly property int sc_ImuTimeout: 7
 
         readonly property var stopConditionToString: new Map([
             [sc_None, ""],
@@ -1882,6 +1883,7 @@ Item {
             [sc_SensorFull, "Sensor Full"],
             [sc_ReverseStop, "Reverse Stop"],
             [sc_Quickstop, "Quickstop"],
+            [sc_ImuTimeout, "IMU Timeout"],
         ])
 
         property int stopCondition: sc_None
@@ -1993,22 +1995,28 @@ Item {
         }
 
         readonly property int alert_fwFault: 1
+        readonly property int alert_imuTimeout: 2
 
         readonly property var alertData: new Map([
             [0, {
                 "name": "None",
-                "severity": "WARNING",
+                "severity": "INFO",
             }],
             [alert_fwFault, {
                 "name": "Fault",
                 "severity": "FATAL",
             }],
+            [alert_imuTimeout, {
+                "name": "IMU Timeout",
+                "severity": "ERROR",
+            }],
         ])
 
         readonly property var severityColors: new Map([
             ["FATAL", Utility.getAppHexColor("red")],
-            ["ERROR", Utility.getAppHexColor("orange")],
-            ["WARNING", Utility.getAppHexColor("lightText")],
+            ["ERROR", Utility.getAppHexColor("red")],
+            ["WARNING", Utility.getAppHexColor("orange")],
+            ["INFO", Utility.getAppHexColor("lightText")],
         ])
 
         property Timer alertsListPollTimer: Timer {
@@ -2036,19 +2044,26 @@ Item {
         }
 
         function updateActiveAlerts() {
-            if (activeAlertsMask & alert_fwFault) {
-                activeAlertHighlight = alert_fwFault;
-                activeAlertCount = 1;
-                isFatalActive = true;
-                activeAlerts = [
-                    alert_fwFault,
-                ];
-            } else {
-                activeAlertHighlight = 0;
-                activeAlertCount = 0;
-                isFatalActive = false;
-                activeAlerts = [];
-            }
+            var active = [];
+            var highlight = 0;
+            var fatal = false;
+            alertData.forEach(function(data, id) {
+                if (id === 0 || !(activeAlertsMask & (1 << (id - 1)))) {
+                    return;
+                }
+                active.push(id);
+                // highlight the first active alert, but prefer a fatal one
+                if (!highlight || (data.severity === "FATAL" && !fatal)) {
+                    highlight = id;
+                }
+                if (data.severity === "FATAL") {
+                    fatal = true;
+                }
+            });
+            activeAlertHighlight = highlight;
+            activeAlertCount = active.length;
+            isFatalActive = fatal;
+            activeAlerts = active;
         }
 
         function receiveAlertsList(dv, ind) {

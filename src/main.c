@@ -169,6 +169,7 @@ static void main_freq_update_reconfigure(float frequency) {
 static void imu_freq_update_reconfigure(float frequency) {
     Data *d = (Data *) ARG;
 
+    balance_filter_configure(&d->balance_filter, &d->float_conf, frequency);
     motor_control_configure(&d->motor_control, &d->float_conf, frequency);
     pid_configure(&d->pid, frequency);
     booster_configure(&d->booster, frequency);
@@ -178,8 +179,6 @@ static void imu_freq_update_reconfigure(float frequency) {
 }
 
 static void reconfigure(Data *d) {
-    balance_filter_configure(&d->balance_filter, &d->float_conf);
-
     main_freq_update_reconfigure(d->main_freq_tracker.filter_frequency);
     imu_freq_update_reconfigure(d->imu_freq_tracker.filter_frequency);
 
@@ -292,6 +291,10 @@ static float get_setpoint_adjustment_speed(Data *d) {
 
 bool can_engage(const Data *d) {
     if (d->state.charging) {
+        return false;
+    }
+
+    if (!imu_data_settled(&d->imu, &d->time)) {
         return false;
     }
 
@@ -743,7 +746,7 @@ static void imu_ref_callback(float *acc, float *gyro, float *mag, float dt) {
 
     frequency_tracker_update(&d->imu_freq_tracker, dt);
 
-    imu_update(&d->imu, &d->balance_filter, &d->state);
+    imu_update(&d->imu, &d->balance_filter, &d->state, &d->time);
 
     if (d->state.state == STATE_RUNNING) {
         pid_control(d, dt);
@@ -833,9 +836,26 @@ static void refloat_thd(void *arg) {
         bms_update(&d->bms, &d->float_conf.bms, &d->time);
 
         motor_data_evaluate_alerts(&d->motor, &d->alert_tracker, &d->time);
+
+        if (imu_check_timeout(&d->imu, &d->time)) {
+            if (d->state.state == STATE_RUNNING) {
+                state_stop(&d->state, STOP_IMU_TIMEOUT);
+                data_recorder_trigger(&d->data_record, false);
+            }
+            // The IMU callback which normally applies motor control is dead,
+            // apply it from here. When the callback resumes, both threads may
+            // call this concurrently for up to one loop tick (benign).
+            motor_control_apply(
+                &d->motor_control, d->motor.abs_erpm_smooth.value, d->state.state, &d->time
+            );
+            alert_tracker_add(&d->alert_tracker, &d->time, ALERT_IMU_TIMEOUT, 0);
+        }
+
         alert_tracker_finalize(&d->alert_tracker, &d->time);
         if (alert_tracker_is_alert_active(&d->alert_tracker, ALERT_FW_FAULT)) {
             d->beep_reason = BEEP_FW_FAULT;
+        } else if (alert_tracker_is_alert_active(&d->alert_tracker, ALERT_IMU_TIMEOUT)) {
+            d->beep_reason = BEEP_ERROR;
         }
 
         // Control Loop State Logic
@@ -1195,7 +1215,7 @@ static void data_init(Data *d) {
     balance_filter_init(&d->balance_filter);
 
     motor_data_init(&d->motor);
-    imu_init(&d->imu);
+    imu_init(&d->imu, &d->time);
     pid_init(&d->pid);
     motor_control_init(&d->motor_control);
 
