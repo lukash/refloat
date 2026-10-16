@@ -42,10 +42,10 @@ static inline float inv_sqrt(float x) {
 static float calculate_acc_confidence(float new_acc_mag, BalanceFilterData *data) {
     // G.K. Egan (C) computes confidence in accelerometers when
     // aircraft is being accelerated over and above that due to gravity
-    data->acc_mag = data->acc_mag * 0.9 + new_acc_mag * 0.1;
+    ema_update(&data->acc_mag, new_acc_mag);
 
     // Hard-coded accelerometer confidence decay of 0.02
-    float confidence = 1.0 - (0.02 * sqrtf(fabsf(data->acc_mag - 1.0f)));
+    float confidence = 1.0 - (0.02 * sqrtf(fabsf(data->acc_mag.value - 1.0f)));
 
     return confidence > 0 ? confidence : 0;
 }
@@ -58,10 +58,14 @@ void balance_filter_init(BalanceFilterData *data) {
     data->q1 = quat[1];
     data->q2 = quat[2];
     data->q3 = quat[3];
-    data->acc_mag = 1.0;
+    ema_init(&data->acc_mag);
+    ema_reset(&data->acc_mag, 1.0f);
 }
 
-void balance_filter_configure(BalanceFilterData *data, const RefloatConfig *config) {
+void balance_filter_configure(
+    BalanceFilterData *data, const RefloatConfig *config, float frequency
+) {
+    ema_configure(&data->acc_mag, 8.0f, frequency);
     data->kp_pitch = config->mahony_kp;
     data->kp_roll = config->mahony_kp_roll;
     // Use middle value between Pitch KP and Roll KP. Yaw KP seems to have

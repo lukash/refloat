@@ -169,6 +169,7 @@ static void main_freq_update_reconfigure(float frequency) {
 static void imu_freq_update_reconfigure(float frequency) {
     Data *d = (Data *) ARG;
 
+    balance_filter_configure(&d->balance_filter, &d->float_conf, frequency);
     motor_control_configure(&d->motor_control, &d->float_conf, frequency);
     pid_configure(&d->pid, frequency);
     booster_configure(&d->booster, frequency);
@@ -178,8 +179,6 @@ static void imu_freq_update_reconfigure(float frequency) {
 }
 
 static void reconfigure(Data *d) {
-    balance_filter_configure(&d->balance_filter, &d->float_conf);
-
     main_freq_update_reconfigure(d->main_freq_tracker.filter_frequency);
     imu_freq_update_reconfigure(d->imu_freq_tracker.filter_frequency);
 
