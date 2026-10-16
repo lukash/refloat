@@ -35,6 +35,8 @@ typedef struct {
     bool recording;
     bool autostart;
     bool autostop;
+    // recompute decimation on sample rate change; cleared by a manual decimation set
+    bool decimation_auto;
     uint8_t decimation;
     uint8_t decimation_counter;
     uint16_t sample_rate;
