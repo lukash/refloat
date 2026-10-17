@@ -241,6 +241,8 @@ Item {
         target: mcConfig
 
         property int batteryCells: mcConfig.getParamInt("si_battery_cells")
+        property int motorPoles: mcConfig.getParamInt("si_motor_poles")
+        property real fluxLinkage: mcConfig.getParamDouble("foc_motor_flux_linkage")
         property real tempMotorStart: mcConfig.getParamDouble("l_temp_motor_start")
         property real tempFetStart: mcConfig.getParamDouble("l_temp_fet_start")
         property real currentMin: mcConfig.getParamDouble("l_current_min")
@@ -249,7 +251,9 @@ Item {
         property real inCurrentMax: mcConfig.getParamDouble("l_in_current_max")
 
         function onParamChangedDouble(src, name, newParam) {
-            if (name === "l_temp_motor_start") {
+            if (name === "foc_motor_flux_linkage") {
+                fluxLinkage = newParam;
+            } else if (name === "l_temp_motor_start") {
                 tempMotorStart = newParam;
             } else if (name === "l_temp_fet_start") {
                 tempFetStart = newParam;
@@ -267,6 +271,8 @@ Item {
         function onParamChangedInt(src, name, newParam) {
             if (name === "si_battery_cells") {
                 batteryCells = newParam;
+            } else if (name === "si_motor_poles") {
+                motorPoles = newParam;
             }
         }
     }
@@ -452,6 +458,10 @@ Item {
 
         function getEnumNames(name) {
             return pkgConfig.getParamEnumNames(name);
+        }
+
+        function getParamDecimals(name) {
+            return pkgConfig.getParamDecimalsDouble(name);
         }
 
         function paramIsTune(name) {
@@ -1417,6 +1427,70 @@ Item {
 
                 return [tune, [1, 3]];
             },
+        }
+
+        // In 1.3, current-based options became torque-based, interpreted as
+        // currents on a reference motor (30 poles, 27mWb flux linkage). To
+        // retain the behavior of older tunes, these options are rescaled by
+        // the ratio of the motor torque constant to the reference one.
+        readonly property var torqueConversionMultiply: [
+            "kp", "kp2", "ki", "ki_limit",
+            "booster_current", "brkbooster_current",
+            "torquetilt_start_current",
+            "atr_amps_accel_ratio", "atr_amps_decel_ratio",
+        ]
+        readonly property var torqueConversionDivide: [
+            "torquetilt_strength", "torquetilt_strength_regen",
+        ]
+
+        // Returns 0 for FW < 6.06, where the package doesn't have access to
+        // Flux Linkage and Motor Poles and no compensation occurs, so we
+        // shouldn't convert either.
+        function torqueConstantRatio() {
+            var [fwMajor, fwMinor] = board.getFwVersion();
+            if (fwMajor < 6 || (fwMajor === 6 && fwMinor < 6)) {
+                return 0;
+            }
+            if (motorConfig.fluxLinkage <= 0.001 || motorConfig.motorPoles <= 0) {
+                return 0;
+            }
+            return motorConfig.motorPoles * motorConfig.fluxLinkage / (30 * 0.027);
+        }
+
+        function roundParam(name, value) {
+            return Number(value.toFixed(packageConfig.getParamDecimals(name)));
+        }
+
+        // Returns the conversion as [{name, oldValue, newValue}]
+        function torqueConversionDiff(tune, ratio) {
+            var diff = [];
+            for (let name of torqueConversionMultiply) {
+                if (tune.settings.hasOwnProperty(name)) {
+                    diff.push({
+                        "name": name,
+                        "oldValue": tune.settings[name],
+                        "newValue": roundParam(name, tune.settings[name] * ratio)
+                    });
+                }
+            }
+            for (let name of torqueConversionDivide) {
+                if (tune.settings.hasOwnProperty(name)) {
+                    diff.push({
+                        "name": name,
+                        "oldValue": tune.settings[name],
+                        "newValue": roundParam(name, tune.settings[name] / ratio)
+                    });
+                }
+            }
+            return diff;
+        }
+
+        function applyTorqueConversion(tune, diff) {
+            for (let row of diff) {
+                tune.settings[row.name] = row.newValue;
+            }
+            updatePackageDataInTune(tune);
+            tune.date = new Date();
         }
 
         function onUpdate() {
@@ -5318,10 +5392,12 @@ Item {
 
         property var tuneSlot
         property var tune: null
+        property real convertRatio: 0
 
         function show(slot) {
             tuneSlot = slot;
             tune = tuneManager.loadTune(slot);
+            convertRatio = tuneManager.torqueConstantRatio();
             editTuneDiff.setModel(packageConfig.diffConfig(tune).differs);
             editTuneDiff.reset();
 
@@ -5415,6 +5491,119 @@ Item {
                 checked: true
                 visible: editTuneDialog.tune && !editTuneDiff.isEmpty
                 text: "Overwrite with current tune"
+            }
+
+            Button {
+                Layout.alignment: Qt.AlignHCenter
+
+                visible: !!editTuneDialog.tune && editTuneDialog.convertRatio > 0
+                text: "Convert from 1.2"
+
+                onClicked: {
+                    convertTuneDialog.show(editTuneDialog.tune, editTuneDialog.convertRatio, function(tune) {
+                        tuneManager.saveTune(editTuneDialog.tuneSlot, tune);
+                        VescIf.emitStatusMessage(tune.name + " converted and saved", true);
+                        editTuneDialog.close();
+                    });
+                }
+            }
+        }
+    }
+
+    BaseDialog {
+        id: convertTuneDialog
+        parent: ApplicationWindow.overlay
+
+        title: "Convert Tune"
+        standardButtons: Dialog.Ok | Dialog.Cancel
+
+        readonly property real valueColumnWidth: 65
+
+        property var tune: null
+        property real ratio: 0
+        // called with the converted tune on confirmation
+        property var acceptAction
+
+        readonly property var conversion: tune && ratio ? tuneManager.torqueConversionDiff(tune, ratio) : []
+
+        function show(tune, ratio, acceptAction) {
+            convertTuneDialog.tune = tune;
+            convertTuneDialog.ratio = ratio;
+            convertTuneDialog.acceptAction = acceptAction;
+            open();
+        }
+
+        Component.onCompleted: {
+            standardButton(Dialog.Ok).text = "Convert";
+        }
+
+        onAccepted: {
+            tuneManager.applyTorqueConversion(tune, conversion);
+            acceptAction(tune);
+        }
+
+        ColumnLayout {
+            width: convertTuneDialog.availableWidth
+            spacing: 10
+
+            NText {
+                Layout.fillWidth: true
+                font.pointSize: 12
+                wrapMode: TextEdit.WordWrap
+                text: "Tune \"%1\" will be converted from version 1.2 or lower to 1.3.\n\nThe conversion uses the motor parameters of the connected board. Make sure this is the board the tune is made for.".arg(convertTuneDialog.tune ? convertTuneDialog.tune.name : "")
+            }
+
+            Column {
+                Layout.fillWidth: true
+
+                Row {
+                    width: parent.width
+
+                    NText {
+                        width: parent.width - 2 * convertTuneDialog.valueColumnWidth - 10
+                        text: "Option"
+                    }
+
+                    NText {
+                        width: convertTuneDialog.valueColumnWidth
+                        horizontalAlignment: Text.AlignRight
+                        text: "Old"
+                    }
+
+                    NText {
+                        width: convertTuneDialog.valueColumnWidth
+                        horizontalAlignment: Text.AlignRight
+                        text: "New"
+                    }
+                }
+
+                Repeater {
+                    model: convertTuneDialog.conversion
+
+                    Row {
+                        width: parent.width
+
+                        NText {
+                            width: parent.width - 2 * convertTuneDialog.valueColumnWidth - 10
+                            wrapMode: Text.WordWrap
+                            text: packageConfig.getDisplayName(modelData.name)
+                            color: Utility.getAppHexColor("lightText")
+                        }
+
+                        NText {
+                            width: convertTuneDialog.valueColumnWidth
+                            horizontalAlignment: Text.AlignRight
+                            text: modelData.oldValue
+                        }
+
+                        NText {
+                            width: convertTuneDialog.valueColumnWidth
+                            horizontalAlignment: Text.AlignRight
+                            text: modelData.newValue
+                            color: Utility.getAppHexColor("lightAccent")
+                        }
+                    }
+                }
             }
         }
     }
@@ -5995,6 +6184,7 @@ Item {
         property var config
         property bool automatic: false
         property bool isTune: false
+        property real convertRatio: 0
 
         property var name: config ? config.name : "(Unknown)"
         property var date: config && config.date ? Qt.formatDateTime(new Date(config.date)) : ""
@@ -6010,6 +6200,7 @@ Item {
             config = cfg;
             automatic = !!auto;
             isTune = !!tune;
+            convertRatio = tuneManager.torqueConstantRatio();
             applyConfigDiff.reset();
             applyConfigDiff.isTune = isTune;
             if (!applyConfigDiff.isEmpty && !isTune) {
@@ -6120,6 +6311,21 @@ Item {
                 wrapMode: Text.WordWrap
                 visible: !applyConfigDiff.isEmpty && !applyConfigDialog.isTune
                 text: "Restoring this backup will overwrite your current config."
+            }
+
+            Button {
+                Layout.alignment: Qt.AlignHCenter
+
+                visible: !!applyConfigDialog.config && applyConfigDialog.convertRatio > 0
+                text: "Convert from 1.2"
+
+                onClicked: {
+                    convertTuneDialog.show(applyConfigDialog.config, applyConfigDialog.convertRatio, function(tune) {
+                        // reassign to recompute the diff
+                        applyConfigDialog.set(tune);
+                        VescIf.emitStatusMessage(tune.name + " converted", true);
+                    });
+                }
             }
         }
     }
