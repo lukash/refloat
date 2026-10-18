@@ -1392,6 +1392,10 @@ Item {
             }
         }
 
+        function updatePackageDataInTune(tune) {
+            tune.package = {"name": packageName, "version": packageVersion};
+        }
+
         // Major package versions require a migration, minor don't.
         // Migration functions should return: [tuneObject, [newMajor, newMinor]]
         property var migrations: {
@@ -1429,6 +1433,12 @@ Item {
             }
 
             var res = Object.assign({}, tune);
+            // underscore-prefixed members are transient and aren't stored
+            for (let key in res) {
+                if (key.startsWith("_")) {
+                    delete res[key];
+                }
+            }
             res.settings = [];
             for (let [name, value] of Object.entries(tune.settings)) {
                 res.settings.push({
@@ -1462,15 +1472,12 @@ Item {
                 "version": formatVersion,
                 "name": name,
                 "date": new Date(),
-                "package": {
-                    "name": packageName,
-                    "version": packageVersion
-                },
                 "board": {
                     "id": board.getId(),
                 },
                 "settings": settings
             };
+            updatePackageDataInTune(tune);
 
             var boardName = board.getName();
             if (boardName) {
@@ -1496,6 +1503,7 @@ Item {
             if (settings) {
                 tune.settings = settings;
                 tune.date = new Date();
+                updatePackageDataInTune(tune);
             }
             tune.version = formatVersion;
 
@@ -1515,6 +1523,7 @@ Item {
                 var versionKey = [major, minor].join(".");
                 if (migrations.hasOwnProperty(versionKey)) {
                     [tune, [major, minor]] = migrations[versionKey](tune);
+                    tune._migrated = true;
                 } else {
                     minor++;
                 }
@@ -1617,6 +1626,12 @@ Item {
 
         function saveTune(slot, tune) {
             var id = tuneId(slot);
+
+            // settings migrated on load are recorded under the current package on save
+            if (tune._migrated) {
+                updatePackageDataInTune(tune);
+            }
+
             tuneStorage.setValue(id, JSON.stringify(convertToOldFormat(tune)));
 
             tunes[slot] = tune;
