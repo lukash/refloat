@@ -1411,7 +1411,7 @@ Item {
         property var migrations: {
             "1.1": function(tune) {
                 var [fwMajor, fwMinor] = board.getFwVersion();
-                if (fwMajor > 6 || (fwMajor == 6 && fwMinor >= 5) && motorConfig.batteryCells > 0) {
+                if ((fwMajor > 6 || (fwMajor == 6 && fwMinor >= 5)) && motorConfig.batteryCells > 0) {
                     if (tune.settings["tiltback_hv"] > 10) {
                         tune.settings["tiltback_hv"] = roundParam("tiltback_hv", tune.settings["tiltback_hv"] / motorConfig.batteryCells);
                     }
