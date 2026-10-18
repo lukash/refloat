@@ -4446,7 +4446,7 @@ p, li { white-space: pre-wrap; }
                     <param>is_footbeep_enabled</param>
                     <param>::sep::Miscellaneous</param>
                     <param>is_beeper_enabled</param>
-                    <param>::sep::Leds (changes require reboot)</param>
+                    <param>::sep::LEDs (changes require reboot)</param>
                     <param>hardware.leds.mode</param>
                     <param>hardware.leds.pin</param>
                     <param>hardware.leds.pin_config</param>
