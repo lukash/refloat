@@ -1413,10 +1413,10 @@ Item {
                 var [fwMajor, fwMinor] = board.getFwVersion();
                 if (fwMajor > 6 || (fwMajor == 6 && fwMinor >= 5) && motorConfig.batteryCells > 0) {
                     if (tune.settings["tiltback_hv"] > 10) {
-                        tune.settings["tiltback_hv"] /= motorConfig.batteryCells;
+                        tune.settings["tiltback_hv"] = roundParam("tiltback_hv", tune.settings["tiltback_hv"] / motorConfig.batteryCells);
                     }
                     if (tune.settings["tiltback_lv"] > 10) {
-                        tune.settings["tiltback_lv"] /= motorConfig.batteryCells;
+                        tune.settings["tiltback_lv"] = roundParam("tiltback_lv", tune.settings["tiltback_lv"] / motorConfig.batteryCells);
                     }
                 }
 
