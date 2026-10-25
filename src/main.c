@@ -916,10 +916,11 @@ static void refloat_thd(void *arg) {
                 d->setpoint_target,
                 get_setpoint_adjustment_speed(d) * dt
             );
-            d->setpoint = d->setpoint_target_interpolated;
+
+            float setpoint = d->setpoint_target_interpolated;
 
             remote_update(&d->remote, &d->state, &d->float_conf, dt);
-            d->setpoint += d->remote.setpoint.value;
+            setpoint += d->remote.setpoint.value;
 
             if (!d->state.darkride) {
                 if (!d->state.wheelslip) {
@@ -935,25 +936,29 @@ static void refloat_thd(void *arg) {
                     &d->motor,
                     &d->atr,
                     d->state.wheelslip,
-                    d->setpoint - d->imu.balance_pitch,
+                    setpoint - d->imu.balance_pitch,
                     dt
                 );
                 turn_tilt_update(&d->turn_tilt, &d->motor, &d->float_conf, d->state.wheelslip, dt);
 
-                d->setpoint += d->noseangling_interpolated;
-                d->setpoint += d->turn_tilt.setpoint.value;
+                setpoint += d->noseangling_interpolated;
+                setpoint += d->turn_tilt.setpoint.value;
 
                 // aggregated torque tilts:
                 // if signs match between torque tilt and ATR + brake tilt, use the more significant
                 // one if signs do not match, they are simply added together
                 float ab_offset = d->atr.setpoint.value + d->brake_tilt.setpoint.value;
                 if (sign(ab_offset) == sign(d->torque_tilt.setpoint.value)) {
-                    d->setpoint += sign(ab_offset) *
+                    setpoint += sign(ab_offset) *
                         fmaxf(fabsf(ab_offset), fabsf(d->torque_tilt.setpoint.value));
                 } else {
-                    d->setpoint += ab_offset + d->torque_tilt.setpoint.value;
+                    setpoint += ab_offset + d->torque_tilt.setpoint.value;
                 }
             }
+
+            // The setpoint is used in the IMU callback and therefore needs to
+            // be set only once, otherwise it'll race
+            d->setpoint = setpoint;
 
             break;
         case (STATE_READY):
