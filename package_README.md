@@ -5,6 +5,11 @@ A full-featured self-balancing skateboard package.
 ## New in 1.3
 This version reworks a lot of the core control mechanisms and adds Setpoint Smoothing to all Tilts. Due to this, boards will behave slightly differently and tunes might need adjusting.
 
+### Recent additions
+- LED status bar can now be disabled above a configurable speed while still allowing duty/current utilization indicators to remain active
+- New GUI options for the LED speed cutoff and enable/disable toggle
+- Improved compatibility with config restore workflows when new settings are introduced
+
 Changelog highlights:
 - Reworked internal timing for better vibration rejection and more consistent tune behavior across setups
 - Setpoint Smoothing for all Tilts (ATR, Torque Tilt, Brake Tilt, Turn Tilt, Remote)

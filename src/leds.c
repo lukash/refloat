@@ -544,6 +544,9 @@ static void status_animate(
     float blend,
     float idle_blend
 ) {
+    const float speed_kph = fabsf(motor->speed);
+    const bool moving = speed_kph > 0.5f;
+
     if (fabsf(VESC_IF->mc_get_rpm()) > ERPM_MOVING_THRESHOLD) {
         leds->status_idle_time = current_time;
     }
@@ -565,6 +568,44 @@ static void status_animate(
         rate_limitf(&leds->status_utilization_blend, 0.0f, SB_RATE);
     }
 
+    const bool soc_off_by_speed =
+        leds->cfg->status.disable_soc_above_speed && moving &&
+        speed_kph >= leds->cfg->status.speed_off_threshold;
+    const float soc_off_hyst = 1.0f;
+    const float soc_on_threshold = leds->cfg->status.speed_off_threshold - soc_off_hyst;
+    const bool soc_should_be_off =
+        leds->cfg->status.disable_soc_above_speed &&
+        (soc_off_by_speed ||
+         (leds->status_soc_blend < 0.5f && moving && speed_kph > soc_on_threshold));
+
+    float target_soc_blend = 1.0f;
+    if (leds->cfg->status.disable_soc_above_speed) {
+        if (!moving) {
+            target_soc_blend = 1.0f;
+        } else if (speed_kph >= leds->cfg->status.speed_off_threshold) {
+            target_soc_blend = 0.0f;
+        } else if (speed_kph <= soc_on_threshold && leds->status_soc_blend <= 0.5f) {
+            target_soc_blend = 1.0f;
+        } else {
+            target_soc_blend = leds->status_soc_blend;
+        }
+    }
+    if (soc_should_be_off) {
+        target_soc_blend = 0.0f;
+    }
+    rate_limitf(&leds->status_soc_blend, target_soc_blend, SB_RATE);
+
+    float soc_blend = leds->status_soc_blend;
+    if (soc_should_be_off || target_soc_blend <= 0.05f) {
+        idle_blend = 0.0f;
+        soc_blend = 0.0f;
+    }
+
+    if (soc_should_be_off && leds->status_utilization_blend <= 0.0f) {
+        strip_set_color(leds, strip, 0x00000000, 0.0f, 1.0f);
+        return;
+    }
+
     if (idle_blend > 0.0f) {
         if (strip == &leds->front_strip) {
             strip_set_color(leds, strip, 0x00000000, strip->brightness, blend);
@@ -580,10 +621,16 @@ static void status_animate(
 
     if (idle_blend < 1.0f) {
         const bool reverse = strip == &leds->front_strip;
+
         if (leds->status_utilization_blend < 1.0f) {
             const float battery = VESC_IF->mc_get_battery_level(NULL);
             anim_battery_bar(
-                leds, strip, battery, reverse, fminf(blend, 1.0f - idle_blend), current_time
+                leds,
+                strip,
+                battery,
+                reverse,
+                fminf(blend, soc_blend),
+                current_time
             );
         }
 
@@ -601,7 +648,13 @@ static void status_animate(
             }
 
             anim_progress_bar(
-                leds, strip, max_sat, max_color, true, reverse, leds->status_utilization_blend
+                leds,
+                strip,
+                max_sat,
+                max_color,
+                true,
+                reverse,
+                leds->status_utilization_blend * blend
             );
         }
 
@@ -798,6 +851,7 @@ void leds_init(Leds *leds) {
     leds->motor_utilization_threshold = 0.0f;
     leds->status_utilization_blend = 0.0f;
     leds->status_idle_blend = 0.0f;
+    leds->status_soc_blend = 1.0f;
     leds->status_idle_time = 0.0f;
     leds->status_animation_start = 0.0f;
 
