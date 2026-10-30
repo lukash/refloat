@@ -28,6 +28,8 @@ $(REFLOAT_SOURCES): $(CONF_GEN_HEADERS) conf/conf_general.h
 
 $(CONF_GEN_FILES) &: conf/settings.xml
 	$(VESC_TOOL) --xmlConfToCode conf/settings.xml
+	sed -i 's/conf->leds.status.speed_off_threshold, 10000/conf->leds.status.speed_off_threshold, 1/g' conf/confparser.c
+	sed -i 's/conf->leds.status.speed_off_threshold = buffer_get_float16(buffer, 10000/conf->leds.status.speed_off_threshold = buffer_get_float16(buffer, 1/g' conf/confparser.c
 	# !!! make xml config loading in vesc_tool work with LTO !!!
 	sed -i "s/^uint8_t data_/__attribute__((used)) uint8_t data_/g" conf/confxml.c
 
