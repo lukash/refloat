@@ -122,7 +122,7 @@ void motor_control_apply(MotorControl *mc, float abs_erpm, RunState state, const
 }
 
 void motor_control_play_tone(MotorControl *mc, uint16_t frequency, float intensity) {
-    uint8_t new_ticks = max(1, mc->main_freq / frequency);
+    uint16_t new_ticks = max(1, mc->main_freq / frequency);
     if (new_ticks != mc->tone_ticks) {
         mc->tone_ticks = new_ticks;
         mc->tone_counter = mc->tone_ticks;

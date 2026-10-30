@@ -32,8 +32,8 @@ typedef struct {
     time_t brake_timer;
     bool parking_brake_active;
 
-    uint8_t tone_ticks;
-    uint8_t tone_counter;
+    uint16_t tone_ticks;
+    uint16_t tone_counter;
     bool tone_high;
     float tone_intensity;
 
