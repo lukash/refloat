@@ -5485,14 +5485,6 @@ Item {
                 isTune: true
             }
 
-            CheckBox {
-                id: saveTuneOverwrite
-
-                checked: true
-                visible: editTuneDialog.tune && !editTuneDiff.isEmpty
-                text: "Overwrite with current tune"
-            }
-
             Button {
                 Layout.alignment: Qt.AlignHCenter
 
@@ -5506,6 +5498,14 @@ Item {
                         editTuneDialog.close();
                     });
                 }
+            }
+
+            CheckBox {
+                id: saveTuneOverwrite
+
+                checked: true
+                visible: editTuneDialog.tune && !editTuneDiff.isEmpty
+                text: "Overwrite with current tune"
             }
         }
     }
@@ -6303,16 +6303,6 @@ Item {
                 dialog: applyConfigDialog
             }
 
-            LText {
-                Layout.fillWidth: true
-                Layout.topMargin: 16
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-                wrapMode: Text.WordWrap
-                visible: !applyConfigDiff.isEmpty && !applyConfigDialog.isTune
-                text: "Restoring this backup will overwrite your current config."
-            }
-
             Button {
                 Layout.alignment: Qt.AlignHCenter
 
@@ -6326,6 +6316,16 @@ Item {
                         VescIf.emitStatusMessage(tune.name + " converted", true);
                     });
                 }
+            }
+
+            LText {
+                Layout.fillWidth: true
+                Layout.topMargin: 16
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+                wrapMode: Text.WordWrap
+                visible: !applyConfigDiff.isEmpty && !applyConfigDialog.isTune
+                text: "Restoring this backup will overwrite your current config."
             }
         }
     }
