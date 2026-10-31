@@ -32,7 +32,7 @@ typedef struct {
     float filter_frequency;
     float last_reading;
     time_t last_reading_time;
-    bool first;
+    bool calibrating;
     bool running;
     uint32_t recalcs;
 } FrequencyTracker;
@@ -49,7 +49,9 @@ void frequency_tracker_update(FrequencyTracker *ft, float dt);
  * apart agree within 1%) and more than 3% away from the current filter frequency
  * and if so, triggers a reconfiguration of the filters. It only happens when
  * running, because the current modulation has a big impact on CPU load and
- * subsequently the scheduling.
+ * subsequently the scheduling. The exception is the calibration after startup,
+ * which is done even when not running and ends with the first stable reading,
+ * whether it triggers a reconfiguration or not.
  */
 void frequency_tracker_check(
     FrequencyTracker *ft, bool running, const Time *time, void (*reconf_cb)(float)

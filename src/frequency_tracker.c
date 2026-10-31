@@ -41,7 +41,7 @@ void frequency_tracker_init(FrequencyTracker *ft, float frequency, const Time *t
     ft->frequency = frequency;
     ft->filter_frequency = frequency;
     restart_readings(ft, time);
-    ft->first = true;
+    ft->calibrating = true;
     ft->running = false;
     ft->recalcs = 0;
 }
@@ -76,11 +76,15 @@ void frequency_tracker_check(
     bool stable = fabsf(frequency - ft->last_reading) < STABLE_TOLERANCE * frequency;
     ft->last_reading = frequency;
 
-    if (stable && (running || ft->first) &&
+    if (!stable) {
+        return;
+    }
+
+    if ((running || ft->calibrating) &&
         fabsf(1 - frequency / ft->filter_frequency) > RECONFIGURE_THRESHOLD) {
         reconf_cb(frequency);
         ft->filter_frequency = frequency;
-        ft->first = false;
         ++ft->recalcs;
     }
+    ft->calibrating = false;
 }
