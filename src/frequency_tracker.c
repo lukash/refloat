@@ -23,12 +23,24 @@
 
 // Time constant of the frequency filter [s] (corresponds to a 1 Hz cutoff)
 #define FREQUENCY_TIME_CONSTANT 0.16f
+// Period of reading the frequency for the reconfiguration check [s]. A change
+// of frequency has to last about two periods to trigger a reconfiguration.
+#define READING_PERIOD 0.5f
+// Max relative difference of two consecutive readings of a stable frequency
+#define STABLE_TOLERANCE 0.01f
+// Relative difference from the filter frequency that triggers a reconfiguration
+#define RECONFIGURE_THRESHOLD 0.03f
+
+static void restart_readings(FrequencyTracker *ft, const Time *time) {
+    timer_refresh(time, &ft->last_reading_time);
+    ft->last_reading = 0.0f;
+}
 
 void frequency_tracker_init(FrequencyTracker *ft, float frequency, const Time *time) {
     ft->dt = 0.0f;
     ft->frequency = frequency;
     ft->filter_frequency = frequency;
-    timer_refresh(time, &ft->filter_last_update);
+    restart_readings(ft, time);
     ft->first = true;
     ft->running = false;
     ft->recalcs = 0;
@@ -48,16 +60,26 @@ void frequency_tracker_check(
     FrequencyTracker *ft, bool running, const Time *time, void (*reconf_cb)(float)
 ) {
     if (!ft->running && running) {
-        // wait a second after engaging for the frequency to settle
-        timer_refresh(time, &ft->filter_last_update);
+        // Readings from before engaging don't count, the load changes the frequency.
+        // The reset last_reading can't pass as stable, so a reconfiguration takes two
+        // readings after engaging: a change of frequency has to last about a second.
+        restart_readings(ft, time);
     }
     ft->running = running;
 
-    if ((running || ft->first) && timer_older(time, ft->filter_last_update, 1.0f) &&
-        fabsf(1 - ft->frequency / ft->filter_frequency) > 0.03f) {
-        reconf_cb(ft->frequency);
-        ft->filter_frequency = ft->frequency;
-        timer_refresh(time, &ft->filter_last_update);
+    if (!timer_older(time, ft->last_reading_time, READING_PERIOD)) {
+        return;
+    }
+    timer_refresh(time, &ft->last_reading_time);
+
+    float frequency = ft->frequency;
+    bool stable = fabsf(frequency - ft->last_reading) < STABLE_TOLERANCE * frequency;
+    ft->last_reading = frequency;
+
+    if (stable && (running || ft->first) &&
+        fabsf(1 - frequency / ft->filter_frequency) > RECONFIGURE_THRESHOLD) {
+        reconf_cb(frequency);
+        ft->filter_frequency = frequency;
         ft->first = false;
         ++ft->recalcs;
     }

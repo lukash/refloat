@@ -30,7 +30,8 @@ typedef struct {
     float dt;
     float frequency;
     float filter_frequency;
-    time_t filter_last_update;
+    float last_reading;
+    time_t last_reading_time;
     bool first;
     bool running;
     uint32_t recalcs;
@@ -44,11 +45,11 @@ void frequency_tracker_init(FrequencyTracker *ft, float frequency, const Time *t
 void frequency_tracker_update(FrequencyTracker *ft, float dt);
 
 /**
- * Checks if the frequency is within 3% of the current filter frequency and if
- * not, triggers a reconfiguration of the filters. The amount of changes is
- * throttled to once per second and is only changed when running, because the
- * current modulation has a big impact on CPU load and subsequently the
- * scheduling.
+ * Checks if the frequency is stable (two consecutive readings half a second
+ * apart agree within 1%) and more than 3% away from the current filter frequency
+ * and if so, triggers a reconfiguration of the filters. It only happens when
+ * running, because the current modulation has a big impact on CPU load and
+ * subsequently the scheduling.
  */
 void frequency_tracker_check(
     FrequencyTracker *ft, bool running, const Time *time, void (*reconf_cb)(float)
