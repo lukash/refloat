@@ -46,6 +46,12 @@ void frequency_tracker_init(FrequencyTracker *ft, float frequency, const Time *t
     ft->recalcs = 0;
 }
 
+void frequency_tracker_recalibrate(FrequencyTracker *ft, float frequency, const Time *time) {
+    ft->frequency = frequency;
+    restart_readings(ft, time);
+    ft->calibrating = true;
+}
+
 void frequency_tracker_update(FrequencyTracker *ft, float dt) {
     ft->dt = dt * 1000.0f;
     // A first order filter of 1 / dt with each sample weighted by the time it

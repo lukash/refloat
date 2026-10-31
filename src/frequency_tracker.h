@@ -40,6 +40,13 @@ typedef struct {
 void frequency_tracker_init(FrequencyTracker *ft, float frequency, const Time *time);
 
 /**
+ * Starts the calibration again from the given frequency. To be called when the
+ * frequency is known to have changed, so that the filters are reconfigured
+ * without waiting for running.
+ */
+void frequency_tracker_recalibrate(FrequencyTracker *ft, float frequency, const Time *time);
+
+/**
  * Updates the tracked dt and filtered frequency.
  */
 void frequency_tracker_update(FrequencyTracker *ft, float dt);
@@ -49,9 +56,10 @@ void frequency_tracker_update(FrequencyTracker *ft, float dt);
  * apart agree within 1%) and more than 3% away from the current filter frequency
  * and if so, triggers a reconfiguration of the filters. It only happens when
  * running, because the current modulation has a big impact on CPU load and
- * subsequently the scheduling. The exception is the calibration after startup,
- * which is done even when not running and ends with the first stable reading,
- * whether it triggers a reconfiguration or not.
+ * subsequently the scheduling. The exception is the calibration (after startup
+ * or frequency_tracker_recalibrate()), which is done even when not running and
+ * ends with the first stable reading, whether it triggers a reconfiguration or
+ * not.
  */
 void frequency_tracker_check(
     FrequencyTracker *ft, bool running, const Time *time, void (*reconf_cb)(float)

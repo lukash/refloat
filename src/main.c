@@ -1139,9 +1139,16 @@ static void aux_thd(void *arg) {
     }
 
     time_t motor_config_refresh_timer = 0;
+    int imu_sample_rate = VESC_IF->get_cfg_int(CFG_PARAM_IMU_sample_rate);
 
     while (!VESC_IF->should_terminate()) {
         bool running = d->state.state == STATE_RUNNING;
+
+        int new_imu_sample_rate = VESC_IF->get_cfg_int(CFG_PARAM_IMU_sample_rate);
+        if (new_imu_sample_rate != imu_sample_rate) {
+            imu_sample_rate = new_imu_sample_rate;
+            frequency_tracker_recalibrate(&d->imu_freq_tracker, imu_sample_rate, &d->time);
+        }
 
         frequency_tracker_check(
             &d->main_freq_tracker, running, &d->time, &main_freq_update_reconfigure
