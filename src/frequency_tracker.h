@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include "filters/ema.h"
 #include "time.h"
 
 /**
@@ -29,7 +28,7 @@
  */
 typedef struct {
     float dt;
-    EMA frequency;
+    float frequency;
     float filter_frequency;
     time_t filter_last_update;
     bool first;

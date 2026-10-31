@@ -2190,7 +2190,7 @@ static void cmd_realtime_data(Data *d, uint8_t *buf, int len) {
     add_rt_item(buffer, &ind, mask1, RT_MASK1_REMOTE_SETPOINT, d->remote.setpoint.value, use_f32);
     add_rt_item(buffer, &ind, mask1, RT_MASK1_BALANCE_CURRENT, d->balance_current.value, use_f32);
     add_rt_item(
-        buffer, &ind, mask1, RT_MASK1_LOOP_FREQUENCY, d->imu_freq_tracker.frequency.value, use_f32
+        buffer, &ind, mask1, RT_MASK1_LOOP_FREQUENCY, d->imu_freq_tracker.frequency, use_f32
     );
 
     // MASK2

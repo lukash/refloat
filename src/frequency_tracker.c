@@ -17,13 +17,16 @@
 
 #include "frequency_tracker.h"
 
+#include "lib/utils.h"
+
 #include <math.h>
+
+// Time constant of the frequency filter [s] (corresponds to a 1 Hz cutoff)
+#define FREQUENCY_TIME_CONSTANT 0.16f
 
 void frequency_tracker_init(FrequencyTracker *ft, float frequency, const Time *time) {
     ft->dt = 0.0f;
-    ema_init(&ft->frequency);
-    ema_configure(&ft->frequency, 1.0f, frequency);
-    ema_reset(&ft->frequency, frequency);
+    ft->frequency = frequency;
     ft->filter_frequency = frequency;
     timer_refresh(time, &ft->filter_last_update);
     ft->first = true;
@@ -33,7 +36,12 @@ void frequency_tracker_init(FrequencyTracker *ft, float frequency, const Time *t
 
 void frequency_tracker_update(FrequencyTracker *ft, float dt) {
     ft->dt = dt * 1000.0f;
-    ema_update(&ft->frequency, 1.0f / dt);
+    // A first order filter of 1 / dt with each sample weighted by the time it
+    // covers (alpha = dt / time constant). The dt cancels out, so every sample
+    // counts once no matter how short its dt is and the result is the number
+    // of samples per time, unbiased by jitter (unlike the mean of 1 / dt). The
+    // max() keeps the filter stable for a dt longer than the time constant.
+    ft->frequency += (1.0f - ft->frequency * dt) / max(FREQUENCY_TIME_CONSTANT, dt);
 }
 
 void frequency_tracker_check(
@@ -46,10 +54,9 @@ void frequency_tracker_check(
     ft->running = running;
 
     if ((running || ft->first) && timer_older(time, ft->filter_last_update, 1.0f) &&
-        fabsf(1 - ft->frequency.value / ft->filter_frequency) > 0.03f) {
-        reconf_cb(ft->frequency.value);
-        ft->filter_frequency = ft->frequency.value;
-        ema_configure(&ft->frequency, 1.0f, ft->filter_frequency);
+        fabsf(1 - ft->frequency / ft->filter_frequency) > 0.03f) {
+        reconf_cb(ft->frequency);
+        ft->filter_frequency = ft->frequency;
         timer_refresh(time, &ft->filter_last_update);
         ft->first = false;
         ++ft->recalcs;

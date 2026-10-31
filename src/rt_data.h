@@ -37,7 +37,7 @@
 
 #define RT_DATA_ITEMS(S, R)                                                                        \
     R(imu_freq_tracker.dt, "control.dt")                                                           \
-    R(imu_freq_tracker.frequency.value, "control.freq")                                            \
+    R(imu_freq_tracker.frequency, "control.freq")                                                  \
     R(imu_latency_tracker.excess, "control.latency")                                               \
     S(motor.speed, "speed")                                                                        \
     R(motor.erpm, "erpm")                                                                          \
