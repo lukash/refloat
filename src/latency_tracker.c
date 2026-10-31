@@ -33,6 +33,12 @@ void latency_tracker_init(LatencyTracker *lt) {
 }
 
 void latency_tracker_update(LatencyTracker *lt, float dt) {
+    // An IMU restart would otherwise add its gap to the latency permanently
+    if (!VESC_IF->imu_startup_done()) {
+        latency_tracker_init(lt);
+        return;
+    }
+
     uint32_t now = VESC_IF->timer_time_now();
     if (lt->first) {
         lt->first = false;
