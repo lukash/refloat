@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Please make sure you are providing sufficient details for the report to be useful, written concisely. If applicable, provide a set of steps to reproduce. If unsure, get in touch on [discord](https://discord.com/channels/1346864089170710739/1347601377815429151).
+        Please make sure you are providing sufficient details for the report to be useful, written concisely. If applicable, provide a set of steps to reproduce. If unsure, get in touch on the [Refloat Discord server](https://discord.gg/vu7s84Fzb).
   - type: input
     id: version
     attributes:
