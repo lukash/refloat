@@ -495,7 +495,7 @@ p, li { white-space: pre-wrap; }
             <cDefine>CFG_DFLT_FAULT_ADC_HALF_ERPM</cDefine>
             <editorScale>1</editorScale>
             <editAsPercentage>0</editAsPercentage>
-            <maxInt>100000</maxInt>
+            <maxInt>5000</maxInt>
             <minInt>0</minInt>
             <showDisplay>0</showDisplay>
             <stepInt>50</stepInt>
@@ -899,7 +899,7 @@ p, li { white-space: pre-wrap; }
             <cDefine>CFG_DFLT_TILTBACK_CONSTANT_ERPM</cDefine>
             <editorScale>1</editorScale>
             <editAsPercentage>0</editAsPercentage>
-            <maxInt>100000</maxInt>
+            <maxInt>50000</maxInt>
             <minInt>200</minInt>
             <showDisplay>0</showDisplay>
             <stepInt>50</stepInt>
@@ -963,7 +963,7 @@ p, li { white-space: pre-wrap; }
             <cDefine>CFG_DFLT_TILTBACK_VARIABLE_ERPM</cDefine>
             <editorScale>1</editorScale>
             <editAsPercentage>0</editAsPercentage>
-            <maxInt>100000</maxInt>
+            <maxInt>50000</maxInt>
             <minInt>0</minInt>
             <showDisplay>0</showDisplay>
             <stepInt>50</stepInt>
@@ -2562,7 +2562,7 @@ p, li { white-space: pre-wrap; }
             <cDefine>CFG_DFLT_TURNTILT_START_ERPM</cDefine>
             <editorScale>1</editorScale>
             <editAsPercentage>0</editAsPercentage>
-            <maxInt>100000</maxInt>
+            <maxInt>10000</maxInt>
             <minInt>100</minInt>
             <showDisplay>0</showDisplay>
             <stepInt>100</stepInt>
@@ -2606,7 +2606,7 @@ p, li { white-space: pre-wrap; }
             <cDefine>CFG_DFLT_TURNTILT_ERPM_BOOST_END</cDefine>
             <editorScale>1</editorScale>
             <editAsPercentage>0</editAsPercentage>
-            <maxInt>100000</maxInt>
+            <maxInt>50000</maxInt>
             <minInt>100</minInt>
             <showDisplay>0</showDisplay>
             <stepInt>100</stepInt>
