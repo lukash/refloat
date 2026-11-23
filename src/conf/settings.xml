@@ -2626,7 +2626,7 @@ p, li { white-space: pre-wrap; }
             <cDefine>CFG_DFLT_TURNTILT_YAW_AGGREGATE</cDefine>
             <editorScale>1</editorScale>
             <editAsPercentage>0</editAsPercentage>
-            <maxInt>360</maxInt>
+            <maxInt>180</maxInt>
             <minInt>50</minInt>
             <showDisplay>0</showDisplay>
             <stepInt>5</stepInt>
