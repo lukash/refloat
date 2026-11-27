@@ -1674,6 +1674,46 @@ static void cmd_runtime_tune(Data *d, unsigned char *cfg, int len) {
         d->float_conf.torque_tilt.filter.off_speed_time_constant = (float) max(1, cfg[24]) / 100.0f;
         d->float_conf.turn_tilt.filter.time_constant = (float) max(1, cfg[25]) / 100.0f;
     }
+    if (len >= 94) {
+        // Full resolution values, override the coarse ones above. Encoded like in settings.xml
+        // (integers as uint16) and clamped to its limits.
+        RefloatConfig *c = &d->float_conf;
+        int32_t i = 26;
+        c->kp = clampf(buffer_get_float16(cfg, 10, &i), 0, 60);
+        c->kp2 = clampf(buffer_get_float16(cfg, 100, &i), 0, 3);
+        c->ki = clampf(buffer_get_float16(cfg, 100000, &i), 0, 0.3f);
+        c->ki_limit = clampf(buffer_get_float16(cfg, 10, &i), 0, 500);
+        c->mahony_kp = clampf(buffer_get_float16(cfg, 10000, &i), 0.2f, 3);
+        c->mahony_kp_roll = clampf(buffer_get_float16(cfg, 10000, &i), 0, 3);
+        c->kp_brake = clampf(buffer_get_float16(cfg, 100, &i), 0.2f, 3);
+        c->kp2_brake = clampf(buffer_get_float16(cfg, 100, &i), 0, 3);
+        c->torquetilt_strength = clampf(buffer_get_float16(cfg, 1000, &i), 0, 1);
+        c->torquetilt_strength_regen = clampf(buffer_get_float16(cfg, 1000, &i), 0, 1);
+        c->torquetilt_start_current = clampf(buffer_get_float16(cfg, 100, &i), 0, 100);
+        c->torquetilt_angle_limit = clampf(buffer_get_float16(cfg, 100, &i), 0, 30);
+        c->torque_tilt.filter.on_speed_limit = clampf(buffer_get_float16(cfg, 100, &i), 0, 100);
+        c->torque_tilt.filter.off_speed_limit = clampf(buffer_get_float16(cfg, 100, &i), 0, 100);
+        c->turntilt_strength = clampf(buffer_get_float16(cfg, 100, &i), -30, 30);
+        c->turntilt_angle_limit = clampf(buffer_get_float16(cfg, 100, &i), 0, 30);
+        c->turntilt_start_erpm = clampf(buffer_get_uint16(cfg, &i), 100, 10000);
+        c->turntilt_erpm_boost = clampf(buffer_get_uint16(cfg, &i), 0, 10000);
+        c->turntilt_erpm_boost_end = clampf(buffer_get_uint16(cfg, &i), 100, 50000);
+        c->turntilt_yaw_aggregate = clampf(buffer_get_uint16(cfg, &i), 50, 180);
+        c->turntilt_start_angle = clampf(buffer_get_float16(cfg, 100, &i), 0, 45);
+        c->atr_strength_up = clampf(buffer_get_float16(cfg, 1000, &i), 0, 3.5f);
+        c->atr_strength_down = clampf(buffer_get_float16(cfg, 1000, &i), 0, 3.5f);
+        c->atr_threshold_up = clampf(buffer_get_float16(cfg, 100, &i), 0, 5);
+        c->atr_threshold_down = clampf(buffer_get_float16(cfg, 100, &i), 0, 5);
+        c->atr_speed_boost = clampf(buffer_get_float16(cfg, 10000, &i), -1, 1);
+        c->atr_angle_limit = clampf(buffer_get_float16(cfg, 100, &i), 0, 30);
+        c->atr.filter.on_speed_limit = clampf(buffer_get_float16(cfg, 100, &i), 0, 100);
+        c->atr.filter.off_speed_limit = clampf(buffer_get_float16(cfg, 100, &i), 0, 100);
+        c->atr.transition_boost = clampf(buffer_get_float16(cfg, 1000, &i), 1, 4);
+        c->atr_amps_accel_ratio = clampf(buffer_get_float16(cfg, 100, &i), 5, 30);
+        c->atr_amps_decel_ratio = clampf(buffer_get_float16(cfg, 100, &i), 4, 30);
+        c->braketilt_strength = clampf(buffer_get_float16(cfg, 100, &i), 0, 20);
+        c->braketilt_lingering = clampf(buffer_get_float16(cfg, 1000, &i), 1, 5);
+    }
 
     reconfigure(d);
 }
