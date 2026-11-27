@@ -264,6 +264,8 @@ static void engage(Data *d) {
 
     state_engage(&d->state);
     timer_refresh(&d->time, &d->time.engage_timer);
+    timer_refresh(&d->time, &d->fault_switch_timer);
+    timer_refresh(&d->time, &d->fault_switch_half_timer);
     data_recorder_trigger(&d->data_record, true);
 }
 
